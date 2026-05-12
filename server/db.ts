@@ -22,6 +22,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
     throw new Error("User openId is required for upsert");
   }
+  if (!user.userType) {
+    throw new Error("User userType is required for upsert");
+  }
 
   const db = await getDb();
   if (!db) {
@@ -32,6 +35,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   try {
     const values: InsertUser = {
       openId: user.openId,
+      userType: user.userType,
     };
     const updateSet: Record<string, unknown> = {};
 
@@ -47,6 +51,12 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     };
 
     textFields.forEach(assignNullable);
+
+    // Handle userType separately (not nullable)
+    if (user.userType !== undefined) {
+      values.userType = user.userType;
+      updateSet.userType = user.userType;
+    }
 
     if (user.lastSignedIn !== undefined) {
       values.lastSignedIn = user.lastSignedIn;

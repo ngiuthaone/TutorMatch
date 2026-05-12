@@ -288,6 +288,7 @@ class SDKServer {
           name: userInfo.name || null,
           email: userInfo.email ?? null,
           loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
+          userType: "student",
           lastSignedIn: signedInAt,
         });
         user = await db.getUserByOpenId(userInfo.openId);
@@ -303,6 +304,7 @@ class SDKServer {
 
     await db.upsertUser({
       openId: user.openId,
+      userType: user.userType,
       lastSignedIn: signedInAt,
     });
 
