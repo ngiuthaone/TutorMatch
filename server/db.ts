@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, tutors, requests, ratings } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -99,4 +99,92 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Tutor queries
+export async function createTutor(tutorData: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(tutors).values({
+    userId: tutorData.userId,
+    bio: tutorData.bio,
+    avatarUrl: tutorData.avatarUrl,
+    avatarKey: tutorData.avatarKey,
+    education: JSON.stringify(tutorData.education || []),
+    subjects: JSON.stringify(tutorData.subjects || []),
+    grades: JSON.stringify(tutorData.grades || []),
+    hourlyRate: tutorData.hourlyRate,
+    experience: tutorData.experience || 0,
+    location: tutorData.location,
+    district: tutorData.district,
+    availability: JSON.stringify(tutorData.availability || {}),
+  });
+  return result;
+}
+
+export async function getTutorByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(tutors).where(eq(tutors.userId, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllTutors() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(tutors);
+}
+
+// Request queries
+export async function createRequest(requestData: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(requests).values({
+    studentId: requestData.studentId,
+    subject: requestData.subject,
+    grade: requestData.grade,
+    description: requestData.description,
+    preferredTimes: JSON.stringify(requestData.preferredTimes || []),
+    location: requestData.location,
+    district: requestData.district,
+    budget: requestData.budget,
+    status: "open",
+  });
+  return result;
+}
+
+export async function getRequestsByStudentId(studentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(requests).where(eq(requests.studentId, studentId));
+}
+
+export async function getAllRequests() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(requests);
+}
+
+// Rating queries
+export async function createRating(ratingData: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(ratings).values({
+    lessonId: ratingData.lessonId,
+    fromUserId: ratingData.fromUserId,
+    toUserId: ratingData.toUserId,
+    ratingType: ratingData.ratingType,
+    score: ratingData.score,
+    review: ratingData.review,
+  });
+  return result;
+}
+
+export async function getRatingsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(ratings).where(eq(ratings.toUserId, userId));
+}
+
+

@@ -13,7 +13,7 @@
 ## Phase 3: Tutor Registration & Profile
 - [x] Build tutor registration form (personal info, subjects, education, avatar, hourly rate)
 - [x] Create tutor profile management page
-- [ ] Implement profile picture upload to storage
+- [x] Implement profile picture upload to storage
 - [x] Add form validation and error handling
 
 ## Phase 4: Student/Parent Request Form
@@ -37,10 +37,10 @@
 - [ ] Create request management pages for both tutors and students
 
 ## Phase 8: Two-way Rating System
-- [ ] Build student rating form for tutors (after lesson completion)
-- [ ] Build tutor rating form for students (after lesson completion)
-- [ ] Implement rating display on tutor profiles
-- [ ] Add logic to only enable ratings after lesson completion
+- [x] Build student rating form for tutors (after lesson completion)
+- [x] Build tutor rating form for students (after lesson completion)
+- [x] Implement rating display on tutor profiles
+- [x] Add logic to only enable ratings after lesson completion
 
 ## Phase 9: Admin CMS (/admin)
 - [x] Create password-protected /admin route
@@ -65,3 +65,6 @@
 - Tutor detail page
 - Password-protected admin CMS
 - Database schema with 8 tables
+- tRPC procedures for tutors, requests, ratings
+- Two-way rating system page
+- Backend database helpers
