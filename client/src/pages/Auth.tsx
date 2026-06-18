@@ -145,12 +145,8 @@ export default function Auth() {
         })
       );
 
-      // Redirect based on user type
-      if (userType === "tutor") {
-        navigate("/tutor-dashboard");
-      } else {
-        navigate("/student-dashboard");
-      }
+      // Redirect to Hub after login
+      navigate("/hub");
     } catch (error) {
       setErrors({ general: "Đăng nhập thất bại. Vui lòng thử lại." });
     } finally {
@@ -188,12 +184,8 @@ export default function Auth() {
         })
       );
 
-      // After successful registration, redirect to appropriate page
-      if (userType === "tutor") {
-        navigate("/become-tutor");
-      } else {
-        navigate("/find-tutor");
-      }
+      // After successful registration, redirect to Hub
+      navigate("/hub");
     } catch (error) {
       setErrors({ general: "Đăng ký thất bại. Vui lòng thử lại." });
     } finally {

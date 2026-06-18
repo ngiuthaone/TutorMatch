@@ -15,6 +15,7 @@ import Matching from "./pages/Matching";
 import TutorDashboard from "./pages/TutorDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import Auth from "./pages/Auth";
+import Hub from "./pages/Hub";
 import { useEffect, useState } from "react";
 
 function Router() {
@@ -48,7 +49,8 @@ function Router() {
       (currentPath === "/become-tutor" ||
         currentPath === "/find-tutor" ||
         currentPath === "/tutor-dashboard" ||
-        currentPath === "/student-dashboard")
+        currentPath === "/student-dashboard" ||
+        currentPath === "/hub")
     ) {
       navigate("/auth");
     }
@@ -69,12 +71,12 @@ function Router() {
       <Route path={"/admin"} component={Admin} />
       <Route path={"/rating"} component={Rating} />
       <Route path={"/matching"} component={Matching} />
+      <Route path={"/hub"} component={Hub} />
       <Route path={"/tutor-dashboard"} component={TutorDashboard} />
       <Route path={"/student-dashboard"} component={StudentDashboard} />
       <Route path={"/auth"} component={Auth} />
       <Route path={"/login"} component={Auth} />
       <Route path={"/register"} component={Auth} />
-      <Route path={"/dashboard"} component={() => <div>Dashboard Page</div>} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
