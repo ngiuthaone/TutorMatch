@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import CreateRequestModal, { RequestFormData } from "@/components/CreateRequestModal";
+import { trpc } from "@/lib/trpc";
 import {
   Search,
   Filter,
@@ -66,22 +67,20 @@ export default function Hub() {
     navigate("/");
   };
 
+  const createRequestMutation = trpc.requests.create.useMutation();
+
   const handleCreateRequest = async (formData: RequestFormData) => {
     setIsSubmittingRequest(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      // In real implementation, this would call tRPC procedure
-      // await trpc.requests.create.useMutation(formData);
+      await createRequestMutation.mutateAsync(formData);
       
       toast.success("Yêu cầu đã được tạo thành công!");
       setIsCreateRequestModalOpen(false);
       
       // Refresh requests list
       // In real implementation, invalidate queries here
-    } catch (error) {
-      toast.error("Tạo yêu cầu thất bại. Vui lòng thử lại.");
+    } catch (error: any) {
+      toast.error(error?.message || "Tạo yêu cầu thất bại. Vui lòng thử lại.");
     } finally {
       setIsSubmittingRequest(false);
     }

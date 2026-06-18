@@ -62,18 +62,29 @@ export const appRouter = router({
       .input(
         z.object({
           subject: z.string(),
-          grade: z.string(),
+          gradeLevel: z.string(),
           description: z.string(),
-          preferredTimes: z.string().optional(),
-          location: z.string().optional(),
-          district: z.string().optional(),
-          budget: z.string().optional(),
+          preferredTimeframe: z.array(z.string()),
+          location: z.string(),
+          budget: z.number().optional(),
+          studentName: z.string(),
+          studentPhone: z.string(),
+          lessonFrequency: z.string(),
+          lessonDuration: z.number(),
+          startDate: z.string(),
+          specialRequirements: z.string().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
         return await createRequest({
           studentId: ctx.user.id,
-          ...input,
+          subject: input.subject,
+          grade: input.gradeLevel,
+          description: input.description,
+          preferredTimes: input.preferredTimeframe.join(", "),
+          location: input.location,
+          budget: input.budget ? input.budget.toString() : undefined,
+          district: input.location.split(",")[0] || input.location,
         });
       }),
 
