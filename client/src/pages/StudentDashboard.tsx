@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import {
@@ -16,29 +16,64 @@ import {
   MapPin,
   DollarSign,
 } from "lucide-react";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+
+interface UserData {
+  name: string;
+  email: string;
+  userType: "tutor" | "student";
+  phone?: string;
+}
 
 export default function StudentDashboard() {
   const [, navigate] = useLocation();
-  const { user, logout, isAuthenticated } = useAuth();
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const logoutMutation = trpc.auth.logout.useMutation();
-
-  const handleLogout = async () => {
+  // Check authentication on mount
+  useEffect(() => {
     try {
-      await logoutMutation.mutateAsync();
-      logout();
-      navigate("/");
+      const userStr = localStorage.getItem("tutormatch_user");
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        if (userData.isAuthenticated && userData.userType === "student") {
+          setUser(userData);
+          setIsAuthenticated(true);
+        } else {
+          navigate("/auth");
+        }
+      } else {
+        navigate("/auth");
+      }
     } catch (error) {
-      toast.error("Có lỗi xảy ra khi đăng xuất");
+      console.error("Error reading user data:", error);
+      navigate("/auth");
+    } finally {
+      setIsLoading(false);
     }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("tutormatch_user");
+    toast.success("Đã đăng xuất thành công");
+    navigate("/");
   };
 
-  if (!isAuthenticated) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg p-8 shadow-lg max-w-md w-full text-center">
@@ -49,8 +84,8 @@ export default function StudentDashboard() {
             Vui lòng đăng nhập để truy cập dashboard học sinh.
           </p>
           <Button
-            className="w-full bg-blue-600 hover:bg-blue-700"
-            onClick={() => navigate("/login")}
+            className="w-full bg-purple-600 hover:bg-purple-700"
+            onClick={() => navigate("/auth")}
           >
             Đăng nhập
           </Button>
@@ -84,12 +119,12 @@ export default function StudentDashboard() {
                 <Menu className="w-6 h-6" />
               )}
             </button>
-            <h1 className="text-2xl font-bold text-blue-600">TutorMatch</h1>
+            <h1 className="text-2xl font-bold text-slate-900">TutorMatch</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-slate-900">{user?.name}</p>
-              <p className="text-xs text-slate-600">{user?.email}</p>
+              <p className="text-sm font-semibold text-slate-900">{user.name}</p>
+              <p className="text-xs text-slate-600">{user.email}</p>
             </div>
             <Button
               variant="outline"
@@ -143,7 +178,7 @@ export default function StudentDashboard() {
               <div className="space-y-6">
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h2 className="text-2xl font-bold text-slate-900 mb-6">
-                    Chào mừng, {user?.name}!
+                    Chào mừng, {user.name}!
                   </h2>
 
                   {/* Stats */}
@@ -353,52 +388,35 @@ export default function StudentDashboard() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-slate-900">
-                            Nguyễn Văn A
+                            Nguyễn Văn {String.fromCharCode(64 + i)}
                           </h3>
                           <p className="text-sm text-slate-600">
                             Toán học, Vật lý
                           </p>
                           <div className="flex items-center gap-1 mt-1">
-                            {[1, 2, 3, 4, 5].map((j) => (
-                              <Star
-                                key={j}
-                                className={`w-4 h-4 ${
-                                  j <= 4
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-slate-300"
-                                }`}
-                              />
-                            ))}
-                            <span className="text-xs text-slate-600 ml-1">
-                              (25)
-                            </span>
+                            <span className="text-yellow-500">★★★★★</span>
+                            <span className="text-sm text-slate-600">(4.8)</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="space-y-2 mb-4 text-sm text-slate-600">
-                        <p>
-                          <span className="font-semibold">Kinh nghiệm:</span> 5
-                          năm
-                        </p>
-                        <p>
-                          <span className="font-semibold">Giá:</span> 150.000
-                          VND/giờ
-                        </p>
-                        <p>
-                          <span className="font-semibold">Địa chỉ:</span> Quận 1
-                        </p>
-                      </div>
+                      <p className="text-sm text-slate-600 mb-3">
+                        Kinh nghiệm: {3 + i} năm
+                      </p>
 
                       <div className="flex gap-2">
                         <Button
                           className="flex-1 bg-purple-600 hover:bg-purple-700"
-                          onClick={() => navigate("/tutor/1")}
+                          size="sm"
+                        >
+                          Liên hệ
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          size="sm"
                         >
                           Xem hồ sơ
-                        </Button>
-                        <Button variant="outline" className="flex-1">
-                          Liên hệ
                         </Button>
                       </div>
                     </div>
@@ -418,27 +436,43 @@ export default function StudentDashboard() {
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="border border-slate-200 rounded-lg p-4 flex items-center justify-between"
+                      className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                     >
-                      <div>
-                        <h3 className="font-semibold text-slate-900">
-                          Buổi học Toán học
-                        </h3>
-                        <p className="text-sm text-slate-600">
-                          Gia sư: Nguyễn Văn A
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">
-                          20/06/2026 18:00-20:00
-                        </p>
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-semibold text-slate-900">
+                            Buổi học {i}: Toán học
+                          </h3>
+                          <p className="text-sm text-slate-600">
+                            Gia sư: Nguyễn Văn A
+                          </p>
+                        </div>
+                        <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                          Sắp tới
+                        </span>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-slate-900">
-                          300.000 VND
-                        </p>
-                        <Button size="sm" variant="outline" className="mt-2">
-                          Xem chi tiết
-                        </Button>
+
+                      <div className="flex items-center gap-4 text-sm text-slate-600 mb-4">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(Date.now() + i * 86400000).toLocaleDateString("vi-VN")}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          14:00 - 16:00
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          Online
+                        </span>
                       </div>
+
+                      <Button
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                        size="sm"
+                      >
+                        Tham gia buổi học
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -449,32 +483,25 @@ export default function StudentDashboard() {
             {activeTab === "ratings" && (
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-2xl font-bold text-slate-900 mb-6">
-                  Đánh giá gia sư
+                  Đánh giá
                 </h2>
 
                 <div className="space-y-4">
-                  {[1, 2].map((i) => (
+                  {[1, 2, 3].map((i) => (
                     <div
                       key={i}
                       className="border border-slate-200 rounded-lg p-4"
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <p className="font-semibold text-slate-900">
-                            Nguyễn Văn A
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            Buổi học Toán học - 20/06/2026
-                          </p>
-                        </div>
-                        <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-                          Chưa đánh giá
-                        </span>
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-slate-900">
+                          Nguyễn Văn {String.fromCharCode(64 + i)}
+                        </h3>
+                        <span className="text-yellow-500">★★★★★</span>
                       </div>
-
-                      <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                        Đánh giá gia sư
-                      </Button>
+                      <p className="text-sm text-slate-600">
+                        Gia sư rất tuyệt vời, giảng dạy rõ ràng và có kiên nhẫn.
+                        Tôi đã tiến bộ rất nhiều.
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -488,50 +515,28 @@ export default function StudentDashboard() {
                   Cài đặt
                 </h2>
 
-                <div className="space-y-6">
-                  <div className="pb-6 border-b border-slate-200">
-                    <h3 className="font-semibold text-slate-900 mb-3">
-                      Thông báo
-                    </h3>
-                    <div className="space-y-3">
-                      <label className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          defaultChecked
-                          className="w-4 h-4 rounded"
-                        />
-                        <span className="text-slate-700">
-                          Thông báo gia sư được đề xuất
-                        </span>
-                      </label>
-                      <label className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          defaultChecked
-                          className="w-4 h-4 rounded"
-                        />
-                        <span className="text-slate-700">
-                          Nhắc nhở buổi học sắp tới
-                        </span>
-                      </label>
-                      <label className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          defaultChecked
-                          className="w-4 h-4 rounded"
-                        />
-                        <span className="text-slate-700">
-                          Thông báo tin nhắn từ gia sư
-                        </span>
-                      </label>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                    <div>
+                      <h3 className="font-semibold text-slate-900">
+                        Thông báo email
+                      </h3>
+                      <p className="text-sm text-slate-600">
+                        Nhận thông báo về gia sư mới
+                      </p>
                     </div>
+                    <input type="checkbox" defaultChecked className="w-5 h-5" />
                   </div>
-
-                  <div>
-                    <h3 className="font-semibold text-slate-900 mb-3">
-                      Bảo mật
-                    </h3>
-                    <Button variant="outline">Đổi mật khẩu</Button>
+                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                    <div>
+                      <h3 className="font-semibold text-slate-900">
+                        Thông báo SMS
+                      </h3>
+                      <p className="text-sm text-slate-600">
+                        Nhận thông báo qua tin nhắn
+                      </p>
+                    </div>
+                    <input type="checkbox" defaultChecked className="w-5 h-5" />
                   </div>
                 </div>
               </div>
