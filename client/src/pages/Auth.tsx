@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
@@ -123,11 +123,27 @@ export default function Auth() {
       return;
     }
 
+    if (!userType) {
+      setErrors({ general: "Vui lòng chọn vai trò của bạn" });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Save user info to localStorage to simulate login
+      localStorage.setItem(
+        "tutormatch_user",
+        JSON.stringify({
+          email: loginData.email,
+          name: loginData.email.split("@")[0],
+          userType: userType,
+          isAuthenticated: true,
+        })
+      );
 
       // Redirect based on user type
       if (userType === "tutor") {
@@ -149,11 +165,28 @@ export default function Auth() {
       return;
     }
 
+    if (!userType) {
+      setErrors({ general: "Vui lòng chọn vai trò của bạn" });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Save user info to localStorage to simulate registration
+      localStorage.setItem(
+        "tutormatch_user",
+        JSON.stringify({
+          email: registerData.email,
+          name: registerData.name,
+          phone: registerData.phone,
+          userType: userType,
+          isAuthenticated: true,
+        })
+      );
 
       // After successful registration, redirect to appropriate page
       if (userType === "tutor") {

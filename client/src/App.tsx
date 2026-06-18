@@ -15,15 +15,33 @@ import Matching from "./pages/Matching";
 import TutorDashboard from "./pages/TutorDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import Auth from "./pages/Auth";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function Router() {
-  const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check localStorage for authentication on mount and when location changes
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const userStr = localStorage.getItem("tutormatch_user");
+        const isAuth = userStr ? JSON.parse(userStr).isAuthenticated : false;
+        setIsAuthenticated(isAuth);
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
+  }, []);
 
   // Redirect to auth if trying to access protected routes without login
   useEffect(() => {
+    if (isLoading) return;
+
     const currentPath = window.location.pathname;
     if (
       !isAuthenticated &&
@@ -34,7 +52,11 @@ function Router() {
     ) {
       navigate("/auth");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isLoading, navigate]);
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   // make sure to consider if you need authentication for certain routes
   return (
