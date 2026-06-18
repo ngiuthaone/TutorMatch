@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import CreateRequestModal, { RequestFormData } from "@/components/CreateRequestModal";
 import {
   Search,
   Filter,
@@ -33,6 +34,8 @@ export default function Hub() {
   const [activeTab, setActiveTab] = useState("discover");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("all");
+  const [isCreateRequestModalOpen, setIsCreateRequestModalOpen] = useState(false);
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -61,6 +64,27 @@ export default function Hub() {
     localStorage.removeItem("tutormatch_user");
     toast.success("Đã đăng xuất thành công");
     navigate("/");
+  };
+
+  const handleCreateRequest = async (formData: RequestFormData) => {
+    setIsSubmittingRequest(true);
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      
+      // In real implementation, this would call tRPC procedure
+      // await trpc.requests.create.useMutation(formData);
+      
+      toast.success("Yêu cầu đã được tạo thành công!");
+      setIsCreateRequestModalOpen(false);
+      
+      // Refresh requests list
+      // In real implementation, invalidate queries here
+    } catch (error) {
+      toast.error("Tạo yêu cầu thất bại. Vui lòng thử lại.");
+    } finally {
+      setIsSubmittingRequest(false);
+    }
   };
 
   const goToDashboard = () => {
@@ -555,7 +579,7 @@ export default function Hub() {
             {user.userType === "student" && (
               <Button
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => navigate("/find-tutor")}
+                onClick={() => setIsCreateRequestModalOpen(true)}
               >
                 + Tạo yêu cầu mới
               </Button>
@@ -707,6 +731,14 @@ export default function Hub() {
           </div>
         )}
       </main>
+
+      {/* Create Request Modal */}
+      <CreateRequestModal
+        isOpen={isCreateRequestModalOpen}
+        onClose={() => setIsCreateRequestModalOpen(false)}
+        onSubmit={handleCreateRequest}
+        isLoading={isSubmittingRequest}
+      />
     </div>
   );
 }
