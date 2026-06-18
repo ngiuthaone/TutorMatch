@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -14,8 +14,28 @@ import Rating from "./pages/Rating";
 import Matching from "./pages/Matching";
 import TutorDashboard from "./pages/TutorDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
+import Auth from "./pages/Auth";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { useEffect } from "react";
 
 function Router() {
+  const { isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
+
+  // Redirect to auth if trying to access protected routes without login
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    if (
+      !isAuthenticated &&
+      (currentPath === "/become-tutor" ||
+        currentPath === "/find-tutor" ||
+        currentPath === "/tutor-dashboard" ||
+        currentPath === "/student-dashboard")
+    ) {
+      navigate("/auth");
+    }
+  }, [isAuthenticated]);
+
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
@@ -29,8 +49,10 @@ function Router() {
       <Route path={"/matching"} component={Matching} />
       <Route path={"/tutor-dashboard"} component={TutorDashboard} />
       <Route path={"/student-dashboard"} component={StudentDashboard} />
+      <Route path={"/auth"} component={Auth} />
+      <Route path={"/login"} component={Auth} />
+      <Route path={"/register"} component={Auth} />
       <Route path={"/dashboard"} component={() => <div>Dashboard Page</div>} />
-      <Route path={"/login"} component={() => <div>Login Page</div>} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -86,7 +86,7 @@ export default function Home() {
             <Button
               size="lg"
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all"
-              onClick={() => navigate("/become-tutor")}
+              onClick={() => navigate("/auth")}
             >
               <span>Trở thành gia sư</span>
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -96,7 +96,7 @@ export default function Home() {
               size="lg"
               variant="outline"
               className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 px-8 py-6 text-lg font-semibold rounded-lg transition-all"
-              onClick={() => navigate("/find-tutor")}
+              onClick={() => navigate("/auth")}
             >
               <span>Tìm gia sư</span>
               <ArrowRight className="ml-2 w-5 h-5" />
