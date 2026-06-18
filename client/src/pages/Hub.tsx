@@ -68,6 +68,9 @@ export default function Hub() {
   };
 
   const createRequestMutation = trpc.requests.create.useMutation();
+  const getMyRequestsQuery = trpc.requests.getMyRequests.useQuery(undefined, {
+    enabled: isAuthenticated && user?.userType === "student",
+  });
 
   const handleCreateRequest = async (formData: RequestFormData) => {
     setIsSubmittingRequest(true);
@@ -78,7 +81,7 @@ export default function Hub() {
       setIsCreateRequestModalOpen(false);
       
       // Refresh requests list
-      // In real implementation, invalidate queries here
+      await getMyRequestsQuery.refetch();
     } catch (error: any) {
       toast.error(error?.message || "Tạo yêu cầu thất bại. Vui lòng thử lại.");
     } finally {
@@ -585,7 +588,30 @@ export default function Hub() {
             )}
 
             <div className="space-y-4">
-              {studentRequests.map((request) => (
+              {getMyRequestsQuery.isLoading && (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  <p className="text-slate-600">Đang tải yêu cầu...</p>
+                </div>
+              )}
+              {getMyRequestsQuery.error && (
+                <div className="text-center py-8 bg-red-50 rounded-lg border border-red-200">
+                  <p className="text-red-600 mb-3">Không thể tải yêu cầu. Vui lòng thử lại.</p>
+                  <Button
+                    size="sm"
+                    onClick={() => getMyRequestsQuery.refetch()}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Thử lại
+                  </Button>
+                </div>
+              )}
+              {getMyRequestsQuery.data && getMyRequestsQuery.data.length === 0 && (
+                <div className="text-center py-8 bg-slate-50 rounded-lg">
+                  <p className="text-slate-600">Bạn chưa tạo yêu cầu nào. Hãy bấm nút "Tạo yêu cầu mới" để bắt đầu.</p>
+                </div>
+              )}
+              {getMyRequestsQuery.data?.map((request: any) => (
                 <div
                   key={request.id}
                   className="bg-white rounded-lg shadow-sm p-6 border border-slate-200"
@@ -593,14 +619,25 @@ export default function Hub() {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-semibold text-slate-900">
-                        {request.subject} - {request.grade}
+                        {request.subject} - {request.gradeLevel || request.grade}
                       </h3>
-                      <p className="text-sm text-slate-600">
-                        {request.name}
-                      </p>
                     </div>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                      Đang tìm
+                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                      request.status === "matched"
+                        ? "bg-blue-100 text-blue-700"
+                        : request.status === "completed"
+                        ? "bg-green-100 text-green-700"
+                        : request.status === "in_progress"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-slate-100 text-slate-700"
+                    }`}>
+                      {request.status === "matched"
+                        ? "Đã ghép cặp"
+                        : request.status === "completed"
+                        ? "Hoàn thành"
+                        : request.status === "in_progress"
+                        ? "Đang học"
+                        : "Đang tìm"}
                     </span>
                   </div>
 
@@ -615,11 +652,11 @@ export default function Hub() {
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      {request.timeframe}
+                      {request.preferredTimeframe || request.timeframe}
                     </span>
                     <span className="flex items-center gap-1">
                       <DollarSign className="w-4 h-4" />
-                      {request.budget.toLocaleString()} đ/giờ
+                      {parseInt(request.budget || 0).toLocaleString()} đ/giờ
                     </span>
                   </div>
 

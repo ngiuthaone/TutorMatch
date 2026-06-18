@@ -93,6 +93,6 @@
 ## Phase 12: Student Request Creation (Stapps-inspired)
 - [x] Create request creation modal/form with all required fields
 - [x] Connect form to backend tRPC to save requests to database
-- [ ] Display student's requests list on Hub
+- [x] Display student's requests list on Hub
 - [ ] Implement automatic matching system to suggest tutors
 - [ ] Add request status tracking (pending, matched, in-progress, completed)
