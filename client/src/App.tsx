@@ -12,6 +12,8 @@ import TutorDetail from "./pages/TutorDetail";
 import Admin from "./pages/Admin";
 import Rating from "./pages/Rating";
 import Matching from "./pages/Matching";
+import TutorDashboard from "./pages/TutorDashboard";
+import StudentDashboard from "./pages/StudentDashboard";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -25,6 +27,8 @@ function Router() {
       <Route path={"/admin"} component={Admin} />
       <Route path={"/rating"} component={Rating} />
       <Route path={"/matching"} component={Matching} />
+      <Route path={"/tutor-dashboard"} component={TutorDashboard} />
+      <Route path={"/student-dashboard"} component={StudentDashboard} />
       <Route path={"/dashboard"} component={() => <div>Dashboard Page</div>} />
       <Route path={"/login"} component={() => <div>Login Page</div>} />
       <Route path={"/404"} component={NotFound} />
