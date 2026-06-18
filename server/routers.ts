@@ -48,12 +48,19 @@ export const appRouter = router({
         });
       }),
 
-    getProfile: protectedProcedure.query(async ({ ctx }) => {
-      return await getTutorByUserId(ctx.user.id);
-    }),
+    getById: publicProcedure
+      .input(z.object({ tutorId: z.number() }))
+      .query(async ({ input }) => {
+        const tutors = await getAllTutors();
+        return tutors.find((t: any) => t.id === input.tutorId);
+      }),
 
     list: publicProcedure.query(async () => {
       return await getAllTutors();
+    }),
+
+    getMyProfile: protectedProcedure.query(async ({ ctx }) => {
+      return await getTutorByUserId(ctx.user.id);
     }),
   }),
 
@@ -64,27 +71,20 @@ export const appRouter = router({
           subject: z.string(),
           gradeLevel: z.string(),
           description: z.string(),
-          preferredTimeframe: z.array(z.string()),
+          preferredTimeframe: z.array(z.string()).optional(),
           location: z.string(),
-          budget: z.number().optional(),
           studentName: z.string(),
           studentPhone: z.string(),
-          lessonFrequency: z.string(),
-          lessonDuration: z.number(),
-          startDate: z.string(),
-          specialRequirements: z.string().optional(),
+          lessonFrequency: z.string().optional(),
+          lessonDuration: z.number().optional(),
+          startDate: z.string().optional(),
+          budget: z.number().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
         return await createRequest({
-          studentId: ctx.user.id,
-          subject: input.subject,
-          grade: input.gradeLevel,
-          description: input.description,
-          preferredTimes: input.preferredTimeframe.join(", "),
-          location: input.location,
-          budget: input.budget ? input.budget.toString() : undefined,
-          district: input.location.split(",")[0] || input.location,
+          userId: ctx.user.id,
+          ...input,
         });
       }),
 
@@ -123,6 +123,44 @@ export const appRouter = router({
       .input(z.object({ userId: z.number() }))
       .query(async ({ input }) => {
         return await getRatingsByUserId(input.userId);
+      }),
+  }),
+
+  matching: router({
+    suggestTutors: publicProcedure
+      .input(
+        z.object({
+          requestId: z.number().optional(),
+          subject: z.string(),
+          gradeLevel: z.string(),
+          budget: z.number().optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        const allTutors = await getAllTutors();
+
+        const matchedTutors = allTutors.filter((tutor: any) => {
+          const tutorSubjects = tutor.subjects || [];
+          const tutorGrades = tutor.grades || [];
+
+          const subjectMatch = tutorSubjects.some((s: string) =>
+            s.toLowerCase().includes(input.subject.toLowerCase())
+          );
+          const gradeMatch = tutorGrades.some((g: string) =>
+            g.toLowerCase().includes(input.gradeLevel.toLowerCase())
+          );
+
+          const budgetMatch =
+            !input.budget || parseInt(tutor.hourlyRate || 0) <= input.budget;
+
+          return subjectMatch && gradeMatch && budgetMatch;
+        });
+
+        return matchedTutors.sort((a: any, b: any) => {
+          const ratingA = a.rating || 0;
+          const ratingB = b.rating || 0;
+          return ratingB - ratingA;
+        });
       }),
   }),
 });

@@ -422,6 +422,36 @@ export default function Hub() {
               </div>
             </div>
 
+            {/* Matching Suggestions (for students with active requests) */}
+            {user.userType === "student" && getMyRequestsQuery.data && getMyRequestsQuery.data.length > 0 && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm p-6 border border-blue-200">
+                <h3 className="text-xl font-bold text-slate-900 mb-4">Gia sư được đề xuất cho bạn</h3>
+                <p className="text-slate-600 mb-4">Dựa trên yêu cầu của bạn, đây là những gia sư phù hợp nhất</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {tutors.slice(0, 4).map((tutor) => (
+                    <div
+                      key={tutor.id}
+                      className="bg-white rounded-lg p-4 border border-slate-200 hover:shadow-md transition-shadow"
+                    >
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mb-3 flex-shrink-0">
+                        <span className="text-lg font-bold text-white">{tutor.image}</span>
+                      </div>
+                      <h4 className="font-semibold text-slate-900 text-sm">{tutor.name}</h4>
+                      <div className="flex items-center gap-1 mt-1 mb-2">
+                        <span className="text-yellow-500 text-sm">★</span>
+                        <span className="text-sm font-semibold text-slate-900">{tutor.rating}</span>
+                      </div>
+                      <p className="text-xs text-slate-600 mb-2">{tutor.subjects.join(", ")}</p>
+                      <p className="text-sm font-semibold text-blue-600">{tutor.price.toLocaleString()} đ/giờ</p>
+                      <Button className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-xs" size="sm">
+                        Liên hệ
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Tutors List (for students) */}
             {user.userType === "student" && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -94,5 +94,5 @@
 - [x] Create request creation modal/form with all required fields
 - [x] Connect form to backend tRPC to save requests to database
 - [x] Display student's requests list on Hub
-- [ ] Implement automatic matching system to suggest tutors
-- [ ] Add request status tracking (pending, matched, in-progress, completed)
+- [x] Implement automatic matching system to suggest tutors
+- [x] Add request status tracking (pending, matched, in-progress, completed)
