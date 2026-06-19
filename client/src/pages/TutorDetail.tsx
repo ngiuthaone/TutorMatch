@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import {
   Star,
   MapPin,
@@ -69,7 +69,20 @@ const mockTutorDetail = {
 
 export default function TutorDetail() {
   const [, navigate] = useLocation();
+  const [match, params] = useRoute("/tutor/:id");
   const [showContactForm, setShowContactForm] = useState(false);
+  const [tutorId] = useState(() => params?.id || "1");
+
+  // Redirect to tutors list if no valid route match
+  useEffect(() => {
+    if (!match) {
+      navigate("/tutors");
+    }
+  }, [match, navigate]);
+
+  if (!match) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
