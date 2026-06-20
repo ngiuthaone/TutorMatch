@@ -14,7 +14,7 @@ import Rating from "./pages/Rating";
 import Matching from "./pages/Matching";
 import TutorDashboard from "./pages/TutorDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
-import Auth from "./pages/Auth";
+import UnifiedAuth from "./pages/UnifiedAuth";
 import Hub from "./pages/Hub";
 import { useEffect, useState } from "react";
 
@@ -79,9 +79,7 @@ function Router() {
       <Route path={"/hub"} component={Hub} />
       <Route path={"/tutor-dashboard"} component={TutorDashboard} />
       <Route path={"/student-dashboard"} component={StudentDashboard} />
-      <Route path={"/auth"} component={Auth} />
-      <Route path={"/login"} component={Auth} />
-      <Route path={"/register"} component={Auth} />
+      <Route path="/auth" component={UnifiedAuth} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

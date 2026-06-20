@@ -100,7 +100,7 @@
 
 ## Phase 13: Stapps-Inspired Redesign
 
-### Phase 1: Guest Experience (Xem trước khi đăng nhập)
+### Phase 1: Guest Experience (Xem trước khi đăng nhập) ✅ HOÀN THÀNH
 - [x] Cho phép khách vãng lai xem danh sách gia sư mà không cần đăng nhập
 - [x] Hiển thị đánh giá, giá, môn học, khu vực trên trang chủ
 - [x] Thêm nút "Xem hồ sơ" cho từng gia sư (không yêu cầu đăng nhập)
