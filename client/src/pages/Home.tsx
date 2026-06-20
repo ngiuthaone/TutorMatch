@@ -253,6 +253,125 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Featured Tutors Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-4xl font-bold text-center text-slate-900 mb-4">
+            Gia sư nổi bật
+          </h2>
+          <p className="text-center text-slate-600 mb-16 text-lg">
+            Duyệt hồ sơ của các gia sư hàng đầu được xác minh
+          </p>
+
+          <div className="grid md:grid-cols-4 gap-6">
+            {[
+              {
+                id: 1,
+                name: "Trần Minh Anh",
+                subject: "Toán học, Vật lý",
+                rating: 4.9,
+                reviews: 48,
+                hourlyRate: 350,
+                location: "Mong Kok",
+              },
+              {
+                id: 2,
+                name: "Nguyễn Thị Hương",
+                subject: "Tiếng Anh, IELTS",
+                rating: 4.8,
+                reviews: 35,
+                hourlyRate: 320,
+                location: "Central",
+              },
+              {
+                id: 3,
+                name: "Lê Hoàng Phúc",
+                subject: "Hóa học, Sinh học",
+                rating: 4.9,
+                reviews: 42,
+                hourlyRate: 340,
+                location: "Causeway Bay",
+              },
+              {
+                id: 4,
+                name: "Đặng Thị Linh",
+                subject: "Tiếng Trung, Toán",
+                rating: 4.7,
+                reviews: 28,
+                hourlyRate: 300,
+                location: "Tsim Sha Tsui",
+              },
+            ].map((tutor) => (
+              <div
+                key={tutor.id}
+                className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group"
+                onClick={() => navigate(`/tutor/${tutor.id}`)}
+              >
+                {/* Avatar Placeholder */}
+                <div className="w-full h-40 bg-gradient-to-br from-blue-300 to-purple-300 flex items-center justify-center">
+                  <div className="text-6xl text-white opacity-50">
+                    {tutor.name.charAt(0)}
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="p-4">
+                  <h3 className="font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition">
+                    {tutor.name}
+                  </h3>
+                  <p className="text-xs text-slate-600 mb-3">{tutor.subject}</p>
+
+                  {/* Rating */}
+                  <div className="flex items-center gap-1 mb-3">
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3.5 h-3.5 ${
+                            i < Math.floor(tutor.rating)
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-slate-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs font-semibold text-slate-900">
+                      {tutor.rating}
+                    </span>
+                    <span className="text-xs text-slate-500">({tutor.reviews})</span>
+                  </div>
+
+                  {/* Price & Location */}
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-xs text-slate-600">Giá</p>
+                      <p className="font-bold text-slate-900">${tutor.hourlyRate}/h</p>
+                    </div>
+                    <p className="text-xs text-slate-600">{tutor.location}</p>
+                  </div>
+
+                  {/* View Profile Button */}
+                  <button className="w-full mt-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">
+                    Xem hồ sơ
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-6 text-lg font-semibold rounded-lg transition-all"
+              onClick={() => navigate("/tutors")}
+            >
+              Xem tất cả gia sư →
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="max-w-4xl mx-auto px-4 text-center">
