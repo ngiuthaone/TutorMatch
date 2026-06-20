@@ -72,6 +72,14 @@ export default function TutorDetail() {
   const [match, params] = useRoute("/tutor/:id");
   const [showContactForm, setShowContactForm] = useState(false);
   const [tutorId] = useState(() => params?.id || "1");
+  const [isAuthenticated] = useState(() => {
+    try {
+      const userStr = localStorage.getItem("tutormatch_user");
+      return userStr ? JSON.parse(userStr).isAuthenticated : false;
+    } catch {
+      return false;
+    }
+  });
 
   // Redirect to tutors list if no valid route match
   useEffect(() => {

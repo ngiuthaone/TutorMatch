@@ -96,9 +96,9 @@ export default function Home() {
               size="lg"
               variant="outline"
               className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 px-8 py-6 text-lg font-semibold rounded-lg transition-all"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/tutors")}
             >
-              <span>Tìm gia sư</span>
+              <span>Xem danh sách gia sư</span>
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
           </div>
@@ -267,7 +267,7 @@ export default function Home() {
             <Button
               size="lg"
               className="bg-white text-blue-600 hover:bg-slate-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all"
-              onClick={() => navigate("/become-tutor")}
+              onClick={() => navigate("/auth")}
             >
               Trở thành gia sư
             </Button>
@@ -276,9 +276,9 @@ export default function Home() {
               size="lg"
               variant="outline"
               className="border-2 border-white text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold rounded-lg transition-all"
-              onClick={() => navigate("/find-tutor")}
+              onClick={() => navigate("/tutors")}
             >
-              Tìm gia sư ngay
+              Duyệt danh sách gia sư
             </Button>
           </div>
         </div>

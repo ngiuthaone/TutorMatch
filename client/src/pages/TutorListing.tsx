@@ -89,6 +89,14 @@ const mockTutors: Tutor[] = [
 
 export default function TutorListing() {
   const [, navigate] = useLocation();
+  const [isAuthenticated] = useState(() => {
+    try {
+      const userStr = localStorage.getItem("tutormatch_user");
+      return userStr ? JSON.parse(userStr).isAuthenticated : false;
+    } catch {
+      return false;
+    }
+  });
   const [filters, setFilters] = useState({
     subject: "",
     grade: "",
@@ -403,7 +411,13 @@ export default function TutorListing() {
                   </Button>
                   <Button
                     className="flex-1 bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2"
-                    onClick={() => navigate(`/tutor/${tutor.id}`)}
+                    onClick={() => {
+                      if (isAuthenticated) {
+                        navigate(`/tutor/${tutor.id}`);
+                      } else {
+                        navigate("/auth");
+                      }
+                    }}
                   >
                     <MessageCircle className="w-4 h-4" />
                     Liên hệ

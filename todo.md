@@ -96,3 +96,41 @@
 - [x] Display student's requests list on Hub
 - [x] Implement automatic matching system to suggest tutors
 - [x] Add request status tracking (pending, matched, in-progress, completed)
+
+
+## Phase 13: Stapps-Inspired Redesign
+
+### Phase 1: Guest Experience (Xem trước khi đăng nhập)
+- [ ] Cho phép khách vãng lai xem danh sách gia sư mà không cần đăng nhập
+- [ ] Hiển thị đánh giá, giá, môn học, khu vực trên trang chủ
+- [ ] Thêm nút "Xem hồ sơ" cho từng gia sư (không yêu cầu đăng nhập)
+- [ ] Hiển thị USP và số liệu thống kê
+
+### Phase 2: Unified Auth (Gộp đăng ký/đăng nhập)
+- [ ] Tạo trang auth duy nhất: nhập email/phone
+- [ ] Phân biệt người cũ (vào thẳng Hub) vs người mới (chọn role)
+- [ ] Tách luồng theo role từ lúc chọn CTA
+
+### Phase 3: Role-Specific Registration
+- [ ] Form đăng ký gia sư: xác minh tuổi (≥16), học vấn (≥Trung 4), bằng cấp
+- [ ] Form đăng ký học sinh: nhu cầu học, khu vực, ngân sách
+- [ ] Thêm điều khoản pháp lý cho gia sư
+
+### Phase 4: Tutor Verification
+- [ ] Thêm hệ thống xét duyệt hồ sơ gia sư
+- [ ] Admin dashboard để duyệt/từ chối hồ sơ
+- [ ] Gia sư chỉ thấy case sau khi được duyệt
+
+### Phase 5: Payment & Contact Lock
+- [ ] Khoá thông tin liên hệ gia sư đến khi thanh toán
+- [ ] Hệ thống thanh toán: phí dịch vụ từ phụ huynh (tối đa 2 buổi)
+- [ ] Tiết lộ số điện thoại/WhatsApp sau thanh toán
+
+### Phase 6: Confirmation Letter
+- [ ] Tạo thư xác nhận khi 2 bên thống nhất lịch/giá
+- [ ] Ghi rõ: số buổi, giờ học, học phí, hình thức dạy
+
+### Phase 7: Retention Features
+- [ ] Tab quản lý case đang ghép
+- [ ] Tab khoá học live-stream
+- [ ] Danh sách "gia sư nổi bật" xếp theo đánh giá

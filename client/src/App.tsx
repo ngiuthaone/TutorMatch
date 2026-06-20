@@ -44,14 +44,19 @@ function Router() {
     if (isLoading) return;
 
     const currentPath = window.location.pathname;
-    if (
-      !isAuthenticated &&
-      (currentPath === "/become-tutor" ||
-        currentPath === "/find-tutor" ||
-        currentPath === "/tutor-dashboard" ||
-        currentPath === "/student-dashboard" ||
-        currentPath === "/hub")
-    ) {
+    // Protected routes that require authentication
+    const protectedRoutes = [
+      "/become-tutor",
+      "/find-tutor",
+      "/tutor-dashboard",
+      "/student-dashboard",
+      "/hub",
+    ];
+    
+    // Allow guest access to tutor listing and detail pages
+    const isProtectedRoute = protectedRoutes.some(route => currentPath.startsWith(route));
+    
+    if (!isAuthenticated && isProtectedRoute) {
       navigate("/auth");
     }
   }, [isAuthenticated, isLoading, navigate]);
