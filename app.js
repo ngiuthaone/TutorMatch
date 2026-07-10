@@ -6,7 +6,7 @@
   const app = document.getElementById("app");
   let backendEnabled = location.protocol !== "file:";
   let cleanupSubjectGallery = null;
-  let cleanupHeroCutouts = null;
+  let cleanupCommunityJourney = null;
 
   const SUBJECTS = ["Toán", "Tiếng Anh", "Vật lý", "Hóa học", "Ngữ văn", "IELTS", "Tin học"];
   const REGIONS = ["Quận 1", "Quận 3", "Quận 7", "Bình Thạnh", "Thủ Đức", "Online"];
@@ -267,7 +267,6 @@
   }
 
   function pageHome() {
-    const approved = approvedTutors().slice(0, 3);
     const subjects = [
       ["Math", "Numbers, logic, exam prep"],
       ["English", "Speaking, grammar, confidence"],
@@ -277,21 +276,85 @@
       ["Science", "Physics, chemistry, biology"],
       ["Coding", "Projects, logic, creative tech"]
     ];
+    const communityColumns = [
+      [
+        ["Marie", "French Tutor", "Relaxed weekly French practice for beginners.", "French", "Conversation", "Lyon", "Available", "Marie"],
+        ["Carlos", "Photography Learner", "Practicing portrait photography with other curious beginners.", "Photography", "Portraits", "Mexico City", "Learning", "Carlos"],
+        ["Priya", "Product Designer", "Sharing practical interface lessons for aspiring designers.", "Figma", "UI Design", "Bangalore", "Mentor", "Priya"],
+        ["Kenji", "Pottery Hobbyist", "Exploring handcraft through calm studio sessions.", "Pottery", "Ceramics", "Kyoto", "Collaborate", "Kenji"],
+        ["Olivia", "Speaking Mentor", "Hosting small practice groups for confident communication.", "Public speaking", "Leadership", "London", "Hosting", "Olivia"]
+      ],
+      [
+        ["Minh", "Home Cook", "Teaching Vietnamese family recipes on slow weekends.", "Cooking", "Culture", "Ho Chi Minh City", "Sharing", "Minh"],
+        ["Aisha", "Study Partner", "Preparing for computer science finals with peer study.", "Algorithms", "Python", "Accra", "Studying", "Aisha"],
+        ["James", "Swimming Coach", "Beginner adult lessons in a relaxed environment.", "Swimming", "Fitness", "Sydney", "Available", "JamesO"],
+        ["Sofia", "Startup Mentor", "Helping builders think through early product decisions.", "Startups", "Product", "San Francisco", "Mentor", "Sofia"],
+        ["Leo", "Guitar Teacher", "Teaching acoustic guitar to first-time musicians.", "Guitar", "Music theory", "Seoul", "Available", "Leo"]
+      ],
+      [
+        ["Zara", "Video Creator", "Sharing editing lessons for creators building stronger stories.", "Video editing", "Storytelling", "Dubai", "Creator", "Zara"],
+        ["Dmitri", "Chess Host", "Weekly blitz sessions for players improving together.", "Chess", "Strategy", "Moscow", "Hosting", "Dmitri"],
+        ["Yuki", "Community Host", "Gathering people around seasonal flower arranging.", "Ikebana", "Floral design", "Tokyo", "Hosting", "Yuki"],
+        ["Elena", "Language Learner", "Practicing Japanese conversation before an exchange program.", "Japanese", "Culture", "Barcelona", "Learning", "ElenaT"],
+        ["Hana", "Piano Tutor", "Guiding beginners through rhythm, posture, and confidence.", "Piano", "Practice", "Seoul", "Available", "Hana"]
+      ]
+    ];
+    const communityCard = ([name, role, bio, skillOne, skillTwo, location, status, seed]) => `
+      <article class="community-member-card">
+        <div class="community-member-head">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${escapeHtml(seed)}" alt="${escapeHtml(name)} profile avatar" width="56" height="56" loading="lazy">
+          <div>
+            <h3>${escapeHtml(name)}</h3>
+            <p>${escapeHtml(role)}</p>
+          </div>
+          <span>${escapeHtml(status)}</span>
+        </div>
+        <p>${escapeHtml(bio)}</p>
+        <div class="community-skill-row">
+          <span>${escapeHtml(skillOne)}</span>
+          <span>${escapeHtml(skillTwo)}</span>
+        </div>
+        <footer>
+          <small>${escapeHtml(location)}</small>
+          <a class="community-card-action" href="#/student/tutors">View profile</a>
+        </footer>
+      </article>
+    `;
+    const communityColumn = (items, index) => `
+      <div class="community-column" style="--duration:${index === 1 ? 36 : index === 2 ? 32 : 28}s; --offset:-${index * 7}s">
+        <div class="community-column-track">
+          ${items.map(communityCard).join("")}
+          ${items.map(communityCard).join("")}
+        </div>
+      </div>
+    `;
+    const journeyMembers = [].concat(...communityColumns, ...communityColumns).slice(0, 24);
+    const journeyCard = ([name, role, bio, skillOne, skillTwo, location, status, seed]) => `
+      <article class="journey-card-positioner" tabindex="0" aria-label="${escapeHtml(`${name}, ${role}, ${skillOne}`)}">
+        <div class="journey-card-visual">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${escapeHtml(seed)}" alt="${escapeHtml(name)} profile avatar" width="72" height="102" loading="lazy" draggable="false">
+          <div>
+            <p>${escapeHtml(name)}</p>
+            <span>${escapeHtml(skillOne)}</span>
+          </div>
+        </div>
+      </article>
+    `;
     return publicShell(`
       <main class="landing tutoria-landing" id="main-content">
         <section class="hero tutoria-hero">
           <div class="hero-bg" aria-hidden="true">
             <span class="hero-scene-layer hero-sky"></span>
-            <canvas class="hero-scene-layer hero-video-cutout hero-jupiter-object" data-cutout-video="assets/tutoria-jupiter.mov"></canvas>
-            <canvas class="hero-scene-layer hero-video-cutout hero-human-object" data-cutout-video="assets/tutoria-human.mov"></canvas>
           </div>
           <div class="hero-copy">
-            <p class="hero-kicker">Personal tutoring, thoughtfully matched</p>
+            <p class="hero-kicker">One platform. Countless possibilities.</p>
             <h1>
               Beyond <em>ordinary,</em> we shape<br>
               learning for <em>every mind.</em>
             </h1>
-            <p class="lede">Tutoria helps students find thoughtful tutors across academics, music, art, and creative skill-building.</p>
+            <p class="lede">
+              <span>Tutoria is where people learn, teach, connect, and grow together.</span>
+            </p>
             <div class="hero-actions">
               <a class="liquid-glass-btn" href="#/auth/login">Sign In</a>
               <a class="liquid-glass-btn strong" href="#/auth/register/student">Sign Up</a>
@@ -316,17 +379,37 @@
             </div>
           </div>
         </section>
-        <section class="section">
-          <div class="section-title"><p class="kicker">Cách hoạt động</p><h2>Đủ rõ để phụ huynh yên tâm, đủ gọn để gia sư nhận case nhanh.</h2></div>
-          <div class="feature-grid">
-            <article><b>01</b><h3>Phụ huynh mô tả nhu cầu</h3><p>Chọn môn, lớp, khu vực, hình thức học, lịch rảnh và ngân sách mong muốn.</p></article>
-            <article><b>02</b><h3>Hệ thống chỉ hiện gia sư đã duyệt</h3><p>Gia sư pending hoặc bị reject không xuất hiện trong kết quả ghép.</p></article>
-            <article><b>03</b><h3>Chat, chốt lịch, thanh toán</h3><p>Thông tin liên hệ được khóa cho tới khi case đã thanh toán.</p></article>
+        <section class="community-journey-section" data-community-journey aria-labelledby="community-journey-heading">
+          <div class="community-journey-sticky">
+            <p class="community-journey-prompt community-journey-prompt-top">
+              <span class="community-journey-prompt-copy community-journey-prompt-initial">Looking for academic support?</span>
+              <span class="community-journey-prompt-copy community-journey-prompt-middle">Want to pick up a new hobby?</span>
+              <span class="community-journey-prompt-copy community-journey-prompt-next">Want to earn from your expertise?</span>
+            </p>
+            <div class="community-journey-stage">
+              ${journeyMembers.map(journeyCard).join("")}
+            </div>
+            <p class="community-journey-prompt community-journey-prompt-bottom">
+              <span class="community-journey-prompt-copy community-journey-prompt-initial">Want to share what you know?</span>
+              <span class="community-journey-prompt-copy community-journey-prompt-middle">Want to learn a new skill?</span>
+              <span class="community-journey-prompt-copy community-journey-prompt-next">Looking for like-minded people?</span>
+            </p>
+            <div class="community-journey-center">
+              <div>
+                <h2 id="community-journey-heading">Meet the Tutoria community</h2>
+              </div>
+            </div>
           </div>
         </section>
-        <section class="section">
-          <div class="section-title"><p class="kicker">Xem trước</p><h2>Hồ sơ gia sư viết để phụ huynh so sánh nhanh.</h2></div>
-          <div class="tutor-grid">${approved.map(({ user, profile }) => tutorListing(user, profile, true)).join("")}</div>
+        <section class="community-showcase-section" aria-labelledby="community-showcase-heading">
+          <div class="community-showcase-copy">
+            <p>Meet the community</p>
+            <h2 id="community-showcase-heading">Learn from people. Grow with people.</h2>
+            <span>Discover tutors, learners, creators, and mentors sharing what they know on Tutoria.</span>
+          </div>
+          <div class="community-columns" aria-label="Tutoria community members">
+            ${communityColumns.map(communityColumn).join("")}
+          </div>
         </section>
       </main>
     `);
@@ -807,101 +890,162 @@
     document.body?.classList?.toggle("has-tutoria-hero", Boolean(document.querySelector(".tutoria-hero")));
     app.focus?.({ preventScroll: true });
     initSubjectGallery();
-    initHeroVideoCutouts();
+    initCommunityJourney();
   }
 
-  function initHeroVideoCutouts() {
-    cleanupHeroCutouts?.();
-    cleanupHeroCutouts = null;
-    if (typeof document.querySelectorAll !== "function" || typeof requestAnimationFrame !== "function") return;
-    const canvases = [...document.querySelectorAll("[data-cutout-video]")];
-    if (!canvases.length) return;
+  function initCommunityJourney() {
+    cleanupCommunityJourney?.();
+    cleanupCommunityJourney = null;
+    if (typeof document.querySelector !== "function" || typeof requestAnimationFrame !== "function") return;
+    const section = document.querySelector("[data-community-journey]");
+    if (!section) return;
+    const cards = [...section.querySelectorAll(".journey-card-positioner")];
+    const center = section.querySelector(".community-journey-center");
+    if (!cards.length || !center) return;
 
-    const cleanups = canvases.map((canvas) => {
-      const source = canvas.dataset.cutoutVideo;
-      const context = canvas.getContext("2d", { willReadFrequently: true });
-      if (!source || !context) return () => {};
-
-      const video = document.createElement("video");
-      video.src = source;
-      video.muted = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.autoplay = true;
-      video.preload = "auto";
-      video.crossOrigin = "anonymous";
-
-      const scratch = document.createElement("canvas");
-      const scratchContext = scratch.getContext("2d", { willReadFrequently: true });
-      let frame = 0;
-      let stopped = false;
-      let ready = false;
-
-      const sizeCanvas = () => {
-        const width = video.videoWidth || 720;
-        const height = video.videoHeight || 720;
-        const maxWidth = canvas.classList.contains("hero-human-object") ? 520 : 620;
-        const scale = Math.min(1, maxWidth / width);
-        const drawWidth = Math.max(1, Math.round(width * scale));
-        const drawHeight = Math.max(1, Math.round(height * scale));
-        if (canvas.width !== drawWidth || canvas.height !== drawHeight) {
-          canvas.width = drawWidth;
-          canvas.height = drawHeight;
-          scratch.width = drawWidth;
-          scratch.height = drawHeight;
-        }
-      };
-
-      const makeCheckerTransparent = (pixels) => {
-        const data = pixels.data;
-        for (let index = 0; index < data.length; index += 4) {
-          const red = data[index];
-          const green = data[index + 1];
-          const blue = data[index + 2];
-          const max = Math.max(red, green, blue);
-          const min = Math.min(red, green, blue);
-          const isNeutral = max - min < 22;
-          const isChecker = isNeutral && max > 158;
-          if (isChecker) {
-            data[index + 3] = 0;
-          }
-        }
-      };
-
-      const draw = () => {
-        if (stopped) return;
-        if (ready && video.readyState >= 2) {
-          sizeCanvas();
-          scratchContext.drawImage(video, 0, 0, scratch.width, scratch.height);
-          const pixels = scratchContext.getImageData(0, 0, scratch.width, scratch.height);
-          makeCheckerTransparent(pixels);
-          context.clearRect(0, 0, canvas.width, canvas.height);
-          context.putImageData(pixels, 0, 0);
-        }
-        frame = requestAnimationFrame(draw);
-      };
-
-      const start = () => {
-        ready = true;
-        sizeCanvas();
-        video.play().catch(() => {});
-        draw();
-      };
-
-      video.addEventListener("loadeddata", start, { once: true });
-      video.load();
-      video.play().catch(() => {});
-
-      return () => {
-        stopped = true;
-        cancelAnimationFrame(frame);
-        video.pause();
-        video.removeAttribute("src");
-        video.load();
-      };
+    const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
+    const ease = (value) => value < .5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2;
+    const mix = (a, b, t) => a + (b - a) * t;
+    const lerpPos = (from, to, t) => ({
+      x: mix(from.x, to.x, t),
+      y: mix(from.y, to.y, t),
+      rotation: mix(from.rotation, to.rotation, t),
+      scale: mix(from.scale, to.scale, t),
+      opacity: mix(from.opacity, to.opacity, t)
     });
+    const zones = [
+      { x: -0.34, y: -0.30, rot: -7, scale: 1.25 },
+      { x: -0.10, y: -0.38, rot: -2, scale: 1.30 },
+      { x: 0.28, y: -0.26, rot: 5, scale: 1.22 },
+      { x: -0.28, y: 0.02, rot: -4, scale: 1.18 },
+      { x: 0.06, y: -0.08, rot: 1, scale: 1.28 },
+      { x: 0.24, y: 0.06, rot: 6, scale: 1.20 },
+      { x: -0.20, y: 0.22, rot: -5, scale: 1.24 },
+      { x: 0.02, y: 0.30, rot: 3, scale: 1.16 },
+      { x: -0.14, y: -0.16, rot: -3, scale: 1.22 },
+      { x: 0.16, y: 0.18, rot: 4, scale: 1.26 }
+    ];
+    let frame = 0;
+    let geometry = null;
 
-    cleanupHeroCutouts = () => cleanups.forEach((cleanup) => cleanup());
+    const buildPositions = () => {
+      const rect = section.getBoundingClientRect();
+      const width = Math.min(window.innerWidth, Math.max(320, rect.width));
+      const height = Math.min(window.innerHeight, Math.max(480, rect.height));
+      const n = cards.length;
+      const totalWidth = Math.max(width * 1.15, n * 90);
+      return cards.map((_, index) => {
+        const zone = zones[index % zones.length];
+        const scattered = {
+          x: (zone.x + Math.sin(index * 1.7) * 0.06) * width * 0.5,
+          y: (zone.y + Math.cos(index * 2.3) * 0.06) * height * 0.5 + 20,
+          rotation: zone.rot + Math.sin(index * 2.3) * 3,
+          scale: zone.scale + Math.sin(index * 1.1) * 0.04,
+          opacity: 0.82 + Math.sin(index * 1.3) * 0.10
+        };
+        const row = {
+          x: -totalWidth / 2 + (index / Math.max(1, n - 1)) * totalWidth,
+          y: (index % 2 === 0 ? 1 : -1) * 5,
+          rotation: 0,
+          scale: 1.2,
+          opacity: 1
+        };
+        const rowProgress = index / Math.max(1, n - 1);
+        const wave = {
+          x: row.x,
+          y: Math.sin(rowProgress * Math.PI) * Math.min(width, 600) * 0.12,
+          rotation: Math.cos(rowProgress * Math.PI) * 14,
+          scale: 1.2,
+          opacity: 1
+        };
+        const radius = Math.min(width, height) * 0.31;
+        const angle = -Math.PI / 2 + (index / n) * Math.PI * 2;
+        const circle = {
+          x: Math.cos(angle) * radius,
+          y: Math.sin(angle) * radius,
+          rotation: angle * (180 / Math.PI) + 90,
+          scale: 1,
+          opacity: 1
+        };
+        const distance = Math.max(width, height) * 0.95;
+        const disperseAngle = (index / n) * Math.PI * 2;
+        const disperse = {
+          x: Math.cos(disperseAngle) * distance,
+          y: Math.sin(disperseAngle) * distance,
+          rotation: disperseAngle * (180 / Math.PI) + 270,
+          scale: 0.2,
+          opacity: 0
+        };
+        return { scattered, row, wave, circle, disperse };
+      });
+    };
+
+    const positionAt = (steps, progress) => {
+      if (progress < .18) return lerpPos(steps.scattered, steps.row, ease(progress / .18));
+      if (progress < .35) return lerpPos(steps.row, steps.wave, ease((progress - .18) / .17));
+      if (progress < .70) return steps.wave;
+      if (progress < .82) return lerpPos(steps.wave, steps.circle, ease((progress - .70) / .12));
+      if (progress < .90) return steps.circle;
+      return lerpPos(steps.circle, steps.disperse, ease((progress - .90) / .10));
+    };
+
+    const update = () => {
+      frame = 0;
+      if (prefersReduced) return;
+      geometry ||= buildPositions();
+      const start = section.offsetTop;
+      const distance = Math.max(1, section.offsetHeight - window.innerHeight);
+      const progress = clamp((window.scrollY - start) / distance);
+      const firstSwap = ease(clamp((progress - .05) / .10));
+      const secondSwap = ease(clamp((progress - .25) / .10));
+      const promptExit = ease(clamp((progress - .62) / .08));
+      section.style.setProperty("--prompt-initial-opacity", String(1 - firstSwap));
+      section.style.setProperty("--prompt-middle-opacity", String(firstSwap * (1 - secondSwap)));
+      section.style.setProperty("--prompt-next-opacity", String(secondSwap * (1 - promptExit)));
+      section.style.setProperty("--prompt-initial-y", `${mix(0, -18, firstSwap)}px`);
+      section.style.setProperty("--prompt-middle-y", `${mix(18, 0, firstSwap) + mix(0, -18, secondSwap)}px`);
+      section.style.setProperty("--prompt-next-y", `${mix(18, 0, secondSwap) + mix(0, -18, promptExit)}px`);
+      cards.forEach((card, index) => {
+        const pos = positionAt(geometry[index], progress);
+        card.style.opacity = String(pos.opacity);
+        card.style.transform = `translate(-50%, -50%) translate3d(${pos.x}px, ${pos.y}px, 0) rotate(${pos.rotation}deg) scale(${pos.scale})`;
+      });
+      const centerIn = ease(clamp((progress - .76) / .08));
+      const centerOut = ease(clamp((progress - .91) / .07));
+      center.style.opacity = String(centerIn * (1 - centerOut));
+      center.style.transform = `translateY(${mix(18, -18, centerOut)}px) scale(${mix(.94, 1, centerIn)})`;
+    };
+
+    const requestUpdate = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(update);
+    };
+    const rebuild = () => {
+      geometry = buildPositions();
+      requestUpdate();
+    };
+
+    if (prefersReduced) {
+      cards.forEach((card) => {
+        card.style.position = "relative";
+        card.style.left = "auto";
+        card.style.top = "auto";
+        card.style.opacity = "1";
+        card.style.transform = "none";
+      });
+      center.style.opacity = "1";
+    } else {
+      rebuild();
+      window.addEventListener("scroll", requestUpdate, { passive: true });
+      window.addEventListener("resize", rebuild);
+    }
+
+    cleanupCommunityJourney = () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", rebuild);
+    };
   }
 
   function initSubjectGallery() {
