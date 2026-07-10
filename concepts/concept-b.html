@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Concept B - Operator Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html"><span class="mark" style="background:#22314a">TM</span><span>TutorMatch Ops</span></a>
+      <nav class="nav">
+        <a href="concept-a.html">Concept A</a>
+        <a href="concept-c.html">Concept C</a>
+        <a class="button dark" href="../index.html">MVP</a>
+      </nav>
+    </header>
+    <section class="dashboard">
+      <aside class="sidebar">
+        <div class="brand"><span class="mark" style="background:#22314a">TM</span><span>Workspace</span></div>
+        <nav>
+          <a class="active" href="#">Dashboard</a>
+          <a href="#">Yêu cầu mở</a>
+          <a href="#">Case đang chat</a>
+          <a href="#">Thanh toán</a>
+          <a href="#">Duyệt tutor</a>
+        </nav>
+      </aside>
+      <main class="work">
+        <div class="work-head">
+          <div>
+            <p class="eyebrow">Concept B · Operator dashboard</p>
+            <h1>Điều phối case rõ trạng thái.</h1>
+          </div>
+          <a class="button dark" href="#">Tạo yêu cầu</a>
+        </div>
+        <div class="kpi-grid">
+          <div class="card"><span class="badge">Open</span><h3>18 case</h3><p>Đang chờ tutor nhận.</p></div>
+          <div class="card"><span class="badge amber">Chat</span><h3>11 case</h3><p>Đang thương lượng.</p></div>
+          <div class="card"><span class="badge green">Paid</span><h3>7 case</h3><p>Đã mở khóa liên hệ.</p></div>
+          <div class="card"><span class="badge">Review</span><h3>4.8★</h3><p>Rating trung bình.</p></div>
+        </div>
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Pipeline</p>
+              <h2>Case cần xử lý hôm nay</h2>
+            </div>
+            <a class="button secondary" href="#">Lọc</a>
+          </div>
+          <div class="table">
+            <div class="row-card">
+              <div><b>Toán lớp 10 · Bình Thạnh</b><p>Phụ huynh muốn học T3 tối, budget 320k.</p></div>
+              <span class="badge amber">negotiating</span>
+              <span>Gia Huy</span>
+              <a class="button secondary" href="#">Mở chat</a>
+            </div>
+            <div class="row-card">
+              <div><b>IELTS 5.5 · Online</b><p>Cần tutor speaking, học cuối tuần.</p></div>
+              <span class="badge">confirmed</span>
+              <span>Lan Anh</span>
+              <a class="button secondary" href="#">Thanh toán</a>
+            </div>
+            <div class="row-card">
+              <div><b>Tin học Python · Thủ Đức</b><p>Case mới, chưa có tutor nhận.</p></div>
+              <span class="badge">open</span>
+              <span>3 match</span>
+              <a class="button secondary" href="#">Xem match</a>
+            </div>
+          </div>
+        </section>
+      </main>
+    </section>
+  </body>
+</html>

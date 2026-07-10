@@ -1,0 +1,11 @@
+{
+  "name": "tutormatch-mvp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static SPA MVP marketplace connecting tutors with students/parents.",
+  "scripts": {
+    "start": "node server.js",
+    "serve": "node server.js",
+    "test": "node tests/state-machine.test.js"
+  }
+}

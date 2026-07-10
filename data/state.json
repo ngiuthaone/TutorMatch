@@ -1,0 +1,759 @@
+{
+  "currentUserId": "u_student",
+  "users": [
+    {
+      "id": "u_student",
+      "name": "Anh Thư",
+      "email": "student@example.com",
+      "password": "Pass123!",
+      "role": "student",
+      "studentKind": "parent",
+      "phone": "0901 111 222",
+      "address": "Quận 3, TP.HCM",
+      "avatarUrl": "assets/profile-review-emily.png",
+      "createdAt": "2026-06-01T09:00:00.000Z"
+    },
+    {
+      "id": "u_tutor",
+      "name": "Minh Khang",
+      "email": "tutor@example.com",
+      "password": "Pass123!",
+      "role": "tutor",
+      "phone": "0902 333 444",
+      "address": "Bình Thạnh, TP.HCM",
+      "avatarUrl": "assets/tutor-alex.png",
+      "createdAt": "2026-06-01T09:10:00.000Z"
+    },
+    {
+      "id": "u_tutor_lan",
+      "name": "Lê Lan Anh",
+      "email": "lan.tutor@example.com",
+      "password": "Pass123!",
+      "role": "tutor",
+      "phone": "0907 222 118",
+      "address": "Quận 1, TP.HCM",
+      "avatarUrl": "assets/tutor-alex.png",
+      "createdAt": "2026-06-01T09:12:00.000Z"
+    },
+    {
+      "id": "u_tutor_khoa",
+      "name": "Phạm Minh Khoa",
+      "email": "khoa.tutor@example.com",
+      "password": "Pass123!",
+      "role": "tutor",
+      "phone": "0908 667 889",
+      "address": "Thủ Đức, TP.HCM",
+      "avatarUrl": "assets/tutor-alex.png",
+      "createdAt": "2026-06-01T09:14:00.000Z"
+    },
+    {
+      "id": "u_tutor_pending",
+      "name": "Trần Mai Chi",
+      "email": "pending.tutor@example.com",
+      "password": "Pass123!",
+      "role": "tutor",
+      "phone": "0905 999 888",
+      "address": "Quận 7, TP.HCM",
+      "avatarUrl": "assets/tutor-alex.png",
+      "createdAt": "2026-06-01T09:20:00.000Z"
+    },
+    {
+      "id": "u_tutor_sophia",
+      "name": "Nguyễn Phương Linh",
+      "email": "sophia.tutor@example.com",
+      "password": "Pass123!",
+      "role": "tutor",
+      "phone": "0909 555 121",
+      "address": "Quận 3, TP.HCM",
+      "avatarUrl": "assets/profile-sophia.png",
+      "createdAt": "2026-06-01T09:24:00.000Z"
+    },
+    {
+      "id": "u_admin",
+      "name": "Admin TutorMatch",
+      "email": "admin@example.com",
+      "password": "Pass123!",
+      "role": "admin",
+      "phone": "support@tutormatch.vn",
+      "address": "Back office",
+      "createdAt": "2026-06-01T09:30:00.000Z"
+    }
+  ],
+  "tutorProfiles": [
+    {
+      "userId": "u_tutor",
+      "subjects": [
+        "Toán",
+        "Vật lý",
+        "IELTS"
+      ],
+      "regions": [
+        "Quận 1",
+        "Quận 3",
+        "Bình Thạnh",
+        "Online"
+      ],
+      "format": "both",
+      "hourlyRate": 280000,
+      "age": 24,
+      "educationLevel": "bachelor",
+      "availability": [
+        "T3 tối",
+        "T5 tối",
+        "T7 sáng"
+      ],
+      "bio": "Gia sư 5 năm kinh nghiệm luyện thi chuyển cấp và IELTS foundation. Ưu tiên lộ trình rõ ràng, có bài tập sau mỗi buổi.",
+      "credentialFiles": [
+        "bang-su-pham-gia-huy.pdf",
+        "ielts-8.0.jpg"
+      ],
+      "verificationStatus": "approved",
+      "rejectionReason": "",
+      "ratingAvg": 4.9
+    },
+    {
+      "userId": "u_tutor_lan",
+      "subjects": [
+        "Tiếng Anh",
+        "IELTS",
+        "Ngữ văn"
+      ],
+      "regions": [
+        "Quận 1",
+        "Quận 3",
+        "Online"
+      ],
+      "format": "online",
+      "hourlyRate": 320000,
+      "age": 27,
+      "educationLevel": "master",
+      "availability": [
+        "T2 tối",
+        "T5 tối",
+        "CN chiều"
+      ],
+      "bio": "Chuyên luyện IELTS và tiếng Anh học thuật. Mỗi học sinh có bài kiểm tra đầu vào, mục tiêu điểm số và lộ trình theo tuần.",
+      "credentialFiles": [
+        "tesol-lan-anh.pdf",
+        "ielts-8.5-lan-anh.jpg"
+      ],
+      "verificationStatus": "approved",
+      "rejectionReason": "",
+      "ratingAvg": 4.8
+    },
+    {
+      "userId": "u_tutor_khoa",
+      "subjects": [
+        "Tin học",
+        "Toán"
+      ],
+      "regions": [
+        "Thủ Đức",
+        "Bình Thạnh",
+        "Online"
+      ],
+      "format": "both",
+      "hourlyRate": 260000,
+      "age": 22,
+      "educationLevel": "college",
+      "availability": [
+        "T4 chiều",
+        "T7 sáng",
+        "CN chiều"
+      ],
+      "bio": "Hỗ trợ học sinh cấp 2-3 học Toán và lập trình căn bản. Cách dạy đi từ ví dụ thực tế, bài tập ngắn và phản hồi sau từng buổi.",
+      "credentialFiles": [
+        "student-card-khoa.jpg",
+        "coding-award-khoa.pdf"
+      ],
+      "verificationStatus": "approved",
+      "rejectionReason": "",
+      "ratingAvg": 4.7
+    },
+    {
+      "userId": "u_tutor_pending",
+      "subjects": [
+        "Tiếng Anh",
+        "Ngữ văn"
+      ],
+      "regions": [
+        "Quận 7",
+        "Online"
+      ],
+      "format": "online",
+      "hourlyRate": 220000,
+      "age": 19,
+      "educationLevel": "college",
+      "availability": [
+        "T2 tối",
+        "CN chiều"
+      ],
+      "bio": "Đang nộp hồ sơ xác minh. Có kinh nghiệm kèm học sinh lớp 6-9.",
+      "credentialFiles": [
+        "student-card-mai-chi.jpg"
+      ],
+      "verificationStatus": "pending_review",
+      "rejectionReason": "",
+      "ratingAvg": 0
+    },
+    {
+      "userId": "u_tutor_sophia",
+      "subjects": [
+        "Toán",
+        "Giải tích"
+      ],
+      "regions": [
+        "Quận 1",
+        "Quận 3",
+        "Online"
+      ],
+      "format": "both",
+      "hourlyRate": 350000,
+      "age": 29,
+      "educationLevel": "master",
+      "availability": [
+        "T2 16:00 - 18:00",
+        "T3 19:00 - 21:00",
+        "T5 19:00 - 21:00",
+        "T7 09:00 - 11:00"
+      ],
+      "bio": "Giúp học sinh lấy lại nền tảng Toán và tự tin hơn trước mỗi kỳ kiểm tra.",
+      "credentialFiles": [
+        "ms-applied-mathematics.pdf",
+        "background-check.pdf"
+      ],
+      "verificationStatus": "approved",
+      "rejectionReason": "",
+      "ratingAvg": 5
+    }
+  ],
+  "requests": [
+    {
+      "id": "r_seed",
+      "studentId": "u_student",
+      "subjects": [
+        "Toán",
+        "Vật lý"
+      ],
+      "grade": "Lớp 10",
+      "region": "Bình Thạnh",
+      "format": "home",
+      "schedule": [
+        "T3 tối",
+        "T7 sáng"
+      ],
+      "budgetMin": 220000,
+      "budgetMax": 320000,
+      "studentsCount": 1,
+      "note": "Cần gia sư giúp lấy lại nền tảng và chuẩn bị kiểm tra giữa kỳ.",
+      "status": "open",
+      "createdAt": "2026-06-02T10:00:00.000Z"
+    }
+  ],
+  "cases": [
+    {
+      "id": "c_seed",
+      "requestId": "r_seed",
+      "tutorId": "u_tutor",
+      "status": "negotiating",
+      "cancelledReason": "",
+      "cancelledBy": "",
+      "createdAt": "2026-06-02T10:30:00.000Z"
+    }
+  ],
+  "confirmationLetters": [],
+  "payments": [],
+  "messages": [
+    {
+      "id": "m_seed_1",
+      "caseId": "c_seed",
+      "senderId": "u_student",
+      "content": "Chào thầy, em muốn học Toán và Vật lý lớp 10 vào tối thứ 3 hoặc sáng thứ 7.",
+      "createdAt": "2026-06-02T10:35:00.000Z"
+    },
+    {
+      "id": "m_seed_2",
+      "caseId": "c_seed",
+      "senderId": "u_tutor",
+      "content": "Chào anh/chị, em phù hợp lịch T3 tối. Mình có thể học thử 1 buổi trước, phí 280k/buổi.",
+      "createdAt": "2026-06-02T10:40:00.000Z"
+    }
+  ],
+  "reviews": [],
+  "ui": {
+    "activeConversationId": "c_seed"
+  },
+  "tutorDashboardData": {
+    "u_tutor": {
+      "stats": {
+        "totalStudents": 48,
+        "totalStudentsDelta": 5,
+        "pendingRequests": 7,
+        "monthlyEarnings": 24500000,
+        "monthlyEarningsDelta": 18,
+        "completedSessions": 36,
+        "completedSessionsDelta": 8
+      },
+      "pendingRequests": [
+        {
+          "id": "tdr_1",
+          "studentName": "Mai Anh",
+          "avatarUrl": "assets/tutor-sophia.png",
+          "subject": "Toán",
+          "level": "Lớp 10",
+          "location": "Quận 3, TP.HCM",
+          "rate": 350000,
+          "status": "pending"
+        },
+        {
+          "id": "tdr_2",
+          "studentName": "Quốc Huy",
+          "avatarUrl": "assets/tutor-ethan.png",
+          "subject": "Vật lý",
+          "level": "Lớp 11",
+          "location": "Bình Thạnh, TP.HCM",
+          "rate": 300000,
+          "status": "pending"
+        },
+        {
+          "id": "tdr_3",
+          "studentName": "Minh Châu",
+          "avatarUrl": "assets/tutor-isabella.png",
+          "subject": "Tiếng Anh",
+          "level": "IELTS foundation",
+          "location": "Online",
+          "rate": 320000,
+          "status": "pending"
+        }
+      ],
+      "upcomingLessons": [
+        {
+          "id": "tdl_1",
+          "month": "TH6",
+          "day": "22",
+          "weekday": "T7",
+          "studentName": "Mai Anh",
+          "subject": "Toán",
+          "level": "Lớp 10",
+          "time": "16:00 - 17:00",
+          "format": "Online"
+        },
+        {
+          "id": "tdl_2",
+          "month": "TH6",
+          "day": "23",
+          "weekday": "CN",
+          "studentName": "Quốc Huy",
+          "subject": "Vật lý",
+          "level": "Lớp 11",
+          "time": "18:00 - 19:00",
+          "format": "Online"
+        },
+        {
+          "id": "tdl_3",
+          "month": "TH6",
+          "day": "24",
+          "weekday": "T2",
+          "studentName": "Minh Châu",
+          "subject": "Tiếng Anh",
+          "level": "IELTS foundation",
+          "time": "19:00 - 20:00",
+          "format": "Tại nhà"
+        },
+        {
+          "id": "tdl_4",
+          "month": "TH6",
+          "day": "25",
+          "weekday": "T3",
+          "studentName": "Gia Bảo",
+          "subject": "Hóa học",
+          "level": "Lớp 12",
+          "time": "20:00 - 21:00",
+          "format": "Online"
+        }
+      ],
+      "earnings": {
+        "monthlyIncome": 14250000,
+        "yearlyGrowth": 24,
+        "ytd": 14250000,
+        "highestMonth": 2650000,
+        "highestMonthLabel": "Th7",
+        "averagePerMonth": 1293000,
+        "months": [
+          {
+            "label": "T1",
+            "value": 420
+          },
+          {
+            "label": "T2",
+            "value": 680
+          },
+          {
+            "label": "T3",
+            "value": 1000
+          },
+          {
+            "label": "T4",
+            "value": 920
+          },
+          {
+            "label": "T5",
+            "value": 1420
+          },
+          {
+            "label": "T6",
+            "value": 1680
+          },
+          {
+            "label": "T7",
+            "value": 1860
+          },
+          {
+            "label": "T8",
+            "value": 2250
+          },
+          {
+            "label": "T9",
+            "value": 1780
+          },
+          {
+            "label": "T10",
+            "value": 1200
+          },
+          {
+            "label": "T11",
+            "value": 1500
+          },
+          {
+            "label": "T12",
+            "value": 1920
+          }
+        ]
+      }
+    }
+  },
+  "studentDashboardData": {
+    "u_student": {
+      "stats": {
+        "activeTutors": 2,
+        "upcomingLessons": 3,
+        "totalSpent": 640000,
+        "completedSessions": 18
+      },
+      "requests": [
+        {
+          "id": "sdr_1",
+          "tutorName": "Minh Khang",
+          "avatarUrl": "assets/student05-alex.png",
+          "tutorId": "u_tutor_sophia",
+          "subject": "Toán",
+          "subjectDetail": "Lớp 10",
+          "requestedOn": "14/06/2026",
+          "status": "pending",
+          "action": "Xem hồ sơ"
+        },
+        {
+          "id": "sdr_2",
+          "tutorName": "Lê Lan Anh",
+          "avatarUrl": "assets/student05-priya.png",
+          "subject": "Tiếng Anh",
+          "subjectDetail": "IELTS foundation",
+          "requestedOn": "10/06/2026",
+          "status": "matched",
+          "action": "Nhắn tin"
+        },
+        {
+          "id": "sdr_3",
+          "tutorName": "Phạm Minh Khoa",
+          "avatarUrl": "assets/student05-daniel.png",
+          "subject": "Tin học",
+          "subjectDetail": "Lớp 11",
+          "requestedOn": "06/06/2026",
+          "status": "active",
+          "action": "Xem buổi học"
+        }
+      ],
+      "lessons": [
+        {
+          "id": "sdl_1",
+          "month": "TH6",
+          "day": "20",
+          "weekday": "T7",
+          "tutorName": "Minh Khang",
+          "avatarUrl": "assets/student05-alex.png",
+          "subject": "Toán",
+          "topic": "Ôn hàm số bậc hai",
+          "time": "16:00 - 17:00",
+          "status": "Đã lên lịch"
+        },
+        {
+          "id": "sdl_2",
+          "month": "TH6",
+          "day": "22",
+          "weekday": "T2",
+          "tutorName": "Lê Lan Anh",
+          "avatarUrl": "assets/student05-priya.png",
+          "subject": "Tiếng Anh",
+          "topic": "IELTS foundation",
+          "time": "19:00 - 20:00",
+          "status": "Đã lên lịch"
+        },
+        {
+          "id": "sdl_3",
+          "month": "TH6",
+          "day": "24",
+          "weekday": "T4",
+          "tutorName": "Phạm Minh Khoa",
+          "avatarUrl": "assets/student05-daniel.png",
+          "subject": "Tin học",
+          "topic": "Cấu trúc dữ liệu cơ bản",
+          "time": "18:30 - 19:30",
+          "status": "Đã xác nhận"
+        }
+      ]
+    }
+  },
+  "studentPortalData": {
+    "u_student": {
+      "activeConversationId": "conv_james",
+      "conversations": [
+        {
+          "id": "conv_james",
+          "name": "Minh Khang",
+          "avatar": "assets/tutor-alex.png",
+          "online": true,
+          "unread": 1,
+          "preview": "Mình chốt Chủ nhật 16:00 nhé.",
+          "messages": [
+            {
+              "from": "tutor",
+              "text": "Chào Anh Thư, mình xem yêu cầu học Toán lớp 10 rồi."
+            },
+            {
+              "from": "student",
+              "text": "Dạ em cần ôn lại hàm số và hình học."
+            },
+            {
+              "from": "tutor",
+              "text": "Được nhé. Chủ nhật 16:00 mình học thử 1 buổi, sau đó chốt lịch cố định."
+            },
+            {
+              "from": "student",
+              "text": "Dạ được ạ."
+            }
+          ]
+        },
+        {
+          "id": "conv_emily",
+          "name": "Lê Lan Anh",
+          "avatar": "assets/student05-priya.png",
+          "online": true,
+          "unread": 2,
+          "preview": "Mình gửi lộ trình IELTS foundation.",
+          "messages": [
+            {
+              "from": "tutor",
+              "text": "Mình đã xem mục tiêu IELTS của em."
+            },
+            {
+              "from": "student",
+              "text": "Em muốn bắt đầu từ nền tảng nghe và đọc."
+            }
+          ]
+        },
+        {
+          "id": "conv_michael",
+          "name": "Phạm Minh Khoa",
+          "avatar": "assets/profile-sophia.png",
+          "online": true,
+          "unread": 0,
+          "preview": "Buổi Tin học đã xác nhận.",
+          "messages": [
+            {
+              "from": "tutor",
+              "text": "Buổi tới mình học biến và vòng lặp trước."
+            },
+            {
+              "from": "student",
+              "text": "Dạ em đã chuẩn bị laptop."
+            }
+          ]
+        },
+        {
+          "id": "conv_sophia",
+          "name": "Nguyễn Phương Linh",
+          "avatar": "assets/profile-sophia.png",
+          "online": false,
+          "unread": 0,
+          "preview": "Mình có thể chuẩn bị bài Giải tích.",
+          "messages": [
+            {
+              "from": "tutor",
+              "text": "Mình có thể chuẩn bị bài Giải tích trước buổi học."
+            }
+          ]
+        },
+        {
+          "id": "conv_david",
+          "name": "Quốc Bảo",
+          "avatar": "assets/profile-review-jacob.png",
+          "online": false,
+          "unread": 0,
+          "preview": "Dàn ý bài viết đã sẵn sàng.",
+          "messages": [
+            {
+              "from": "tutor",
+              "text": "Em xem trước dàn ý bài viết trước buổi học nhé."
+            }
+          ]
+        },
+        {
+          "id": "conv_olivia",
+          "name": "Bảo Ngọc",
+          "avatar": "assets/profile-review-ava.png",
+          "online": true,
+          "unread": 0,
+          "preview": "Danh sách từ vựng đã sẵn sàng.",
+          "messages": [
+            {
+              "from": "tutor",
+              "text": "Mình chuẩn bị danh sách từ vựng cho thứ Sáu rồi."
+            }
+          ]
+        }
+      ],
+      "paymentMethod": "Visa kết thúc 4242",
+      "payments": [
+        {
+          "id": "pay_1",
+          "date": "20/06/2026",
+          "tutor": "Minh Khang",
+          "subject": "Toán",
+          "duration": "60 phút",
+          "amount": 280000,
+          "status": "Đã thanh toán"
+        },
+        {
+          "id": "pay_2",
+          "date": "13/06/2026",
+          "tutor": "Lê Lan Anh",
+          "subject": "Tiếng Anh",
+          "duration": "90 phút",
+          "amount": 320000,
+          "status": "Đã thanh toán"
+        },
+        {
+          "id": "pay_3",
+          "date": "06/06/2026",
+          "tutor": "Phạm Minh Khoa",
+          "subject": "Tin học",
+          "duration": "60 phút",
+          "amount": 260000,
+          "status": "Chờ thanh toán"
+        },
+        {
+          "id": "pay_4",
+          "date": "29/05/2026",
+          "tutor": "Hoàng Mai",
+          "subject": "Hóa học",
+          "duration": "60 phút",
+          "amount": 300000,
+          "status": "Lỗi thanh toán"
+        },
+        {
+          "id": "pay_5",
+          "date": "22/05/2026",
+          "tutor": "Nguyễn Phương Linh",
+          "subject": "Giải tích",
+          "duration": "120 phút",
+          "amount": 350000,
+          "status": "Đã thanh toán"
+        },
+        {
+          "id": "pay_6",
+          "date": "15/05/2026",
+          "tutor": "Bảo Ngọc",
+          "subject": "Tiếng Anh",
+          "duration": "60 phút",
+          "amount": 280000,
+          "status": "Đã thanh toán"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "sess_1",
+          "type": "upcoming",
+          "tutor": "Minh Khang",
+          "subject": "Toán",
+          "topic": "Hàm số · Lớp 10",
+          "date": "24/06/2026",
+          "time": "16:00 - 17:00",
+          "location": "Online (Google Meet)",
+          "status": "Đã xác nhận",
+          "avatar": "assets/student05-priya.png"
+        },
+        {
+          "id": "sess_2",
+          "type": "upcoming",
+          "tutor": "Lê Lan Anh",
+          "subject": "Tiếng Anh",
+          "topic": "IELTS foundation",
+          "date": "26/06/2026",
+          "time": "18:00 - 19:00",
+          "location": "Online (Zoom)",
+          "status": "Đã lên lịch",
+          "avatar": "assets/student05-alex.png"
+        },
+        {
+          "id": "sess_3",
+          "type": "upcoming",
+          "tutor": "Phạm Minh Khoa",
+          "subject": "Tin học",
+          "topic": "Cấu trúc dữ liệu",
+          "date": "28/06/2026",
+          "time": "17:00 - 18:00",
+          "location": "Online (Google Meet)",
+          "status": "Đã xác nhận",
+          "avatar": "assets/profile-sophia.png"
+        },
+        {
+          "id": "sess_4",
+          "type": "past",
+          "tutor": "Hoàng Mai",
+          "subject": "Hóa học",
+          "topic": "Hóa hữu cơ · Lớp 11",
+          "date": "20/06/2026",
+          "time": "60 phút",
+          "location": "Online",
+          "status": "5.0",
+          "avatar": "assets/student05-daniel.png"
+        },
+        {
+          "id": "sess_5",
+          "type": "past",
+          "tutor": "Khánh Linh",
+          "subject": "Sinh học",
+          "topic": "Tế bào học · Lớp 10",
+          "date": "18/06/2026",
+          "time": "60 phút",
+          "location": "Online",
+          "status": "4.5",
+          "avatar": "assets/student05-priya.png"
+        },
+        {
+          "id": "sess_6",
+          "type": "past",
+          "tutor": "Trần Gia Huy",
+          "subject": "Toán",
+          "topic": "Lượng giác · Lớp 11",
+          "date": "15/06/2026",
+          "time": "60 phút",
+          "location": "Online",
+          "status": "5.0",
+          "avatar": "assets/tutor-ethan.png"
+        }
+      ]
+    }
+  },
+  "serverUpdatedAt": "2026-07-10T01:39:43.365Z"
+}
