@@ -3,10 +3,13 @@
   const LEGACY_KEY = "tutormatch_mvp_v2";
   const API_BASE_URL = (window.TUTORMATCH_API_BASE_URL || "").replace(/\/$/, "");
   const API_STATE_URL = `${API_BASE_URL}/api/state`;
+  const DISCOVER_URL = window.TUTORIA_DISCOVER_URL || "/discover";
   const app = document.getElementById("app");
   let backendEnabled = location.protocol !== "file:";
   let cleanupSubjectGallery = null;
   let cleanupCommunityJourney = null;
+  let cleanupLearnerSection = null;
+  let cleanupFloatingPills = null;
 
   const SUBJECTS = ["Toán", "Tiếng Anh", "Vật lý", "Hóa học", "Ngữ văn", "IELTS", "Tin học"];
   const REGIONS = ["Quận 1", "Quận 3", "Quận 7", "Bình Thạnh", "Thủ Đức", "Online"];
@@ -225,25 +228,23 @@
   function publicShell(content, active = "home") {
     const user = currentUser();
     const mobileItems = [
-      ["#/student/tutors", "Subjects"],
-      ["#about", "About"],
-      ["#journal", "Journal"],
-      ["#reach-us", "Reach Us"],
-      [user ? `#/${user.role === "admin" ? "admin" : user.role}` : "#/auth/login", user ? "Dashboard" : "Sign In"]
+      [DISCOVER_URL, "Discover"],
+      ["#reach-us", "About Us"],
+      ["#fyp", "FYP"],
+      ["#/auth/login", "Sign In"]
     ];
     return `
       <header class="site-header public-header">
         <a class="brand tutoria-brand" href="#/" aria-label="Tutoria home"><span>Tutoria<sup>®</sup></span></a>
         <nav class="site-nav" aria-label="Điều hướng chính">
           <a class="${active === "home" ? "active" : ""}" href="#/">Home</a>
-          <a href="#/student/tutors">Subjects</a>
-          <a href="#about">About</a>
-          <a href="#journal">Journal</a>
-          <a href="#reach-us">Reach Us</a>
+          <a href="${escapeHtml(DISCOVER_URL)}">Discover</a>
+          <a href="#reach-us">About Us</a>
+          <a href="#fyp">FYP</a>
         </nav>
         <div class="header-actions">
-          <a class="reach-link" href="${user ? `#/${user.role === "admin" ? "admin" : user.role}` : "#/auth/login"}">${user ? "Dashboard" : "Sign In"}</a>
-          <a class="header-cta" href="#/auth/register/student">Begin Journey</a>
+          <a class="header-cta" href="#/auth/login">Sign In</a>
+          <a class="header-cta header-cta-primary" href="#/auth/register/student">Sign Up</a>
           <button class="mobile-menu-button" type="button" data-action="open-mobile-menu" aria-label="Open menu" aria-controls="mobile-menu">
             <span></span><span></span><span></span>
           </button>
@@ -259,7 +260,7 @@
           <nav aria-label="Mobile navigation">
             ${mobileItems.map(([href, label], index) => `<a href="${href}" style="--i:${index}">${escapeHtml(label)}</a>`).join("")}
           </nav>
-          <a class="mobile-menu-cta" href="#/auth/register/student">Start Matching</a>
+          <a class="mobile-menu-cta" href="#/auth/register/student">Sign Up</a>
         </div>
       </aside>
       ${content}
@@ -356,8 +357,7 @@
               <span>Tutoria is where people learn, teach, connect, and grow together.</span>
             </p>
             <div class="hero-actions">
-              <a class="liquid-glass-btn" href="#/auth/login">Sign In</a>
-              <a class="liquid-glass-btn strong" href="#/auth/register/student">Sign Up</a>
+              <a class="liquid-glass-btn strong" href="${escapeHtml(DISCOVER_URL)}">Discover</a>
             </div>
           </div>
           <div class="subject-orbit" aria-labelledby="subject-orbit-title">
@@ -409,6 +409,81 @@
           </div>
           <div class="community-columns" aria-label="Tutoria community members">
             ${communityColumns.map(communityColumn).join("")}
+          </div>
+        </section>
+        <section class="learner-section" data-learner-section aria-labelledby="learner-section-heading">
+          <div class="learner-section-bg" aria-hidden="true"></div>
+          <div class="learner-comets" aria-hidden="true">
+            <span class="learner-comet comet-one"></span>
+            <span class="learner-comet comet-two"></span>
+            <span class="learner-comet comet-three"></span>
+            <span class="learner-comet comet-four"></span>
+            <span class="learner-comet comet-five"></span>
+            <span class="learner-comet comet-six"></span>
+            <span class="learner-comet comet-seven"></span>
+          </div>
+          <div class="learner-section-content">
+            <div class="learner-section-words" data-floating-pills aria-label="Learner resources">
+              ${["Find tutors", "Attend courses", "Read blogs", "Watch tutorials", "Join workshops"].map((item, index) => `<span style="--i:${index}">${escapeHtml(item)}</span>`).join("")}
+            </div>
+            <h2 id="learner-section-heading">Become a learner</h2>
+          </div>
+        </section>
+        <section class="sharer-section" data-sharer-section aria-labelledby="sharer-section-heading">
+          <div class="sharer-section-bg" aria-hidden="true"></div>
+          <div class="sharer-comets" aria-hidden="true">
+            <span class="sharer-comet sharer-comet-two"></span>
+            <span class="sharer-comet sharer-comet-three"></span>
+            <span class="sharer-comet sharer-comet-four"></span>
+            <span class="sharer-comet sharer-comet-five"></span>
+            <span class="sharer-comet sharer-comet-six"></span>
+            <span class="sharer-comet sharer-comet-seven"></span>
+            <span class="sharer-comet sharer-comet-eight"></span>
+            <span class="sharer-comet sharer-comet-nine"></span>
+            <span class="sharer-comet sharer-comet-ten"></span>
+            <span class="sharer-comet sharer-comet-eleven"></span>
+            <span class="sharer-comet sharer-comet-twelve"></span>
+            <span class="sharer-comet sharer-comet-thirteen"></span>
+            <span class="sharer-comet sharer-comet-fourteen"></span>
+          </div>
+          <div class="sharer-section-content">
+            <div class="sharer-section-words" aria-label="Sharer opportunities">
+              ${["Offer coaching", "Tutoring", "Selling courses", "Sharing tutorials", "Mentor people", "Write articles"].map((item, index) => `<span style="--i:${index}">${escapeHtml(item)}</span>`).join("")}
+            </div>
+            <h2 id="sharer-section-heading">Become a sharer</h2>
+          </div>
+        </section>
+        <section class="connector-section" data-connector-section aria-labelledby="connector-section-heading">
+          <div class="connector-section-bg" aria-hidden="true"></div>
+          <div class="connector-section-content">
+            <div class="hero-text-sparkles" aria-hidden="true">
+              <span class="hero-sparkle hero-sparkle-one"></span>
+              <span class="hero-sparkle hero-sparkle-two"></span>
+              <span class="hero-sparkle hero-sparkle-three"></span>
+              <span class="hero-sparkle hero-sparkle-four"></span>
+              <span class="hero-sparkle hero-sparkle-five"></span>
+              <span class="hero-sparkle hero-sparkle-six"></span>
+              <span class="hero-sparkle hero-sparkle-seven"></span>
+              <span class="hero-sparkle hero-sparkle-eight"></span>
+              <span class="hero-sparkle hero-sparkle-nine"></span>
+              <span class="hero-sparkle hero-sparkle-ten"></span>
+              <span class="hero-sparkle hero-sparkle-eleven"></span>
+              <span class="hero-sparkle hero-sparkle-twelve"></span>
+              <span class="hero-sparkle hero-sparkle-thirteen"></span>
+              <span class="hero-sparkle hero-sparkle-fourteen"></span>
+              <span class="hero-sparkle hero-sparkle-fifteen"></span>
+              <span class="hero-sparkle hero-sparkle-sixteen"></span>
+              <span class="hero-sparkle hero-sparkle-seventeen"></span>
+              <span class="hero-sparkle hero-sparkle-eighteen"></span>
+              <span class="hero-sparkle hero-sparkle-nineteen"></span>
+              <span class="hero-sparkle hero-sparkle-twenty"></span>
+              <span class="hero-sparkle hero-sparkle-twenty-one"></span>
+              <span class="hero-sparkle hero-sparkle-twenty-two"></span>
+            </div>
+            <h2 id="connector-section-heading">Become a connector</h2>
+            <div class="connector-section-words" data-floating-pills aria-label="Connector opportunities">
+              ${["Join communities", "Meet people with similar interests", "Find startup partners", "Volunteer together", "Attend events", "Networking"].map((item, index) => `<span style="--i:${index}">${escapeHtml(item)}</span>`).join("")}
+            </div>
           </div>
         </section>
       </main>
@@ -891,6 +966,301 @@
     app.focus?.({ preventScroll: true });
     initSubjectGallery();
     initCommunityJourney();
+    initLearnerSection();
+    initFloatingPills();
+  }
+
+  function initLearnerSection() {
+    cleanupLearnerSection?.();
+    cleanupLearnerSection = null;
+    if (typeof document.querySelector !== "function") return;
+    const sections = [...document.querySelectorAll("[data-learner-section], [data-sharer-section], [data-connector-section]")];
+    if (!sections.length) return;
+    const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (prefersReduced || typeof IntersectionObserver !== "function") {
+      sections.forEach((section) => {
+        section.classList.add("is-visible");
+        section.style.setProperty("--section-words-progress", "1");
+        section.style.setProperty("--section-words-y", "0px");
+        section.style.setProperty("--section-words-blur", "0px");
+        section.style.setProperty("--section-quote-progress", "1");
+        section.style.setProperty("--section-quote-y", "0px");
+        section.style.setProperty("--section-quote-blur", "0px");
+        if (section.matches("[data-connector-section]")) {
+          section.style.setProperty("--connector-words-progress", "1");
+          section.style.setProperty("--connector-words-y", "0px");
+          section.style.setProperty("--connector-words-blur", "0px");
+          section.style.setProperty("--connector-quote-progress", "1");
+          section.style.setProperty("--connector-quote-y", "0px");
+          section.style.setProperty("--connector-quote-blur", "0px");
+        }
+      });
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-visible");
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.34 });
+    sections.forEach((section) => observer.observe(section));
+
+    const titleMotions = [
+      { section: document.querySelector("[data-learner-section]"), prefix: "learner" },
+      { section: document.querySelector("[data-sharer-section]"), prefix: "sharer" },
+      { section: document.querySelector("[data-connector-section]"), prefix: "connector" }
+    ].map((target) => ({ ...target, title: target.section?.querySelector("h2") }))
+      .filter((target) => target.section && target.title);
+    let frame = 0;
+
+    const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
+    const easeInOutCubic = (value) => value < 0.5
+      ? 4 * value * value * value
+      : 1 - Math.pow(-2 * value + 2, 3) / 2;
+
+    const setTitleMotion = () => {
+      frame = 0;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1;
+      const centerX = viewportWidth / 2;
+      const centerY = viewportHeight / 2;
+
+      titleMotions.forEach(({ section, title, prefix }) => {
+        const rect = section.getBoundingClientRect();
+        section.style.setProperty("--section-title-x", "0px");
+        section.style.setProperty("--section-title-y", "0px");
+        section.style.setProperty("--section-title-scale", "1");
+        const scrollSpan = Math.max(rect.height, viewportHeight);
+        const progress = clamp((viewportHeight - rect.top) / scrollSpan);
+        const settle = easeInOutCubic(clamp((progress - 0.24) / 0.76));
+        const wordsProgress = easeInOutCubic(clamp((progress - 0.58) / 0.22));
+        const quoteStart = section.matches("[data-learner-section], [data-sharer-section], [data-connector-section]") ? 0.5 : 0.88;
+        const quoteDuration = section.matches("[data-learner-section], [data-sharer-section], [data-connector-section]") ? 0.2 : 0.12;
+        const quoteProgress = easeInOutCubic(clamp((progress - quoteStart) / quoteDuration));
+        const lift = 1 - settle;
+        const titleOpacity = clamp((viewportHeight - rect.top) / Math.max(120, viewportHeight * 0.18));
+        const titleRect = title.getBoundingClientRect();
+        const titleCenterX = titleRect.left + titleRect.width / 2;
+        const titleCenterY = titleRect.top + titleRect.height / 2;
+
+        section.style.setProperty(`--${prefix}-title-x`, `${(centerX - titleCenterX) * lift}px`);
+        section.style.setProperty(`--${prefix}-title-y`, `${(centerY - titleCenterY) * lift}px`);
+        section.style.setProperty(`--${prefix}-title-scale`, String(1 + 0.08 * lift));
+        section.style.setProperty(`--${prefix}-title-glow`, String(lift));
+        section.style.setProperty(`--${prefix}-title-opacity`, String(titleOpacity));
+        section.style.setProperty("--section-title-x", `${(centerX - titleCenterX) * lift}px`);
+        section.style.setProperty("--section-title-y", `${(centerY - titleCenterY) * lift}px`);
+        section.style.setProperty("--section-title-scale", String(1 + 0.08 * lift));
+        section.style.setProperty("--section-title-glow", String(lift));
+        section.style.setProperty("--section-title-opacity", String(titleOpacity));
+        section.style.setProperty("--section-words-progress", String(wordsProgress));
+        section.style.setProperty("--section-words-y", `${14 * (1 - wordsProgress)}px`);
+        section.style.setProperty("--section-words-blur", `${6 * (1 - wordsProgress)}px`);
+        section.style.setProperty("--section-quote-progress", String(quoteProgress));
+        section.style.setProperty("--section-quote-y", `${16 * (1 - quoteProgress)}px`);
+        section.style.setProperty("--section-quote-blur", `${5 * (1 - quoteProgress)}px`);
+
+        if (section.matches("[data-connector-section]")) {
+          section.style.setProperty("--connector-words-progress", String(wordsProgress));
+          section.style.setProperty("--connector-words-y", `${14 * (1 - wordsProgress)}px`);
+          section.style.setProperty("--connector-words-blur", `${6 * (1 - wordsProgress)}px`);
+          section.style.setProperty("--connector-quote-progress", String(quoteProgress));
+          section.style.setProperty("--connector-quote-y", `${16 * (1 - quoteProgress)}px`);
+          section.style.setProperty("--connector-quote-blur", `${5 * (1 - quoteProgress)}px`);
+        }
+      });
+    };
+
+    const requestTitleMotion = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(setTitleMotion);
+    };
+
+    setTitleMotion();
+    window.addEventListener("scroll", requestTitleMotion, { passive: true });
+    window.addEventListener("resize", requestTitleMotion);
+
+    cleanupLearnerSection = () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", requestTitleMotion);
+      window.removeEventListener("resize", requestTitleMotion);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }
+
+  function initFloatingPills() {
+    cleanupFloatingPills?.();
+    cleanupFloatingPills = null;
+    if (typeof document.querySelectorAll !== "function" || typeof requestAnimationFrame !== "function") return;
+    const fields = [...document.querySelectorAll("[data-floating-pills]")];
+    if (!fields.length) return;
+    const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (prefersReduced) return;
+
+    let frame = 0;
+    const systems = [];
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+    const seedUnit = (index, salt) => {
+      const value = Math.sin((index + 1) * 12.9898 + salt * 78.233) * 43758.5453;
+      return value - Math.floor(value);
+    };
+
+    const build = () => {
+      systems.length = 0;
+      fields.forEach((field, fieldIndex) => {
+        field.classList.add("is-physics-field");
+        const rect = field.getBoundingClientRect();
+        if (rect.width < 40 || rect.height < 40) return;
+        const pills = [...field.querySelectorAll("span")];
+        const items = pills.map((pill, index) => {
+          const width = pill.offsetWidth || 120;
+          const height = pill.offsetHeight || 42;
+          const x = seedUnit(index, fieldIndex + 1) * Math.max(1, rect.width - width);
+          const y = seedUnit(index, fieldIndex + 4) * Math.max(1, rect.height - height);
+          const speed = 0.16 + seedUnit(index, fieldIndex + 7) * 0.12;
+          const angle = seedUnit(index, fieldIndex + 11) * Math.PI * 2;
+          return {
+            pill,
+            width,
+            height,
+            radius: Math.max(width, height) * 0.56,
+            x,
+            y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            phase: seedUnit(index, fieldIndex + 15) * Math.PI * 2
+          };
+        });
+        systems.push({ field, items, width: rect.width, height: rect.height });
+      });
+    };
+
+    const step = () => {
+      const now = performance.now() * 0.001;
+      systems.forEach((system) => {
+        const rect = system.field.getBoundingClientRect();
+        system.width = rect.width;
+        system.height = rect.height;
+        system.items.forEach((item) => {
+          item.width = item.pill.offsetWidth || item.width;
+          item.height = item.pill.offsetHeight || item.height;
+          item.radius = Math.max(item.width, item.height) * 0.56;
+          item.x += item.vx;
+          item.y += item.vy;
+          if (item.x < 0 || item.x + item.width > system.width) {
+            item.x = clamp(item.x, 0, Math.max(0, system.width - item.width));
+            item.vx *= -1;
+          }
+          if (item.y < 0 || item.y + item.height > system.height) {
+            item.y = clamp(item.y, 0, Math.max(0, system.height - item.height));
+            item.vy *= -1;
+          }
+        });
+
+        for (let i = 0; i < system.items.length; i += 1) {
+          for (let j = i + 1; j < system.items.length; j += 1) {
+            const a = system.items[i];
+            const b = system.items[j];
+            const ax = a.x + a.width / 2;
+            const ay = a.y + a.height / 2;
+            const bx = b.x + b.width / 2;
+            const by = b.y + b.height / 2;
+            const dx = bx - ax;
+            const dy = by - ay;
+            const distance = Math.max(1, Math.hypot(dx, dy));
+            const minimum = a.radius + b.radius + 10;
+            if (distance >= minimum) continue;
+            const push = (minimum - distance) * 0.025;
+            const nx = dx / distance;
+            const ny = dy / distance;
+            a.vx -= nx * push;
+            a.vy -= ny * push;
+            b.vx += nx * push;
+            b.vy += ny * push;
+          }
+        }
+
+        system.items.forEach((item) => {
+          const speed = Math.hypot(item.vx, item.vy);
+          const maxSpeed = 0.62;
+          if (speed < 0.14) {
+            item.vx += Math.cos(now * 0.7 + item.phase) * 0.018;
+            item.vy += Math.sin(now * 0.6 + item.phase) * 0.018;
+          }
+          if (speed > maxSpeed) {
+            item.vx = (item.vx / speed) * maxSpeed;
+            item.vy = (item.vy / speed) * maxSpeed;
+          }
+          item.vx *= 0.995;
+          item.vy *= 0.995;
+          item.pill.style.transform = `translate3d(${item.x}px, ${item.y}px, 0)`;
+        });
+      });
+      frame = requestAnimationFrame(step);
+    };
+
+    build();
+    frame = requestAnimationFrame(step);
+    window.addEventListener("resize", build);
+    cleanupFloatingPills = () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", build);
+    };
+  }
+
+  function initStarCursor() {
+    if (typeof document.querySelector !== "function" || !document.body) return;
+    if (document.querySelector("[data-star-cursor]")) return;
+    const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (prefersReduced || typeof requestAnimationFrame !== "function") return;
+
+    const cursor = document.createElement("div");
+    cursor.className = "star-cursor";
+    cursor.dataset.starCursor = "true";
+    cursor.innerHTML = '<span class="star-cursor-halo"></span><span class="star-cursor-core"></span>';
+    document.body.append(cursor);
+    document.body.classList.add("has-star-cursor");
+
+    let frame = 0;
+    let active = false;
+    const target = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    const current = { x: target.x, y: target.y };
+
+    const tick = () => {
+      current.x += (target.x - current.x) * 0.14;
+      current.y += (target.y - current.y) * 0.14;
+      cursor.style.transform = `translate3d(${current.x}px, ${current.y}px, 0) translate(-50%, -50%)`;
+      frame = requestAnimationFrame(tick);
+    };
+
+    const show = (event) => {
+      target.x = event.clientX;
+      target.y = event.clientY;
+      if (!active) {
+        active = true;
+        current.x = target.x;
+        current.y = target.y;
+        cursor.classList.add("is-visible");
+        frame = requestAnimationFrame(tick);
+      }
+    };
+    const hide = () => {
+      active = false;
+      cursor.classList.remove("is-visible");
+      cancelAnimationFrame(frame);
+      frame = 0;
+    };
+    const move = (event) => {
+      target.x = event.clientX;
+      target.y = event.clientY;
+      if (!active) show(event);
+    };
+
+    window.addEventListener("pointerenter", show);
+    window.addEventListener("pointermove", move, { passive: true });
+    window.addEventListener("mousemove", move, { passive: true });
+    window.addEventListener("pointerleave", hide);
   }
 
   function initCommunityJourney() {
@@ -1385,5 +1755,6 @@
 
   window.addEventListener("hashchange", render);
   window.tutormatchStateMachine = { getState: () => state, setCaseStatus, connectionFee };
+  initStarCursor();
   render();
 })();

@@ -1,0 +1,543 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
+  --color-accent: var(--accent);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-tutoria-display);
+}
+
+:root {
+  color-scheme: dark;
+  --background: #030812;
+  --foreground: #f3f0e8;
+  --primary: #c8944b;
+  --primary-light: #e4c58d;
+  --primary-dark: #a86f2f;
+  --accent: #d7dde6;
+  --surface: #0b1422;
+  --muted: #aeb7c5;
+  --border: rgba(207, 218, 232, 0.16);
+  --tutoria-ink: #030812;
+  --tutoria-navy: #071426;
+  --tutoria-moon: #f3f0e8;
+  --tutoria-silver: #aeb7c5;
+  --tutoria-amber: #c8944b;
+  --tutoria-glass: rgba(14, 23, 37, 0.76);
+  --tutoria-glass-strong: rgba(7, 14, 25, 0.92);
+  --tutoria-line: rgba(207, 218, 232, 0.16);
+  --font-editorial: var(--font-tutoria-display), Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  background: #030812;
+  scroll-behavior: smooth;
+}
+
+body.tutoria-cosmos {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+  background-color: #030812;
+  background-image:
+    linear-gradient(180deg, rgba(3, 8, 18, 0.12), rgba(3, 8, 18, 0.82) 72%, #030812),
+    url("/brand/tutoria-space-sky.png");
+  background-size: 100% auto, 1440px auto;
+  background-position: top center;
+  background-repeat: repeat-y;
+  background-attachment: fixed;
+}
+
+body.tutoria-cosmos::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(200, 148, 75, 0.12), transparent 22rem),
+    radial-gradient(circle at 86% 36%, rgba(99, 134, 172, 0.14), transparent 28rem),
+    linear-gradient(180deg, transparent 0 64%, rgba(3, 8, 18, 0.62) 88%);
+}
+
+body.tutoria-cosmos h1,
+body.tutoria-cosmos h2,
+.font-display {
+  font-family: var(--font-tutoria-display), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+
+body.tutoria-cosmos a,
+body.tutoria-cosmos button,
+body.tutoria-cosmos input,
+body.tutoria-cosmos select,
+body.tutoria-cosmos textarea {
+  outline-color: var(--primary-light);
+}
+
+body.tutoria-cosmos :focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 3px;
+}
+
+body.tutoria-cosmos .bg-background {
+  background-color: rgba(7, 14, 25, 0.9);
+}
+
+body.tutoria-cosmos .bg-surface {
+  background-color: rgba(15, 27, 43, 0.92);
+}
+
+body.tutoria-cosmos .border-border {
+  border-color: var(--tutoria-line);
+}
+
+body.tutoria-cosmos .shadow-sm,
+body.tutoria-cosmos .shadow-md,
+body.tutoria-cosmos .shadow-lg,
+body.tutoria-cosmos .shadow-xl {
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+}
+
+.tutoria-page-shell {
+  min-height: 100dvh;
+  color: var(--foreground);
+}
+
+.tutoria-page-container {
+  width: min(100% - 2rem, 82rem);
+  margin-inline: auto;
+}
+
+.tutoria-glass {
+  background: var(--tutoria-glass);
+  border: 1px solid var(--tutoria-line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 24px 70px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.tutoria-kicker {
+  color: var(--primary-light);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.tutoria-text-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary-light);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.tutoria-text-link:hover {
+  color: var(--foreground);
+  transform: translateX(2px);
+}
+
+@media (max-width: 767px) {
+  body.tutoria-cosmos {
+    background-size: auto 100vh;
+    background-attachment: scroll;
+  }
+
+  .tutoria-page-container {
+    width: min(100% - 1.25rem, 82rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::selection {
+  background: var(--primary);
+  color: white;
+}
+
+/* TipTap editor styles */
+.article-editor-content .ProseMirror {
+  min-height: 200px;
+  outline: none;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--foreground);
+}
+
+.article-editor-content .ProseMirror p {
+  margin: 0.5em 0;
+}
+
+.article-editor-content .ProseMirror h2 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin: 1.5em 0 0.5em;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.article-editor-content .ProseMirror h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 1.25em 0 0.4em;
+  line-height: 1.35;
+}
+
+.article-editor-content .ProseMirror ul,
+.article-editor-content .ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.article-editor-content .ProseMirror li {
+  margin: 0.25em 0;
+}
+
+.article-editor-content .ProseMirror blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 1em;
+  margin: 1em 0;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.article-editor-content .ProseMirror pre {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1em;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.article-editor-content .ProseMirror code {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 0.125em 0.375em;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+}
+
+.article-editor-content .ProseMirror pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.article-editor-content .ProseMirror img {
+  max-width: 100%;
+  border-radius: 0.75rem;
+  margin: 1em 0;
+}
+
+.article-editor-content .ProseMirror a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.article-editor-content .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5em 0;
+}
+
+.article-editor-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--muted);
+  opacity: 0.6;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Article view content (published) */
+.article-view-content h2 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin: 1.5em 0 0.5em;
+  line-height: 1.3;
+}
+
+.article-view-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 1.25em 0 0.4em;
+  line-height: 1.35;
+}
+
+.article-view-content p {
+  margin: 0.75em 0;
+}
+
+.article-view-content ul,
+.article-view-content ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.article-view-content li {
+  margin: 0.25em 0;
+}
+
+.article-view-content blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 1em;
+  margin: 1em 0;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.article-view-content pre {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1em;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.article-view-content code {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 0.125em 0.375em;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+}
+
+.article-view-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.article-view-content img {
+  max-width: 100%;
+  border-radius: 0.75rem;
+  margin: 1em 0;
+}
+
+.article-view-content a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.article-view-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5em 0;
+}
+
+/* Shared Tutoria public-profile replacement */
+.tr-profile-page{padding:32px 18px 56px;background:radial-gradient(circle at 8% 4%,rgba(37,119,123,.13),transparent 28%),radial-gradient(circle at 92% 12%,rgba(247,234,212,.9),transparent 28%),#f7f7f3;color:#10110f}.tr-profile-shell{max-width:1240px;margin:auto;overflow:hidden;border:1px solid #deded7;border-radius:30px;background:#fffefa;box-shadow:0 24px 70px rgba(18,20,17,.09)}.tr-profile-cover{height:clamp(240px,28vw,360px)}.tr-profile-cover img{width:100%;height:100%;object-fit:cover}.tr-profile-body{padding:0 clamp(24px,4vw,54px) 52px}.tr-profile-summary{display:flex;justify-content:space-between;gap:28px}.tr-profile-person{display:flex;align-items:flex-end;gap:22px}.tr-profile-avatar{width:144px;height:144px;flex:none;margin-top:-62px;border:6px solid #fffefa;border-radius:50%;object-fit:cover;box-shadow:0 16px 42px rgba(20,88,92,.2)}.tr-profile-person>div{padding-top:18px}.tr-profile-person h1{display:flex;align-items:center;gap:8px;margin:0;font-family:Georgia,serif;font-size:clamp(38px,4vw,54px);font-weight:400;line-height:1;letter-spacing:-.04em}.tr-profile-person h1 svg{width:25px;color:#25777b;fill:#25777b}.tr-profile-role{margin:8px 0 0;color:#25777b;font-size:18px;font-weight:600}.tr-profile-meta{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0 0;color:#6d736c;font-size:14px}.tr-profile-meta span,.tr-profile-meta a{display:flex;align-items:center;gap:6px}.tr-profile-meta a{color:#14585c}.tr-profile-meta svg{width:16px}.tr-profile-bio{margin:14px 0 0;color:#50544f;line-height:1.6}.tr-profile-actions{display:flex;align-items:center;gap:10px;padding-top:72px}.tr-profile-actions button{min-width:110px;height:46px;border:1px solid #25777b;border-radius:999px;background:#25777b;color:#fff;font-weight:650}.tr-profile-actions button+button{border-color:#c8cbc2;background:#fffefa;color:#10110f}.tr-profile-layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:32px;margin-top:28px}.tr-profile-stats{display:grid;grid-template-columns:repeat(3,1fr);padding-bottom:24px;border-bottom:1px solid #deded7}.tr-profile-stats div{display:grid;grid-template-columns:28px auto;justify-content:center;border-left:1px solid #deded7}.tr-profile-stats div:first-child{border:0}.tr-profile-stats svg{grid-row:1/3;width:20px;margin-top:5px;color:#25777b}.tr-profile-stats strong{font-size:18px}.tr-profile-stats small{color:#6d736c}.tr-profile-skills{padding:23px 0;border-bottom:1px solid #deded7}.tr-profile-skills h2{margin:0 0 14px;font-size:14px}.tr-profile-skills>div{display:flex;flex-wrap:wrap;gap:10px}.tr-profile-skills span{display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid #deded7;border-radius:999px;background:#eeeeea;font-size:14px;font-weight:600}.tr-profile-skills svg{width:16px}.tr-profile-tabs{display:flex;border-bottom:1px solid #deded7}.tr-profile-tabs button{position:relative;display:flex;align-items:center;gap:7px;min-height:58px;padding:0 18px;color:#777c75}.tr-profile-tabs button[aria-current=page]{color:#14585c;font-weight:700}.tr-profile-tabs button[aria-current=page]:after{content:"";position:absolute;right:16px;bottom:0;left:16px;height:3px;border-radius:3px;background:#25777b}.tr-profile-tabs svg{width:17px}.tr-profile-post,.tr-profile-empty,.tr-profile-sidebar section{border:1px solid #deded7;border-radius:24px;background:#fffefa;box-shadow:0 12px 34px rgba(18,20,17,.055)}.tr-profile-post{max-width:680px;margin:20px auto 0;overflow:hidden}.tr-profile-post header{display:flex;align-items:center;gap:12px;padding:18px 20px;background:#f7f7f3}.tr-profile-post header img{width:48px;height:48px;border-radius:50%;object-fit:cover}.tr-profile-post header span{display:grid}.tr-profile-post header small{color:#777c75}.tr-profile-post-image{width:100%;aspect-ratio:4/3;object-fit:cover}.tr-profile-post>p{margin:0;padding:18px 20px;font-size:16px;line-height:1.55}.tr-profile-post footer{display:flex;gap:24px;padding:18px 20px;border-top:1px solid #eeeeea;color:#6d736c}.tr-profile-post footer span{display:flex;align-items:center;gap:6px}.tr-profile-post footer svg{width:21px}.tr-profile-post footer .push{margin-left:auto;gap:16px}.tr-profile-empty{margin-top:20px;padding:44px 24px;text-align:center}.tr-profile-empty h2,.tr-profile-sidebar h2,.tr-similar h2{font-family:Georgia,serif;font-weight:400;letter-spacing:-.025em}.tr-profile-empty h2{font-size:26px}.tr-profile-empty p{color:#50544f}.tr-profile-sidebar{display:grid;align-content:start;gap:15px}.tr-profile-sidebar section{padding:28px}.tr-profile-sidebar h2{margin:0 0 16px;font-size:28px}.tr-profile-sidebar section>p{color:#50544f;font-size:15px;line-height:1.65}.tr-offer{display:flex;gap:11px;margin-top:18px}.tr-offer svg,.tr-achievement svg{width:20px;flex:none;color:#25777b}.tr-offer span{display:grid}.tr-offer strong{font-size:14px}.tr-offer small{color:#777c75}.tr-achievement{display:flex;align-items:center;gap:11px;margin-top:15px;font-size:14px}.tr-similar{margin-top:48px;padding-top:30px;border-top:1px solid #deded7}.tr-similar>p{margin:0 0 3px;color:#25777b;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}.tr-similar h2{margin:0 0 18px;font-size:32px}.tr-similar>div{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.tr-similar a{display:grid;grid-template-columns:48px minmax(0,1fr) 20px;align-items:center;gap:12px;min-height:82px;padding:14px;border:1px solid #deded7;border-radius:18px;background:#fffefa}.tr-similar a:hover{border-color:#25777b;background:#e1eeee}.tr-similar img{width:48px;height:48px;border-radius:50%;object-fit:cover}.tr-similar a span{display:grid;min-width:0}.tr-similar a strong,.tr-similar a small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tr-similar a strong{font-size:13px}.tr-similar a small{color:#777c75;font-size:11px}.tr-similar a b{color:#25777b;font-size:18px;font-weight:400}
+@media(max-width:1000px){.tr-profile-layout{grid-template-columns:1fr}.tr-profile-sidebar{grid-template-columns:repeat(3,1fr)}.tr-profile-summary{flex-direction:column}.tr-profile-actions{padding-top:0}.tr-similar>div{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){.tr-profile-page{padding:0;background:#fffefa}.tr-profile-shell{border:0;border-radius:0;box-shadow:none}.tr-profile-body{padding:0 16px 28px}.tr-profile-cover{height:250px}.tr-profile-person{display:block}.tr-profile-avatar{width:112px;height:112px;margin-top:-56px}.tr-profile-person h1{font-size:38px}.tr-profile-actions{display:grid;grid-template-columns:1fr 1fr}.tr-profile-sidebar{display:none}.tr-profile-stats div{display:grid;grid-template-columns:1fr;text-align:center}.tr-profile-stats svg{display:none}.tr-profile-skills>div{flex-wrap:nowrap;overflow-x:auto}.tr-profile-tabs{justify-content:space-between;overflow:auto}.tr-profile-tabs button{flex:1;justify-content:center;padding:0 7px;font-size:12px}.tr-profile-post-image{aspect-ratio:16/9}.tr-similar>div{grid-template-columns:1fr}}
+
+/* Threads-inspired post layout */
+.tr-profile-post.tr-thread-post{display:grid;grid-template-columns:48px minmax(0,1fr);gap:12px;padding:20px;border-radius:24px;overflow:visible}.tr-thread-avatar{display:flex;align-items:center;flex-direction:column;gap:10px}.tr-thread-avatar img{width:42px;height:42px;border-radius:50%;object-fit:cover}.tr-thread-avatar span{width:2px;min-height:28px;flex:1;border-radius:2px;background:#deded7}.tr-thread-content{min-width:0}.tr-profile-post .tr-thread-content>header{display:flex;align-items:center;min-height:42px;padding:0;background:transparent}.tr-thread-content>header span{display:flex;align-items:baseline;gap:6px}.tr-thread-content>header strong{font-size:15px}.tr-thread-content>header small{color:#777c75;font-size:14px}.tr-thread-content>header button{display:grid;width:44px;height:44px;margin-left:auto;place-items:center;border-radius:50%;color:#50544f}.tr-thread-content>header button:hover{background:#eeeeea}.tr-thread-content>p{margin:2px 0 12px;color:#20231f;font-size:15px;line-height:1.52}.tr-thread-content .tr-profile-post-image{width:100%;max-height:520px;aspect-ratio:auto;border:1px solid #deded7;border-radius:14px;object-fit:cover}.tr-profile-post .tr-thread-content>footer{display:flex;align-items:center;gap:20px;padding:12px 0 0;border:0;color:#50544f}.tr-thread-content>footer button{display:flex;min-width:44px;min-height:44px;align-items:center;justify-content:center;gap:6px;padding:0 4px;border-radius:999px}.tr-thread-content>footer button:hover{background:#eeeeea;color:#14585c}.tr-thread-content>footer svg{width:21px;height:21px}@media(max-width:520px){.tr-profile-post.tr-thread-post{grid-template-columns:40px minmax(0,1fr);gap:10px;padding:16px 4px;border-inline:0;border-radius:0}.tr-thread-avatar img{width:38px;height:38px}.tr-thread-content .tr-profile-post-image{max-height:440px;border-radius:12px}.tr-profile-post .tr-thread-content>footer{gap:8px;justify-content:space-between}.tr-thread-content>footer button{font-size:12px}}
+
+/* Cosmic Tutoria profile theme */
+.tutoria-cosmos .tr-profile-page {
+  padding: clamp(1rem, 3vw, 2.5rem) 1rem clamp(4rem, 7vw, 7rem);
+  background: transparent;
+  color: var(--tutoria-moon);
+}
+
+.tutoria-cosmos .tr-profile-shell {
+  max-width: 1320px;
+  border-color: var(--tutoria-line);
+  border-radius: 1.4rem;
+  background: rgba(5, 12, 23, 0.86);
+  box-shadow: 0 36px 110px rgba(0, 0, 0, 0.38), inset 0 1px rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(20px);
+}
+
+.tutoria-cosmos .tr-profile-cover {
+  position: relative;
+  height: clamp(260px, 31vw, 430px);
+}
+
+.tutoria-cosmos .tr-profile-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 42%, rgba(5, 12, 23, 0.9));
+  pointer-events: none;
+}
+
+.tutoria-cosmos .tr-profile-cover img {
+  filter: saturate(0.76) brightness(0.72);
+}
+
+.tutoria-cosmos .tr-profile-avatar {
+  border-color: #071426;
+  box-shadow: 0 0 0 1px var(--tutoria-line), 0 18px 46px rgba(0, 0, 0, 0.42);
+  transform: translateY(-50px);
+}
+
+.tutoria-cosmos .tr-profile-person h1 {
+  color: var(--tutoria-moon);
+  font-family: var(--font-tutoria-display), Georgia, serif;
+  font-size: clamp(3.2rem, 5vw, 5.4rem);
+}
+
+.tutoria-cosmos .tr-profile-person h1 svg,
+.tutoria-cosmos .tr-offer svg,
+.tutoria-cosmos .tr-achievement svg,
+.tutoria-cosmos .tr-profile-stats svg {
+  color: var(--primary-light);
+  fill: none;
+}
+
+.tutoria-cosmos .tr-profile-role,
+.tutoria-cosmos .tr-profile-meta a,
+.tutoria-cosmos .tr-profile-tabs button[aria-current="page"],
+.tutoria-cosmos .tr-similar > p,
+.tutoria-cosmos .tr-similar a b {
+  color: var(--primary-light);
+}
+
+.tutoria-cosmos .tr-profile-meta,
+.tutoria-cosmos .tr-profile-bio,
+.tutoria-cosmos .tr-profile-stats small,
+.tutoria-cosmos .tr-profile-tabs button,
+.tutoria-cosmos .tr-profile-empty p,
+.tutoria-cosmos .tr-profile-sidebar section > p,
+.tutoria-cosmos .tr-offer small,
+.tutoria-cosmos .tr-thread-content > header small,
+.tutoria-cosmos .tr-profile-post .tr-thread-content > footer,
+.tutoria-cosmos .tr-similar a small {
+  color: var(--tutoria-silver);
+}
+
+.tutoria-cosmos .tr-profile-actions button {
+  min-height: 46px;
+  border-color: var(--tutoria-moon);
+  border-radius: 0.75rem;
+  background: var(--tutoria-moon);
+  color: var(--tutoria-ink);
+}
+
+.tutoria-cosmos .tr-profile-actions button + button {
+  border-color: var(--tutoria-line);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--tutoria-moon);
+}
+
+.tutoria-cosmos .tr-profile-stats,
+.tutoria-cosmos .tr-profile-stats div,
+.tutoria-cosmos .tr-profile-skills,
+.tutoria-cosmos .tr-profile-tabs,
+.tutoria-cosmos .tr-similar {
+  border-color: var(--tutoria-line);
+}
+
+.tutoria-cosmos .tr-profile-stats strong {
+  color: var(--tutoria-moon);
+}
+
+.tutoria-cosmos .tr-profile-skills span {
+  border-color: var(--tutoria-line);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--tutoria-moon);
+}
+
+.tutoria-cosmos .tr-profile-tabs button[aria-current="page"]::after {
+  background: var(--primary-light);
+}
+
+.tutoria-cosmos .tr-profile-post,
+.tutoria-cosmos .tr-profile-empty,
+.tutoria-cosmos .tr-profile-sidebar section {
+  border-color: var(--tutoria-line);
+  background: rgba(10, 20, 35, 0.72);
+  box-shadow: 0 22px 66px rgba(0, 0, 0, 0.2), inset 0 1px rgba(255, 255, 255, 0.025);
+}
+
+.tutoria-cosmos .tr-profile-empty h2,
+.tutoria-cosmos .tr-profile-sidebar h2,
+.tutoria-cosmos .tr-similar h2 {
+  color: var(--tutoria-moon);
+  font-family: var(--font-tutoria-display), Georgia, serif;
+}
+
+.tutoria-cosmos .tr-thread-avatar span {
+  background: var(--tutoria-line);
+}
+
+.tutoria-cosmos .tr-thread-content > header button,
+.tutoria-cosmos .tr-thread-content > p {
+  color: var(--tutoria-moon);
+}
+
+.tutoria-cosmos .tr-thread-content > header button:hover,
+.tutoria-cosmos .tr-thread-content > footer button:hover {
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--primary-light);
+}
+
+.tutoria-cosmos .tr-thread-content .tr-profile-post-image {
+  border-color: var(--tutoria-line);
+}
+
+.tutoria-cosmos .tr-similar a {
+  border-color: var(--tutoria-line);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--tutoria-moon);
+}
+
+.tutoria-cosmos .tr-similar a:hover {
+  border-color: rgba(228, 197, 141, 0.48);
+  background: rgba(200, 148, 75, 0.08);
+}
+
+@media (max-width: 720px) {
+  .tutoria-cosmos .tr-profile-page { padding: 0 0 4rem; background: transparent; }
+  .tutoria-cosmos .tr-profile-shell { border-inline: 0; border-radius: 0; background: rgba(5, 12, 23, 0.92); }
+  .tutoria-cosmos .tr-profile-body { padding-inline: 1rem; }
+}

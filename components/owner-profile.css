@@ -1,0 +1,323 @@
+.pp-edit-image-field label::after {
+  content: none;
+}
+
+/* Crop editors always begin with the complete uploaded image visible. */
+.pp-crop-dialog .pp-crop-stage img {
+  object-fit: contain;
+}
+
+.pp-crop-overlay.is-cover-editor {
+  display: block;
+  padding: 0;
+  background: rgba(15, 18, 22, 0.9);
+}
+
+.pp-crop-dialog.is-cover-editor {
+  width: 100%;
+  max-height: 100dvh;
+  min-height: 100dvh;
+  overflow-y: auto;
+  border-radius: 0;
+  background: #202327;
+  color: white;
+}
+
+.pp-crop-dialog.is-cover-editor > header {
+  position: sticky;
+  z-index: 3;
+  top: 0;
+  min-height: 78px;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(20, 24, 30, 0.94);
+  backdrop-filter: blur(14px);
+}
+
+.pp-crop-dialog.is-cover-editor > header p {
+  color: #d4d8de;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.pp-crop-dialog.is-cover-editor > header h2 {
+  color: white;
+}
+
+.pp-crop-dialog.is-cover-editor > header > span {
+  display: flex;
+  gap: 10px;
+}
+
+.pp-crop-dialog.is-cover-editor > header > span .pp-button {
+  width: auto;
+  min-width: 132px;
+  height: 46px;
+  padding: 0 22px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.pp-crop-dialog.is-cover-editor > header > span .pp-button-dark {
+  border-color: #2476ed;
+  background: #2476ed;
+}
+
+.pp-crop-dialog.is-cover-editor .pp-crop-stage.is-cover {
+  width: min(calc(100% - 48px), 1280px);
+  margin: 0 auto;
+  border-radius: 0 0 12px 12px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.pp-crop-dialog.is-cover-editor .pp-crop-stage.is-cover:active {
+  cursor: grabbing;
+}
+
+.pp-crop-dialog.is-cover-editor .pp-crop-stage.is-cover:focus-visible {
+  outline: 3px solid #2f7df4;
+  outline-offset: 4px;
+}
+
+.pp-crop-instruction {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  padding: 12px 18px;
+  transform: translate(-50%, -50%);
+  border-radius: 10px;
+  background: rgba(16, 19, 24, 0.76);
+  color: white;
+  font-size: 14px;
+  font-weight: 650;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.pp-crop-controls.is-cover {
+  width: min(calc(100% - 48px), 640px);
+  margin: 24px auto;
+  padding: 16px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.pp-crop-controls.is-cover label > span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.pp-crop-controls.is-cover output {
+  color: #b9bec6;
+  font-variant-numeric: tabular-nums;
+}
+
+.pp-cover-zoom-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.pp-cover-zoom-actions button {
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0 13px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pp-cover-zoom-actions button:last-child {
+  border-color: rgba(47, 125, 244, 0.6);
+  background: rgba(47, 125, 244, 0.2);
+}
+
+@media (max-width: 600px) {
+  .pp-crop-dialog.is-cover-editor > header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .pp-crop-dialog.is-cover-editor > header h2 {
+    font-size: 18px;
+  }
+
+  .pp-crop-dialog.is-cover-editor > header > span .pp-button {
+    padding-inline: 12px;
+  }
+
+  .pp-crop-dialog.is-cover-editor .pp-crop-stage.is-cover {
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .pp-crop-instruction {
+    max-width: calc(100% - 32px);
+    text-align: center;
+    white-space: normal;
+  }
+}
+
+/* Facebook-like profile-picture editor */
+.pp-crop-overlay.is-avatar-editor {
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.pp-crop-dialog.is-avatar-editor {
+  width: min(100%, 720px);
+  background: #26282b;
+  color: #f2f3f5;
+}
+
+.pp-crop-dialog.is-avatar-editor > header {
+  position: sticky;
+  z-index: 3;
+  top: 0;
+  justify-content: center;
+  border-color: #3a3d41;
+  background: #26282b;
+}
+
+.pp-crop-dialog.is-avatar-editor > header p {
+  display: none;
+}
+
+.pp-crop-dialog.is-avatar-editor > header h2 {
+  font-size: 22px;
+  color: #f2f3f5;
+}
+
+.pp-crop-dialog.is-avatar-editor > header > button {
+  position: absolute;
+  right: 18px;
+  background: #3a3d40;
+  color: #d9dce1;
+}
+
+.pp-avatar-description {
+  display: block;
+  width: calc(100% - 36px);
+  min-height: 84px;
+  margin: 18px;
+  border: 1px solid #4b4e53;
+  border-radius: 12px;
+  background: transparent;
+  padding: 14px 16px;
+  color: white;
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.pp-avatar-description:focus {
+  outline: 3px solid rgba(47, 125, 244, 0.35);
+  border-color: #2f7df4;
+}
+
+.pp-crop-dialog.is-avatar-editor .pp-crop-stage.is-avatar {
+  width: min(58vw, 390px);
+  aspect-ratio: 4 / 5;
+  margin: 12px auto 14px;
+  overflow: hidden;
+  border-radius: 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.pp-crop-dialog.is-avatar-editor .pp-crop-stage.is-avatar:active {
+  cursor: grabbing;
+}
+
+.pp-crop-dialog.is-avatar-editor .pp-crop-stage.is-avatar > span {
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  width: min(88%, 340px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.3);
+}
+
+.pp-avatar-zoom {
+  display: grid;
+  grid-template-columns: 26px 1fr 26px;
+  align-items: center;
+  gap: 10px;
+  width: min(calc(100% - 44px), 520px);
+  margin: 0 auto 14px;
+}
+
+.pp-avatar-zoom span {
+  color: #d7d9dd;
+  font-size: 26px;
+  text-align: center;
+}
+
+.pp-avatar-zoom input {
+  width: 100%;
+  accent-color: #2f7df4;
+}
+
+.pp-avatar-options {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pp-avatar-options button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #3a3d40;
+  padding: 0 14px;
+  color: #e7e9ed;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pp-avatar-privacy {
+  margin: 16px 22px;
+  color: #c8cbd0;
+  font-size: 14px;
+}
+
+.pp-crop-dialog.is-avatar-editor > footer {
+  border-color: #414448;
+}
+
+.pp-crop-dialog.is-avatar-editor > footer .pp-button-light {
+  border-color: transparent;
+  background: transparent;
+  color: #5b9bf5;
+}
+
+.pp-crop-dialog.is-avatar-editor > footer .pp-button-dark {
+  min-width: 110px;
+  border-color: #2476ed;
+  border-radius: 8px;
+  background: #2476ed;
+}
+
+@media (max-width: 600px) {
+  .pp-crop-overlay.is-avatar-editor {
+    align-items: end;
+    padding: 0;
+  }
+
+  .pp-crop-dialog.is-avatar-editor {
+    max-height: 94dvh;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .pp-crop-dialog.is-avatar-editor .pp-crop-stage.is-avatar {
+    width: min(76vw, 340px);
+  }
+}

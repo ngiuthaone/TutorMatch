@@ -4,8 +4,17 @@
   "private": true,
   "description": "Static SPA MVP marketplace connecting tutors with students/parents.",
   "scripts": {
-    "start": "node server.js",
+    "start": "node scripts/start-local.js",
     "serve": "node server.js",
-    "test": "node tests/state-machine.test.js"
+    "test": "node tests/state-machine.test.js",
+    "build:profile": "esbuild components/profile-preview.jsx --bundle --outfile=components/profile-preview.js --format=iife"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.2"
   }
 }

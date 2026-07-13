@@ -1,0 +1,72 @@
+.main { flex: 1; padding-bottom: 8rem; }
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .55fr);
+  align-items: end;
+  gap: 4rem;
+  padding-block: clamp(7rem, 13vw, 12rem) clamp(4rem, 8vw, 7rem);
+}
+
+.hero h1 {
+  max-width: 950px;
+  margin-top: .9rem;
+  font-size: clamp(4.2rem, 8vw, 9rem);
+  line-height: .82;
+  text-wrap: balance;
+}
+
+.hero > p {
+  max-width: 390px;
+  padding-bottom: .6rem;
+  color: var(--muted);
+  font-size: .92rem;
+  line-height: 1.75;
+}
+
+.fields { border-top: 1px solid var(--tutoria-line); }
+
+.fields > a {
+  display: grid;
+  grid-template-columns: 2.5rem 3rem minmax(0, 1fr) auto 2rem;
+  align-items: center;
+  gap: 1.2rem;
+  min-height: 124px;
+  border-bottom: 1px solid var(--tutoria-line);
+  color: var(--foreground);
+  transition: padding 200ms ease, background-color 200ms ease;
+}
+
+.fields > a:hover { padding-inline: .8rem; background: rgba(255, 255, 255, .024); }
+.index { color: rgba(174, 183, 197, .5); font: .68rem var(--font-geist-mono); }
+.fields svg { color: var(--primary-light); }
+.copy strong { display: block; font-family: var(--font-tutoria-display); font-size: clamp(1.8rem, 3vw, 3rem); font-weight: 400; line-height: .95; }
+.copy small { display: block; margin-top: .45rem; color: var(--muted); font-size: .75rem; }
+.count { color: var(--muted); font-size: .72rem; }
+.arrow { transition: transform 180ms ease; }
+.fields > a:hover .arrow { transform: translate(3px, -3px); }
+
+.prompt {
+  margin-top: clamp(6rem, 10vw, 10rem);
+  padding: clamp(2rem, 6vw, 5rem);
+  border: 1px solid var(--tutoria-line);
+  border-radius: 1.25rem;
+  background: rgba(10, 20, 35, .72);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, .28);
+  backdrop-filter: blur(18px);
+}
+
+.prompt h2 { max-width: 800px; margin-top: .8rem; font-size: clamp(3rem, 5vw, 5.5rem); line-height: .9; }
+.prompt form { display: grid; grid-template-columns: 1fr auto; gap: .75rem; max-width: 850px; margin-top: 2.4rem; }
+.prompt input { min-height: 54px; border: 1px solid var(--tutoria-line); border-radius: .8rem; background: rgba(3, 8, 18, .72); padding-inline: 1rem; color: var(--foreground); }
+.prompt button { display: inline-flex; min-height: 54px; align-items: center; justify-content: center; gap: .5rem; border-radius: .8rem; background: var(--tutoria-moon); padding: .7rem 1.2rem; color: var(--tutoria-ink); font-size: .82rem; font-weight: 700; }
+
+@media (max-width: 760px) {
+  .main { padding-bottom: 5rem; }
+  .hero { grid-template-columns: 1fr; gap: 1.5rem; padding-top: 6.5rem; }
+  .hero h1 { font-size: clamp(4rem, 18vw, 6.2rem); }
+  .fields > a { grid-template-columns: 2.4rem 1fr auto; min-height: 108px; gap: .8rem; }
+  .index, .count { display: none; }
+  .copy strong { font-size: 1.8rem; }
+  .prompt form { grid-template-columns: 1fr; }
+}
