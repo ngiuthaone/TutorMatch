@@ -7,56 +7,20 @@ import {
   IconClock,
   IconMapPin,
   IconMessageCircle,
-  IconSearch,
-  IconSparkles,
   IconStarFilled,
   IconUsers,
 } from "@tabler/icons-react";
 
+import { RecommendationCollage } from "./recommendation-collage";
 import styles from "./discover-home.module.css";
 
-const paths = [
-  { label: "People", href: "/people", note: "Tutors & collaborators" },
-  { label: "Courses", href: "/courses", note: "Learn at your pace" },
-  { label: "Events", href: "/events", note: "Practice in company" },
-  { label: "Communities", href: "/communities", note: "Find your circle" },
-];
-
-const discoveries = [
-  {
-    eyebrow: "Field note · Photography",
-    title: "Five mistakes beginners make behind the lens",
-    description: "Duc Pham turns a decade of practice into an eight-minute field guide.",
-    meta: "8 min read",
-    href: "/discussions/blogs/b1",
-    image: "https://picsum.photos/seed/tutoria-photo-field/1100/760",
-    feature: true,
-  },
-  {
-    eyebrow: "1:1 · Public speaking",
-    title: "From nervous to natural",
-    description: "A six-session path with Minh Anh.",
-    meta: "Next opening · Tue",
-    href: "/people?topic=Personal+development",
-    image: "https://picsum.photos/seed/tutoria-speaking-room/760/620",
-  },
-  {
-    eyebrow: "Community · Founders",
-    title: "Build the idea with people who understand it",
-    description: "1,200 makers exchanging feedback, introductions, and momentum.",
-    meta: "34 conversations today",
-    href: "/communities?topic=Business",
-    image: "https://picsum.photos/seed/tutoria-founders-night/760/620",
-  },
-];
-
 const people = [
-  { name: "Minh Anh", role: "Public speaking coach", focus: "Confidence", image: "https://picsum.photos/seed/minh-anh-cosmos/340/420" },
-  { name: "Huy Tran", role: "Full-stack mentor", focus: "Technology", image: "https://picsum.photos/seed/huy-tran-cosmos/340/420" },
-  { name: "Linh Nguyen", role: "IELTS coach", focus: "Languages", image: "https://picsum.photos/seed/linh-nguyen-cosmos/340/420" },
-  { name: "Duc Pham", role: "Photography artist", focus: "Creative practice", image: "https://picsum.photos/seed/duc-pham-cosmos/340/420" },
-  { name: "Thu Ha", role: "Culinary teacher", focus: "Cooking", image: "https://picsum.photos/seed/thu-ha-cosmos/340/420" },
-  { name: "Bao Long", role: "Business mentor", focus: "Entrepreneurship", image: "https://picsum.photos/seed/bao-long-cosmos/340/420" },
+  { name: "Minh Anh", role: "Public speaking coach", image: "https://i.pravatar.cc/150?u=minh-anh", color: "from-orange-500 to-rose-400", availability: "Available", tagline: "Helped 200+ learners speak with confidence", tags: ["Public Speaking", "Communication", "Leadership"], rating: 4.9, studentsCount: 1200, location: "Online", district: "Cầu Giấy", hourlyRate: 250000, currency: "VND" },
+  { name: "Huy Tran", role: "Full-stack mentor", image: "https://i.pravatar.cc/150?u=huy-tran", color: "from-sky-600 to-indigo-400", availability: "Available", tagline: "500+ devs launched careers with his mentorship", tags: ["React", "TypeScript", "Node.js"], rating: 4.9, studentsCount: 500, location: "Online", district: "Seoul", hourlyRate: 60, currency: "USD" },
+  { name: "Linh Nguyen", role: "IELTS coach", image: "https://i.pravatar.cc/150?u=linh-nguyen", color: "from-emerald-600 to-teal-400", availability: "Available", tagline: "Helped 300+ learners achieve band 7+", tags: ["IELTS", "Speaking", "Writing"], rating: 4.8, studentsCount: 300, location: "Online", district: "Ha Noi", hourlyRate: 180000, currency: "VND" },
+  { name: "Duc Pham", role: "Photography artist", image: "https://i.pravatar.cc/150?u=duc-pham", color: "from-amber-500 to-orange-400", availability: "Available", tagline: "Film & digital — 8 years behind the lens", tags: ["Composition", "Lighting", "Editing"], rating: 4.7, studentsCount: 180, location: "Online", district: "Da Nang", hourlyRate: 200000, currency: "VND" },
+  { name: "Thu Ha", role: "Culinary teacher", image: "https://i.pravatar.cc/150?u=thu-ha", color: "from-rose-500 to-pink-400", availability: "Available", tagline: "Vietnamese home cooking, from pho to family feasts", tags: ["Vietnamese", "Baking", "Meal Prep"], rating: 4.9, studentsCount: 250, location: "Online", district: "Hai Phong", hourlyRate: 150000, currency: "VND" },
+  { name: "Bao Long", role: "Business mentor", image: "https://i.pravatar.cc/150?u=bao-long", color: "from-violet-600 to-purple-400", availability: "Available", tagline: "Helping founders validate, build, and scale", tags: ["Strategy", "Fundraising", "Growth"], rating: 4.8, studentsCount: 90, location: "Online", district: "HCMC", hourlyRate: 75, currency: "USD" },
 ];
 
 const courses = [
@@ -118,99 +82,9 @@ const conversations = [
 export function DiscoverHome() {
   return (
     <main className={styles.page}>
-      <section className={styles.hero} aria-labelledby="discover-heading">
-        <div className={styles.heroStars} aria-hidden="true" />
-        <Image
-          className={styles.heroPlanet}
-          src="/brand/tutoria-jupiter-cutout.png"
-          alt=""
-          width={930}
-          height={930}
-          priority
-        />
-        <div className={`${styles.heroInner} tutoria-page-container`}>
-          <div className={styles.heroCopy}>
-            <p className="tutoria-kicker">Your learning constellation</p>
-            <h1 id="discover-heading">
-              Follow your curiosity. <em>Find your people.</em>
-            </h1>
-            <p className={styles.heroLead}>
-              Tutoria brings thoughtful teachers, practical courses, live workshops, and generous communities into one orbit.
-            </p>
+      <RecommendationCollage />
 
-            <form className={styles.search} action="/search" role="search">
-              <IconSearch aria-hidden="true" size={21} />
-              <label className="sr-only" htmlFor="discover-query">Search Tutoria</label>
-              <input id="discover-query" name="q" placeholder="What would you like to learn?" />
-              <button type="submit" aria-label="Search">
-                <IconArrowRight aria-hidden="true" size={19} />
-              </button>
-            </form>
-
-            <div className={styles.heroMeta} aria-label="Tutoria activity">
-              <span><strong>24k</strong> curious minds</span>
-              <span><strong>680</strong> active sharers</span>
-              <span><strong>42</strong> rooms live today</span>
-            </div>
-          </div>
-
-          <div className={styles.orbitStage} aria-label="Ways to explore Tutoria">
-            <div className={styles.orbitLine} aria-hidden="true" />
-            <div className={`${styles.orbitCard} tutoria-glass`}>
-              <div className={styles.orbitHeader}>
-                <span><IconSparkles size={16} aria-hidden="true" /> Live orbit</span>
-                <span className={styles.liveSignal}>Now</span>
-              </div>
-              <div className={styles.pathList}>
-                {paths.map((path, index) => (
-                  <Link href={path.href} key={path.label}>
-                    <span className={styles.pathIndex}>0{index + 1}</span>
-                    <span>
-                      <strong>{path.label}</strong>
-                      <small>{path.note}</small>
-                    </span>
-                    <IconArrowUpRight size={18} aria-hidden="true" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.section} aria-labelledby="recommended-heading">
-        <div className="tutoria-page-container">
-          <header className={styles.sectionHeader}>
-            <div>
-              <p className="tutoria-kicker">Chosen for your orbit</p>
-              <h2 id="recommended-heading">Start with something that <em>pulls you in.</em></h2>
-            </div>
-            <Link className="tutoria-text-link" href="/discover/for-you">All recommendations <IconArrowRight size={16} /></Link>
-          </header>
-
-          <div className={styles.discoveryGrid}>
-            {discoveries.map((item) => (
-              <Link className={item.feature ? styles.discoveryFeature : styles.discoveryCard} href={item.href} key={item.title}>
-                <Image
-                  src={item.image}
-                  alt=""
-                  fill
-                  sizes={item.feature ? "(max-width: 720px) 86vw, (max-width: 1000px) 100vw, 58vw" : "(max-width: 720px) 86vw, 32vw"}
-                  unoptimized
-                />
-                <span className={styles.imageShade} aria-hidden="true" />
-                <span className={styles.discoveryContent}>
-                  <small>{item.eyebrow}</small>
-                  <strong>{item.title}</strong>
-                  <span>{item.description}</span>
-                  <span className={styles.cardMeta}>{item.meta} <IconArrowUpRight size={17} /></span>
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
+      <div className={styles.backgroundSections}>
       <section className={`${styles.section} ${styles.peopleSection}`} aria-labelledby="people-heading">
         <div className="tutoria-page-container">
           <header className={styles.sectionHeader}>
@@ -221,21 +95,80 @@ export function DiscoverHome() {
             <Link className="tutoria-text-link" href="/people">Meet the community <IconArrowRight size={16} /></Link>
           </header>
 
-          <div className={styles.peopleRail}>
-            {people.map((person, index) => (
-              <Link href={`/profile/${encodeURIComponent(person.name)}`} className={styles.person} key={person.name}>
-                <span className={styles.personNumber}>0{index + 1}</span>
-                <span className={styles.personPortrait}>
-                  <Image src={person.image} alt={person.name} width={340} height={420} unoptimized />
-                </span>
-                <span className={styles.personCopy}>
-                  <strong>{person.name}</strong>
-                  <small>{person.role}</small>
-                  <span>{person.focus}</span>
-                </span>
-                <IconArrowUpRight size={18} aria-hidden="true" />
-              </Link>
-            ))}
+          <div className={styles.peopleMarquee}>
+            <div className={styles.peopleMarqueeStage}>
+              <div className={styles.peopleMarqueeRows}>
+                {[people.slice(0, 3), people.slice(3)].map((row, rowIndex) => (
+                  <div className={styles.peopleMarqueeRow} key={`row-${rowIndex}`}>
+                    <div className={styles.peopleMarqueeTrack} data-speed={rowIndex === 0 ? 1 : 1.3}>
+                      {[0, 1, 2, 3].map((dup) => (
+                        <div className={styles.peopleMarqueeSet} key={`dup-${dup}`} aria-hidden={dup > 0 || undefined}>
+                          {row.map((person) => {
+                            const full = Math.floor(person.rating);
+                            const currencySymbol = person.currency === "VND" ? "₫" : "$";
+                            return (
+                              <Link
+                                href={`/profile/${encodeURIComponent(person.name)}`}
+                                className={styles.personCard}
+                                key={person.name}
+                                tabIndex={dup > 0 ? -1 : undefined}
+                              >
+                                <div className={`${styles.personCardHeader} ${person.color}`}>
+                                  <div className={styles.personCardHeaderShade} />
+                                  <span className={styles.personCardPortrait}>
+                                    <Image src={person.image} alt={person.name} fill sizes="72px" unoptimized />
+                                  </span>
+                                  <span className={styles.personCardTop}>
+                                    <strong className={styles.personCardName}>{person.name}</strong>
+                                    <small className={styles.personCardRole}>{person.role.toUpperCase()}</small>
+                                  </span>
+                                </div>
+                                <div className={styles.personCardBody}>
+                                  <span className={styles.personCardAvail}>
+                                    <span className={styles.availDot} />
+                                    {person.availability}
+                                  </span>
+                                  <p className={styles.personCardTagline}>{person.tagline}</p>
+                                  <div className={styles.personCardTags}>
+                                    {person.tags.map((tag, i) => (
+                                      <span key={tag}>
+                                        {tag}
+                                        {i < person.tags.length - 1 && <span className={styles.tagSep}>·</span>}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <div className={styles.personCardRating}>
+                                    <span className={styles.stars}>
+                                      {"★".repeat(full)}
+                                    </span>
+                                    <span>{person.rating}</span>
+                                    <span className={styles.ratingSep}>·</span>
+                                    <span>{person.studentsCount.toLocaleString("en-US")} learners</span>
+                                  </div>
+                                  <div className={styles.personCardLocation}>
+                                    <IconMapPin size={12} aria-hidden="true" />
+                                    {person.location}
+                                    {person.district && <>, {person.district}</>}
+                                  </div>
+                                </div>
+                                <div className={styles.personCardFooter}>
+                                  <span className={styles.personCardPrice}>
+                                    {currencySymbol}{person.currency === "VND" ? person.hourlyRate.toLocaleString("en-US") : person.hourlyRate}
+                                  </span>
+                                  <span className={styles.personCardUnit}>
+                                    / {person.currency === "VND" ? "session" : "hr"}
+                                  </span>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -357,7 +290,6 @@ export function DiscoverHome() {
 
       <section className={styles.cta}>
         <div className={`${styles.ctaInner} tutoria-page-container`}>
-          <Image src="/brand/tutoria-human-cutout.png" alt="" width={520} height={620} />
           <div>
             <p className="tutoria-kicker">Your knowledge belongs here too</p>
             <h2>Someone is looking for the thing you already know.</h2>
@@ -369,6 +301,7 @@ export function DiscoverHome() {
           </div>
         </div>
       </section>
+      </div>
     </main>
   );
 }

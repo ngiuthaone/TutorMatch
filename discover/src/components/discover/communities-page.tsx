@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { IconUsers, IconMessage2, IconBookmark, IconSparkles, IconSearch, IconAdjustmentsHorizontal } from "@tabler/icons-react";
+import { IconUsers, IconMessage2, IconBookmark, IconSearch, IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { useFilterParams } from "@/components/ui/use-filter-params";
 import { ActiveFilters } from "@/components/ui/active-filters";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
@@ -82,7 +82,7 @@ export function CommunitiesPage() {
       <main className={styles.main}>
         <header className={styles.hero}>
           <div>
-            <div className={styles.heroTop}><p className={styles.eyebrow}><IconSparkles size={15} />Tutoria communities</p><div className={styles.search}><label htmlFor="community-search" className={styles.visuallyHidden}>Search communities</label><IconSearch size={18} /><input id="community-search" type="search" placeholder="Search communities or topics" value={query} onChange={(e) => params.set("q", e.target.value)} /></div></div>
+            <div className={styles.heroTop}><div className={styles.search}><label htmlFor="community-search" className={styles.visuallyHidden}>Search communities</label><IconSearch size={18} /><input id="community-search" type="search" placeholder="Search communities or topics" value={query} onChange={(e) => params.set("q", e.target.value)} /></div></div>
             <h1 className={styles.title}>Find your people. <em>Grow together.</em></h1>
           </div>
           <div className={styles.orbitStat} aria-label={`${filtered.length} communities match the current filters`}>

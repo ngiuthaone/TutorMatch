@@ -119,7 +119,7 @@ export function ProfileReplacement({ name }: { name?: string }) {
                 <div><UsersRound /><strong>{profile.followers}</strong><small>Followers</small></div>
               </section>
               <section className="tr-profile-skills">
-                <h2>Skills</h2>
+                <h2 style={{ fontFamily: "var(--font-sans), Inter, sans-serif" }}>Skills</h2>
                 <div>{profile.skills.map(x => <span key={x}><Camera />{x}</span>)}</div>
               </section>
               <nav className="tr-profile-tabs" aria-label="Profile sections">

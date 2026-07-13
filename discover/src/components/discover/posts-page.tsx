@@ -94,7 +94,7 @@ export function DiscussionsPage() {
 
         <main className={styles.feedColumn}>
           <header className={styles.feedHeader}>
-            <h1>Discussions</h1>
+            <h1 style={{ fontFamily: "var(--font-sans), Inter, sans-serif" }}>Discussions</h1>
             <button className={styles.headerAction} aria-label="Notifications"><IconBell size={21} stroke={1.7} /></button>
           </header>
 
@@ -138,12 +138,12 @@ export function DiscussionsPage() {
 
         <aside className={styles.rightRail} aria-label="Discover more">
           <section className={styles.railCard}>
-            <h2>Join the conversation</h2>
+            <h2 style={{ fontFamily: "var(--font-sans), Inter, sans-serif" }}>Join the conversation</h2>
             <p>Share what you know, ask thoughtful questions, and learn with the Tutoria community.</p>
             <Link href="/auth/sign-up" className={styles.railPrimary}>Join Tutoria</Link>
           </section>
           <section className={styles.railCard}>
-            <h2>Trending today</h2>
+            <h2 style={{ fontFamily: "var(--font-sans), Inter, sans-serif" }}>Trending today</h2>
             <Link href="/discussions/tags/Photography" className={styles.railLink}>Photography <span>328 posts</span></Link>
             <Link href="/discussions/tags/IELTS" className={styles.railLink}>IELTS practice <span>214 posts</span></Link>
             <Link href="/discussions/tags/Technology" className={styles.railLink}>Technology <span>186 posts</span></Link>

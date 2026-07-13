@@ -2,34 +2,16 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { IconSearch, IconStar, IconClock, IconBookmark, IconHeart, IconSparkles, IconAdjustmentsHorizontal } from "@tabler/icons-react";
+import { IconSearch, IconStar, IconClock, IconBookmark, IconHeart, IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { useFilterParams } from "@/components/ui/use-filter-params";
 import { ActiveFilters } from "@/components/ui/active-filters";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
 import { FilterRadio } from "@/components/ui/filter-section";
+import { forYouItems } from "./for-you-data";
 import styles from "./marketplace-pages.module.css";
-
-interface FeedItem {
-  type: string; typeLabel: string; typeColor: string;
-  title: string; author: string; meta: string;
-  saves?: number; comments?: number; rating?: number;
-  image: string; online?: boolean; price?: string; topic?: string;
-}
 
 const tabs = ["All", "People", "1-on-1", "Courses", "Posts", "Communities", "Events"];
 
-const allItems: FeedItem[] = [
-  { type: "Article", typeLabel: "ARTICLE", typeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300", title: "Five mistakes beginners make when learning photography", author: "Duc Pham", meta: "8 min read", saves: 234, comments: 18, image: "https://picsum.photos/seed/fyp-photo/400/240", online: true, price: "Free", topic: "Photography" },
-  { type: "One-on-one", typeLabel: "ONE-ON-ONE", typeColor: "bg-primary/10 text-primary-dark dark:text-primary-light", title: "Public speaking: from nervous to natural in 30 days", author: "Minh Anh", meta: "6 sessions", image: "https://picsum.photos/seed/fyp-speaking/400/240", online: true, price: "Paid", topic: "Personal development" },
-  { type: "Course", typeLabel: "COURSE", typeColor: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300", title: "Complete web development bootcamp 2026", author: "Huy Tran", meta: "48 lessons", rating: 4.8, image: "https://picsum.photos/seed/fyp-web/400/240", online: true, price: "Paid", topic: "Technology" },
-  { type: "Community", typeLabel: "COMMUNITY", typeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300", title: "Young Founders Vietnam", author: "Build ideas, meet collaborators", meta: "1,200 members", image: "https://picsum.photos/seed/fyp-founders/400/240", topic: "Business" },
-  { type: "Workshop", typeLabel: "WORKSHOP", typeColor: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300", title: "Beginner pottery: make your first cup", author: "Thu Ha", meta: "Sat, 2:00 PM", image: "https://picsum.photos/seed/fyp-pottery/400/240", online: false, price: "Paid", topic: "Creative arts" },
-  { type: "Article", typeLabel: "ARTICLE", typeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300", title: "How I improved my IELTS speaking from 6.0 to 7.5", author: "Linh Nguyen", meta: "6 min read", saves: 412, comments: 37, image: "https://picsum.photos/seed/fyp-ielts/400/240", online: true, price: "Free", topic: "Languages" },
-  { type: "Course", typeLabel: "COURSE", typeColor: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300", title: "IELTS Speaking Masterclass", author: "Linh Nguyen", meta: "24 lessons", rating: 4.9, image: "https://picsum.photos/seed/fyp-masterclass/400/240", online: true, price: "Paid", topic: "Languages" },
-  { type: "Community", typeLabel: "COMMUNITY", typeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300", title: "Hanoi Photography Walks", author: "Photo walks every weekend", meta: "850 members", image: "https://picsum.photos/seed/fyp-photowalk/400/240", topic: "Photography" },
-  { type: "One-on-one", typeLabel: "ONE-ON-ONE", typeColor: "bg-primary/10 text-primary-dark dark:text-primary-light", title: "Coding mentorship with Huy", author: "Huy Tran", meta: "Hourly sessions", image: "https://picsum.photos/seed/fyp-mentor/400/240", online: true, price: "Paid", topic: "Technology" },
-  { type: "Workshop", typeLabel: "WORKSHOP", typeColor: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300", title: "Startup Networking Night", author: "Bao Long", meta: "Fri, 6:30 PM", image: "https://picsum.photos/seed/fyp-networking/400/240", online: false, price: "Free", topic: "Business" },
-];
 
 const filterMap: Record<string, string> = {
   People: "One-on-one",
@@ -40,7 +22,7 @@ const filterMap: Record<string, string> = {
   Events: "Workshop",
 };
 
-const allTopics = [...new Set(allItems.filter((i) => i.topic).map((i) => i.topic!))];
+const allTopics = [...new Set(forYouItems.filter((i) => i.topic).map((i) => i.topic!))];
 
 const sortOptions = [
   { value: "match", label: "Best match" },
@@ -61,7 +43,7 @@ export function ForYouPage() {
   const sort = params.get("sort", "match");
 
   const filtered = useMemo(() => {
-    let result = [...allItems];
+    let result = [...forYouItems];
 
     if (tab !== "All" && filterMap[tab]) {
       result = result.filter((i) => i.type === filterMap[tab]);
@@ -102,19 +84,22 @@ export function ForYouPage() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <header className={styles.hero}><div><div className={styles.heroTop}><p className={styles.eyebrow}><IconSparkles size={15} />For you</p><div className={styles.search}><label htmlFor="foryou-search" className={styles.visuallyHidden}>Search recommendations</label><IconSearch size={18} /><input id="foryou-search" type="search" placeholder="Search recommendations" value={query} onChange={(e) => params.set("q", e.target.value)} /></div></div><h1 className={styles.title}>Chosen for your <em>curiosity.</em></h1></div><div className={styles.orbitStat}><div><strong>{filtered.length}</strong><span>ideas in your orbit</span></div></div></header>
+        <header className={styles.hero}><div><div className={styles.heroTop}><div className={styles.search}><label htmlFor="foryou-search" className={styles.visuallyHidden}>Search recommendations</label><IconSearch size={18} /><input id="foryou-search" type="search" placeholder="Search recommendations" value={query} onChange={(e) => params.set("q", e.target.value)} /></div></div><h1 className={styles.title}>Chosen for your <em>curiosity.</em></h1></div><div className={styles.orbitStat}><div><strong>{filtered.length}</strong><span>ideas in your orbit</span></div></div></header>
         <div className={styles.mobileResultsTools}><button type="button" className={styles.mobileFilterButton} onClick={() => setFiltersOpen(true)}><IconAdjustmentsHorizontal size={17} /> Filters{activeFilters.length ? ` (${activeFilters.length})` : ""}</button></div>
         {activeFilters.length > 0 && <div className={styles.activeFilters}><ActiveFilters filters={activeFilters} onRemove={(key) => params.set(key, "")} onClear={params.clear} /></div>}
         <div className={styles.resultsLayout}><aside className={styles.filterSidebar} aria-label="Filter recommendations"><div className={styles.filterSidebarHeading}><span><IconAdjustmentsHorizontal size={17} /> Filters</span>{activeFilters.length > 0 && <button type="button" onClick={params.clear}>Clear</button>}</div>{filterPanel}</aside><div className={styles.resultsColumn}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((item) => (
-              <a key={item.title} href="#" className="group rounded-2xl border border-border bg-background hover:shadow-md hover:border-primary/20 transition-all duration-200 overflow-hidden">
+              <a key={item.title} href="#" className="group relative rounded-2xl overflow-hidden transition-all duration-200" style={{ border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.04)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+                <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.05), transparent 60%)" }} />
                 <div className="aspect-[5/3] overflow-hidden bg-surface relative">
                   <Image src={item.image} alt={item.title} fill unoptimized sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                  <span className={`absolute top-3 left-3 px-2 py-0.5 text-[10px] font-semibold rounded-md ${item.typeColor}`}>{item.typeLabel}</span>
+                  <div className="absolute top-3 left-3 overflow-hidden rounded-md border border-white/35 bg-white/5 backdrop-blur-2xl shadow-xl shadow-black/10 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:via-transparent before:to-transparent">
+                    <span className="relative block px-2 py-0.5 text-[10px] font-semibold text-white/90">{item.typeLabel}</span>
+                  </div>
                   <button className="absolute top-3 right-3 p-1.5 rounded-lg bg-black/20 backdrop-blur-sm text-white hover:bg-black/40 transition-colors"><IconBookmark size={14} /></button>
                 </div>
-                <div className="p-4">
+                <div className="p-5">
                   <h3 className="font-semibold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors">{item.title}</h3>
                   <p className="text-xs text-muted mt-1.5">{item.author}</p>
                   <div className="flex items-center gap-3 mt-3 text-xs text-muted">

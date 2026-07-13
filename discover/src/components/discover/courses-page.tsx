@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { IconSearch, IconStar, IconClock, IconUsers, IconBookmark, IconSparkles, IconBook2, IconAdjustmentsHorizontal } from "@tabler/icons-react";
+import { IconSearch, IconStar, IconClock, IconUsers, IconBookmark, IconBook2, IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { useFilterParams } from "@/components/ui/use-filter-params";
 import { ActiveFilters } from "@/components/ui/active-filters";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
@@ -17,17 +17,17 @@ interface Course {
 
 const allCourses: Course[] = [
   { title: "Complete Web Development Bootcamp 2026", instructor: "Huy Tran", category: "Technology", lessons: 48, duration: "16h", rating: 4.8, students: 1200, level: "Beginner", price: "Free", image: "https://picsum.photos/seed/web-cat/400/240" },
-  { title: "IELTS Speaking Masterclass", instructor: "Linh Nguyen", category: "Languages", lessons: 24, duration: "8h", rating: 4.9, students: 890, level: "Intermediate", price: "499,000 VND", image: "https://picsum.photos/seed/ielts-cat/400/240" },
-  { title: "Public Speaking for Professionals", instructor: "Minh Anh", category: "Personal development", lessons: 16, duration: "6h", rating: 4.7, students: 650, level: "All levels", price: "350,000 VND", image: "https://picsum.photos/seed/speaking-cat/400/240" },
+  { title: "IELTS Speaking Masterclass", instructor: "Linh Nguyen", category: "Languages", lessons: 24, duration: "8h", rating: 4.9, students: 890, level: "Intermediate", price: "499,000 đ", image: "https://picsum.photos/seed/ielts-cat/400/240" },
+  { title: "Public Speaking for Professionals", instructor: "Minh Anh", category: "Personal development", lessons: 16, duration: "6h", rating: 4.7, students: 650, level: "All levels", price: "350,000 đ", image: "https://picsum.photos/seed/speaking-cat/400/240" },
   { title: "Digital Photography Fundamentals", instructor: "Duc Pham", category: "Creative", lessons: 32, duration: "12h", rating: 4.8, students: 720, level: "Beginner", price: "Free", image: "https://picsum.photos/seed/photo-cat/400/240" },
-  { title: "Vietnamese Home Cooking", instructor: "Thu Ha", category: "Lifestyle", lessons: 20, duration: "10h", rating: 4.9, students: 2100, level: "Beginner", price: "299,000 VND", image: "https://picsum.photos/seed/cooking-cat/400/240" },
+  { title: "Vietnamese Home Cooking", instructor: "Thu Ha", category: "Lifestyle", lessons: 20, duration: "10h", rating: 4.9, students: 2100, level: "Beginner", price: "299,000 đ", image: "https://picsum.photos/seed/cooking-cat/400/240" },
   { title: "Startup Fundamentals", instructor: "Bao Long", category: "Business", lessons: 12, duration: "5h", rating: 4.6, students: 430, level: "Beginner", price: "Free", image: "https://picsum.photos/seed/startup-cat/400/240" },
-  { title: "Advanced React & Next.js", instructor: "Huy Tran", category: "Technology", lessons: 36, duration: "14h", rating: 4.8, students: 560, level: "Advanced", price: "599,000 VND", image: "https://picsum.photos/seed/react-cat/400/240" },
+  { title: "Advanced React & Next.js", instructor: "Huy Tran", category: "Technology", lessons: 36, duration: "14h", rating: 4.8, students: 560, level: "Advanced", price: "599,000 đ", image: "https://picsum.photos/seed/react-cat/400/240" },
   { title: "English for Beginners", instructor: "Linh Nguyen", category: "Languages", lessons: 30, duration: "20h", rating: 4.8, students: 3400, level: "Beginner", price: "Free", image: "https://picsum.photos/seed/english-cat/400/240" },
-  { title: "Music Production with Ableton", instructor: "Quoc Anh", category: "Creative", lessons: 28, duration: "18h", rating: 4.6, students: 320, level: "Intermediate", price: "750,000 VND", image: "https://picsum.photos/seed/music-cat/400/240" },
+  { title: "Music Production with Ableton", instructor: "Quoc Anh", category: "Creative", lessons: 28, duration: "18h", rating: 4.6, students: 320, level: "Intermediate", price: "750,000 đ", image: "https://picsum.photos/seed/music-cat/400/240" },
   { title: "Yoga for Beginners", instructor: "Ngoc Tram", category: "Sports", lessons: 40, duration: "15h", rating: 4.8, students: 980, level: "Beginner", price: "Free", image: "https://picsum.photos/seed/yoga-cat/400/240" },
-  { title: "Makeup & Nail Art", instructor: "Phuong Anh", category: "Beauty", lessons: 18, duration: "7h", rating: 4.5, students: 410, level: "Beginner", price: "249,000 VND", image: "https://picsum.photos/seed/beauty-cat/400/240" },
-  { title: "IELTS Writing Workshop", instructor: "Linh Nguyen", category: "Academic", lessons: 12, duration: "6h", rating: 4.7, students: 1100, level: "Intermediate", price: "399,000 VND", image: "https://picsum.photos/seed/writing-cat/400/240" },
+  { title: "Makeup & Nail Art", instructor: "Phuong Anh", category: "Beauty", lessons: 18, duration: "7h", rating: 4.5, students: 410, level: "Beginner", price: "249,000 đ", image: "https://picsum.photos/seed/beauty-cat/400/240" },
+  { title: "IELTS Writing Workshop", instructor: "Linh Nguyen", category: "Academic", lessons: 12, duration: "6h", rating: 4.7, students: 1100, level: "Intermediate", price: "399,000 đ", image: "https://picsum.photos/seed/writing-cat/400/240" },
 ];
 
 const allLevels = ["Beginner", "Intermediate", "Advanced", "All levels"];
@@ -161,7 +161,6 @@ export function CoursesPage() {
         <header className={styles.hero}>
           <div>
             <div className={styles.heroTop}>
-              <p className={styles.eyebrow}><IconSparkles size={15} />Tutoria courses</p>
               <div className={styles.search}>
                 <label htmlFor="course-search" className={styles.visuallyHidden}>Search courses</label>
                 <IconSearch size={18} />
@@ -183,7 +182,7 @@ export function CoursesPage() {
           <ActiveFilters filters={activeFilters} onRemove={(key) => params.set(key, "")} onClear={params.clear} />
         </div>}
 
-        <div className={styles.resultsLayout}>
+        <div className={`${styles.resultsLayout} ${styles.courseResultsLayout}`}>
           <aside className={styles.filterSidebar} aria-label="Filter courses">
             <div className={styles.filterSidebarHeading}><span><IconAdjustmentsHorizontal size={17} /> Filters</span>{activeFilters.length > 0 && <button type="button" onClick={params.clear}>Clear</button>}</div>
             {filterPanel}

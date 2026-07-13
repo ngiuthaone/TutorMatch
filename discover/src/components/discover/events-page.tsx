@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { IconCalendar, IconClock, IconMapPin, IconUsers, IconBookmark, IconSparkles, IconSearch, IconAdjustmentsHorizontal } from "@tabler/icons-react";
+import { IconCalendar, IconClock, IconMapPin, IconUsers, IconBookmark, IconSearch, IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { useFilterParams } from "@/components/ui/use-filter-params";
 import { ActiveFilters } from "@/components/ui/active-filters";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
@@ -18,13 +18,13 @@ interface Event {
 const quickTabs = ["All", "Near me", "Online", "Today", "This week", "This weekend", "Free"];
 
 const allEvents: Event[] = [
-  { title: "Beginner Pottery Workshop", host: "Thu Ha", date: "Sunday, 14 Jul", time: "2:00 PM", location: "Tay Ho, Ha Noi", type: "In person", price: "350,000 VND", attending: 12, capacity: 20, image: "https://picsum.photos/seed/ev-pottery/400/240", topic: "Creative arts", level: "Beginner" },
+  { title: "Beginner Pottery Workshop", host: "Thu Ha", date: "Sunday, 14 Jul", time: "2:00 PM", location: "Tay Ho, Ha Noi", type: "In person", price: "350,000 đ", attending: 12, capacity: 20, image: "https://picsum.photos/seed/ev-pottery/400/240", topic: "Creative arts", level: "Beginner" },
   { title: "IELTS Speaking Practice Group", host: "Linh Nguyen", date: "Saturday, 13 Jul", time: "10:00 AM", location: "Online", type: "Online", price: "Free", attending: 8, capacity: 15, image: "https://picsum.photos/seed/ev-ielts/400/240", topic: "Languages", level: "Intermediate" },
   { title: "Startup Networking Night", host: "Bao Long", date: "Friday, 19 Jul", time: "6:30 PM", location: "Hoan Kiem, Ha Noi", type: "In person", price: "Free", attending: 45, capacity: 60, image: "https://picsum.photos/seed/ev-startup/400/240", topic: "Business", level: "All levels" },
-  { title: "Watercolor Painting Session", host: "Duc Pham", date: "Tuesday, 16 Jul", time: "3:00 PM", location: "Online", type: "Online", price: "200,000 VND", attending: 20, capacity: 25, image: "https://picsum.photos/seed/ev-watercolor/400/240", topic: "Creative arts", level: "Beginner" },
+  { title: "Watercolor Painting Session", host: "Duc Pham", date: "Tuesday, 16 Jul", time: "3:00 PM", location: "Online", type: "Online", price: "200,000 đ", attending: 20, capacity: 25, image: "https://picsum.photos/seed/ev-watercolor/400/240", topic: "Creative arts", level: "Beginner" },
   { title: "Photography Walk: Old Quarter", host: "Duc Pham", date: "Sunday, 21 Jul", time: "7:00 AM", location: "Hoan Kiem, Ha Noi", type: "In person", price: "Free", attending: 15, capacity: 15, image: "https://picsum.photos/seed/ev-photowalk/400/240", topic: "Photography", level: "All levels" },
   { title: "Yoga in the Park", host: "Ngoc Tram", date: "Saturday, 20 Jul", time: "6:30 AM", location: "Tay Ho, Ha Noi", type: "In person", price: "Free", attending: 28, capacity: 30, image: "https://picsum.photos/seed/ev-yoga/400/240", topic: "Wellness", level: "Beginner" },
-  { title: "Cooking Class: Pho Masterclass", host: "Thu Ha", date: "Wednesday, 17 Jul", time: "5:00 PM", location: "Online", type: "Online", price: "400,000 VND", attending: 10, capacity: 12, image: "https://picsum.photos/seed/ev-pho/400/240", topic: "Cooking", level: "Intermediate" },
+  { title: "Cooking Class: Pho Masterclass", host: "Thu Ha", date: "Wednesday, 17 Jul", time: "5:00 PM", location: "Online", type: "Online", price: "400,000 đ", attending: 10, capacity: 12, image: "https://picsum.photos/seed/ev-pho/400/240", topic: "Cooking", level: "Intermediate" },
   { title: "Public Speaking Workshop", host: "Minh Anh", date: "Thursday, 18 Jul", time: "7:00 PM", location: "Online", type: "Online", price: "Free", attending: 35, capacity: 50, image: "https://picsum.photos/seed/ev-speaking/400/240", topic: "Personal development", level: "All levels" },
 ];
 
@@ -100,7 +100,7 @@ export function EventsPage() {
       <main className={styles.main}>
         <header className={styles.hero}>
           <div>
-            <div className={styles.heroTop}><p className={styles.eyebrow}><IconSparkles size={15} />Tutoria experiences</p><div className={styles.search}><label htmlFor="event-search" className={styles.visuallyHidden}>Search events</label><IconSearch size={18} /><input id="event-search" type="search" placeholder="Search events, hosts, or topics" value={query} onChange={(e) => params.set("q", e.target.value)} /></div></div>
+            <div className={styles.heroTop}><div className={styles.search}><label htmlFor="event-search" className={styles.visuallyHidden}>Search events</label><IconSearch size={18} /><input id="event-search" type="search" placeholder="Search events, hosts, or topics" value={query} onChange={(e) => params.set("q", e.target.value)} /></div></div>
             <h1 className={styles.title}>Learn where <em>life happens.</em></h1>
           </div>
           <div className={styles.orbitStat} aria-label={`${filtered.length} events match the current filters`}>

@@ -3,6 +3,18 @@
   overflow: clip;
 }
 
+.backgroundSections {
+  position: relative;
+  isolation: isolate;
+  background-color: #030812;
+  background-image:
+    linear-gradient(180deg, rgba(3, 8, 18, 0.18), rgba(3, 8, 18, 0.42)),
+    url("/images/discover-background.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
 .hero {
   position: relative;
   min-height: min(850px, calc(100svh - 72px));
@@ -269,7 +281,7 @@
 .discoveryContent > span:not(.cardMeta) { max-width: 600px; margin-top: 0.75rem; color: rgba(243, 240, 232, 0.76); font-size: 0.85rem; line-height: 1.55; }
 .cardMeta { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 44px; margin-top: 0.7rem; color: var(--primary-light); font-size: 0.75rem; font-weight: 600; }
 
-.peopleSection { border-block: 1px solid var(--tutoria-line); background: rgba(3, 8, 18, 0.56); }
+.peopleSection { border-bottom: 1px solid var(--tutoria-line); background: rgba(3, 8, 18, 0.56); }
 .peopleSection .sectionHeader {
   flex-direction: column;
   align-items: center;
@@ -280,33 +292,273 @@
   max-width: 900px;
 }
 
-.peopleRail {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.peopleMarquee {
+  position: relative;
+  width: 100vw;
+  margin-top: clamp(2rem, 3vw, 3rem);
+  margin-left: calc(50% - 50vw);
   border-top: 1px solid var(--tutoria-line);
 }
 
-.person {
-  display: grid;
-  grid-template-columns: 2rem 5.25rem minmax(0, 1fr) auto;
-  align-items: center;
-  gap: clamp(0.75rem, 1.6vw, 1.35rem);
-  min-height: 126px;
-  padding: 0.9rem clamp(0.8rem, 1.8vw, 1.4rem);
-  border-bottom: 1px solid var(--tutoria-line);
-  color: var(--foreground);
-  transition: background-color 220ms ease, transform 220ms ease;
+.peopleMarqueeStage {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
 }
 
-.person:nth-child(odd) { border-right: 1px solid var(--tutoria-line); }
-.person:hover { background: rgba(255, 255, 255, 0.025); transform: translateY(-2px); }
-.personNumber { color: rgba(174, 183, 197, 0.54); font: 0.68rem var(--font-geist-mono); }
-.personPortrait { width: 5.25rem; height: 5.25rem; border-radius: 0.8rem; overflow: hidden; }
-.personPortrait img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.78); }
-.personCopy { display: block; min-width: 0; }
-.personCopy strong { display: block; font-family: var(--font-tutoria-display); font-size: clamp(1.45rem, 2vw, 2rem); font-weight: 400; line-height: 1; }
-.personCopy small { display: block; margin-top: 0.35rem; color: var(--muted); font-size: 0.76rem; }
-.personCopy > span { display: block; width: max-content; max-width: 100%; margin-top: 0.55rem; overflow: hidden; border-bottom: 1px solid rgba(228, 197, 141, 0.46); color: var(--primary-light); font-size: 0.68rem; text-overflow: ellipsis; white-space: nowrap; }
+.peopleMarqueeRows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-block: 1rem;
+}
+
+.peopleMarqueeRow {
+  width: 100%;
+  overflow: hidden;
+}
+
+.peopleMarqueeTrack {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: peopleSlide1 38s linear infinite;
+}
+
+.peopleMarqueeRow:last-child .peopleMarqueeTrack {
+  animation-name: peopleSlide2;
+  animation-duration: 48s;
+}
+
+.peopleMarqueeRow:hover .peopleMarqueeTrack {
+  animation-play-state: paused;
+}
+
+.peopleMarqueeSet {
+  display: flex;
+  flex: none;
+  gap: 0.85rem;
+  padding-right: 0.85rem;
+}
+
+.personCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  flex: none;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  color: var(--foreground);
+  isolation: isolate;
+  transform: translateZ(0);
+  transition: border-color 220ms ease, transform 220ms ease;
+}
+
+.personCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 60%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.personCard > * {
+  position: relative;
+  z-index: 2;
+}
+
+.personCard:hover,
+.personCard:focus-visible {
+  border-color: rgba(255, 255, 255, 0.45);
+  transform: translateY(-3px);
+  outline: none;
+}
+
+.personCard:focus-visible {
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.personCardHeader {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 1.25rem 1.25rem;
+  overflow: hidden;
+}
+
+.personCardHeaderShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 60%);
+  pointer-events: none;
+}
+
+.personCardPortrait {
+  position: relative;
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background: #0a0d11;
+}
+
+.personCardPortrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.85) contrast(1.02);
+  transition: filter 300ms ease, transform 400ms ease;
+}
+
+.personCard:hover .personCardPortrait img,
+.personCard:focus-visible .personCardPortrait img {
+  filter: saturate(1) contrast(1.05);
+  transform: scale(1.06);
+}
+
+.personCardTop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-bottom: 2px;
+}
+
+.personCardName {
+  display: block;
+  font-family: var(--font-tutoria-display);
+  font-size: 1.1rem;
+  font-weight: 500;
+  line-height: 1.15;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.personCardRole {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.personCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  flex: 1;
+}
+
+.personCardAvail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #34d399;
+}
+
+.availDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+}
+
+.personCardTagline {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: rgba(174, 183, 197, 0.8);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.personCardTags {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.62rem;
+  color: rgba(174, 183, 197, 0.45);
+}
+
+.tagSep {
+  margin: 0 0.35rem;
+  color: rgba(255, 255, 255, 0.12);
+}
+
+.personCardRating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6rem;
+  color: rgba(174, 183, 197, 0.65);
+  flex-wrap: wrap;
+}
+
+.stars {
+  font-size: 0.72rem;
+  color: #f59e0b;
+  letter-spacing: 0.04em;
+}
+
+.ratingSep {
+  margin: 0 0.15rem;
+  color: rgba(255, 255, 255, 0.12);
+}
+
+.personCardLocation {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6rem;
+  color: rgba(174, 183, 197, 0.45);
+}
+
+.personCardFooter {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.personCardPrice {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: white;
+}
+
+.personCardUnit {
+  margin-left: 0.25rem;
+  font-size: 0.6rem;
+  color: rgba(174, 183, 197, 0.4);
+}
+
+@keyframes peopleSlide1 {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-25%, 0, 0); }
+}
+
+@keyframes peopleSlide2 {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-25%, 0, 0); }
+}
 
 .coursesSection .sectionHeader {
   flex-direction: column;
@@ -357,24 +609,24 @@
 .gatherVisual > img { object-fit: cover; object-position: 52% center; }
 .gatherVisual > div { position: absolute; z-index: 2; inset: auto clamp(1.5rem, 4vw, 3.5rem) clamp(2rem, 5vw, 4rem); }
 .gatherVisual h2 { max-width: 700px; margin: 0.8rem 0 1rem; font-size: clamp(3rem, 5vw, 5.5rem); line-height: 0.88; }
-.agenda { display: flex; min-height: 640px; align-self: stretch; flex-direction: column; border-radius: 1.2rem; overflow: hidden; }
+.agenda { display: flex; align-self: stretch; flex-direction: column; border-radius: 1.2rem; overflow: hidden; }
 .agendaHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.35rem; border-bottom: 1px solid var(--tutoria-line); }
 .agendaHeading small { display: block; color: var(--primary-light); font-size: 0.68rem; text-transform: uppercase; letter-spacing: .1em; }
 .agendaHeading strong { display: block; max-width: 300px; margin-top: .4rem; font-family: var(--font-tutoria-display); font-size: 1.75rem; font-weight: 400; line-height: 1; }
 .agendaHeading > a { display: grid; min-width: 44px; min-height: 44px; place-items: center; border: 1px solid var(--tutoria-line); border-radius: 50%; }
 .eventList { display: grid; flex: 1; grid-template-rows: repeat(3, minmax(0, 1fr)); }
-.eventList > a { display: grid; grid-template-columns: 3rem 1fr auto; align-items: center; gap: 1rem; min-height: 0; padding: .8rem 1.35rem; border-bottom: 1px solid var(--tutoria-line); }
+.eventList > a { display: grid; grid-template-columns: 3.5rem 1fr auto; align-items: center; gap: 1.25rem; min-height: 0; padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--tutoria-line); }
 .eventList > a:last-child { border: 0; }
 .dateBlock { text-align: center; }
-.dateBlock strong { display: block; font-family: var(--font-tutoria-display); font-size: 1.85rem; font-weight: 400; line-height: .9; }
-.dateBlock small { color: var(--primary-light); font-size: .6rem; letter-spacing: .08em; }
-.eventCopy > strong { display: block; color: var(--foreground); font-size: .84rem; }
-.eventLocation { display: flex; align-items: center; gap: .3rem; margin-top: .4rem; color: var(--muted); font-size: .68rem; }
-.eventDetails { display: flex; flex-wrap: wrap; gap: .3rem .75rem; margin-top: .65rem; color: rgba(174, 183, 197, .7); font-size: .62rem; }
+.dateBlock strong { display: block; font-family: var(--font-tutoria-display); font-size: 2.25rem; font-weight: 400; line-height: .9; }
+.dateBlock small { color: var(--primary-light); font-size: .72rem; letter-spacing: .08em; }
+.eventCopy > strong { display: block; color: var(--foreground); font-size: 1rem; }
+.eventLocation { display: flex; align-items: center; gap: .3rem; margin-top: .4rem; color: var(--muted); font-size: .8rem; }
+.eventDetails { display: flex; flex-wrap: wrap; gap: .3rem .75rem; margin-top: .65rem; color: rgba(174, 183, 197, .7); font-size: .72rem; }
 .eventDetails > span { display: inline-flex; align-items: center; gap: .25rem; }
 .eventDetails > span + span { position: relative; padding-left: .7rem; }
 .eventDetails > span + span::before { position: absolute; left: 0; color: rgba(174, 183, 197, .35); content: "·"; }
-.eventTime { color: var(--primary-light); font-size: .7rem; }
+.eventTime { color: var(--primary-light); font-size: .85rem; }
 
 .conversationSection { padding-bottom: clamp(6rem, 10vw, 10rem); overflow: hidden; }
 
@@ -388,6 +640,7 @@
 
 .conversationTrack {
   display: flex;
+  gap: 1rem;
   width: max-content;
   animation: conversationSlide 34s linear infinite;
 }
@@ -397,23 +650,38 @@
 }
 
 .conversation {
+  position: relative;
   display: flex;
-  width: clamp(320px, 30vw, 520px);
-  min-height: 330px;
+  width: clamp(320px, 30vw, 480px);
   flex: 0 0 auto;
   flex-direction: column;
-  justify-content: space-between;
-  padding: clamp(1.35rem, 2.5vw, 2.25rem);
-  border-right: 1px solid var(--tutoria-line);
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   color: var(--foreground);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, .055), transparent 58%),
-    rgba(5, 12, 23, .38);
-  transition: background-color 220ms ease, transform 220ms ease;
+  transition: transform 220ms ease;
+}
+
+.conversation::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 60%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.conversation > * {
+  position: relative;
+  z-index: 2;
 }
 
 .conversation:hover {
-  background-color: rgba(255, 255, 255, .035);
   transform: translateY(-3px);
 }
 
@@ -422,31 +690,32 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: .7rem;
+  gap: .5rem;
 }
 
 .conversationTop {
-  color: var(--primary-light);
+  color: var(--muted);
 }
 
 .conversationTopic {
-  font-size: .66rem;
-  font-weight: 700;
-  letter-spacing: .1em;
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .08em;
   text-transform: uppercase;
+  color: var(--primary-light);
 }
 
 .conversationAuthor {
   display: inline-flex;
   align-items: center;
-  gap: .78rem;
-  margin-top: 1.55rem;
+  gap: .65rem;
+  margin-top: 0.85rem;
 }
 
 .conversationAuthor img {
-  width: 48px;
-  height: 48px;
-  border: 1px solid rgba(255, 255, 255, .22);
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, .18);
   border-radius: 50%;
   object-fit: cover;
 }
@@ -454,37 +723,42 @@
 .conversationAuthor strong {
   display: block;
   color: var(--foreground);
-  font-size: .86rem;
-  font-weight: 700;
+  font-size: .82rem;
+  font-weight: 600;
 }
 
 .conversationAuthor small {
   display: block;
-  margin-top: .15rem;
+  margin-top: .05rem;
   color: var(--muted);
-  font-size: .68rem;
+  font-size: .65rem;
 }
 
 .conversationQuestion {
-  display: block;
-  margin-top: 1.7rem;
+  display: -webkit-box;
+  margin-top: 0.9rem;
+  overflow: hidden;
   font-family: var(--font-tutoria-display);
-  font-size: clamp(1.95rem, 2.55vw, 3.15rem);
+  font-size: clamp(1.15rem, 1.5vw, 1.35rem);
   font-weight: 400;
-  line-height: .98;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .conversationExcerpt {
   display: block;
   max-width: 34rem;
-  margin-top: 1.1rem;
-  color: rgba(174, 183, 197, .84);
-  font-size: .82rem;
-  line-height: 1.55;
+  margin-top: 0.55rem;
+  color: rgba(174, 183, 197, .7);
+  font-size: .75rem;
+  line-height: 1.45;
 }
 
 .conversationMeta {
-  margin-top: 2.25rem;
+  margin-top: 1.1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--muted);
   font-size: .68rem;
 }
@@ -502,9 +776,8 @@
 
 .cta { position: relative; border-top: 1px solid var(--tutoria-line); background: rgba(4, 10, 19, .82); overflow: hidden; }
 .cta::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 24% 50%, rgba(200, 148, 75, .14), transparent 24rem); }
-.ctaInner { position: relative; display: grid; grid-template-columns: minmax(260px, .55fr) minmax(0, 1fr); align-items: end; min-height: 560px; }
-.ctaInner > img { align-self: end; max-height: 520px; width: auto; object-fit: contain; filter: saturate(.76); }
-.ctaInner > div { padding-block: clamp(4rem, 8vw, 7rem); }
+.ctaInner { position: relative; display: flex; justify-content: center; min-height: auto; padding-block: clamp(4rem, 8vw, 7rem); }
+.ctaInner > div { text-align: center; }
 .cta h2 { max-width: 820px; margin-top: .8rem; font-size: clamp(3.6rem, 6vw, 6.8rem); line-height: .85; }
 .cta p:not(:first-child) { max-width: 590px; margin-top: 1.6rem; color: var(--muted); line-height: 1.7; }
 .ctaActions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 2rem; }
@@ -534,7 +807,7 @@
   .agenda { width: min(100%, 720px); min-height: 0; }
   .eventList { grid-template-rows: repeat(3, minmax(112px, auto)); }
   .conversationMarquee { margin-inline: -1rem; }
-  .conversation { width: clamp(300px, 46vw, 420px); min-height: 300px; }
+  .conversation { width: clamp(300px, 46vw, 420px); }
 }
 
 @media (max-width: 900px) {
@@ -554,14 +827,6 @@
   .discoveryGrid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: .8rem; }
   .discoveryFeature,
   .discoveryCard { flex: 0 0 min(86vw, 430px); min-height: 460px; scroll-snap-align: start; }
-  .peopleRail { grid-template-columns: 1fr; }
-  .person:nth-child(odd) { border-right: 0; }
-  .person { grid-template-columns: 2rem 4.5rem 1fr auto; min-height: 104px; }
-  .personPortrait { width: 4.5rem; height: 4.5rem; }
-  .personCopy { display: block; }
-  .personCopy strong, .personCopy small, .personCopy > span { display: block; }
-  .personCopy small { margin-top: .2rem; }
-  .personCopy > span { width: max-content; margin-top: .45rem; }
   .course { grid-template-columns: 1.4rem 6.5rem 1fr; gap: .8rem; min-height: 128px; }
   .courseImage { height: 96px; }
   .courseCopy > strong { font-size: 1.4rem; }
@@ -573,11 +838,10 @@
   .eventTime { grid-column: 2; }
   .conversationMarquee { mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); }
   .conversationTrack { animation-duration: 42s; }
-  .conversation { width: min(82vw, 370px); min-height: 280px; }
+  .conversation { width: min(82vw, 370px); }
   .conversationQuestion { font-size: 2rem; }
-  .ctaInner { grid-template-columns: 1fr; min-height: auto; padding-top: 3rem; }
-  .ctaInner > img { width: min(75vw, 360px); max-height: 360px; justify-self: center; order: 2; }
-  .ctaInner > div { padding-block: 3rem 0; }
+  .ctaInner { min-height: auto; padding-block: 3rem 0; }
+  .ctaInner > div { padding-block: 3rem 0; text-align: center; }
   .cta h2 { font-size: clamp(3.4rem, 15vw, 5rem); }
 }
 
@@ -586,9 +850,6 @@
   .search { padding-left: .8rem; }
   .pathList a { min-height: 72px; }
   .sectionHeader h2 { font-size: 3.25rem; }
-  .person { grid-template-columns: 4rem 1fr auto; }
-  .personNumber { display: none; }
-  .personPortrait { width: 4rem; height: 4rem; }
   .course { grid-template-columns: 5.6rem 1fr; }
   .courseIndex { display: none; }
   .courseImage { height: 86px; }
@@ -597,6 +858,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .peopleMarqueeTrack {
+    animation: none;
+  }
+
+  .peopleMarqueeRow:last-child .peopleMarqueeTrack {
+    animation: none;
+  }
+
   .conversationTrack {
     width: auto;
     overflow-x: auto;

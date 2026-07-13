@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
-  IconSearch, IconStar, IconMapPin, IconHeart,
-  IconCircleCheck, IconUsers, IconGlobe, IconSparkles, IconAdjustmentsHorizontal,
+  IconSearch, IconStar, IconMapPin,
+  IconCircleCheck, IconUsers, IconGlobe, IconAdjustmentsHorizontal,
 } from "@tabler/icons-react";
 import { useFilterParams } from "@/components/ui/use-filter-params";
 import { ActiveFilters } from "@/components/ui/active-filters";
@@ -20,14 +21,14 @@ interface Person {
 }
 
 const allPeople: Person[] = [
-  { name: "Minh Anh", title: "Public Speaking Coach", skills: ["Public Speaking", "Communication", "Leadership"], bio: "Helped 200+ learners speak with confidence", rating: 4.9, reviews: 124, learners: 1200, price: "250,000 VND", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/minh-anh-p/200/200", location: "Cầu Giấy", available: true },
-  { name: "Huy Tran", title: "Full-stack Developer", skills: ["JavaScript", "React", "Node.js", "Python"], bio: "8 years building web apps for startups", rating: 4.8, reviews: 89, learners: 890, price: "350,000 VND", online: true, verified: true, freeIntro: false, image: "https://picsum.photos/seed/huy-tran-p/200/200", location: "Ba Đình", available: true },
-  { name: "Linh Nguyen", title: "English & IELTS Coach", skills: ["IELTS", "English", "TOEFL", "Academic Writing"], bio: "7.5 IELTS scorer, 5 years teaching", rating: 4.9, reviews: 156, learners: 2000, price: "200,000 VND", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/linh-nguyen-p/200/200", location: "Đống Đa", available: false },
-  { name: "Duc Pham", title: "Photography Artist", skills: ["Photography", "Lightroom", "Photoshop", "Composition"], bio: "Commercial photographer, exhibition curator", rating: 4.7, reviews: 67, learners: 540, price: "400,000 VND", online: false, verified: false, freeIntro: false, image: "https://picsum.photos/seed/duc-pham-p/200/200", location: "Tây Hồ", available: true },
-  { name: "Thu Ha", title: "Cooking Instructor", skills: ["Vietnamese Cuisine", "Baking", "French Culinary"], bio: "French culinary arts, 200+ classes taught", rating: 4.9, reviews: 203, learners: 3100, price: "300,000 VND", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/thu-ha-p/200/200", location: "Hoàn Kiếm", available: true },
-  { name: "Quoc Anh", title: "Music Producer", skills: ["Music Production", "Ableton", "Sound Design", "Mixing"], bio: "Produced for top Vietnamese artists", rating: 4.6, reviews: 45, learners: 320, price: "500,000 VND", online: true, verified: false, freeIntro: false, image: "https://picsum.photos/seed/quoc-anh-p/200/200", location: "Cầu Giấy", available: false },
-  { name: "Ngoc Tram", title: "Yoga & Meditation Coach", skills: ["Yoga", "Meditation", "Mindfulness", "Breathwork"], bio: "RYT-500 certified, 8 years of practice", rating: 4.8, reviews: 112, learners: 980, price: "220,000 VND", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/ngoc-tram-p/200/200", location: "Ba Đình", available: true },
-  { name: "Bao Long", title: "Business Strategy Mentor", skills: ["Startups", "Strategy", "Marketing", "Fundraising"], bio: "Ex-VC, founded 2 successful startups", rating: 4.7, reviews: 78, learners: 650, price: "450,000 VND", online: true, verified: true, freeIntro: false, image: "https://picsum.photos/seed/bao-long-p/200/200", location: "Tây Hồ", available: true },
+  { name: "Minh Anh", title: "Public Speaking Coach", skills: ["Public Speaking", "Communication", "Leadership"], bio: "Helped 200+ learners speak with confidence", rating: 4.9, reviews: 124, learners: 1200, price: "250,000 đ", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/minh-anh-p/200/200", location: "Cầu Giấy", available: true },
+  { name: "Huy Tran", title: "Full-stack Developer", skills: ["JavaScript", "React", "Node.js", "Python"], bio: "8 years building web apps for startups", rating: 4.8, reviews: 89, learners: 890, price: "350,000 đ", online: true, verified: true, freeIntro: false, image: "https://picsum.photos/seed/huy-tran-p/200/200", location: "Ba Đình", available: true },
+  { name: "Linh Nguyen", title: "English & IELTS Coach", skills: ["IELTS", "English", "TOEFL", "Academic Writing"], bio: "7.5 IELTS scorer, 5 years teaching", rating: 4.9, reviews: 156, learners: 2000, price: "200,000 đ", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/linh-nguyen-p/200/200", location: "Đống Đa", available: false },
+  { name: "Duc Pham", title: "Photography Artist", skills: ["Photography", "Lightroom", "Photoshop", "Composition"], bio: "Commercial photographer, exhibition curator", rating: 4.7, reviews: 67, learners: 540, price: "400,000 đ", online: false, verified: false, freeIntro: false, image: "https://picsum.photos/seed/duc-pham-p/200/200", location: "Tây Hồ", available: true },
+  { name: "Thu Ha", title: "Cooking Instructor", skills: ["Vietnamese Cuisine", "Baking", "French Culinary"], bio: "French culinary arts, 200+ classes taught", rating: 4.9, reviews: 203, learners: 3100, price: "300,000 đ", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/thu-ha-p/200/200", location: "Hoàn Kiếm", available: true },
+  { name: "Quoc Anh", title: "Music Producer", skills: ["Music Production", "Ableton", "Sound Design", "Mixing"], bio: "Produced for top Vietnamese artists", rating: 4.6, reviews: 45, learners: 320, price: "500,000 đ", online: true, verified: false, freeIntro: false, image: "https://picsum.photos/seed/quoc-anh-p/200/200", location: "Cầu Giấy", available: false },
+  { name: "Ngoc Tram", title: "Yoga & Meditation Coach", skills: ["Yoga", "Meditation", "Mindfulness", "Breathwork"], bio: "RYT-500 certified, 8 years of practice", rating: 4.8, reviews: 112, learners: 980, price: "220,000 đ", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/ngoc-tram-p/200/200", location: "Ba Đình", available: true },
+  { name: "Bao Long", title: "Business Strategy Mentor", skills: ["Startups", "Strategy", "Marketing", "Fundraising"], bio: "Ex-VC, founded 2 successful startups", rating: 4.7, reviews: 78, learners: 650, price: "450,000 đ", online: true, verified: true, freeIntro: false, image: "https://picsum.photos/seed/bao-long-p/200/200", location: "Tây Hồ", available: true },
 ];
 
 const allSkills = ["Public Speaking", "JavaScript", "IELTS", "Photography", "Cooking", "Music", "Yoga", "Business"];
@@ -151,7 +152,6 @@ export function PeoplePage() {
         <header className={styles.hero}>
           <div>
             <div className={styles.heroTop}>
-              <p className={styles.eyebrow}><IconSparkles size={15} />Tutoria people</p>
               <div className={styles.search}>
                 <label htmlFor="people-search" className={styles.visuallyHidden}>Search people</label>
                 <IconSearch size={18} />
@@ -174,32 +174,40 @@ export function PeoplePage() {
         {filtered.length > 0 ? (
           <div className={styles.peopleGrid}>
             {filtered.map((person) => (
-              <article key={person.name} className={styles.personCard}>
-                <div className={styles.personImage}>
-                  <Image src={person.image} alt={person.name} fill unoptimized sizes="(max-width: 420px) 100vw, 136px" />
-                  {person.verified && <span className={styles.verified}><IconCircleCheck size={13} />Verified</span>}
-                </div>
+              <article
+                key={person.name}
+                className={styles.personCard}
+              >
                 <div className={styles.cardBody}>
-                  <p className={styles.cardKicker}>{person.title}</p>
-                  <h3 className={styles.cardTitle}>{person.name}</h3>
+                  <div className={styles.personCardHeader}>
+                    <Link className={styles.personAvatar} href={`/profile/${encodeURIComponent(person.name)}`} aria-label={`View ${person.name}'s profile`}>
+                      <Image src={person.image} alt={`${person.name}, ${person.title}`} fill unoptimized sizes="60px" />
+                    </Link>
+                    <div className={styles.personCardHeaderContent}>
+                      <div className={styles.personNameRow}>
+                        <h3><Link className={styles.cardTitle} href={`/profile/${encodeURIComponent(person.name)}`}>{person.name}</Link></h3>
+                        {person.verified && <IconCircleCheck className={styles.nameVerified} size={16} aria-label="Verified profile" />}
+                      </div>
+                      <p className={styles.cardKicker}>{person.title}</p>
+                    </div>
+                    <span className={`${styles.availability} ${person.available ? styles.available : ""}`}>
+                      {person.available ? "Available" : "Limited"}
+                    </span>
+                  </div>
                   <p className={styles.description}>{person.bio}</p>
                   <div className={styles.tagList}>
                     {person.skills.slice(0, 3).map((skill) => <span key={skill} className={styles.tag}>{skill}</span>)}
                   </div>
-                  <div className={styles.metaRow}>
-                    <span className={styles.metaItem}><IconStar size={14} className={styles.star} />{person.rating} ({person.reviews})</span>
-                    <span className={styles.metaItem}><IconUsers size={14} />{person.learners.toLocaleString("en-US")} learners</span>
-                  </div>
-                  <div className={styles.metaRow}>
-                    <span className={styles.metaItem}>{person.online ? <IconGlobe size={14} /> : <IconMapPin size={14} />}{person.online ? "Online" : "In person"}</span>
-                    {person.freeIntro && <span className={styles.status}>Free introduction</span>}
-                  </div>
-                  <div className={styles.priceRow}>
-                    <span className={styles.price}>From {person.price}</span>
-                  </div>
-                  <div className={styles.cardActions}>
-                    <button type="button" className={styles.primaryButton}>View profile</button>
-                    <button type="button" className={styles.iconButton} aria-label={`Save ${person.name}`}><IconHeart size={18} /></button>
+                  <div className={styles.cardFooter}>
+                    <div className={styles.profileMeta}>
+                      <span className={styles.metaItem}><IconStar size={14} className={styles.star} /><strong>{person.rating}</strong></span>
+                      <span className={styles.metaItem}><IconUsers size={14} />{person.learners.toLocaleString("en-US")}</span>
+                      <span className={styles.metaItem}>{person.online ? <IconGlobe size={14} /> : <IconMapPin size={14} />}{person.online ? "Online" : "In person"}</span>
+                      <span className={styles.metaItem}><IconMapPin size={14} />{person.location}</span>
+                    </div>
+                    <div className={styles.priceRow}>
+                      <span className={styles.price}><strong>{person.price}</strong><span>/ session</span></span>
+                    </div>
                   </div>
                 </div>
               </article>

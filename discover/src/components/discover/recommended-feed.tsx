@@ -34,7 +34,7 @@ const items: FeedItem[] = [
     title: "Public speaking: from nervous to natural in 30 days",
     author: "Minh Anh",
     time: "6 sessions",
-    price: "From 250,000 VND",
+    price: "From 250,000 đ",
     image: "https://picsum.photos/seed/public-speaking/400/240",
   },
   {
