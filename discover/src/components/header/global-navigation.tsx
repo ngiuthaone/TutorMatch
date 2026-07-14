@@ -124,16 +124,20 @@ function NavDropdown({ group }: { group: NavGroup }) {
 
 export function GlobalNavigation() {
   const pathname = usePathname();
+  const homeIsActive = pathname === "/" || pathname === "/landing";
   const discoverIsActive = pathname.startsWith("/discover")
     && !navGroups.some((group) => group.matchPatterns.some((pattern) => pathname.startsWith(pattern)));
 
   return (
     <div className={styles.globalNavigation}>
-      <Link href="/" className={styles.wordmark} aria-label="Tutoria home">
-        <span>Tutoria</span>
-        <span className={styles.brandSpark} aria-hidden="true">✦</span>
-      </Link>
       <nav aria-label="Primary navigation" className={styles.desktopNav}>
+        <Link
+          href="/landing"
+          aria-current={homeIsActive ? "page" : undefined}
+          className={`${styles.navLink} ${homeIsActive ? styles.navLinkActive : ""}`}
+        >
+          Home
+        </Link>
         <Link
           href="/discover"
           aria-current={discoverIsActive ? "page" : undefined}
