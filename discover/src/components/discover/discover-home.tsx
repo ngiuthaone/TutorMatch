@@ -8,19 +8,22 @@ import {
   IconMapPin,
   IconMessageCircle,
   IconStarFilled,
-  IconUsers,
 } from "@tabler/icons-react";
 
+import { EventGatherings } from "./event-gatherings";
 import { RecommendationCollage } from "./recommendation-collage";
+import { TutorFeatureGrid } from "./tutor-feature-grid";
+import { CourseJourneyMotion } from "./course-journey-motion";
+import { GlassCard } from "../glass-card";
 import styles from "./discover-home.module.css";
 
 const people = [
   { name: "Minh Anh", role: "Public speaking coach", image: "https://i.pravatar.cc/150?u=minh-anh", color: "from-orange-500 to-rose-400", availability: "Available", tagline: "Helped 200+ learners speak with confidence", tags: ["Public Speaking", "Communication", "Leadership"], rating: 4.9, studentsCount: 1200, location: "Online", district: "Cầu Giấy", hourlyRate: 250000, currency: "VND" },
-  { name: "Huy Tran", role: "Full-stack mentor", image: "https://i.pravatar.cc/150?u=huy-tran", color: "from-sky-600 to-indigo-400", availability: "Available", tagline: "500+ devs launched careers with his mentorship", tags: ["React", "TypeScript", "Node.js"], rating: 4.9, studentsCount: 500, location: "Online", district: "Seoul", hourlyRate: 60, currency: "USD" },
+  { name: "Huy Tran", role: "Full-stack mentor", image: "https://i.pravatar.cc/150?u=huy-tran", color: "from-sky-600 to-indigo-400", availability: "Available", tagline: "500+ devs launched careers with his mentorship", tags: ["React", "TypeScript", "Node.js"], rating: 4.9, studentsCount: 500, location: "Online", district: "Seoul", hourlyRate: 200000, currency: "VND" },
   { name: "Linh Nguyen", role: "IELTS coach", image: "https://i.pravatar.cc/150?u=linh-nguyen", color: "from-emerald-600 to-teal-400", availability: "Available", tagline: "Helped 300+ learners achieve band 7+", tags: ["IELTS", "Speaking", "Writing"], rating: 4.8, studentsCount: 300, location: "Online", district: "Ha Noi", hourlyRate: 180000, currency: "VND" },
-  { name: "Duc Pham", role: "Photography artist", image: "https://i.pravatar.cc/150?u=duc-pham", color: "from-amber-500 to-orange-400", availability: "Available", tagline: "Film & digital — 8 years behind the lens", tags: ["Composition", "Lighting", "Editing"], rating: 4.7, studentsCount: 180, location: "Online", district: "Da Nang", hourlyRate: 200000, currency: "VND" },
+  { name: "Duc Pham", role: "Photography artist", image: "https://i.pravatar.cc/150?u=duc-pham", color: "from-amber-500 to-orange-400", availability: "Available", tagline: "Film and digital, 8 years behind the lens", tags: ["Composition", "Lighting", "Editing"], rating: 4.7, studentsCount: 180, location: "Online", district: "Da Nang", hourlyRate: 200000, currency: "VND" },
   { name: "Thu Ha", role: "Culinary teacher", image: "https://i.pravatar.cc/150?u=thu-ha", color: "from-rose-500 to-pink-400", availability: "Available", tagline: "Vietnamese home cooking, from pho to family feasts", tags: ["Vietnamese", "Baking", "Meal Prep"], rating: 4.9, studentsCount: 250, location: "Online", district: "Hai Phong", hourlyRate: 150000, currency: "VND" },
-  { name: "Bao Long", role: "Business mentor", image: "https://i.pravatar.cc/150?u=bao-long", color: "from-violet-600 to-purple-400", availability: "Available", tagline: "Helping founders validate, build, and scale", tags: ["Strategy", "Fundraising", "Growth"], rating: 4.8, studentsCount: 90, location: "Online", district: "HCMC", hourlyRate: 75, currency: "USD" },
+  { name: "Bao Long", role: "Business mentor", image: "https://i.pravatar.cc/150?u=bao-long", color: "from-violet-600 to-purple-400", availability: "Available", tagline: "Helping founders validate, build, and scale", tags: ["Strategy", "Fundraising", "Growth"], rating: 4.8, studentsCount: 90, location: "Online", district: "HCMC", hourlyRate: 300000, currency: "VND" },
 ];
 
 const courses = [
@@ -28,12 +31,6 @@ const courses = [
   { title: "IELTS speaking masterclass", tutor: "Linh Nguyen", duration: "8 hours", lessons: 24, rating: "4.9", image: "https://picsum.photos/seed/tutoria-ielts-course/680/430" },
   { title: "Digital photography fundamentals", tutor: "Duc Pham", duration: "12 hours", lessons: 32, rating: "4.8", image: "https://picsum.photos/seed/tutoria-photo-course/680/430" },
   { title: "Public speaking for professionals", tutor: "Minh Anh", duration: "6 hours", lessons: 16, rating: "4.7", image: "https://picsum.photos/seed/tutoria-speaking-course/680/430" },
-];
-
-const events = [
-  { date: "19", month: "JUL", title: "Beginner pottery workshop", location: "Tay Ho, Ha Noi", time: "2:00 PM", host: "Hosted by Thu Ha", format: "Hands-on workshop", attendance: "12 of 16 seats" },
-  { date: "22", month: "JUL", title: "IELTS speaking circle", location: "Online", time: "10:00 AM", host: "Hosted by Linh Nguyen", format: "Live practice room", attendance: "8 learners joined" },
-  { date: "24", month: "JUL", title: "Startup networking night", location: "Hoan Kiem, Ha Noi", time: "6:30 PM", host: "Hosted by Bao Long", format: "Community meetup", attendance: "45 attending" },
 ];
 
 const conversations = [
@@ -85,33 +82,27 @@ export function DiscoverHome() {
       <RecommendationCollage />
 
       <div className={styles.backgroundSections}>
-      <section className={`${styles.section} ${styles.peopleSection}`} aria-labelledby="people-heading">
+      <section className={`${styles.section} ${styles.peopleSection}`} aria-label="Tutors and mentors">
+        <TutorFeatureGrid />
         <div className="tutoria-page-container">
-          <header className={styles.sectionHeader}>
-            <div>
-              <p className="tutoria-kicker">Learn from people</p>
-              <h2 id="people-heading">Knowledge feels different when it has a <em>human voice.</em></h2>
-            </div>
-            <Link className="tutoria-text-link" href="/people">Meet the community <IconArrowRight size={16} /></Link>
-          </header>
+          <div className={styles.peopleIntroSpace} aria-hidden="true" />
 
           <div className={styles.peopleMarquee}>
             <div className={styles.peopleMarqueeStage}>
               <div className={styles.peopleMarqueeRows}>
                 {[people.slice(0, 3), people.slice(3)].map((row, rowIndex) => (
                   <div className={styles.peopleMarqueeRow} key={`row-${rowIndex}`}>
-                    <div className={styles.peopleMarqueeTrack} data-speed={rowIndex === 0 ? 1 : 1.3}>
-                      {[0, 1, 2, 3].map((dup) => (
-                        <div className={styles.peopleMarqueeSet} key={`dup-${dup}`} aria-hidden={dup > 0 || undefined}>
+                    <div className={styles.peopleMarqueeTrack}>
+                      {[0, 1, 2, 3].map((duplicateIndex) => (
+                        <div className={styles.peopleMarqueeSet} key={`set-${duplicateIndex}`} aria-hidden={duplicateIndex > 0 || undefined}>
                           {row.map((person) => {
                             const full = Math.floor(person.rating);
-                            const currencySymbol = person.currency === "VND" ? "₫" : "$";
                             return (
                               <Link
                                 href={`/profile/${encodeURIComponent(person.name)}`}
                                 className={styles.personCard}
                                 key={person.name}
-                                tabIndex={dup > 0 ? -1 : undefined}
+                                tabIndex={duplicateIndex > 0 ? -1 : undefined}
                               >
                                 <div className={`${styles.personCardHeader} ${person.color}`}>
                                   <div className={styles.personCardHeaderShade} />
@@ -138,9 +129,7 @@ export function DiscoverHome() {
                                     ))}
                                   </div>
                                   <div className={styles.personCardRating}>
-                                    <span className={styles.stars}>
-                                      {"★".repeat(full)}
-                                    </span>
+                                    <span className={styles.stars}>{"★".repeat(full)}</span>
                                     <span>{person.rating}</span>
                                     <span className={styles.ratingSep}>·</span>
                                     <span>{person.studentsCount.toLocaleString("en-US")} learners</span>
@@ -152,12 +141,8 @@ export function DiscoverHome() {
                                   </div>
                                 </div>
                                 <div className={styles.personCardFooter}>
-                                  <span className={styles.personCardPrice}>
-                                    {currencySymbol}{person.currency === "VND" ? person.hourlyRate.toLocaleString("en-US") : person.hourlyRate}
-                                  </span>
-                                  <span className={styles.personCardUnit}>
-                                    / {person.currency === "VND" ? "session" : "hr"}
-                                  </span>
+                                  <span className={styles.personCardPrice}>{person.hourlyRate.toLocaleString("vi-VN")}đ</span>
+                                  <span className={styles.personCardUnit}>/ session</span>
                                 </div>
                               </Link>
                             );
@@ -170,80 +155,62 @@ export function DiscoverHome() {
               </div>
             </div>
           </div>
+          <div className={styles.peopleSectionAction}>
+            <Link className={`${styles.sectionLink} tutoria-text-link`} href="/people">
+              See people <IconArrowRight size={16} />
+            </Link>
+          </div>
         </div>
       </section>
 
       <section className={`${styles.section} ${styles.coursesSection}`} aria-labelledby="courses-heading">
-        <div className="tutoria-page-container">
-          <header className={styles.sectionHeader}>
-            <div>
-              <p className="tutoria-kicker">Structured journeys</p>
-              <h2 id="courses-heading">Go deep, one thoughtful lesson at a time.</h2>
+        <CourseJourneyMotion
+          className={styles.courseMotionRoot}
+          stageClassName={styles.courseStage}
+        >
+          <header className={`${styles.sectionHeader} tutoria-page-container`}>
+            <div className={styles.courseHeaderCopy}>
+              <h2 id="courses-heading">Browse course</h2>
             </div>
-            <Link className="tutoria-text-link" href="/courses">Browse courses <IconArrowRight size={16} /></Link>
+            <span className={styles.courseBrowseReveal}>
+              <Link className={`${styles.sectionLink} tutoria-text-link`} href="/courses">View all course <IconArrowRight size={16} /></Link>
+            </span>
           </header>
 
-          <div className={styles.courseList}>
+          <div className={`${styles.courseList} tutoria-page-container`} data-course-track>
             {courses.map((course, index) => (
               <Link href="/courses" className={styles.course} key={course.title}>
-                <span className={styles.courseIndex}>0{index + 1}</span>
-                <span className={styles.courseImage}><Image src={course.image} alt="" width={680} height={430} unoptimized /></span>
-                <span className={styles.courseCopy}>
-                  <small>Course by {course.tutor}</small>
-                  <strong>{course.title}</strong>
-                  <span className={styles.courseFacts}>
-                    <span><IconClock size={15} /> {course.duration}</span>
-                    <span><IconBook2 size={15} /> {course.lessons} lessons</span>
-                    <span><IconStarFilled size={14} /> {course.rating}</span>
+                <GlassCard className={styles.courseGlass}>
+                  <span className={styles.courseInner}>
+                    <span className={styles.courseIndex}>0{index + 1}</span>
+                    <span className={styles.courseImage}>
+                      <Image
+                        src={course.image}
+                        alt=""
+                        fill
+                        sizes="(max-width: 900px) calc(100vw - 3rem), (max-width: 1440px) 32vw, 496px"
+                        unoptimized
+                      />
+                    </span>
+                    <span className={styles.courseCopy}>
+                      <small>Course by {course.tutor}</small>
+                      <strong>{course.title}</strong>
+                      <span className={styles.courseFacts}>
+                        <span><IconClock size={15} /> {course.duration}</span>
+                        <span><IconBook2 size={15} /> {course.lessons} lessons</span>
+                        <span><IconStarFilled size={14} /> {course.rating}</span>
+                      </span>
+                    </span>
+                    <IconArrowUpRight className={styles.courseArrow} size={20} aria-hidden="true" />
                   </span>
-                </span>
-                <IconArrowUpRight className={styles.courseArrow} size={20} aria-hidden="true" />
+                </GlassCard>
               </Link>
             ))}
           </div>
-        </div>
+        </CourseJourneyMotion>
       </section>
 
-      <section className={`${styles.section} ${styles.gatherSection}`} aria-labelledby="gather-heading">
-        <div className={`${styles.gatherInner} tutoria-page-container`}>
-          <div className={styles.gatherVisual}>
-            <Image src="/brand/tutoria-community-sky.png" alt="A Tutoria community gathering under the stars" fill sizes="(max-width: 900px) 100vw, 48vw" />
-            <span className={styles.imageShade} aria-hidden="true" />
-            <div>
-              <p className="tutoria-kicker">Learning happens together</p>
-              <h2 id="gather-heading">Meet in the room where ideas become practice.</h2>
-              <Link className="tutoria-text-link" href="/communities">Explore communities <IconArrowRight size={16} /></Link>
-            </div>
-          </div>
-
-          <div className={`${styles.agenda} tutoria-glass`}>
-            <div className={styles.agendaHeading}>
-              <div>
-                <small>This week on Tutoria</small>
-                <strong>Gatherings worth showing up for</strong>
-              </div>
-              <Link href="/events" aria-label="View all events"><IconArrowUpRight size={20} /></Link>
-            </div>
-            <div className={styles.eventList}>
-              {events.map((event) => (
-                <Link href="/events" key={event.title}>
-                  <span className={styles.dateBlock}><strong>{event.date}</strong><small>{event.month}</small></span>
-                  <span className={styles.eventCopy}>
-                    <strong>{event.title}</strong>
-                    <span className={styles.eventLocation}><IconMapPin size={14} /> {event.location}</span>
-                    <span className={styles.eventDetails}>
-                      <span>{event.host}</span>
-                      <span>{event.format}</span>
-                      <span><IconUsers size={13} /> {event.attendance}</span>
-                    </span>
-                  </span>
-                  <span className={styles.eventTime}>{event.time}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <EventGatherings />
 
       <section className={`${styles.section} ${styles.conversationSection}`} aria-labelledby="conversations-heading">
         <div className="tutoria-page-container">
@@ -252,7 +219,7 @@ export function DiscoverHome() {
               <p className="tutoria-kicker">Open conversations</p>
               <h2 id="conversations-heading">A good question can change someone&apos;s direction.</h2>
             </div>
-            <Link className="tutoria-text-link" href="/discussions">Enter discussions <IconArrowRight size={16} /></Link>
+            <Link className={`${styles.sectionLink} tutoria-text-link`} href="/discussions">Enter discussions <IconArrowRight size={16} /></Link>
           </header>
 
           <div className={styles.conversationMarquee} aria-label="Featured discussion previews">

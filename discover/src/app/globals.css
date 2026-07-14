@@ -554,3 +554,8 @@ body.tutoria-cosmos .shadow-xl {
 .tutoria-discover-header > header {
   pointer-events: auto;
 }
+
+.tutoria-discover-header > header > div {
+  width: 100%;
+  max-width: none;
+}

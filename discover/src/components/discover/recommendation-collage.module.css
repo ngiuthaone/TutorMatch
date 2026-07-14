@@ -1,22 +1,242 @@
 .recommendationScene {
+  --reference-display: "Bebas Neue Reference", "Arial Narrow", sans-serif;
+}
+
+@font-face {
+  font-family: "Bebas Neue Reference";
+  src: url("/fonts/bebas-neue-bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+.recommendationScene {
   position: relative;
-  padding: clamp(6rem, 10vw, 10rem) clamp(1rem, 4vw, 4rem);
+  padding: clamp(5rem, 8vw, 7rem) clamp(1rem, 4vw, 4rem) clamp(6rem, 10vw, 10rem);
   overflow: clip;
   background: #000;
   isolation: isolate;
 }
 
+.heroWord {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 14;
+  display: flex;
+  width: 50%;
+  height: 50%;
+  align-items: flex-end;
+  padding-bottom: 0;
+  overflow: hidden;
+  color: rgba(243, 240, 232, 0.96);
+  font-family: var(--reference-display);
+  font-size: clamp(8rem, 20vw, 24rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.72;
+  white-space: nowrap;
+  pointer-events: none;
+  transform-origin: left bottom;
+  animation: heroWordReveal 850ms cubic-bezier(0.22, 1, 0.36, 1) 1.75s both;
+}
+
+.heroPrompt {
+  position: absolute;
+  top: calc(50% + clamp(0.75rem, 1.2vw, 1.5rem));
+  left: clamp(0.75rem, 1.2vw, 1.5rem);
+  z-index: 14;
+  color: rgba(243, 240, 232, 0.94);
+  font-family: var(--reference-display);
+  font-size: clamp(9rem, 18vw, 22rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 0.8;
+  transform: scaleX(0.82);
+  transform-origin: left top;
+  pointer-events: none;
+  animation: heroPromptReveal 700ms cubic-bezier(0.22, 1, 0.36, 1) 1.25s both;
+}
+
+.heroWordTrack {
+  display: flex;
+  width: max-content;
+  align-items: flex-end;
+  margin-bottom: -0.12em;
+  transform-origin: left center;
+  animation: discoverTrackRight 6s linear infinite;
+  will-change: transform;
+}
+
+.heroWordTrack b {
+  display: block;
+  flex: 0 0 auto;
+  padding-right: 10vw;
+  font: inherit;
+  letter-spacing: inherit;
+  transform: scaleX(0.92);
+  transform-origin: left center;
+}
+
+.editorialPanel {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  bottom: 50%;
+  left: calc(75% - 2px);
+  z-index: 4;
+  display: flex;
+  width: auto;
+  flex-direction: column;
+  padding: clamp(5.25rem, 9vh, 6.75rem) clamp(1.2rem, 1.8vw, 2rem) clamp(1.25rem, 1.8vw, 2rem);
+  border-left: 1px solid rgba(243, 240, 232, 0.2);
+  border-bottom: 1px solid rgba(243, 240, 232, 0.22);
+  background: rgba(225, 223, 217, 0.2);
+  box-shadow: inset 1px 0 rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(36px) saturate(0.35) brightness(1.12);
+  backdrop-filter: blur(36px) saturate(0.35) brightness(1.12);
+  color: rgba(243, 240, 232, 0.96);
+  pointer-events: none;
+  animation: editorialPanelReveal 650ms cubic-bezier(0.22, 1, 0.36, 1) 1.4s both;
+}
+
+.editorialPanelHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(0.6rem, 0.7vw, 0.76rem);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+}
+
+.editorialPanelHeader span:last-child {
+  color: rgba(243, 240, 232, 0.52);
+}
+
+.editorialPanelStatement {
+  margin-top: clamp(1.5rem, 2.5vw, 2.75rem);
+  font-family: var(--font-cormorant-garamond), Georgia, serif;
+  font-size: clamp(1.7rem, 2.25vw, 2.8rem);
+  letter-spacing: -0.035em;
+  line-height: 0.9;
+}
+
+.editorialPanelStatement em {
+  font-weight: 400;
+}
+
+.editorialPanelBody {
+  max-width: 34ch;
+  margin-top: auto;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(0.58rem, 0.68vw, 0.74rem);
+  font-weight: 550;
+  letter-spacing: 0.015em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
 .recommendationSticky {
   position: relative;
+  isolation: isolate;
   width: min(100%, 1440px);
-  min-height: 720px;
+  min-height: max(720px, calc(100svh - 7rem));
   margin: 0 auto;
-  background-image:
-    linear-gradient(180deg, rgba(3, 8, 18, 0.02) 0%, rgba(3, 8, 18, 0.08) 48%, rgba(3, 8, 18, 0.24) 100%),
-    url("/brand/tutoria-string.png");
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-size: cover;
+  overflow: hidden;
+}
+
+.recommendationBackdrop {
+  position: absolute;
+  inset: -4%;
+  z-index: -2;
+  background: #000 url("/brand/discover-hero-jupiter.png") center / cover no-repeat;
+  transform: scale(1.06);
+  transform-origin: center;
+  will-change: transform;
+  animation: backdropIdle 12s ease-in-out infinite alternate;
+}
+
+.referenceGrid {
+  position: absolute;
+  inset: 4px;
+  z-index: 5;
+  border-inline: 1px solid rgba(243, 240, 232, 0.24);
+  pointer-events: none;
+}
+
+.jupiterForeground {
+  position: absolute;
+  inset: -4%;
+  z-index: 6;
+  background: url("/brand/discover-hero-jupiter-foreground.png") center / cover no-repeat;
+  transform: scale(1.06);
+  transform-origin: center;
+  pointer-events: none;
+  will-change: transform;
+  animation: backdropIdle 12s ease-in-out infinite alternate;
+}
+
+.middleGridLine {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  z-index: 7;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(243, 240, 232, 0.32) 0 calc(41% + 8px),
+    transparent calc(41% + 8px) calc(62% - 68px),
+    rgba(243, 240, 232, 0.32) calc(62% - 68px) 100%
+  );
+  pointer-events: none;
+  transform-origin: left;
+  animation: gridLineHorizontal 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.gridRailTop,
+.gridRailMiddle,
+.gridRailBottom {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: rgba(243, 240, 232, 0.32);
+  transform-origin: left;
+  animation: gridLineHorizontal 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.gridRailTop { top: 0; }
+.gridRailMiddle { top: 50%; }
+.gridRailBottom { bottom: 0; }
+
+.gridRailLeft,
+.gridRailCenter,
+.gridRailRight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(243, 240, 232, 0.24);
+  transform-origin: top;
+  animation: gridLineVertical 1.35s cubic-bezier(0.22, 1, 0.36, 1) 140ms both;
+}
+
+.gridRailLeft { left: 25%; }
+.gridRailCenter { left: 50%; }
+.gridRailRight { right: 25%; }
+
+.gridNode {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  z-index: 1;
+  border: 1px solid rgba(243, 240, 232, 0.9);
+  background: #f3f0e8;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+  transform: translate(-50%, -50%);
+  animation: gridNodeReveal 420ms ease-out 1.05s both;
 }
 
 .recommendationAmbient {
@@ -28,46 +248,82 @@
   pointer-events: none;
 }
 
+.cardFocusVeil {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .recommendationHeadline {
   position: relative;
   z-index: 2;
   max-width: 1100px;
   margin: 0 auto clamp(3rem, 6vw, 6rem);
-  padding-top: 100px;
+  padding-top: clamp(6.5rem, 12vw, 10rem);
   text-align: center;
+}
+
+.recommendationIndex {
+  display: flex;
+  width: min(100%, 1040px);
+  margin: 0 auto clamp(1.5rem, 3vw, 2.6rem);
+  justify-content: space-between;
+  color: rgba(243, 240, 232, 0.58);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.62rem;
+  font-weight: 550;
+  letter-spacing: 0.14em;
 }
 
 .recommendationHeadline h2 {
   color: var(--foreground);
-  font-family: var(--font-tutoria-display);
-  font-size: clamp(2.75rem, 5.6vw, 5.8rem);
-  font-weight: 400;
-  letter-spacing: -0.045em;
-  line-height: 0.82;
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: clamp(3.2rem, 7vw, 7.4rem);
+  font-weight: 540;
+  letter-spacing: -0.065em;
+  line-height: 0.78;
   text-wrap: balance;
 }
 
 .recommendationHeadline h2 span { display: block; }
-.recommendationHeadline h2 em { color: var(--primary-light); }
+.recommendationHeadline h2 em {
+  color: var(--primary-light);
+  font-family: var(--font-cormorant-garamond), serif;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
 
 .recommendationHeaderLink {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 52px;
   align-items: center;
   gap: 0.45rem;
   margin-top: 1.3rem;
   color: var(--primary-light);
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   font-weight: 650;
 }
 
-.recommendationHeaderLink svg { transition: transform 500ms cubic-bezier(0.32, 0.72, 0, 1); }
+.recommendationHeaderLink svg {
+  width: 19px;
+  height: 19px;
+  transition: transform 500ms cubic-bezier(0.32, 0.72, 0, 1);
+}
 .recommendationHeaderLink:hover svg,
 .recommendationHeaderLink:focus-visible svg { transform: translateX(4px); }
 
 .recommendationMosaic {
+  position: relative;
+  z-index: 16;
   display: grid;
-  min-height: min(78vw, 920px);
+  width: calc(100% - clamp(2rem, 8vw, 10rem));
+  max-width: 1240px;
+  min-height: 0;
+  margin-inline: auto;
+  aspect-ratio: 1.64 / 1;
   grid-template-columns: 1fr 1.15fr 0.9fr 1.15fr 1fr;
   grid-template-rows: 1fr 1.15fr 0.9fr;
   gap: clamp(0.45rem, 0.8vw, 0.9rem);
@@ -151,7 +407,7 @@
   overflow: hidden;
   margin-top: 0.45rem;
   color: #fff;
-  font-family: var(--font-tutoria-display);
+  font-family: var(--font-geist-sans), sans-serif;
   font-size: clamp(0.95rem, 1.55vw, 1.75rem);
   font-weight: 400;
   letter-spacing: -0.025em;
@@ -194,8 +450,56 @@
 }
 
 .recommendationFooterLabel {
-  margin: calc(1.75rem + 20px) 0 0;
-  text-align: center;
+  position: relative;
+  z-index: 30;
+  display: inline-flex;
+  width: fit-content;
+  max-width: calc(100% - 2rem);
+  min-height: 60px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  margin: 1rem;
+  padding: 0.6rem 0.75rem 0.6rem clamp(1.25rem, 2.2vw, 2.25rem);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 1.15rem;
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035) 52%, rgba(255, 255, 255, 0.08)),
+    rgba(255, 255, 255, 0.035);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.16), 0 18px 50px rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(28px) saturate(0.7);
+  backdrop-filter: blur(28px) saturate(0.7);
+  color: rgba(243, 240, 232, 0.96);
+  font-size: clamp(0.9rem, 1.05vw, 1.05rem);
+  font-weight: 520;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  transition: border-color 240ms ease, background-color 240ms ease;
+}
+
+.recommendationFooterLabel:hover,
+.recommendationFooterLabel:focus-visible {
+  border-color: rgba(228, 197, 141, 0.58);
+  outline: none;
+}
+
+.recommendationFooterArrow {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1), background-color 240ms ease;
+}
+
+.recommendationFooterLabel:hover .recommendationFooterArrow,
+.recommendationFooterLabel:focus-visible .recommendationFooterArrow {
+  background: rgba(228, 197, 141, 0.18);
+  transform: translateX(3px);
 }
 
 .recommendationScrollCue { display: none; }
@@ -213,14 +517,67 @@
   94%, 100% { opacity: 0.12; transform: translate3d(0, -8vh, 0) scale(1.05); }
 }
 
+@keyframes cardFocusFade {
+  0%, 28% { opacity: 0; }
+  38% { opacity: 0.72; }
+  46%, 100% { opacity: 1; }
+}
+
 @keyframes cueFade {
   0%, 8% { opacity: 1; transform: translate3d(-50%, 0, 0); }
   16%, 100% { opacity: 0; transform: translate3d(-50%, 0.7rem, 0); }
 }
 
 @keyframes footerLabelReveal {
-  0%, 78% { opacity: 0; transform: translate3d(-50%, 0.7rem, 0); }
-  88%, 100% { opacity: 1; transform: translate3d(-50%, 0, 0); }
+  0%, 52% { opacity: 0; transform: translate3d(-50%, calc(-50% + 1rem), 0); }
+  59%, 84% { opacity: 1; transform: translate3d(-50%, -50%, 0); }
+  94%, 100% { opacity: 0; transform: translate3d(-50%, calc(-50% - 1rem), 0); }
+}
+
+@keyframes backdropIdle {
+  from { background-position: 50% 0%; }
+  to { background-position: 52% 3%; }
+}
+
+@keyframes discoverTrackRight {
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes gridLineHorizontal {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes gridLineVertical {
+  from { opacity: 0; transform: scaleY(0); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+@keyframes gridNodeReveal {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes heroPromptReveal {
+  from { opacity: 0; transform: translate3d(0, 1.25rem, 0) scaleX(0.82); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scaleX(0.82); }
+}
+
+@keyframes heroWordReveal {
+  from { opacity: 0; clip-path: inset(100% 0 0 0); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+
+@keyframes editorialPanelReveal {
+  from { opacity: 0; clip-path: inset(0 0 100% 0); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+
+@keyframes backdropDrift {
+  0% { transform: translate3d(0, 0, 0) scale(1.06); }
+  55% { transform: translate3d(0, -2.5%, 0) scale(1.1); }
+  100% { transform: translate3d(0, -5%, 0) scale(1.14); }
 }
 
 @media (min-width: 721px) and (prefers-reduced-motion: no-preference) {
@@ -243,6 +600,22 @@
 
     .recommendationAmbient { inset: 0; }
 
+    .recommendationBackdrop {
+      animation:
+        backdropIdle 12s ease-in-out infinite alternate,
+        backdropDrift 1ms linear both;
+      animation-timeline: auto, --recommendation-scene;
+      animation-range: normal, entry 0% exit 100%;
+    }
+
+    .jupiterForeground {
+      animation:
+        backdropIdle 12s ease-in-out infinite alternate,
+        backdropDrift 1ms linear both;
+      animation-timeline: auto, --recommendation-scene;
+      animation-range: normal, entry 0% exit 100%;
+    }
+
     .recommendationHeadline {
       position: absolute;
       top: 47%;
@@ -256,11 +629,17 @@
       animation-range: entry 0% exit 100%;
     }
 
+    .recommendationIndex {
+      width: min(86vw, 1040px);
+    }
+
     .recommendationMosaic {
       position: absolute;
       inset: 0;
       z-index: 16;
       min-height: 0;
+      height: auto;
+      margin: auto;
       padding: clamp(0.45rem, 0.8vw, 0.9rem);
       opacity: 0;
       transform-origin: center;
@@ -270,11 +649,22 @@
       animation-range: entry 0% exit 100%;
     }
 
+    .cardFocusVeil {
+      will-change: opacity;
+      animation: cardFocusFade 1ms ease-out both;
+      animation-timeline: --recommendation-scene;
+      animation-range: entry 0% exit 100%;
+    }
+
     .recommendationFooterLabel {
       position: absolute;
-      bottom: calc(1.15rem - 20px);
+      top: 50%;
+      right: auto;
+      bottom: auto;
       left: 50%;
       z-index: 30;
+      width: fit-content;
+      max-width: calc(100% - 2rem);
       margin: 0;
       opacity: 0;
       animation: footerLabelReveal 1ms ease-out both;
@@ -308,13 +698,134 @@
   }
 }
 
+@media (min-width: 721px) {
+  .gridRailMiddle { display: none; }
+}
+
 @media (max-width: 720px) {
-  .recommendationScene { padding: 5rem 1rem 0; }
-  .recommendationHeadline { margin-bottom: 2.5rem; }
-  .recommendationHeadline h2 { font-size: clamp(2.45rem, 10.5vw, 3.8rem); }
+  .recommendationScene {
+    padding: 4.5rem 0 0;
+  }
+
+  .recommendationSticky {
+    min-height: 0;
+  }
+
+  .recommendationBackdrop {
+    inset: 0 0 auto;
+    height: 640px;
+    background-position: center top;
+    transform: none;
+  }
+
+  .jupiterForeground {
+    inset: 0 0 auto;
+    height: 640px;
+    background-position: center top;
+    transform: none;
+  }
+
+  .middleGridLine { display: none; }
+
+  .cardFocusVeil { display: none; }
+
+  .editorialPanel { display: none; }
+
+  .heroWord {
+    bottom: auto;
+    top: 300px;
+    z-index: 14;
+    width: 100%;
+    height: auto;
+    padding-inline: 1rem;
+    font-size: clamp(6rem, 27vw, 10rem);
+    line-height: 0.78;
+  }
+
+  .heroPrompt {
+    top: 210px;
+    left: 1rem;
+    font-size: clamp(6rem, 28vw, 10rem);
+  }
+
+  .heroWordTrack { margin-bottom: 0; }
+
+  .referenceGrid {
+    height: 640px;
+    border-inline-color: rgba(243, 240, 232, 0.3);
+  }
+
+  .gridRailLeft,
+  .gridRailCenter,
+  .gridRailRight,
+  .gridRailBottom,
+  .gridNode {
+    display: none;
+  }
+
+  .gridRailTop,
+  .gridRailMiddle {
+    background: rgba(243, 240, 232, 0.34);
+  }
+
+  .gridRailMiddle {
+    top: auto;
+    bottom: 0;
+  }
+
+  .gridRailTop::before,
+  .gridRailTop::after,
+  .gridRailMiddle::before,
+  .gridRailMiddle::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border: 1px solid rgba(243, 240, 232, 0.9);
+    background: #f3f0e8;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+    transform: translateY(-50%);
+  }
+
+  .gridRailTop::before,
+  .gridRailMiddle::before { left: -4px; }
+  .gridRailTop::after,
+  .gridRailMiddle::after { right: -4px; }
+
+  .recommendationHeadline {
+    display: flex;
+    min-height: 640px;
+    margin: 0;
+    padding: 7rem 1.35rem 5rem;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .recommendationIndex {
+    position: absolute;
+    top: 2rem;
+    right: 1.35rem;
+    left: 1.35rem;
+  }
+
+  .recommendationHeadline h2 {
+    font-size: clamp(3.6rem, 15vw, 6rem);
+    line-height: 0.82;
+  }
+
+  .recommendationHeaderLink {
+    margin-top: 2.25rem;
+  }
 
   .recommendationMosaic {
+    width: auto;
+    max-width: none;
     min-height: 0;
+    margin-inline: 0;
+    aspect-ratio: auto;
+    padding: 1rem;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: none;
     grid-auto-rows: 250px;
@@ -327,4 +838,22 @@
   .recommendationCardCopy > strong { font-size: clamp(1.15rem, 5vw, 1.55rem); }
   .recommendationCardCopy > span:not(.recommendationCardMeta) { font-size: 0.65rem; }
   .recommendationCardMeta { font-size: 0.62rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroWord,
+  .heroPrompt,
+  .editorialPanel,
+  .heroWord > span,
+  .recommendationBackdrop,
+  .jupiterForeground,
+  .gridRailTop,
+  .gridRailMiddle,
+  .gridRailBottom,
+  .gridRailLeft,
+  .gridRailCenter,
+  .gridRailRight,
+  .gridNode {
+    animation: none;
+  }
 }

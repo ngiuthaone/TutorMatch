@@ -7,19 +7,68 @@ import styles from "./recommendation-collage.module.css";
 
 export function RecommendationCollage() {
   return (
-    <section className={styles.recommendationScene} aria-labelledby="recommended-heading">
-        <div className={styles.recommendationSticky}>
+    <section className={styles.recommendationScene} aria-label="Recommended for you">
+      <div className={styles.recommendationSticky}>
+          <div className={styles.recommendationBackdrop} aria-hidden="true" />
           <div className={styles.recommendationAmbient} aria-hidden="true" />
+          <div className={styles.referenceGrid} aria-hidden="true">
+            <span className={styles.gridRailTop} />
+            <span className={styles.gridRailMiddle} />
+            <span className={styles.gridRailBottom} />
+            <span className={styles.gridRailLeft} />
+            <span className={styles.gridRailCenter} />
+            <span className={styles.gridRailRight} />
+            {[0, 25, 50, 75, 100].map((position) => (
+              <i
+                className={styles.gridNode}
+                key={`top-${position}`}
+                style={{ left: `${position}%`, top: 0 }}
+              />
+            ))}
+            {[0, 25, 50, 75, 100].map((position) => (
+              <i
+                className={styles.gridNode}
+                key={`bottom-${position}`}
+                style={{ left: `${position}%`, top: "100%" }}
+              />
+            ))}
+            {[0, 25, 50, 75, 100].map((position) => (
+              <i
+                className={styles.gridNode}
+                key={`middle-${position}`}
+                style={{ left: `${position}%`, top: "50%" }}
+              />
+            ))}
+          </div>
+          <div className={styles.jupiterForeground} aria-hidden="true" />
+          <div className={styles.middleGridLine} aria-hidden="true" />
 
-          <header className={styles.recommendationHeadline}>
-            <h2 id="recommended-heading">
-              <span>Start with something</span>
-              <span>that <em>pulls you in.</em></span>
-            </h2>
-            <Link href="/discover/for-you" className={styles.recommendationHeaderLink}>
-              All recommendations <IconArrowRight size={16} aria-hidden="true" />
-            </Link>
-          </header>
+          <div className={styles.heroPrompt} aria-hidden="true">LET&apos;S</div>
+
+          <div className={styles.heroWord} aria-hidden="true">
+            <span className={styles.heroWordTrack}>
+              <b>DISCOVER</b>
+              <b>DISCOVER</b>
+            </span>
+          </div>
+
+          <aside className={styles.editorialPanel} aria-label="Tutoria introduction">
+            <div className={styles.editorialPanelHeader}>
+              <span>TUTORIA</span>
+              <span>.01</span>
+            </div>
+            <p className={styles.editorialPanelStatement}>
+              Be curious.<br />
+              <em>Learn beyond limits</em>
+            </p>
+            <p className={styles.editorialPanelBody}>
+              Knowledge shaped by people, practice, and shared experience. Discover
+              mentors, ideas, and communities that turn curiosity into something you
+              can carry forward.
+            </p>
+          </aside>
+
+          <div className={styles.cardFocusVeil} aria-hidden="true" />
 
           <div className={styles.recommendationMosaic} aria-label="Recommendations chosen for you">
             {forYouItems.map((item) => (
@@ -45,14 +94,20 @@ export function RecommendationCollage() {
             ))}
           </div>
 
-          <Link className={`${styles.recommendationFooterLabel} tutoria-text-link`} href="/discover/for-you">
-            Recommended for you <IconArrowRight size={16} aria-hidden="true" />
-          </Link>
+          <CuratedTransitionBar />
 
-          <div className={styles.recommendationScrollCue} aria-hidden="true">
-            <span /> Scroll to explore
-          </div>
         </div>
     </section>
+  );
+}
+
+function CuratedTransitionBar() {
+  return (
+    <Link className={styles.recommendationFooterLabel} href="/discover/for-you">
+      <span>See what we curated for you</span>
+      <span className={styles.recommendationFooterArrow} aria-hidden="true">
+        <IconArrowRight size={20} />
+      </span>
+    </Link>
   );
 }

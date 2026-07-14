@@ -2,6 +2,8 @@
 
 import { CloudRain, Play } from "lucide-react";
 
+import { GlassCard } from "./glass-card";
+
 const calendarDays = [
   null,
   null,
@@ -93,30 +95,6 @@ export default function AppleGlass({
         </section>
       </div>
     </main>
-  );
-}
-
-function GlassCard({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={[
-        "relative overflow-hidden rounded-[38px]",
-        "border border-white/35",
-        "bg-white/5 backdrop-blur-2xl",
-        "shadow-xl shadow-black/10",
-        "before:absolute before:inset-0",
-        "before:bg-gradient-to-br before:from-white/10 before:via-transparent before:to-transparent",
-        className,
-      ].join(" ")}
-    >
-      <div className="relative h-full">{children}</div>
-    </div>
   );
 }
 
