@@ -96,7 +96,7 @@ export function EventsPage() {
   </div>;
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${styles.solidBlackPage}`}>
       <main className={styles.main}>
         <header className={styles.hero}>
           <div>

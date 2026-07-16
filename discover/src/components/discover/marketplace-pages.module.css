@@ -33,6 +33,14 @@
   pointer-events: none;
 }
 
+.solidBlackPage {
+  background: #000;
+}
+
+.solidBlackPage::before {
+  content: none;
+}
+
 .main {
   position: relative;
   z-index: 1;
@@ -1103,6 +1111,242 @@ a.primaryButton {
 .courseCard > * {
   position: relative;
   z-index: 2;
+}
+
+.forYouCard {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.23);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.045);
+  -webkit-backdrop-filter: blur(28px) saturate(1.18);
+  backdrop-filter: blur(28px) saturate(1.18);
+  box-shadow:
+    0 26px 64px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.055);
+  color: inherit;
+  text-decoration: none;
+  transform: translate3d(0, 0, 0);
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 300ms ease,
+    background-color 300ms ease,
+    box-shadow 300ms ease;
+}
+
+.forYouCard::before,
+.forYouCard::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+}
+
+.forYouCard::before {
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.115), transparent 34%),
+    linear-gradient(325deg, rgba(200, 148, 75, 0.045), transparent 44%);
+}
+
+.forYouCard::after {
+  inset: 1px;
+  z-index: 1;
+  border-radius: 20px;
+  background: radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.08), transparent 38%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+  opacity: 0.82;
+  transition: opacity 300ms ease;
+}
+
+.forYouCard > * {
+  position: relative;
+  z-index: 2;
+}
+
+.forYouCard:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.065);
+  box-shadow:
+    0 34px 82px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(200, 148, 75, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.07);
+  transform: translate3d(0, -5px, 0);
+}
+
+.forYouCard:hover::after {
+  opacity: 1;
+}
+
+.forYouCard:active {
+  transform: translate3d(0, -1px, 0) scale(0.995);
+}
+
+.forYouCard:focus-visible {
+  border-color: rgba(228, 197, 141, 0.72);
+  outline: none;
+  box-shadow:
+    0 30px 72px rgba(0, 0, 0, 0.42),
+    0 0 0 3px rgba(200, 148, 75, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+.forYouMedia {
+  position: relative;
+  overflow: hidden;
+  background: #090d14;
+}
+
+.forYouMedia::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 52%, rgba(0, 0, 0, 0.34));
+  content: "";
+  pointer-events: none;
+}
+
+.forYouBadge,
+.forYouBookmark {
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(8, 12, 18, 0.42);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.forYouBadge {
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.forYouBadge::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 60%);
+  content: "";
+  pointer-events: none;
+}
+
+.forYouBookmark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  padding: 0;
+  border-radius: 11px;
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  transition: background-color 220ms ease, border-color 220ms ease, transform 220ms ease;
+}
+
+.forYouBookmark:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.forYouBookmark:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.forYouCardBody {
+  flex: 1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.012), rgba(255, 255, 255, 0.028));
+}
+
+.personCard,
+.eventCard,
+.communityCard,
+.courseCard {
+  isolation: isolate;
+  border-color: rgba(255, 255, 255, 0.23);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.045);
+  -webkit-backdrop-filter: blur(28px) saturate(1.18);
+  backdrop-filter: blur(28px) saturate(1.18);
+  box-shadow:
+    0 26px 64px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.055);
+  transform: translate3d(0, 0, 0);
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 300ms ease,
+    background-color 300ms ease,
+    box-shadow 300ms ease;
+}
+
+.personCard::before,
+.eventCard::before,
+.communityCard::before,
+.courseCard::before {
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.115), transparent 34%),
+    linear-gradient(325deg, rgba(200, 148, 75, 0.045), transparent 44%);
+}
+
+.personCard::after,
+.eventCard::after,
+.communityCard::after,
+.courseCard::after {
+  position: absolute;
+  inset: 1px;
+  z-index: 1;
+  border-radius: 20px;
+  background: radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.08), transparent 38%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+  content: "";
+  opacity: 0.82;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.personCard:hover,
+.eventCard:hover,
+.communityCard:hover,
+.courseCard:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.065);
+  box-shadow:
+    0 34px 82px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(200, 148, 75, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.07);
+  transform: translate3d(0, -5px, 0);
+}
+
+.personCard:hover::after,
+.eventCard:hover::after,
+.communityCard:hover::after,
+.courseCard:hover::after {
+  opacity: 1;
+}
+
+.personCard:focus-within,
+.eventCard:focus-within,
+.communityCard:focus-within,
+.courseCard:focus-within {
+  border-color: rgba(228, 197, 141, 0.72);
+  box-shadow:
+    0 30px 72px rgba(0, 0, 0, 0.42),
+    0 0 0 3px rgba(200, 148, 75, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+.eventCard:nth-child(-n + 2) {
+  border-top-color: rgba(255, 255, 255, 0.23);
 }
 
 .cardImage,

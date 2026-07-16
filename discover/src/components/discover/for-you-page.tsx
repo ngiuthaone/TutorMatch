@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { IconSearch, IconStar, IconClock, IconBookmark, IconHeart, IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { useFilterParams } from "@/components/ui/use-filter-params";
 import { ActiveFilters } from "@/components/ui/active-filters";
@@ -82,7 +83,7 @@ export function ForYouPage() {
   </div>;
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${styles.solidBlackPage}`}>
       <main className={styles.main}>
         <header className={styles.hero}><div><div className={styles.heroTop}><div className={styles.search}><label htmlFor="foryou-search" className={styles.visuallyHidden}>Search recommendations</label><IconSearch size={18} /><input id="foryou-search" type="search" placeholder="Search recommendations" value={query} onChange={(e) => params.set("q", e.target.value)} /></div></div><h1 className={styles.title}>Chosen for your <em>curiosity.</em></h1></div><div className={styles.orbitStat}><div><strong>{filtered.length}</strong><span>ideas in your orbit</span></div></div></header>
         <div className={styles.mobileResultsTools}><button type="button" className={styles.mobileFilterButton} onClick={() => setFiltersOpen(true)}><IconAdjustmentsHorizontal size={17} /> Filters{activeFilters.length ? ` (${activeFilters.length})` : ""}</button></div>
@@ -90,16 +91,15 @@ export function ForYouPage() {
         <div className={styles.resultsLayout}><aside className={styles.filterSidebar} aria-label="Filter recommendations"><div className={styles.filterSidebarHeading}><span><IconAdjustmentsHorizontal size={17} /> Filters</span>{activeFilters.length > 0 && <button type="button" onClick={params.clear}>Clear</button>}</div>{filterPanel}</aside><div className={styles.resultsColumn}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((item) => (
-              <a key={item.title} href="#" className="group relative rounded-2xl overflow-hidden transition-all duration-200" style={{ border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.04)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
-                <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.05), transparent 60%)" }} />
-                <div className="aspect-[5/3] overflow-hidden bg-surface relative">
+              <Link key={item.title} href={item.href} className={`${styles.forYouCard} group`}>
+                <div className={`${styles.forYouMedia} aspect-[5/3]`}>
                   <Image src={item.image} alt={item.title} fill unoptimized sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                  <div className="absolute top-3 left-3 overflow-hidden rounded-md border border-white/35 bg-white/5 backdrop-blur-2xl shadow-xl shadow-black/10 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:via-transparent before:to-transparent">
+                  <div className={`${styles.forYouBadge} absolute top-3 left-3`}>
                     <span className="relative block px-2 py-0.5 text-[10px] font-semibold text-white/90">{item.typeLabel}</span>
                   </div>
-                  <button className="absolute top-3 right-3 p-1.5 rounded-lg bg-black/20 backdrop-blur-sm text-white hover:bg-black/40 transition-colors"><IconBookmark size={14} /></button>
+                  <button type="button" aria-label={`Save ${item.title}`} className={`${styles.forYouBookmark} absolute top-3 right-3`}><IconBookmark size={14} /></button>
                 </div>
-                <div className="p-5">
+                <div className={`${styles.forYouCardBody} p-5`}>
                   <h3 className="font-semibold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors">{item.title}</h3>
                   <p className="text-xs text-muted mt-1.5">{item.author}</p>
                   <div className="flex items-center gap-3 mt-3 text-xs text-muted">
@@ -113,7 +113,7 @@ export function ForYouPage() {
                     </div>
                   )}
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
 

@@ -4,6 +4,9 @@
   const API_BASE_URL = (window.TUTORMATCH_API_BASE_URL || "").replace(/\/$/, "");
   const API_STATE_URL = `${API_BASE_URL}/api/state`;
   const DISCOVER_URL = window.TUTORIA_DISCOVER_URL || "/discover";
+  const DISCOVER_ORIGIN = DISCOVER_URL.match(/^https?:\/\/[^/]+/i)?.[0] || "";
+  const SIGN_IN_URL = `${DISCOVER_ORIGIN}/auth/sign-in`;
+  const SIGN_UP_URL = `${DISCOVER_ORIGIN}/auth/sign-up`;
   const app = document.getElementById("app");
   let backendEnabled = location.protocol !== "file:";
   let cleanupSubjectGallery = null;
@@ -226,12 +229,11 @@
   }
 
   function publicShell(content, active = "home") {
-    const user = currentUser();
     const mobileItems = [
       [DISCOVER_URL, "Discover"],
       ["#reach-us", "About Us"],
       ["#fyp", "FYP"],
-      ["#/auth/login", "Sign In"]
+      [SIGN_IN_URL, "Sign In"]
     ];
     return `
       <header class="site-header public-header">
@@ -243,8 +245,8 @@
           <a href="#fyp">FYP</a>
         </nav>
         <div class="header-actions">
-          <a class="header-cta" href="#/auth/login">Sign In</a>
-          <a class="header-cta header-cta-primary" href="#/auth/register/student">Sign Up</a>
+          <a class="header-cta" href="${escapeHtml(SIGN_IN_URL)}">Sign In</a>
+          <a class="header-cta header-cta-primary" href="${escapeHtml(SIGN_UP_URL)}">Sign Up</a>
           <button class="mobile-menu-button" type="button" data-action="open-mobile-menu" aria-label="Open menu" aria-controls="mobile-menu">
             <span></span><span></span><span></span>
           </button>
@@ -260,7 +262,7 @@
           <nav aria-label="Mobile navigation">
             ${mobileItems.map(([href, label], index) => `<a href="${href}" style="--i:${index}">${escapeHtml(label)}</a>`).join("")}
           </nav>
-          <a class="mobile-menu-cta" href="#/auth/register/student">Sign Up</a>
+          <a class="mobile-menu-cta" href="${escapeHtml(SIGN_UP_URL)}">Sign Up</a>
         </div>
       </aside>
       ${content}
@@ -411,6 +413,9 @@
             ${communityColumns.map(communityColumn).join("")}
           </div>
         </section>
+        <div class="horizontal-story" id="horizontal-story">
+          <div class="pin-stage">
+            <div class="story-track">
         <section class="learner-section" data-learner-section aria-labelledby="learner-section-heading">
           <div class="learner-section-bg" aria-hidden="true"></div>
           <div class="learner-comets" aria-hidden="true">
@@ -486,37 +491,53 @@
             </div>
           </div>
         </section>
+
+            </div>
+
+        <!-- Timeline route is a foreground sibling of the moving panels. -->
+        <svg id="timeline-svg" class="timeline-svg" viewBox="0 0 3200 280" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <clipPath id="timeline-progress-clip">
+              <rect id="timeline-progress-rect" x="0" y="0" width="0" height="360" />
+            </clipPath>
+          </defs>
+          <path id="timeline-route" class="timeline-path-dotted"
+            d="M0,150 C200,218 400,86 600,158 S1000,226 1200,147 S1600,72 1800,164 C1920,220 2035,325 2133,325 C2230,325 2380,225 2500,193 C2610,165 2720,165 2830,193 C2950,225 3080,295 3200,325"/>
+          <path class="timeline-path" clip-path="url(#timeline-progress-clip)"
+            d="M0,150 C200,218 400,86 600,158 S1000,226 1200,147 S1600,72 1800,164 C1920,220 2035,325 2133,325 C2230,325 2380,225 2500,193 C2610,165 2720,165 2830,193 C2950,225 3080,295 3200,325"/>
+        </svg>
+
+        <!-- Glowing route marker (viewport-pinned while the panels move). -->
+        <div id="timeline-marker" class="timeline-marker" aria-hidden="true">
+          <div class="timeline-star-pulse">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <defs>
+                <radialGradient id="timeline-star-halo" cx="50%" cy="50%" r="50%">
+                  <stop offset="0" stop-color="#fff" stop-opacity=".94"/>
+                  <stop offset=".2" stop-color="#fff4bf" stop-opacity=".7"/>
+                  <stop offset=".52" stop-color="#a9c8ff" stop-opacity=".2"/>
+                  <stop offset="1" stop-color="#a9c8ff" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+              <circle cx="32" cy="32" r="29" fill="url(#timeline-star-halo)"/>
+              <path d="M32 2 C34.5 21.5 42.5 29.5 62 32 C42.5 34.5 34.5 42.5 32 62 C29.5 42.5 21.5 34.5 2 32 C21.5 29.5 29.5 21.5 32 2Z" fill="#fff9dd"/>
+              <path d="M32 12 C33.7 24.8 39.2 30.3 52 32 C39.2 33.7 33.7 39.2 32 52 C30.3 39.2 24.8 33.7 12 32 C24.8 30.3 30.3 24.8 32 12Z" fill="#fff"/>
+              <circle cx="32" cy="32" r="4.5" fill="#fff"/>
+            </svg>
+          </div>
+        </div>
+
+          </div>
+        </div>
+        <section class="vertical-blank-section" aria-hidden="true"></section>
       </main>
     `);
-  }
-
-  function pageAuth(mode = "login", role = "student") {
-    const isLogin = mode === "login";
-    return publicShell(`
-      <main class="auth-page">
-        <section class="auth-story">
-          <p class="kicker">${isLogin ? "Quay lại TutorMatch" : "Bắt đầu đúng vai trò"}</p>
-          <h1>${isLogin ? "Đăng nhập để tiếp tục quản lý buổi học." : "Một tài khoản, một vai trò rõ ràng cho MVP."}</h1>
-          <p>Phụ huynh tạo nhu cầu học. Gia sư nộp hồ sơ xác minh. Cả hai trao đổi và chốt lịch trong app.</p>
-        </section>
-        <form class="auth-card" data-form="${isLogin ? "login" : "register"}">
-          <h2>${isLogin ? "Đăng nhập" : "Đăng ký"}</h2>
-          ${isLogin ? "" : `<input type="hidden" name="role" value="${escapeHtml(role)}">${role === "tutor" ? `<div class="role-note">${icon("book")}Bạn đang đăng ký làm gia sư.</div>` : ""}`}
-          <label>Email <input name="email" type="email" autocomplete="email" required value="${isLogin ? "student@example.com" : ""}" placeholder="you@example.com"></label>
-          ${isLogin ? "" : `<label>Số điện thoại <input name="phone" type="tel" autocomplete="tel" required placeholder="0901 111 222"></label>`}
-          <label>Mật khẩu <input name="password" type="password" autocomplete="${isLogin ? "current-password" : "new-password"}" required value="${isLogin ? "Pass123!" : ""}" placeholder="Tối thiểu 6 ký tự"></label>
-          <button class="primary" type="submit">${isLogin ? "Đăng nhập" : "Tạo tài khoản"}</button>
-          <p>${isLogin ? `Chưa có tài khoản? <a href="#/auth/register/student">Đăng ký</a>` : `Đã có tài khoản? <a href="#/auth/login">Đăng nhập</a>`}</p>
-          ${isLogin ? `<small>Tài khoản thử: student@example.com, tutor@example.com, admin@example.com · Pass123!</small>` : ""}
-        </form>
-      </main>
-    `, "auth");
   }
 
   function requireUser(role) {
     const user = currentUser();
     if (!user) {
-      navigate("#/auth/login");
+      window.location.assign(SIGN_IN_URL);
       return null;
     }
     if (role && user.role !== role) {
@@ -933,7 +954,6 @@
     const [path, query = ""] = hash.slice(1).split("?");
     const parts = path.split("/").filter(Boolean);
     if (!parts.length) return pageHome();
-    if (parts[0] === "auth") return pageAuth(parts[1] || "login", parts[2] || "student");
     if (parts[0] === "student") {
       if (parts[1] === "tutors") return pageStudentTutors();
       if (parts[1] === "messages") return pageMessages("student");
@@ -968,6 +988,139 @@
     initCommunityJourney();
     initLearnerSection();
     initFloatingPills();
+    initHorizontalStory();
+  }
+
+  let cleanupHorizontalStory = null;
+  function initHorizontalStory() {
+    cleanupHorizontalStory?.();
+    cleanupHorizontalStory = null;
+    const story = document.getElementById("horizontal-story");
+    if (!story || typeof story.querySelector !== "function") return;
+    const pin = story.querySelector(".pin-stage");
+    const track = story.querySelector(".story-track");
+    if (!pin || !track) return;
+    const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (prefersReduced) return;
+
+    const timelineSvg = document.getElementById("timeline-svg");
+    const timelineRoute = document.getElementById("timeline-route");
+    const timelineProgressRect = document.getElementById("timeline-progress-rect");
+    const timelineMarker = document.getElementById("timeline-marker");
+
+    let rafId = 0;
+    let currentX = 0;
+    let targetX = 0;
+    let maxTranslate = 1;
+    let trackWidth = 1;
+    let routeLength = 1;
+    let markerFinishDistance = 1;
+    let markerTravelDistance = 1;
+    let markerEndpointHold = 1;
+    let markerHalfWidth = 32;
+    let markerHalfHeight = 32;
+    let journeyDistance = 1;
+
+    function measure() {
+      track.style.transform = "translate3d(0,0,0)";
+      trackWidth = Math.max(1, track.scrollWidth);
+      maxTranslate = Math.max(1, trackWidth - window.innerWidth);
+      const pinnedMarkerX = window.innerWidth * 0.29;
+      markerHalfWidth = (timelineMarker?.offsetWidth || 64) / 2;
+      markerHalfHeight = (timelineMarker?.offsetHeight || 64) / 2;
+      // Compress the final traversal so the connector does not require a full
+      // extra viewport of scrolling after it comes into view.
+      markerFinishDistance = Math.max(1, window.innerWidth * 0.44);
+      markerTravelDistance = Math.max(1, window.innerWidth + markerHalfWidth - pinnedMarkerX);
+      markerEndpointHold = Math.min(72, window.innerWidth * 0.05);
+      journeyDistance = maxTranslate + markerFinishDistance + markerEndpointHold;
+      routeLength = timelineRoute?.getTotalLength?.() || 1;
+      if (timelineSvg) timelineSvg.style.width = `${trackWidth}px`;
+      story.style.height = `${window.innerHeight + journeyDistance}px`;
+      updateTarget();
+      currentX = targetX;
+      paint();
+    }
+
+    function updateTarget() {
+      const sectionTop = story.offsetTop;
+      const localScroll = window.scrollY - sectionTop;
+      targetX = Math.max(0, Math.min(localScroll, journeyDistance));
+    }
+
+    function paint() {
+      currentX += (targetX - currentX) * 0.085;
+      if (Math.abs(targetX - currentX) < 0.15) currentX = targetX;
+
+      // The panels stop on the connector section while the marker completes the route.
+      const trackX = Math.min(currentX, maxTranslate);
+      track.style.transform = `translate3d(${-trackX}px, 0, 0)`;
+      if (timelineSvg) {
+        timelineSvg.style.transform = `translate3d(${-trackX}px, 0, 0)`;
+      }
+
+      // The star stays pinned during the panel transitions, then crosses the
+      // connector panel and holds at the route endpoint before the story unpins.
+      if (timelineSvg && timelineRoute && timelineMarker) {
+        const pinnedMarkerX = window.innerWidth * 0.29;
+        const finishProgress = Math.max(0, Math.min((currentX - maxTranslate) / markerFinishDistance, 1));
+        const markerScreenX = currentX < pinnedMarkerX
+          ? Math.max(0, currentX)
+          : pinnedMarkerX + finishProgress * markerTravelDistance;
+        const routeX = Math.max(0, Math.min(trackX + markerScreenX, trackWidth));
+        const viewBoxX = (routeX / trackWidth) * 3200;
+
+        // Center the star on the route so it visibly reaches the far-right endpoint.
+        timelineMarker.style.transform = `translate3d(${markerScreenX - markerHalfWidth}px, 0, 0)`;
+
+        // Clip-path expands to show the solid line up to the marker's x.
+        if (timelineProgressRect) {
+          timelineProgressRect.setAttribute("width", String(viewBoxX));
+        }
+
+        // Binary search for the point on the curve at viewBoxX
+        let low = 0;
+        let high = routeLength;
+        for (let i = 0; i < 15; i++) {
+          const mid = (low + high) / 2;
+          const pt = timelineRoute.getPointAtLength(mid);
+          if (pt.x < viewBoxX) low = mid;
+          else high = mid;
+        }
+        const pt = timelineRoute.getPointAtLength((low + high) / 2);
+        const svgRect = timelineSvg.getBoundingClientRect();
+        const svgBottom = window.innerHeight * 0.08;
+        const svgTop = window.innerHeight - svgBottom - svgRect.height;
+        const markerTop = svgTop + (pt.y / 280) * svgRect.height - markerHalfHeight;
+        timelineMarker.style.top = `${markerTop}px`;
+
+        // The sticky stage itself controls when the star enters and leaves the viewport.
+        // Keep it visible for the full learner, sharer, and connector sequence.
+        timelineMarker.classList.add("is-visible");
+      }
+
+      if (Math.abs(targetX - currentX) > 0.15) {
+        rafId = requestAnimationFrame(paint);
+      } else {
+        rafId = 0;
+      }
+    }
+
+    function onScroll() {
+      updateTarget();
+      if (!rafId) rafId = requestAnimationFrame(paint);
+    }
+
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    cleanupHorizontalStory = () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }
 
   function initLearnerSection() {
@@ -1700,26 +1853,7 @@
     const type = form.dataset.form;
     const values = formValues(form);
     if (type === "hero-search") {
-      navigate("#/auth/register/student");
-    }
-    if (type === "login") {
-      const user = state.users.find((item) => item.email === values.email && item.password === values.password);
-      if (!user) {
-        alert("Email hoặc mật khẩu chưa đúng.");
-        return;
-      }
-      state.currentUserId = user.id;
-      save();
-      navigate(user.role === "admin" ? "#/admin" : `#/${user.role}`);
-    }
-    if (type === "register") {
-      const role = values.role || "student";
-      const user = { id: `u_${Date.now()}`, name: role === "student" ? "Người học mới" : "Gia sư mới", email: values.email, password: values.password, role, studentKind: "parent", phone: values.phone, address: "Chưa cập nhật", avatarUrl: role === "student" ? "assets/profile-review-emily.png" : "assets/tutor-isabella.png", createdAt: new Date().toISOString() };
-      state.users.push(user);
-      if (role === "tutor") state.tutorProfiles.push({ userId: user.id, subjects: ["Toán"], regions: ["Online"], format: "online", hourlyRate: 250000, age: 20, educationLevel: "college", availability: ["T3 tối"], bio: "Gia sư mới đang hoàn thiện hồ sơ.", credentialFiles: ["pending.pdf"], verificationStatus: "pending_review", rejectionReason: "", ratingAvg: 0 });
-      state.currentUserId = user.id;
-      save();
-      navigate(`#/${role}`);
+      window.location.assign(SIGN_UP_URL);
     }
     if (type === "request") {
       const request = { id: `r_${Date.now()}`, studentId: currentUser().id, subjects: values.subjects, grade: values.grade, region: values.region, format: values.format, schedule: values.schedule, budgetMin: Number(values.budgetMin), budgetMax: Number(values.budgetMax), studentsCount: Number(values.studentsCount), note: values.note, status: "open", createdAt: new Date().toISOString() };

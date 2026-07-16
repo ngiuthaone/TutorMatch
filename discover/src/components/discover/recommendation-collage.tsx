@@ -55,7 +55,6 @@ export function RecommendationCollage() {
           <aside className={styles.editorialPanel} aria-label="Tutoria introduction">
             <div className={styles.editorialPanelHeader}>
               <span>TUTORIA</span>
-              <span>.01</span>
             </div>
             <p className={styles.editorialPanelStatement}>
               Be curious.<br />

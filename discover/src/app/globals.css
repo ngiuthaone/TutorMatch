@@ -125,6 +125,10 @@ body.tutoria-cosmos .shadow-xl {
   color: var(--foreground);
 }
 
+.tutoria-marketplace-shell {
+  background: #000;
+}
+
 .tutoria-page-container {
   width: min(100% - 2rem, 82rem);
   margin-inline: auto;

@@ -1,15 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  IconArticle,
   IconArrowRight,
   IconArrowUpRight,
   IconBook2,
+  IconBookUpload,
+  IconCalendarEvent,
+  IconChalkboardTeacher,
   IconClock,
   IconMapPin,
-  IconMessageCircle,
   IconStarFilled,
 } from "@tabler/icons-react";
 
+import { ConversationTimeline } from "./conversation-timeline";
 import { EventGatherings } from "./event-gatherings";
 import { RecommendationCollage } from "./recommendation-collage";
 import { TutorFeatureGrid } from "./tutor-feature-grid";
@@ -33,46 +37,30 @@ const courses = [
   { title: "Public speaking for professionals", tutor: "Minh Anh", duration: "6 hours", lessons: 16, rating: "4.7", image: "https://picsum.photos/seed/tutoria-speaking-course/680/430" },
 ];
 
-const conversations = [
+const creatorPaths = [
   {
-    author: "Linh Nguyen",
-    topic: "Languages",
-    text: "The smallest daily practice that changed your learning rhythm?",
-    excerpt: "A thread for tiny routines that actually survived busy weeks.",
-    replies: 28,
-    image: "https://picsum.photos/seed/linh-language-thread/96/96",
+    title: "Publish a course",
+    description: "Shape what you know into a clear learning path people can follow at their own pace.",
+    href: "/auth/sign-up?intent=creator",
+    icon: IconBookUpload,
   },
   {
-    author: "Duc Pham",
-    topic: "Photography",
-    text: "Film photography taught me to wait. What has slowed you down in a good way?",
-    excerpt: "People are trading patient creative rituals, field notes, and beginner-friendly prompts.",
-    replies: 22,
-    image: "https://picsum.photos/seed/duc-photo-thread/96/96",
+    title: "Host an event or workshop",
+    description: "Run a live talk, gathering, or hands-on session built around practice and participation.",
+    href: "/auth/sign-up?intent=creator",
+    icon: IconCalendarEvent,
   },
   {
-    author: "Huy Tran",
-    topic: "Technology",
-    text: "Share a project you shipped before you felt ready.",
-    excerpt: "A generous wall of messy launches, first users, and lessons that arrived after publish.",
-    replies: 36,
-    image: "https://picsum.photos/seed/huy-tech-thread/96/96",
+    title: "Become a tutor",
+    description: "Offer one-to-one or small-group sessions and help learners make steady progress.",
+    href: "/auth/sign-up?intent=creator",
+    icon: IconChalkboardTeacher,
   },
   {
-    author: "Thu Ha",
-    topic: "Creative",
-    text: "What did you learn from teaching someone your favorite skill?",
-    excerpt: "Tutors and learners are comparing the moments where explaining made the idea click.",
-    replies: 19,
-    image: "https://picsum.photos/seed/thu-creative-thread/96/96",
-  },
-  {
-    author: "Mai Le",
-    topic: "Business",
-    text: "Which customer question changed the product you were building?",
-    excerpt: "Founders are sharing the feedback that quietly rewrote their roadmap.",
-    replies: 31,
-    image: "https://picsum.photos/seed/mai-business-thread/96/96",
+    title: "Publish an article or tutorial",
+    description: "Turn a useful idea, field note, or process into something the community can return to.",
+    href: "/articles/new",
+    icon: IconArticle,
   },
 ];
 
@@ -212,59 +200,63 @@ export function DiscoverHome() {
 
       <EventGatherings />
 
-      <section className={`${styles.section} ${styles.conversationSection}`} aria-labelledby="conversations-heading">
-        <div className="tutoria-page-container">
-          <header className={styles.sectionHeader}>
-            <div>
-              <p className="tutoria-kicker">Open conversations</p>
-              <h2 id="conversations-heading">A good question can change someone&apos;s direction.</h2>
+      <ConversationTimeline />
+
+      <section className={styles.creatorSection} aria-labelledby="creator-heading">
+        <div className={styles.creatorFrame}>
+          <div className={styles.creatorReferenceGrid} aria-hidden="true">
+            <span className={styles.creatorRailTop} />
+            <span className={styles.creatorRailMiddle} />
+            <span className={styles.creatorRailBottom} />
+            <span className={styles.creatorRailQuarter} />
+            <span className={styles.creatorRailCenter} />
+            <span className={styles.creatorRailThreeQuarter} />
+            {[0, 25, 50, 75, 100].flatMap((left) =>
+              [0, 62, 100].map((top) => (
+                <i
+                  className={styles.creatorGridNode}
+                  key={`${left}-${top}`}
+                  style={{ left: `${left}%`, top: top === 62 ? "466px" : `${top}%` }}
+                />
+              )),
+            )}
+          </div>
+
+          <header className={styles.creatorHeader}>
+            <p className={styles.creatorIndex}>Tutoria</p>
+            <h2 id="creator-heading" className={styles.creatorHeading}>
+              <span className={styles.creatorFixed}>Become a</span>
+              <span className={styles.creatorWordViewport} aria-hidden="true">
+                <span className={styles.creatorWordTrack}>
+                  <b>creator</b>
+                </span>
+              </span>
+              <span className={styles.visuallyHidden}>creator</span>
+            </h2>
+            <div className={styles.creatorNote}>
+              <p>Someone is looking for the thing you already know.</p>
+              <span>Choose how to share what you know.</span>
             </div>
-            <Link className={`${styles.sectionLink} tutoria-text-link`} href="/discussions">Enter discussions <IconArrowRight size={16} /></Link>
           </header>
 
-          <div className={styles.conversationMarquee} aria-label="Featured discussion previews">
-            <div className={styles.conversationTrack}>
-              {[...conversations, ...conversations].map((conversation, index) => (
-                <Link
-                  href="/discussions"
-                  className={styles.conversation}
-                  key={`${conversation.text}-${index}`}
-                  aria-label={`${conversation.topic} discussion: ${conversation.text}`}
-                >
-                  <span className={styles.conversationTop}>
-                    <span className={styles.conversationTopic}>{conversation.topic}</span>
-                    <IconArrowUpRight size={17} aria-hidden="true" />
+          <div className={styles.creatorCards}>
+            {creatorPaths.map((path) => {
+              const PathIcon = path.icon;
+              return (
+                <Link className={styles.creatorCard} href={path.href} key={path.title}>
+                  <span className={styles.creatorCardMeta}>
+                    <PathIcon size={22} stroke={1.45} aria-hidden="true" />
                   </span>
-                  <span className={styles.conversationAuthor}>
-                    <Image src={conversation.image} alt="" width={48} height={48} unoptimized />
-                    <span>
-                      <strong>{conversation.author}</strong>
-                      <small>Started the conversation</small>
-                    </span>
+                  <span className={styles.creatorCardCopy}>
+                    <strong>{path.title}</strong>
+                    <span>{path.description}</span>
                   </span>
-                  <strong className={styles.conversationQuestion}>{conversation.text}</strong>
-                  <span className={styles.conversationExcerpt}>{conversation.excerpt}</span>
-                  <span className={styles.conversationMeta}>
-                    <span><IconMessageCircle size={15} aria-hidden="true" /> {conversation.replies} replies</span>
-                    <span>Join in</span>
+                  <span className={styles.creatorCardAction}>
+                    Start sharing <IconArrowUpRight size={17} aria-hidden="true" />
                   </span>
                 </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.cta}>
-        <div className={`${styles.ctaInner} tutoria-page-container`}>
-          <div>
-            <p className="tutoria-kicker">Your knowledge belongs here too</p>
-            <h2>Someone is looking for the thing you already know.</h2>
-            <p>Share a field note, host a workshop, teach a course, or open a room for the community.</p>
-            <div className={styles.ctaActions}>
-              <Link href="/auth/sign-up?intent=creator">Start sharing <IconArrowRight size={17} /></Link>
-              <Link href="/articles/new">Write an article</Link>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>

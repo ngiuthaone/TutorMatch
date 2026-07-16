@@ -639,8 +639,7 @@ svg {
   box-shadow: var(--shadow);
 }
 
-.ghost-link,
-.auth-card p a {
+.ghost-link {
   display: inline-flex;
   min-height: 42px;
   align-items: center;
@@ -690,7 +689,6 @@ p {
 }
 
 .hero h1,
-.auth-story h1,
 .page-hero h1,
 .profile-main h1,
 .state-card h1 {
@@ -705,7 +703,6 @@ p {
 
 .lede,
 .hero-copy > p:not(.kicker),
-.auth-story p,
 .page-hero p,
 .section-title p,
 .profile-main header p {
@@ -780,7 +777,6 @@ textarea {
 }
 
 .hero-image-card,
-.auth-card,
 .panel,
 .tutor-card,
 .metric,
@@ -1148,8 +1144,7 @@ textarea {
 
 .section-title h2,
 .panel-title h2,
-.profile-sections h2,
-.auth-card h2 {
+.profile-sections h2 {
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(1.7rem, 3.2vw, 3rem);
@@ -1193,63 +1188,10 @@ textarea {
   color: var(--soft);
 }
 
-.auth-page {
-  display: grid;
-  grid-template-columns: minmax(0, .9fr) minmax(360px, 560px);
-  gap: clamp(28px, 7vw, 92px);
-  width: min(100% - 36px, 1180px);
-  min-height: calc(100dvh - 76px);
-  align-items: center;
-  margin: 0 auto;
-  padding: 54px 0;
-}
-
-.auth-card,
 .form-card {
   display: grid;
   gap: 16px;
   padding: clamp(20px, 4vw, 34px);
-}
-
-.auth-card small {
-  color: var(--muted);
-}
-
-.role-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.role-tabs a {
-  display: flex;
-  min-height: 72px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  color: var(--soft);
-  font-weight: 800;
-}
-
-.role-tabs a.active {
-  border-color: var(--primary);
-  background: var(--primary-soft);
-  color: var(--primary-2);
-}
-
-.role-note {
-  display: inline-flex;
-  min-height: 48px;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--primary-soft);
-  color: var(--primary-2);
-  padding: 0 14px;
-  font-weight: 800;
 }
 
 .workspace-shell {
@@ -1816,7 +1758,6 @@ tr:last-child td {
 
 @media (max-width: 1180px) {
   .hero,
-  .auth-page,
   .profile-page {
     grid-template-columns: 1fr;
   }
@@ -1888,7 +1829,6 @@ tr:last-child td {
   }
 
   .hero h1,
-  .auth-story h1,
   .page-hero h1,
   .profile-main h1 {
     font-size: clamp(2.25rem, 13vw, 3.7rem);
@@ -1905,7 +1845,6 @@ tr:last-child td {
   .filters,
   .form-row,
   .check-grid,
-  .role-tabs,
   .timeline {
     grid-template-columns: 1fr;
   }
@@ -3240,6 +3179,166 @@ tr:last-child td {
   }
 }
 
+/* ── Horizontal scroll story ────────────────────────────────── */
+.horizontal-story {
+  position: relative;
+}
+
+.vertical-blank-section {
+  position: relative;
+  min-height: 100dvh;
+  background: #000;
+}
+
+.pin-stage {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.story-track {
+  position: relative;
+  display: flex;
+  height: 100dvh;
+  will-change: transform;
+}
+
+.story-track > * {
+  flex: none;
+  width: 100vw;
+  height: 100dvh;
+}
+
+.story-track > .sharer-section,
+.story-track > .connector-section {
+  margin-top: 0;
+}
+
+.story-track > .learner-section,
+.story-track > .sharer-section,
+.story-track > .connector-section {
+  min-height: 100dvh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .horizontal-story {
+    height: auto !important;
+  }
+
+  .pin-stage {
+    position: relative;
+    height: auto;
+    overflow: visible;
+  }
+
+  .story-track {
+    display: block;
+    height: auto;
+    transform: none !important;
+  }
+
+  .story-track > * {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .timeline-svg,
+  .timeline-marker {
+    display: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .horizontal-story {
+    height: auto !important;
+  }
+
+  .pin-stage {
+    position: relative;
+    height: auto;
+    overflow: visible;
+  }
+
+  .story-track {
+    display: block;
+    height: auto;
+    transform: none !important;
+  }
+
+  .story-track > * {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .timeline-svg,
+  .timeline-marker {
+    display: none !important;
+  }
+}
+
+/* ── Timeline SVG route ─────────────────────────────────────── */
+.timeline-svg {
+  position: absolute;
+  left: 0;
+  bottom: 8vh;
+  width: 100%;
+  max-width: none;
+  height: 34vh;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 18;
+  will-change: transform;
+}
+.timeline-path {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 1.45;
+  vector-effect: non-scaling-stroke;
+}
+.timeline-path-dotted {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 1.15;
+  stroke-dasharray: 3 8;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ── Glowing timeline marker ────────────────────────────────── */
+.timeline-marker {
+  position: absolute;
+  left: 0;
+  top: 62vh;
+  z-index: 24;
+  width: 64px;
+  height: 64px;
+  opacity: 0;
+  pointer-events: none;
+  will-change: top, opacity, transform;
+  filter:
+    drop-shadow(0 0 7px rgba(255, 255, 255, .72))
+    drop-shadow(0 0 18px rgba(255, 228, 144, .42))
+    drop-shadow(0 0 34px rgba(126, 173, 255, .24));
+  transition: opacity 0.25s ease;
+}
+
+.timeline-marker.is-visible {
+  opacity: 1;
+}
+
+.timeline-star-pulse {
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  animation: timeline-star-pulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes timeline-star-pulse {
+  from { opacity: .78; transform: scale(.84) rotate(-3deg); }
+  to { opacity: 1; transform: scale(1.08) rotate(3deg); }
+}
+
+/* ── Section: Learner ──────────────────────────────────────── */
 .learner-section {
   position: relative;
   min-height: 100dvh;
@@ -4868,7 +4967,6 @@ tr:last-child td {
 
 .liquid-glass-btn,
 .tutoria-hero .liquid-glass-btn,
-.auth-card .primary,
 .panel .primary,
 .profile-aside .primary,
 .row-card .primary,
