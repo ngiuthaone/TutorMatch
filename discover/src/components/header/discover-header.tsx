@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { IconMenu2, IconX, IconBell } from "@tabler/icons-react";
 import { GlobalNavigation } from "./global-navigation";
-import { CreateMenu } from "./create-menu";
 import { UserMenu } from "./user-menu";
 import { MobileNavigation } from "./mobile-navigation";
 import type { HeaderUser } from "./types";
@@ -57,10 +56,7 @@ export function DiscoverHeader({ user: userProp }: DiscoverHeaderProps) {
 
         <div className={styles.actions}>
           {user ? (
-            <>
-              <CreateMenu />
-              <UserMenu user={user} />
-            </>
+            <UserMenu user={user} />
           ) : (
             <>
               <Link href="/auth/sign-up?intent=creator" className={styles.creatorLink}>

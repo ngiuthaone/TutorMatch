@@ -27,6 +27,17 @@ const learnGroup: NavGroup = {
   matchPatterns: ["/courses", "/skills", "/discover/for-you"],
 };
 
+const createGroup: NavGroup = {
+  label: "Create",
+  items: [
+    { label: "Become a tutor", href: "/become-a-tutor" },
+    { label: "Create an event/workshop", href: "/events/new" },
+    { label: "Create a course", href: "/courses/new" },
+    { label: "Write an article", href: "/articles/new" },
+  ],
+  matchPatterns: ["/become-a-tutor", "/events/new", "/courses/new", "/articles/new"],
+};
+
 const communityGroup: NavGroup = {
   label: "Community",
   items: [
@@ -38,7 +49,16 @@ const communityGroup: NavGroup = {
   matchPatterns: ["/discussions", "/communities", "/people", "/events"],
 };
 
-const navGroups = [learnGroup, communityGroup];
+const navGroups = [learnGroup, createGroup, communityGroup];
+
+function groupIsActive(pathname: string, group: NavGroup) {
+  const createIsActive = createGroup.matchPatterns.some((pattern) => pathname.startsWith(pattern));
+
+  if (group === createGroup) return createIsActive;
+  if (createIsActive) return false;
+
+  return group.matchPatterns.some((pattern) => pathname.startsWith(pattern));
+}
 
 function NavDropdown({ group }: { group: NavGroup }) {
   const pathname = usePathname();
@@ -58,7 +78,7 @@ function NavDropdown({ group }: { group: NavGroup }) {
     timer.current = setTimeout(() => setOpen(false), 120);
   };
 
-  const isActive = group.items.some((item) => pathname.startsWith(item.href));
+  const isActive = groupIsActive(pathname, group);
 
   useEffect(() => {
     if (!open) return;

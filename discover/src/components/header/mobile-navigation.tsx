@@ -18,6 +18,13 @@ const learnItems = [
   { label: "For You", href: "/discover/for-you" },
 ];
 
+const createItems = [
+  { label: "Become a tutor", href: "/become-a-tutor" },
+  { label: "Create an event/workshop", href: "/events/new" },
+  { label: "Create a course", href: "/courses/new" },
+  { label: "Write an article", href: "/articles/new" },
+];
+
 const communityItems = [
   { label: "Discussions", href: "/discussions" },
   { label: "Communities", href: "/communities" },
@@ -125,15 +132,12 @@ export function MobileNavigation({ open, onClose, user }: MobileNavigationProps)
               Discover
             </Link>
             <ExpandableSection label="Learn" items={learnItems} onClose={onClose} />
+            <ExpandableSection label="Create" items={createItems} onClose={onClose} />
             <ExpandableSection label="Community" items={communityItems} onClose={onClose} />
           </nav>
 
           {user ? (
             <div className={styles.mobileActions}>
-              <button className={styles.mobilePrimaryAction}>
-                <span>+</span>
-                Create
-              </button>
               <div className={styles.mobileUtilityRow}>
                 <button className={styles.mobileSecondaryAction}>
                   Messages

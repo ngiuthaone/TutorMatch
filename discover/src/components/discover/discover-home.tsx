@@ -41,19 +41,19 @@ const creatorPaths = [
   {
     title: "Publish a course",
     description: "Shape what you know into a clear learning path people can follow at their own pace.",
-    href: "/auth/sign-up?intent=creator",
+    href: "/courses/new",
     icon: IconBookUpload,
   },
   {
     title: "Host an event or workshop",
     description: "Run a live talk, gathering, or hands-on session built around practice and participation.",
-    href: "/auth/sign-up?intent=creator",
+    href: "/events/new",
     icon: IconCalendarEvent,
   },
   {
     title: "Become a tutor",
     description: "Offer one-to-one or small-group sessions and help learners make steady progress.",
-    href: "/auth/sign-up?intent=creator",
+    href: "/become-a-tutor",
     icon: IconChalkboardTeacher,
   },
   {
