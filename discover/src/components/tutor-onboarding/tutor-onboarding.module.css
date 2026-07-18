@@ -153,6 +153,18 @@
 .progressStep:hover .progressCopy strong { color: var(--text); }
 
 .mainForm { min-width: 0; padding: 26px 26px 44px; }
+.onboardingFaq { margin-top: 18px; padding: 18px 20px; border: 1px solid var(--line); border-radius: var(--radiusPanel); background: rgba(13,22,30,.26); }
+.onboardingFaq > div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+.onboardingFaq h2 { margin: 0; color: var(--text); font-size: 15px; font-weight: 620; }
+.onboardingFaq > div:first-child > span { color: var(--gold); font-size: 11px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; }
+.onboardingFaqList { margin-top: 10px; border-top: 1px solid var(--line); }
+.onboardingFaqList details { border-bottom: 1px solid var(--line); }
+.onboardingFaqList summary { min-height: 46px; padding: 10px 26px 10px 0; position: relative; display: flex; align-items: center; color: #dce0e4; cursor: pointer; font-size: 12px; font-weight: 560; line-height: 1.4; list-style: none; }
+.onboardingFaqList summary::-webkit-details-marker { display: none; }
+.onboardingFaqList summary::after { position: absolute; right: 3px; color: var(--gold); content: "+"; font-size: 20px; font-weight: 350; transition: transform 180ms ease; }
+.onboardingFaqList details[open] summary::after { transform: rotate(45deg); }
+.onboardingFaqList p { margin: -1px 0 12px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.onboardingFaqList summary:focus-visible { outline: 2px solid var(--violetBright); outline-offset: -3px; }
 .contextAside { padding: 26px 18px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 16px; }
 .sectionHeading { margin: 0 0 20px; }
 .sectionHeading h1 { margin: 0; font-family: var(--font-tutoria-display), Georgia, serif; font-size: clamp(31px, 3vw, 40px); font-weight: 400; line-height: 1; letter-spacing: -.025em; }
@@ -320,6 +332,27 @@
 .bulletList { margin: 4px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.7; }
 .toggleHeading .label { margin: 0; }
 .consultGrid { margin: 11px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.faqEditor { margin-top: 12px; }
+.faqEditorTop { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+.faqEditor h3 { margin: -2px 0 0; color: var(--text); font-size: 15px; font-weight: 600; }
+.faqEditorTop p { max-width: 56ch; margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.faqEditorTop .addButton { flex: 0 0 auto; }
+.faqEditorList { margin-top: 16px; display: grid; gap: 8px; }
+.faqCard { padding: 12px; border: 1px solid var(--lineStrong); border-radius: var(--radiusControl); display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap: 10px; background: var(--field); }
+.faqCardHeader { grid-column: 1 / -1; padding-bottom: 9px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+.faqCardHeader > span { color: var(--violetBright); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.faqCardHeader > button { min-height: 32px; padding: 0 6px; border: 0; display: inline-flex; align-items: center; gap: 5px; background: transparent; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; }
+.faqCardHeader > button:hover:not(:disabled) { color: #ffb4a6; }
+.faqCardHeader > button:disabled { opacity: .4; cursor: not-allowed; }
+.faqField { min-width: 0; display: grid; gap: 6px; color: var(--muted); font-size: 11px; }
+.faqField textarea { min-height: 88px; resize: vertical; }
+.previewFaqList { margin-top: 10px; border-top: 1px solid var(--line); }
+.previewFaqList details { border-bottom: 1px solid var(--line); }
+.previewFaqList summary { min-height: 42px; padding: 9px 20px 9px 0; position: relative; display: flex; align-items: center; color: #dce1e5; cursor: pointer; font-size: 12px; list-style: none; }
+.previewFaqList summary::-webkit-details-marker { display: none; }
+.previewFaqList summary::after { position: absolute; right: 1px; color: var(--gold); content: "+"; font-size: 18px; }
+.previewFaqList details[open] summary::after { transform: rotate(45deg); }
+.previewFaqList p { margin: -2px 0 11px; color: var(--muted); font-size: 12px; line-height: 1.55; }
 
 .previewTopGrid { display: grid; grid-template-columns: 1.15fr .8fr .85fr; gap: 12px; }
 .previewBottomGrid { margin-top: 12px; display: grid; grid-template-columns: .8fr 1.2fr; gap: 12px; }
@@ -403,6 +436,8 @@
   .progressMarkerWrap { height: auto; }
   .mainForm { padding: 24px 16px 40px; }
   .profileGrid, .twoColumnGrid, .availabilityGrid, .pricingTopGrid, .pricingBottomGrid, .previewTopGrid, .previewBottomGrid { grid-template-columns: 1fr; }
+  .faqCard { grid-template-columns: 1fr; }
+  .faqEditorTop { align-items: flex-start; flex-direction: column; gap: 8px; }
   .profilePhoto { max-width: 280px; }
   .photoColumn { max-width: 280px; }
   .availabilityRight .twoColumnGridCompact { grid-template-columns: 1fr; }

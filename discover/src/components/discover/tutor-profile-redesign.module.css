@@ -527,6 +527,19 @@
 .consultation > div svg { width: 16px; color: var(--brass); }
 .consultation ul { padding-left: 1rem; color: var(--muted); font-size: 0.8125rem; line-height: 1.7; list-style: disc; }
 
+.faqPanel { scroll-margin-top: 9rem; }
+.faqHeading { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; }
+.faqHeading > div > span { display: block; margin-bottom: 0.45rem; color: var(--brass); font-size: 0.72rem; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; }
+.faqHeading > p { max-width: 32ch; margin: 0; color: var(--muted); font-size: 0.8125rem; line-height: 1.55; }
+.faqList { margin-top: 1.25rem; border-top: 1px solid var(--line); }
+.faqItem { border-bottom: 1px solid var(--line); }
+.faqItem summary { min-height: 58px; padding: 0.9rem 2rem 0.9rem 0; position: relative; display: flex; align-items: center; color: var(--text-soft); cursor: pointer; font-size: 0.875rem; font-weight: 600; line-height: 1.4; list-style: none; }
+.faqItem summary::-webkit-details-marker { display: none; }
+.faqItem summary::after { position: absolute; right: 0.25rem; color: var(--brass); content: "+"; font-size: 1.35rem; font-weight: 400; transition: transform 180ms ease; }
+.faqItem[open] summary::after { transform: rotate(45deg); }
+.faqItem p { max-width: 68ch; margin: -0.15rem 0 1rem; color: var(--muted); font-size: 0.8125rem; line-height: 1.65; }
+.faqItem summary:focus-visible { outline: 2px solid var(--brass); outline-offset: -3px; }
+
 .primaryButton,
 .secondaryButton {
   width: 100%;
@@ -691,6 +704,7 @@
   .keyFacts > span { min-height: 46px; padding-inline: 0; }
   .keyFacts > span + span { border-top: 1px solid var(--line); border-left: 0; }
   .policyCopy { grid-template-columns: 1fr; }
+  .faqHeading { align-items: start; flex-direction: column; gap: 0.6rem; }
   .reviewsPanel > header { align-items: flex-start; flex-direction: column; gap: 0; }
   .bookingCard { display: block; }
   .bookingPrice { margin-bottom: 1rem; }

@@ -40,6 +40,13 @@ const lessonFormats = [
   { icon: IconUsers, title: "Public place", detail: "Libraries, studios, cafes, or community spaces." },
 ];
 
+const profileFaqs = [
+  { question: "How do I book a lesson with this tutor?", answer: "Choose a lesson length, then select an available time. Your booking is confirmed once the tutor accepts it." },
+  { question: "Can I reschedule a booked lesson?", answer: "Yes. You can reschedule from your bookings area, subject to the cancellation notice shown above." },
+  { question: "What should I prepare for my first lesson?", answer: "Bring your goal, any relevant materials, and a few examples of what you would like to learn. Your tutor will tailor the first session from there." },
+  { question: "How are lessons paid for?", answer: "Payments are made securely through Tutoria when you book. The lesson price and any first-session offer are shown before you confirm." },
+];
+
 export function ProfileReplacement({ name }: { name?: string }) {
   const profile = getTutorProfile(name);
   const firstName = profile.name.split(" ")[0];
@@ -222,7 +229,7 @@ export function ProfileReplacement({ name }: { name?: string }) {
             </div>
           </section>
 
-          <div className={styles.policyGrid} id="faq">
+          <div className={styles.policyGrid}>
             <section className={styles.panel}>
               <h2>Booking rules &amp; cancellation policy</h2>
               <div className={styles.policyCopy}>
@@ -245,6 +252,24 @@ export function ProfileReplacement({ name }: { name?: string }) {
               <a className={styles.primaryButton} href="#availability">Choose a time</a>
             </section>
           </div>
+
+          <section className={`${styles.panel} ${styles.faqPanel}`} id="faq" aria-labelledby="profile-faq-title">
+            <div className={styles.faqHeading}>
+              <div>
+                <span>Before you book</span>
+                <h2 id="profile-faq-title">Frequently asked questions</h2>
+              </div>
+              <p>Everything you need to know before your first lesson with {firstName}.</p>
+            </div>
+            <div className={styles.faqList}>
+              {profileFaqs.map((faq) => (
+                <details key={faq.question} className={styles.faqItem}>
+                  <summary>{faq.question}</summary>
+                  <p>{faq.answer}</p>
+                </details>
+              ))}
+            </div>
+          </section>
 
           <section className={`${styles.panel} ${styles.reviewsPanel}`} id="reviews">
             <header>

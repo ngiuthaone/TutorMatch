@@ -29,6 +29,7 @@ import styles from "./tutor-onboarding.module.css";
 
 type TutorDraftStatus = "draft" | "pending_review";
 type TutorVisibility = "public" | "unlisted" | "paused";
+type TutorFaq = { id: string; question: string; answer: string };
 type DraftUpdater = (updater: (draft: TutorDraft) => TutorDraft) => void;
 type ValidationError = { fieldId: string; message: string };
 
@@ -63,6 +64,7 @@ type TutorDraft = {
   consultationDuration: string;
   consultationPrice: string;
   consultationPurpose: string;
+  faqs: TutorFaq[];
   visibility: TutorVisibility;
   status: TutorDraftStatus;
   submittedAt?: string;
@@ -102,6 +104,12 @@ const stepQuestions = [
   "Review your tutor profile",
 ];
 
+const onboardingFaqs = [
+  { question: "What do I need before I apply?", answer: "Prepare a clear profile photo, a short introduction, the subjects you teach, your availability, and your lesson rates." },
+  { question: "Can I save my progress and finish later?", answer: "Yes. Your draft is saved in this browser, and you can return to update any section before submitting it for review." },
+  { question: "What happens after I submit my profile?", answer: "Tutoria reviews your profile before it is published. You can still preview your information while the review is in progress." },
+];
+
 const defaultDraft: TutorDraft = {
   displayName: "Thu Hà",
   headline: "Pottery tutor helping beginners build confidence through hands-on practice.",
@@ -138,6 +146,10 @@ const defaultDraft: TutorDraft = {
   consultationDuration: "15 minutes",
   consultationPrice: "Free",
   consultationPurpose: "Discuss goals and compatibility",
+  faqs: [
+    { id: "faq-first-lesson", question: "What should learners bring to their first lesson?", answer: "Bring your goal and any relevant materials. I’ll tailor the session to your current level." },
+    { id: "faq-experience", question: "Do learners need prior experience?", answer: "No. I adapt lessons for complete beginners as well as more experienced learners." },
+  ],
   visibility: "public",
   status: "draft",
 };
@@ -157,6 +169,7 @@ function normalizeDraft(value: Partial<TutorDraft>): TutorDraft {
     availability: Array.isArray(value.availability) ? value.availability.map(normalizeRange) : defaultDraft.availability,
     timeZone: value.timeZone ? normalizeRange(value.timeZone) : defaultDraft.timeZone,
     exceptions: Array.isArray(value.exceptions) ? value.exceptions.map((item) => normalizeRange(item).replace(" · ", ": ")) : defaultDraft.exceptions,
+    faqs: Array.isArray(value.faqs) ? value.faqs.filter((faq): faq is TutorFaq => Boolean(faq && typeof faq.question === "string" && typeof faq.answer === "string")).map((faq, index) => ({ id: faq.id || `faq-${index}`, question: faq.question, answer: faq.answer })) : defaultDraft.faqs,
     rates: { ...defaultDraft.rates, ...(value.rates || {}) },
   };
 }
@@ -427,6 +440,16 @@ function PricingStep({ draft, update, errors }: { draft: TutorDraft; update: Dra
         <section className={styles.groupPanel}><FieldLabel>Your cancellation</FieldLabel><ul className={styles.bulletList}><li>Learner gets a full refund</li><li>Learner can reschedule or choose another time</li><li>Repeated late cancellations may affect profile visibility</li></ul></section>
         <section className={styles.groupPanel}><label className={styles.toggleHeading}><span className={styles.label}>Short consultation (optional)</span><input className={styles.toggle} type="checkbox" checked={draft.consultationEnabled} onChange={(event) => set("consultationEnabled", event.target.checked)} /></label>{draft.consultationEnabled && <><div className={styles.consultGrid}><div><small>Duration</small><SelectControl label="Consultation duration" value={draft.consultationDuration} options={["10 minutes", "15 minutes", "20 minutes", "30 minutes"]} onChange={(value) => set("consultationDuration", value)} /></div><div><small>Price</small><SelectControl label="Consultation price" value={draft.consultationPrice} options={["Free", "50,000 đ", "100,000 đ"]} onChange={(value) => set("consultationPrice", value)} /></div></div><FieldLabel htmlFor="consultation-purpose">Purpose</FieldLabel><input id="consultation-purpose" className={styles.input} value={draft.consultationPurpose} onChange={(event) => set("consultationPurpose", event.target.value)} /></>}</section>
       </div>
+      <section className={`${styles.groupPanel} ${styles.faqEditor}`} aria-labelledby="faq-editor-title">
+        <div className={styles.faqEditorTop}><div><FieldLabel>Frequently asked questions</FieldLabel><h3 id="faq-editor-title">Help learners book with confidence</h3><p>Add the answers learners need before they decide to book a lesson.</p></div><button className={styles.addButton} type="button" onClick={() => set("faqs", [...draft.faqs, { id: `faq-${Date.now()}`, question: "", answer: "" }])}><IconPlus size={14} /> Add question</button></div>
+        <div className={styles.faqEditorList}>
+          {draft.faqs.map((faq, index) => <div className={styles.faqCard} key={faq.id}>
+            <div className={styles.faqCardHeader}><span>FAQ {String(index + 1).padStart(2, "0")}</span><button type="button" onClick={() => set("faqs", draft.faqs.filter((item) => item.id !== faq.id))} disabled={draft.faqs.length === 1} aria-label={`Remove question ${index + 1}`}><IconTrash size={14} /> Remove</button></div>
+            <label className={styles.faqField}><span>Question</span><input className={styles.input} value={faq.question} placeholder="What do learners often ask?" onChange={(event) => set("faqs", draft.faqs.map((item) => item.id === faq.id ? { ...item, question: event.target.value } : item))} /></label>
+            <label className={styles.faqField}><span>Answer</span><textarea className={styles.input} rows={3} value={faq.answer} placeholder="Give a clear, helpful answer" onChange={(event) => set("faqs", draft.faqs.map((item) => item.id === faq.id ? { ...item, answer: event.target.value } : item))} /></label>
+          </div>)}
+        </div>
+      </section>
     </>
   );
 }
@@ -444,7 +467,7 @@ function PreviewStep({ draft, onOpenPreview, onMessage, onReset, onVisibilityCha
       <SectionHeading step={5} title="Preview & publish" description="Review your profile before it goes live." />
       <div className={styles.previewTopGrid}>
         <section className={styles.groupPanel}><FieldLabel>Public profile preview</FieldLabel><div className={styles.publicProfile}><div className={`${styles.previewPhoto} ${!draft.photoUrl ? styles.photoPlaceholder : ""}`} style={draft.photoUrl ? { backgroundImage: `url(${draft.photoUrl})` } : undefined} role="img" aria-label={`${draft.displayName || "Tutor"} profile portrait`} /><div><h2>{draft.displayName || "Your name"} <em>New tutor</em></h2><p>{draft.headline || "Your professional headline"}</p><small><IconMapPin size={15} /> Hà Nội, Vietnam</small><small><IconWorld size={15} /> {draft.languages.join(", ") || "Languages not set"}</small><small><IconDeviceLaptop size={15} /> {draft.lessonFormat}</small><strong>{formatVnd(primaryRate)} / {primaryDuration || "Not set"} min</strong></div></div><div className={styles.previewActions}><button className={styles.primaryButton} type="button" onClick={onOpenPreview}>View full profile</button><button className={styles.secondaryButton} type="button" onClick={onMessage}>Message</button></div></section>
-        <section className={styles.groupPanel}><FieldLabel>What learners see</FieldLabel><ul className={styles.statusList}><StatusItem>About me</StatusItem><StatusItem>What I teach</StatusItem><StatusItem>Lesson format &amp; availability</StatusItem><StatusItem>Rates &amp; policies</StatusItem><StatusItem warning={!draft.introVideoName}>Introduction video {draft.introVideoName ? "added" : "(optional)"}</StatusItem><li className={styles.pendingStatus}><span><IconClock size={15} /></span>Reviews (coming soon)</li></ul></section>
+        <section className={styles.groupPanel}><FieldLabel>What learners see</FieldLabel><ul className={styles.statusList}><StatusItem>About me</StatusItem><StatusItem>What I teach</StatusItem><StatusItem>Lesson format &amp; availability</StatusItem><StatusItem>Rates &amp; policies</StatusItem><StatusItem warning={!draft.faqs.some((faq) => faq.question.trim() && faq.answer.trim())}>Frequently asked questions</StatusItem><StatusItem warning={!draft.introVideoName}>Introduction video {draft.introVideoName ? "added" : "(optional)"}</StatusItem><li className={styles.pendingStatus}><span><IconClock size={15} /></span>Reviews (coming soon)</li></ul></section>
         <section className={styles.groupPanel}><FieldLabel>Publication checklist</FieldLabel><ul className={styles.statusList}><StatusItem warning={!draft.photoUrl}>Profile photo</StatusItem><StatusItem warning={draft.headline.length < 20}>Headline</StatusItem><StatusItem warning={draft.about.length < 80}>About you</StatusItem><StatusItem warning={!draft.skills.length}>Skills &amp; specialties</StatusItem><StatusItem warning={!draft.availability.length}>Availability set</StatusItem><StatusItem warning={!primaryRate}>Rates set</StatusItem><StatusItem>Policies set</StatusItem><StatusItem warning>Identity verified</StatusItem><StatusItem>Payout account connected</StatusItem></ul></section>
       </div>
       <div className={styles.previewBottomGrid}>
@@ -484,7 +507,7 @@ function FullProfilePreview({ draft, onClose }: { draft: TutorDraft; onClose: ()
       <section className={styles.previewModal} role="dialog" aria-modal="true" aria-labelledby="full-preview-title">
         <button className={styles.modalClose} type="button" onClick={onClose} aria-label="Close preview" autoFocus><IconX size={18} /></button>
         <div className={styles.modalHero}><div className={styles.modalPhoto} style={draft.photoUrl ? { backgroundImage: `url(${draft.photoUrl})` } : undefined} role="img" aria-label={`${draft.displayName || "Tutor"} profile portrait`} /><div><span className={styles.modalEyebrow}>Tutoria tutor preview</span><h2 id="full-preview-title">{draft.displayName || "Your name"}</h2><p>{draft.headline}</p><strong>{formatVnd(duration ? draft.rates[String(duration)] || 0 : 0)} / {duration || "Not set"} min</strong></div></div>
-        <div className={styles.modalBody}><section><h3>About me</h3><p>{draft.about}</p></section><section><h3>What I teach</h3><div className={styles.chipRow}>{draft.skills.map((skill) => <span className={styles.chip} key={skill}>{skill}</span>)}</div></section><section><h3>What you’ll achieve</h3><ul>{draft.goals.map((goal) => <li key={goal}>{goal}</li>)}</ul></section><section><h3>Lesson details</h3><p>{draft.lessonDescription}</p><p>{draft.lessonFormat}: {draft.sessionLengths.map((item) => `${item} min`).join(", ")}</p></section></div>
+        <div className={styles.modalBody}><section><h3>About me</h3><p>{draft.about}</p></section><section><h3>What I teach</h3><div className={styles.chipRow}>{draft.skills.map((skill) => <span className={styles.chip} key={skill}>{skill}</span>)}</div></section><section><h3>What you’ll achieve</h3><ul>{draft.goals.map((goal) => <li key={goal}>{goal}</li>)}</ul></section><section><h3>Lesson details</h3><p>{draft.lessonDescription}</p><p>{draft.lessonFormat}: {draft.sessionLengths.map((item) => `${item} min`).join(", ")}</p></section>{draft.faqs.some((faq) => faq.question.trim() && faq.answer.trim()) && <section><h3>Frequently asked questions</h3><div className={styles.previewFaqList}>{draft.faqs.filter((faq) => faq.question.trim() && faq.answer.trim()).map((faq) => <details key={faq.id}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}</div></section>}</div>
       </section>
     </div>
   );
@@ -629,6 +652,12 @@ export function TutorOnboarding() {
             <div className={styles.stepActionCopy}><span>Section {activeStep + 1} of {steps.length}</span>{errors.length > 0 && <p>{errors.length} {errors.length === 1 ? "item needs" : "items need"} attention</p>}</div>
             {activeStep === 4 ? <div className={styles.finalActions}><button className={styles.previewButton} type="button" onClick={() => setShowPreview(true)}>Preview</button><button className={styles.primaryButton} type="button" onClick={submitForReview} disabled={submitted}>{submitted ? "Submitted" : "Submit for review"}</button></div> : <button className={styles.primaryButton} type="button" onClick={continueToNextStep}>Continue <IconChevronRight size={17} /></button>}
           </div>
+          <section className={styles.onboardingFaq} aria-labelledby="onboarding-faq-title">
+            <div><span>Need help?</span><h2 id="onboarding-faq-title">Tutor application FAQ</h2></div>
+            <div className={styles.onboardingFaqList}>
+              {onboardingFaqs.map((faq) => <details key={faq.question}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}
+            </div>
+          </section>
         </div>
         <TutorLivePreview draft={draft} />
       </div>
