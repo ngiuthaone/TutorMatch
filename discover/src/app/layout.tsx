@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Cormorant_Garamond, DM_Serif_Display, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,6 +17,13 @@ const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   style: ["normal", "italic"],
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  variable: "--font-profile-serif",
+  subsets: ["latin"],
+  weight: "400",
+  style: "normal",
 });
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -40,7 +47,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${cormorantGaramond.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${dmSerifDisplay.variable} ${cormorantGaramond.variable} h-full antialiased`}
     >
       <body className="tutoria-cosmos min-h-[100dvh] flex flex-col">{children}</body>
     </html>

@@ -1,202 +1,299 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import {
-  BadgeCheck, Camera, CalendarDays, Ellipsis, Heart, Image as ImageIcon,
-  Link2, MapPin, Medal, MessageCircle, PanelsTopLeft, Repeat2, Send,
-  Star, Trophy, UserRound, UsersRound,
-} from "lucide-react";
+  IconArrowRight,
+  IconBook2,
+  IconCalendar,
+  IconCheck,
+  IconClock,
+  IconDeviceLaptop,
+  IconHeartHandshake,
+  IconHome,
+  IconIdBadge2,
+  IconLanguage,
+  IconMapPin,
+  IconMessageCircle,
+  IconRosetteDiscountCheck,
+  IconSchool,
+  IconShieldCheck,
+  IconSparkles,
+  IconStarFilled,
+  IconUsers,
+} from "@tabler/icons-react";
+import { formatVnd, getTutorProfile } from "./tutor-profile-data";
+import styles from "./tutor-profile-redesign.module.css";
 
-const profiles: Record<string, {
-  name: string; role: string; avatar: string; bio: string;
-  location: string; website: string; cover: string; skills: string[];
-  learners: number; rating: number; followers: number;
-}> = {
-  "Duc Pham": {
-    name: "Duc Pham", role: "Photography Artist",
-    avatar: "https://images.unsplash.com/photo-1452780212940-6f5c0d14d848?auto=format&fit=crop&w=400&q=90",
-    bio: "Commercial photographer and exhibition curator.\nTeaching photography for 5+ years.",
-    location: "Tay Ho, Ha Noi", website: "ducpham.photo",
-    cover: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1800&q=90",
-    skills: ["Photography", "Lightroom", "Photoshop", "Composition"],
-    learners: 1200, rating: 4.9, followers: 245,
-  },
-  "Linh Nguyen": {
-    name: "Linh Nguyen", role: "English & IELTS Coach",
-    avatar: "https://picsum.photos/seed/linh-avatar/200/200",
-    bio: "Helping students achieve their IELTS goals.\n7+ years of teaching experience.",
-    location: "Ha Noi", website: "linhnguyen.edu",
-    cover: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1800&q=90",
-    skills: ["IELTS", "English", "Public Speaking"],
-    learners: 890, rating: 4.8, followers: 180,
-  },
-  "Thu Ha": {
-    name: "Thu Ha", role: "Cooking Instructor",
-    avatar: "https://picsum.photos/seed/thu-avatar/200/200",
-    bio: "Home cook turned instructor.\nSharing Vietnamese cuisine with the world.",
-    location: "Sai Gon", website: "thuhacooks.com",
-    cover: "https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=1800&q=90",
-    skills: ["Cooking", "Baking", "Vietnamese Cuisine"],
-    learners: 650, rating: 4.7, followers: 320,
-  },
-  "Huy Tran": {
-    name: "Huy Tran", role: "Full-stack Developer",
-    avatar: "https://picsum.photos/seed/huy-avatar/200/200",
-    bio: "Building products and teaching code.\nFull-stack dev with 8 years experience.",
-    location: "Da Nang", website: "huy.dev",
-    cover: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1800&q=90",
-    skills: ["React", "TypeScript", "Node.js", "Python"],
-    learners: 1100, rating: 4.9, followers: 410,
-  },
-  "Minh Anh": {
-    name: "Minh Anh", role: "Public Speaking Coach",
-    avatar: "https://picsum.photos/seed/minh-avatar/200/200",
-    bio: "Helping professionals communicate with confidence.\nTEDx speaker and coach.",
-    location: "Ha Noi", website: "minhanhspeaks.com",
-    cover: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1800&q=90",
-    skills: ["Public Speaking", "Presentation Skills", "Communication"],
-    learners: 1340, rating: 4.9, followers: 560,
-  },
-  "Bao Long": {
-    name: "Bao Long", role: "Business Strategy Mentor",
-    avatar: "https://picsum.photos/seed/bao-avatar/200/200",
-    bio: "Startup advisor and strategy consultant.\nFormer founder, current mentor.",
-    location: "Sai Gon", website: "baolong.co",
-    cover: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1800&q=90",
-    skills: ["Business Strategy", "Startups", "Leadership"],
-    learners: 720, rating: 4.7, followers: 290,
-  },
-};
+const availability = [
+  { time: "09:00 - 12:00", days: [true, true, true, true, true, false, false] },
+  { time: "14:00 - 18:00", days: [true, true, true, true, true, true, false] },
+  { time: "18:00 - 21:00", days: [true, true, true, true, false, false, false] },
+];
 
-const allPeople = Object.values(profiles);
+const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const offers = [
-  ["1-on-1 Coaching Sessions", "Personalized guidance"],
-  ["Group Workshops", "Hands-on learning experience"],
-  ["Online Resources", "Self-paced materials"],
+const lessonFormats = [
+  { icon: IconDeviceLaptop, title: "Online", detail: "Live video lessons with screen sharing and feedback." },
+  { icon: IconHome, title: "At my teaching space", detail: "A prepared space with the tools needed for the lesson." },
+  { icon: IconMapPin, title: "At your location", detail: "Available in central Ha Noi when the lesson allows it." },
+  { icon: IconUsers, title: "Public place", detail: "Libraries, studios, cafes, or community spaces." },
 ];
 
 export function ProfileReplacement({ name }: { name?: string }) {
-  const [tab, setTab] = useState("Posts");
-  const tabs = [["Posts", PanelsTopLeft], ["Articles", ImageIcon], ["Sessions", CalendarDays], ["About", UserRound]] as const;
-
-  const profile = (name && profiles[name]) || profiles["Duc Pham"];
+  const profile = getTutorProfile(name);
   const firstName = profile.name.split(" ")[0];
+  const rateOptions = [
+    { minutes: 30, price: Math.round(profile.price * 0.6 / 10000) * 10000 },
+    { minutes: 50, price: Math.round(profile.price * 0.85 / 10000) * 10000 },
+    { minutes: 60, price: profile.price, popular: true },
+    { minutes: 90, price: Math.round(profile.price * 1.4 / 10000) * 10000 },
+  ];
+  const [selectedMinutes, setSelectedMinutes] = useState(60);
+  const selectedRate = rateOptions.find((rate) => rate.minutes === selectedMinutes) ?? rateOptions[2];
+  const selectedFirstLessonPrice = Math.round(selectedRate.price * 0.88 / 5000) * 5000;
+  const consultationPrice = Math.round(profile.price * 0.4 / 10000) * 10000;
 
   return (
-    <main className="tr-profile-page">
-      <article className="tr-profile-shell">
-        <div className="tr-profile-cover">
-          <img src={profile.cover} alt="" />
-        </div>
-        <div className="tr-profile-body">
-          <header className="tr-profile-summary">
-            <div className="tr-profile-person">
-              <img className="tr-profile-avatar" src={profile.avatar} alt={profile.name} />
-              <div>
-                <h1>{profile.name} <BadgeCheck aria-label="Verified" /></h1>
-                <p className="tr-profile-role">{profile.role}</p>
-                <p className="tr-profile-meta">
-                  <span><MapPin />{profile.location}</span>
-                  <a href={`https://${profile.website}`}><Link2 />{profile.website}</a>
-                </p>
-                <p className="tr-profile-bio">
-                  {profile.bio.split("\n").map((l, i) => <span key={i}>{l}<br /></span>)}
-                </p>
+    <main className={styles.page}>
+      <div className={styles.layout}>
+        <div className={styles.mainColumn}>
+          <section className={styles.hero} aria-labelledby="profile-name">
+            <div className={styles.portrait}>
+              <Image
+                src={profile.image}
+                alt={`${profile.name}, ${profile.role}`}
+                fill
+                loading="eager"
+                unoptimized
+                sizes="(max-width: 760px) 100vw, (max-width: 1180px) 38vw, 352px"
+              />
+            </div>
+
+            <div className={styles.identity}>
+              <span className={styles.roleLabel}>{profile.role}</span>
+              <div className={styles.verificationRow}>
+                <span><IconRosetteDiscountCheck aria-hidden="true" /> Verified tutor</span>
+                <span><IconIdBadge2 aria-hidden="true" /> ID verified</span>
               </div>
-            </div>
-            <div className="tr-profile-actions">
-              <button>Follow</button>
-              <button>Message</button>
-            </div>
-          </header>
 
-          <div className="tr-profile-layout">
+              <div className={styles.nameRow}>
+                <h1 id="profile-name">{profile.name}</h1>
+                <span className={styles.rating}><IconStarFilled aria-hidden="true" /> {profile.rating} <small>({profile.reviewCount} reviews)</small></span>
+              </div>
+
+              <p className={styles.tagline}>{profile.tagline}</p>
+
+              <div className={styles.keyFacts}>
+                <span><IconBook2 aria-hidden="true" /><strong>{profile.lessons}</strong><small>Lessons taught</small></span>
+                <span><IconClock aria-hidden="true" /><strong>{profile.responseTime}</strong><small>Average response</small></span>
+                <span><IconMapPin aria-hidden="true" /><strong>{profile.location}</strong><small>Local time GMT+7</small></span>
+              </div>
+
+              <div className={styles.attributeGroup}>
+                <h2>Languages</h2>
+                <div>{profile.languages.map((language) => <span key={language}>{language}</span>)}</div>
+              </div>
+
+            </div>
+          </section>
+
+          <nav className={styles.sectionNav} aria-label="Tutor profile sections">
+            <a href="#about">About</a>
+            <a href="#lessons">Lessons &amp; pricing</a>
+            <a href="#availability">Availability</a>
+            <a href="#reviews">Reviews ({profile.reviewCount})</a>
+            <a href="#faq">FAQ</a>
+          </nav>
+
+          <section className={`${styles.panel} ${styles.aboutPanel}`} id="about">
             <div>
-              <section className="tr-profile-stats">
-                <div><UsersRound /><strong>{profile.learners}</strong><small>Learners</small></div>
-                <div><Star /><strong>{profile.rating}</strong><small>Rating</small></div>
-                <div><UsersRound /><strong>{profile.followers}</strong><small>Followers</small></div>
-              </section>
-              <section className="tr-profile-skills">
-                <h2 style={{ fontFamily: "var(--font-sans), Inter, sans-serif" }}>Skills</h2>
-                <div>{profile.skills.map(x => <span key={x}><Camera />{x}</span>)}</div>
-              </section>
-              <nav className="tr-profile-tabs" aria-label="Profile sections">
-                {tabs.map(([label, Icon]) => (
-                  <button key={label} aria-current={tab === label ? "page" : undefined} onClick={() => setTab(label)}>
-                    <Icon />{label}
-                  </button>
-                ))}
-              </nav>
-
-              {tab === "Posts" && (
-                <article className="tr-profile-post tr-thread-post">
-                  <div className="tr-thread-avatar"><img src={profile.avatar} alt={`${profile.name}'s profile`} /><span aria-hidden="true" /></div>
-                  <div className="tr-thread-content">
-                    <header><span><strong>{profile.name}</strong><small>· 1h</small></span><button aria-label="Post options"><Ellipsis /></button></header>
-                    <p>Sharing something I&apos;ve been working on lately.</p>
-                    <img className="tr-profile-post-image" src={profile.cover} alt={`${profile.name}'s latest work`} />
-                    <footer><button aria-label="Like post"><Heart />142</button><button aria-label="Reply to post"><MessageCircle />8</button><button aria-label="Repost"><Repeat2 />1</button><button aria-label="Share post"><Send />4</button></footer>
-                  </div>
-                </article>
-              )}
-              {tab === "Articles" && (
-                <section className="tr-profile-empty">
-                  <h2>Articles</h2>
-                  <p>Long-form content will appear here.</p>
-                </section>
-              )}
-              {tab === "Sessions" && (
-                <section className="tr-profile-empty">
-                  <h2>Learn with {firstName}</h2>
-                  <p>Private sessions and workshops are available from {firstName}&apos;s profile.</p>
-                </section>
-              )}
-              {tab === "About" && (
-                <section className="tr-profile-empty">
-                  <h2>About {firstName}</h2>
-                  <p>{profile.bio}</p>
-                </section>
-              )}
+              <h2>About {firstName}</h2>
+              {profile.about.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
             </div>
+          </section>
 
-            <aside className="tr-profile-sidebar">
-              <section>
-                <h2>About {firstName}</h2>
-                <p>{profile.bio}</p>
-              </section>
-              <section>
-                <h2>What I offer</h2>
-                {offers.map(([title, desc]) => (
-                  <div className="tr-offer" key={title}>
-                    <Camera /><span><strong>{title}</strong><small>{desc}</small></span>
-                  </div>
-                ))}
-              </section>
-              <section>
-                <h2>Achievements</h2>
-                <div className="tr-achievement"><Medal />Featured Creator</div>
-                <div className="tr-achievement"><Trophy />Top Rated</div>
-              </section>
-            </aside>
+          <div className={styles.trioGrid}>
+            <section className={styles.panel}>
+              <h2>What I teach</h2>
+              <ul className={styles.iconList}>
+                {profile.subjects.map((subject) => <li key={subject}><IconSchool aria-hidden="true" />{subject}</li>)}
+              </ul>
+            </section>
+            <section className={styles.panel}>
+              <h2>Learner levels</h2>
+              <ul className={styles.dotList}>
+                {profile.learnerLevels.map((level) => <li key={level}>{level}</li>)}
+              </ul>
+            </section>
+            <section className={styles.panel}>
+              <h2>Age groups</h2>
+              <ul className={styles.iconList}>
+                {profile.ageGroups.map((group) => <li key={group}><IconUsers aria-hidden="true" />{group}</li>)}
+              </ul>
+            </section>
           </div>
 
-          <section className="tr-similar">
-            <p>Keep exploring</p>
-            <h2>Similar people</h2>
-            <div>
-              {allPeople.filter(p => p.name !== profile.name).map(person => (
-                <a key={person.name} href={`/profile/${encodeURIComponent(person.name)}`}>
-                  <img src={person.avatar} alt="" />
-                  <span><strong>{person.name}</strong><small>{person.role}</small></span>
-                  <b>→</b>
-                </a>
+          <section className={`${styles.panel} ${styles.teachingPanel}`}>
+            <h2>My teaching style</h2>
+            <div className={styles.styleTags}>{profile.teachingStyles.map((style) => <span key={style}>{style}</span>)}</div>
+          </section>
+
+          <div className={`${styles.splitGrid} ${styles.outcomeGrid}`}>
+            <section className={`${styles.panel} ${styles.outcomesPanel}`}>
+              <div className={styles.outcomesIntro}>
+                <span>Built for real situations</span>
+                <h2>What you can achieve</h2>
+                <p>Turn focused practice into speaking skills you can use immediately.</p>
+              </div>
+              <ul className={styles.checkList}>
+                {profile.outcomes.map((outcome) => <li key={outcome}><span>{outcome}</span><IconCheck aria-hidden="true" /></li>)}
+              </ul>
+            </section>
+            <section className={styles.panel}>
+              <h2>What happens in a typical lesson</h2>
+              <p>{profile.typicalLesson}</p>
+            </section>
+          </div>
+
+          <section className={`${styles.panel} ${styles.formatsPanel}`}>
+            <h2>Lesson formats &amp; teaching locations</h2>
+            <div className={styles.formatsGrid}>
+              {lessonFormats.map(({ icon: Icon, title, detail }) => (
+                <div key={title}>
+                  <Icon aria-hidden="true" />
+                  <span><strong>{title}</strong><small>{detail}</small></span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className={styles.availabilityGrid} id="availability">
+            <section className={`${styles.panel} ${styles.schedulePanel}`}>
+              <h2>Weekly availability <small>(Ha Noi time GMT+7)</small></h2>
+              <div className={styles.schedule} role="table" aria-label={`${profile.name}'s weekly availability`}>
+                <div className={styles.scheduleRow} role="row">
+                  <span role="columnheader">Time</span>
+                  {weekDays.map((day) => <span role="columnheader" key={day}>{day}</span>)}
+                </div>
+                {availability.map((row) => (
+                  <div className={styles.scheduleRow} role="row" key={row.time}>
+                    <span role="rowheader">{row.time}</span>
+                    {row.days.map((available, index) => <span role="cell" key={`${row.time}-${weekDays[index]}`} aria-label={available ? "Available" : "Unavailable"}>{available ? <IconCheck aria-hidden="true" /> : "-"}</span>)}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+          </div>
+
+          <section className={`${styles.panel} ${styles.ratesPanel}`} id="lessons">
+            <h2>Rates &amp; offers</h2>
+            <div className={styles.rateCards} role="group" aria-label="Choose a lesson length">
+              {rateOptions.map((rate) => {
+                const isSelected = selectedMinutes === rate.minutes;
+                return (
+                  <button
+                    className={`${styles.rateOption} ${isSelected ? styles.rateOptionSelected : ""}`}
+                    type="button"
+                    key={rate.minutes}
+                    aria-pressed={isSelected}
+                    onClick={() => setSelectedMinutes(rate.minutes)}
+                  >
+                    {rate.popular && <span className={styles.popularTag}>Popular</span>}
+                    <span className={styles.rateDuration}>{rate.minutes} minutes</span>
+                    <strong>{formatVnd(rate.price).replace(" đ", "")}</strong>
+                    <small>VND</small>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className={styles.offerBanner} aria-live="polite" aria-atomic="true">
+              <div>
+                <h3>First session offer</h3>
+                <p>New learners receive a lower price on their first {selectedMinutes}-minute lesson. Get a feel for the teaching style and start building your plan.</p>
+              </div>
+              <div className={styles.offerPrice}>
+                <span>{formatVnd(selectedRate.price)}</span>
+                <strong>{formatVnd(selectedFirstLessonPrice)}</strong>
+                <small>First lesson price</small>
+              </div>
+            </div>
+          </section>
+
+          <div className={styles.policyGrid} id="faq">
+            <section className={styles.panel}>
+              <h2>Booking rules &amp; cancellation policy</h2>
+              <div className={styles.policyCopy}>
+                <div><strong>Same-day booking</strong><p>Available when the tutor has an open time.</p></div>
+                <div><strong>No-show</strong><p>The full lesson fee is charged.</p></div>
+                <div><strong>Learner cancellation</strong><p>Full refund at least 24 hours before the lesson.</p></div>
+                <div><strong>Tutor cancellation</strong><p>Full refund with the option to reschedule.</p></div>
+              </div>
+            </section>
+
+            <section className={`${styles.panel} ${styles.consultation}`}>
+              <h2>Short consultation</h2>
+              <p>Ask a focused question or see if the tutor is right for your goal.</p>
+              <div><span><IconClock aria-hidden="true" />20 minutes</span><strong>{formatVnd(consultationPrice)}</strong></div>
+              <ul>
+                <li>Get quick feedback or guidance</li>
+                <li>Discuss goals, materials, or project ideas</li>
+                <li>Useful for new learners</li>
+              </ul>
+              <a className={styles.primaryButton} href="#availability">Choose a time</a>
+            </section>
+          </div>
+
+          <section className={`${styles.panel} ${styles.reviewsPanel}`} id="reviews">
+            <header>
+              <div><h2>What learners say</h2><span><IconStarFilled aria-hidden="true" /> {profile.rating} out of 5 ({profile.reviewCount} reviews)</span></div>
+              <a href="#reviews">View all reviews <IconArrowRight aria-hidden="true" /></a>
+            </header>
+            <div className={styles.reviewGrid}>
+              {profile.reviews.map((review) => (
+                <article key={review.name}>
+                  <div><span className={styles.reviewAvatar} aria-hidden="true">{review.name.charAt(0)}</span><span><strong>{review.name}</strong><small>{review.date}</small></span></div>
+                  <span className={styles.stars} aria-label="5 out of 5 stars">★★★★★</span>
+                  <p>{review.text}</p>
+                </article>
               ))}
             </div>
           </section>
         </div>
-      </article>
+
+        <aside className={styles.bookingCard} aria-label="Booking summary">
+          <p>Lessons from</p>
+          <div className={styles.bookingPrice} aria-live="polite" aria-atomic="true"><strong>{formatVnd(selectedRate.price)}</strong><span>/ {selectedMinutes} min</span><small>{selectedRate.popular ? "Popular" : "Selected"}</small></div>
+          <a className={styles.primaryButton} href="#availability">View available times</a>
+          <a className={styles.secondaryButton} href="#lessons">Book lesson</a>
+
+          <div className={styles.bookingSection}>
+            <h2>Lesson formats</h2>
+            <ul>
+              <li><IconDeviceLaptop aria-hidden="true" />Online</li>
+              <li><IconHome aria-hidden="true" />At my teaching space</li>
+              <li><IconMapPin aria-hidden="true" />At learner&apos;s location</li>
+              <li><IconUsers aria-hidden="true" />Public place</li>
+            </ul>
+          </div>
+
+          <div className={styles.bookingSection}>
+            <h2>Next available</h2>
+            <div className={styles.nextAvailable}><IconCalendar aria-hidden="true" /><span><strong>Today, 14:00 - 15:00</strong><small>Ha Noi time (GMT+7)</small></span></div>
+            <a className={styles.inlineLink} href="#availability">View full availability <IconArrowRight aria-hidden="true" /></a>
+          </div>
+
+          <ul className={styles.trustList}>
+            <li><IconShieldCheck aria-hidden="true" />Verified and ID checked tutor</li>
+            <li><IconHeartHandshake aria-hidden="true" />Secure payments</li>
+            <li><IconMessageCircle aria-hidden="true" />24/7 Tutoria support</li>
+            <li><IconLanguage aria-hidden="true" />Lessons in {profile.languages.length} languages</li>
+            <li><IconSparkles aria-hidden="true" />Personalized learning plan</li>
+          </ul>
+        </aside>
+      </div>
     </main>
   );
 }
