@@ -12,7 +12,7 @@ import styles from "./discussions.module.css";
 
 const ALL_TAGS = ["Photography", "IELTS", "Languages", "Business", "Technology", "Creative", "Cooking", "Personal development", "Academic", "Community"];
 const publicProfileHref = (name: string) =>
-  `/u/${encodeURIComponent(name)}`;
+  `/user/${encodeURIComponent(name)}`;
 
 const POSTS = [
   { id: "p1", author: "Duc Pham", role: "Photography Artist", avatar: "https://picsum.photos/seed/duc-avatar/60/60", content: "Golden hour at West Lake today. The light was absolutely incredible \u{1F305}\n\nSometimes you just need to stop and appreciate the moment.", image: "https://picsum.photos/seed/golden-hour/600/400", likes: 142, comments: 8, tags: ["Photography"], createdAt: "1h ago" },
