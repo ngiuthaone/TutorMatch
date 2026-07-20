@@ -348,7 +348,7 @@ export function UserProfile({ name }: { name: string }) {
           <h2 className="text-sm font-semibold text-foreground mb-4">Similar people</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {ALL_USERS.filter(u => u.name !== user.name).slice(0, 4).map(u => (
-              <a key={u.name} href={`/profile/${encodeURIComponent(u.name)}`} className="rounded-xl border border-border bg-background p-3 hover:shadow-sm hover:border-primary/20 transition-all duration-200 text-center">
+              <a key={u.name} href={`/user/${encodeURIComponent(u.name)}`} className="rounded-xl border border-border bg-background p-3 hover:shadow-sm hover:border-primary/20 transition-all duration-200 text-center">
                 <img src={u.avatar} alt={u.name} className="w-11 h-11 rounded-full object-cover mx-auto" />
                 <p className="text-xs font-semibold text-foreground mt-2 line-clamp-1">{u.name}</p>
                 <p className="text-[10px] text-muted line-clamp-1">{u.role}</p>

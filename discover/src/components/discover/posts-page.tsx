@@ -89,7 +89,7 @@ export function DiscussionsPage() {
             <button className={`${styles.navButton} ${styles.navCreate}`} aria-label="Create a post" onClick={() => window.dispatchEvent(new CustomEvent("tutoria:create-post"))}><IconPlus size={27} stroke={1.8} /></button>
             <Link href="/discussions/saved" className={styles.navLink} aria-label="Saved"><IconBookmark size={25} stroke={1.8} /></Link>
             <button className={styles.navButton} aria-label="Notifications"><IconHeart size={25} stroke={1.8} /></button>
-            <Link href="/profile/me" className={styles.navLink} aria-label="Profile"><IconUser size={25} stroke={1.8} /></Link>
+            <Link href="/user/me" className={styles.navLink} aria-label="Profile"><IconUser size={25} stroke={1.8} /></Link>
           </nav>
           <div className={styles.navBottom}><button className={styles.navButton} aria-label="More options"><IconMenu2 size={25} stroke={1.8} /></button></div>
         </aside>
@@ -159,7 +159,7 @@ export function DiscussionsPage() {
           <Link href="/search" className={styles.mobileNavLink} aria-label="Search"><IconSearch size={23} /></Link>
           <button className={`${styles.mobileNavLink} ${styles.mobileCreate}`} aria-label="Create a post" onClick={() => window.dispatchEvent(new CustomEvent("tutoria:create-post"))}><IconPlus size={25} /></button>
           <Link href="/discussions/saved" className={styles.mobileNavLink} aria-label="Saved"><IconBookmark size={23} /></Link>
-          <Link href="/profile/me" className={styles.mobileNavLink} aria-label="Profile"><IconUser size={23} /></Link>
+          <Link href="/user/me" className={styles.mobileNavLink} aria-label="Profile"><IconUser size={23} /></Link>
         </nav>
       </div>
     </div>
