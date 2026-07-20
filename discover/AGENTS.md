@@ -35,7 +35,6 @@ Full content creation system with two modes: **Post** (short-form, modal-based) 
 ### Article creation
 - `src/components/article-editor/article-editor-page.tsx` — Full-page editor with cover, title, rich text, publish panel
 - `src/components/article-editor/article-rich-text.tsx` — TipTap editor (H2, H3, bold, italic, lists, quote, code, image, link, divider)
-- `src/components/article-editor/article-template-selector.tsx` — 6 writing templates
 - `src/components/article-editor/article-view.tsx` — Published article page
 - `src/components/article-editor/article-preview.tsx` — Preview mode
 

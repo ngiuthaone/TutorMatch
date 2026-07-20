@@ -32,6 +32,7 @@ import {
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 
 import styles from "./course-creator.module.css";
+import { savePublishedCourse, type CourseDetail } from "@/lib/course-data";
 
 type CourseLevel = "Beginner" | "Intermediate" | "Advanced" | "All levels";
 type CourseAccess = "Free" | "One-time purchase";
@@ -55,6 +56,12 @@ type Chapter = {
   lessons: Lesson[];
 };
 
+type CreatorFaq = {
+  id: string;
+  question: string;
+  answer: string;
+};
+
 type CourseDraft = {
   title: string;
   promise: string;
@@ -64,6 +71,8 @@ type CourseDraft = {
   languages: string[];
   learners: string;
   outcomes: string[];
+  requirements: string[];
+  faqs: CreatorFaq[];
   chapters: Chapter[];
   progression: Progression;
   discussions: boolean;
@@ -95,6 +104,11 @@ const defaultDraft: CourseDraft = {
     "Build responsive pages with HTML and CSS",
     "Add interactions using JavaScript",
     "Create reusable React components",
+  ],
+  requirements: ["A laptop or desktop computer", "A stable internet connection"],
+  faqs: [
+    { id: "faq-experience", question: "Do I need previous experience?", answer: "No. The course starts with the foundations and guides you through each step." },
+    { id: "faq-access", question: "How long will I have access?", answer: "You can return to the course and its lessons whenever you need them." },
   ],
   chapters: [
     {
@@ -148,6 +162,42 @@ function formatPrice(value: number) {
   return `${new Intl.NumberFormat("vi-VN").format(value)} đ`;
 }
 
+function createSlug(title: string) {
+  const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return `${base || "course"}-${Date.now().toString(36)}`;
+}
+
+function formatDuration(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const remaining = minutes % 60;
+  if (!hours) return `${remaining}m`;
+  return remaining ? `${hours}h ${remaining}m` : `${hours}h`;
+}
+
+function toPublishedCourse(draft: CourseDraft): CourseDetail {
+  const lessons = draft.chapters.flatMap((chapter) => chapter.lessons);
+  const duration = lessons.reduce((sum, lesson) => sum + Number(lesson.duration || 0), 0);
+  return {
+    slug: createSlug(draft.title), title: draft.title, instructor: "Sophia Nguyen", category: draft.category,
+    lessons: lessons.length, duration: formatDuration(duration), rating: 0, students: 0, level: draft.level,
+    price: draft.access === "Free" ? "Free" : formatPrice(draft.price), image: draft.coverImage,
+    subtitle: draft.promise, reviewCount: 0,
+    updated: new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(new Date()),
+    language: draft.languages.join(" and "), certificate: draft.certificate,
+    description: [draft.shortDescription, draft.fullDescription].filter(Boolean), outcomes: draft.outcomes,
+    requirements: draft.requirements,
+    faqs: draft.faqs.map(({ question, answer }) => ({ question, answer })),
+    curriculum: draft.chapters.map((chapter) => ({
+      title: chapter.title,
+      duration: formatDuration(chapter.lessons.reduce((sum, lesson) => sum + Number(lesson.duration || 0), 0)),
+      lessons: chapter.lessons.map((lesson) => lesson.title),
+    })),
+    instructorRole: `${draft.category} course creator`,
+    instructorBio: `Sophia creates structured, practical courses for ${draft.level.toLowerCase()} learners on Tutoria.`,
+    instructorImage: "https://picsum.photos/seed/sophia-nguyen-course/320/320", reviews: [],
+  };
+}
+
 function readFileAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -175,6 +225,7 @@ export function CourseCreator() {
   const [published, setPublished] = useState(false);
   const [languageInput, setLanguageInput] = useState("");
   const [outcomeInput, setOutcomeInput] = useState("");
+  const [requirementInput, setRequirementInput] = useState("");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
 
@@ -225,15 +276,44 @@ export function CourseCreator() {
   const readyLessons = lessons.filter((lesson) => lesson.ready).length;
   const fee = draft.access === "One-time purchase" ? Math.round(draft.price * 0.1) : 0;
   const payout = Math.max(0, draft.price - fee);
+  const essentialsComplete = Boolean(
+    draft.title.trim()
+    && draft.promise.trim()
+    && draft.category.trim()
+    && draft.topic.trim()
+  );
+  const learnersComplete = Boolean(
+    draft.languages.length > 0
+    && draft.learners.trim()
+    && draft.outcomes.length > 0
+    && draft.outcomes.every((outcome) => outcome.trim())
+  );
+  const curriculumComplete = Boolean(
+    draft.chapters.length > 0
+    && draft.chapters.every((chapter) => (
+      chapter.title.trim()
+      && chapter.lessons.length > 0
+      && chapter.lessons.every((lesson) => lesson.title.trim() && lesson.description.trim())
+    ))
+  );
+  const listingComplete = Boolean(
+    draft.coverImage
+    && draft.shortDescription.trim()
+    && draft.fullDescription.trim()
+    && draft.requirements.length > 0
+    && draft.requirements.every((requirement) => requirement.trim())
+    && draft.faqs.length > 0
+    && draft.faqs.every((faq) => faq.question.trim() && faq.answer.trim())
+    && (draft.access === "Free" || draft.price > 0)
+  );
 
   const checklist = useMemo(() => [
-    { label: "Course title and promise", complete: draft.title.trim().length >= 8 && draft.promise.trim().length >= 20, step: 0 },
-    { label: "Learner outcomes", complete: draft.outcomes.length >= 3, step: 0 },
-    { label: "Curriculum", complete: draft.chapters.length > 0 && lessons.length >= 3, step: 1 },
+    { label: "Course title and promise", complete: essentialsComplete, step: 0 },
+    { label: "Learners and outcomes", complete: learnersComplete, step: 0 },
+    { label: "Curriculum", complete: curriculumComplete, step: 1 },
     { label: "Learning experience", complete: draft.requireLessons || draft.requireProject, step: 2 },
-    { label: "Course page", complete: Boolean(draft.coverImage) && draft.fullDescription.trim().length >= 80, step: 0 },
-    { label: "Pricing and visibility", complete: draft.access === "Free" || draft.price > 0, step: 0 },
-  ], [draft, lessons.length]);
+    { label: "Course page", complete: listingComplete, step: 0 },
+  ], [curriculumComplete, draft.requireLessons, draft.requireProject, essentialsComplete, learnersComplete, listingComplete]);
 
   const progress = Math.round((checklist.filter((item) => item.complete).length / checklist.length) * 100);
   const readyToPublish = checklist.every((item) => item.complete);
@@ -249,21 +329,21 @@ export function CourseCreator() {
       number: "01",
       title: "Essentials",
       description: "Set the promise and position.",
-      complete: draft.title.trim().length >= 8 && draft.promise.trim().length >= 20 && Boolean(draft.category && draft.topic),
+      complete: essentialsComplete,
     },
     {
       id: "course-learners",
       number: "02",
       title: "Learners & outcomes",
       description: "Clarify who it serves and why.",
-      complete: draft.languages.length > 0 && draft.learners.trim().length >= 20 && draft.outcomes.length >= 3,
+      complete: learnersComplete,
     },
     {
       id: "course-listing",
       number: "03",
       title: "Listing & access",
       description: "Present, price, and package it.",
-      complete: Boolean(draft.coverImage) && draft.fullDescription.trim().length >= 80 && (draft.access === "Free" || draft.price > 0),
+      complete: listingComplete,
     },
   ];
 
@@ -335,13 +415,23 @@ export function CourseCreator() {
 
   const publish = () => {
     if (!readyToPublish) {
-      setNotice("Complete the remaining review items before publishing.");
+      const missing = checklist.filter((item) => !item.complete).map((item) => item.label.toLowerCase());
+      setNotice(`Before publishing, complete: ${missing.join(", ")}.`);
       goToStep(3);
       return;
     }
-    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    const publishedCourse = toPublishedCourse(draft);
+    try {
+      // The published record replaces the draft, avoiding two copies of uploaded base64 cover images.
+      window.localStorage.removeItem(DRAFT_KEY);
+      savePublishedCourse(publishedCourse);
+    } catch {
+      setNotice("This browser could not save the course. Try a smaller cover image and publish again.");
+      return;
+    }
     setPublished(true);
-    setNotice("Course published.");
+    setNotice("Course published. Opening its public page…");
+    window.setTimeout(() => { window.location.href = `/courses/${publishedCourse.slug}`; }, 500);
   };
 
   return (
@@ -430,6 +520,20 @@ export function CourseCreator() {
                       <fieldset className={styles.radioList}><legend>Course access</legend>{(["Free", "One-time purchase"] as const).map((option) => <label key={option}><input type="radio" name="access" checked={draft.access === option} onChange={() => patchDraft("access", option)} /><span><strong>{option}</strong><small>{option === "Free" ? "Anyone can enroll without payment." : "Learners pay once for ongoing access."}</small></span></label>)}</fieldset>
                       {draft.access === "One-time purchase" ? <div className={styles.pricingPanel}><label className={styles.field}><span>Course price</span><div className={styles.priceInput}><IconCurrencyDong size={18} /><input type="number" min={0} value={draft.price} onChange={(event) => patchDraft("price", Number(event.target.value))} /></div></label><dl><div><dt>Learner pays</dt><dd>{formatPrice(draft.price)}</dd></div><div><dt>Platform fee (10%)</dt><dd>{formatPrice(fee)}</dd></div><div><dt>You receive</dt><dd>{formatPrice(payout)}</dd></div></dl></div> : <div className={styles.freeAccessPanel}><IconUsers size={22} /><div><strong>Free enrollment</strong><p>No payment details are needed. Anyone with access to the listing can enroll.</p></div></div>}
                     </div>
+                    <section className={styles.enrollmentInfo} aria-labelledby="course-enrollment-info-title">
+                      <header className={styles.enrollmentInfoHeader}><div><span>Before enrollment</span><h4 id="course-enrollment-info-title">Help learners arrive prepared.</h4><p>Set expectations and answer the questions that may stop someone from enrolling.</p></div><strong>{draft.requirements.length + draft.faqs.length} items</strong></header>
+                      <div className={styles.infoBuilderGrid}>
+                        <section className={styles.infoBuilder} aria-labelledby="course-requirements-title">
+                          <div className={styles.infoBuilderTitle}><span><IconCheck size={17} /></span><div><strong id="course-requirements-title">Requirements</strong><p>What learners need before they begin.</p></div></div>
+                          <div className={styles.requirementList}>{draft.requirements.map((requirement, index) => <div key={`requirement-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><input aria-label={`Requirement ${index + 1}`} value={requirement} onChange={(event) => patchDraft("requirements", draft.requirements.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} /><button type="button" aria-label={`Remove requirement ${index + 1}`} onClick={() => patchDraft("requirements", draft.requirements.filter((_, itemIndex) => itemIndex !== index))}><IconTrash size={15} /></button></div>)}</div>
+                          <div className={styles.addRow}><input aria-label="New course requirement" value={requirementInput} placeholder="Add a device, skill, or material" onChange={(event) => setRequirementInput(event.target.value)} /><button type="button" onClick={() => { const value = requirementInput.trim(); if (value) patchDraft("requirements", [...draft.requirements, value]); setRequirementInput(""); }}><IconPlus size={15} /> Add</button></div>
+                        </section>
+                        <section className={styles.infoBuilder} aria-labelledby="course-faq-title">
+                          <div className={styles.infoBuilderTitle}><span><IconMessageCircle size={17} /></span><div><strong id="course-faq-title">Frequently asked questions</strong><p>Give a direct answer to each common concern.</p></div><button type="button" onClick={() => patchDraft("faqs", [...draft.faqs, { id: createId("faq"), question: "", answer: "" }])}><IconPlus size={15} /> Add question</button></div>
+                          <div className={styles.faqBuilderList}>{draft.faqs.map((faq, index) => <article key={faq.id}><header><span>Question {String(index + 1).padStart(2, "0")}</span><button type="button" aria-label={`Remove FAQ ${index + 1}`} onClick={() => patchDraft("faqs", draft.faqs.filter((item) => item.id !== faq.id))}><IconTrash size={15} /> Remove</button></header><label className={styles.field}><span>Question</span><input value={faq.question} placeholder="What do learners usually ask?" onChange={(event) => patchDraft("faqs", draft.faqs.map((item) => item.id === faq.id ? { ...item, question: event.target.value } : item))} /></label><label className={styles.field}><span>Answer</span><textarea rows={3} value={faq.answer} placeholder="Give a concise, useful answer" onChange={(event) => patchDraft("faqs", draft.faqs.map((item) => item.id === faq.id ? { ...item, answer: event.target.value } : item))} /></label></article>)}</div>
+                        </section>
+                      </div>
+                    </section>
                   </div>
                 </section>
               </>
@@ -480,7 +584,7 @@ export function CourseCreator() {
                   <fieldset className={styles.radioList}><legend>Visibility</legend>{(["Public", "Unlisted"] as const).map((option) => <label key={option}><input type="radio" name="visibility" checked={draft.visibility === option} onChange={() => patchDraft("visibility", option)} /><span>{option === "Public" ? <IconWorld size={18} /> : <IconLock size={18} />}<span><strong>{option}</strong><small>{option === "Public" ? "Anyone can discover and enroll." : "Only people with the link can view it."}</small></span></span></label>)}</fieldset>
                 </div>
                 <div className={styles.previewActions}><button type="button" onClick={() => setPreviewOpen(true)}><IconWorld size={18} /><span><strong>Preview public page</strong><small>See the listing as learners will.</small></span><IconChevronRight size={16} /></button><button type="button" onClick={() => setPreviewOpen(true)}><IconPlayerPlay size={18} /><span><strong>Preview course player</strong><small>Step through the learning experience.</small></span><IconChevronRight size={16} /></button><button type="button" onClick={() => setPreviewOpen(true)}><IconCertificate size={18} /><span><strong>Preview certificate</strong><small>Check the completion reward.</small></span><IconChevronRight size={16} /></button></div>
-                <div className={styles.publishPanel}><IconRocket size={22} /><div><strong>{published ? "Course published" : "Publication workflow"}</strong><p>{published ? `Your course is now ${draft.visibility.toLowerCase()}. You can keep improving it at any time.` : "Publishing saves this draft and makes the course available based on the visibility you selected."}</p></div><button type="button" disabled={!readyToPublish || published} onClick={publish}>{published ? <><IconCheck size={17} /> Published</> : "Publish course"}</button></div>
+                <div className={styles.publishPanel}><IconRocket size={22} /><div><strong>{published ? "Course published" : "Publication workflow"}</strong><p>{published ? `Your course is now ${draft.visibility.toLowerCase()}. You can keep improving it at any time.` : "Publishing saves this draft and makes the course available based on the visibility you selected."}</p></div><button type="button" disabled={published} onClick={publish}>{published ? <><IconCheck size={17} /> Published</> : "Publish course"}</button></div>
               </>
             )}
           </section>
@@ -493,7 +597,7 @@ export function CourseCreator() {
             ) : (
               <div className={styles.finalActions}>
                 <button type="button" className={styles.saveButton} onClick={() => setPreviewOpen(true)}>Preview</button>
-                <button type="button" className={styles.publishButton} onClick={publish} disabled={!readyToPublish || published}>{published ? "Published" : "Publish course"}</button>
+                <button type="button" className={styles.publishButton} onClick={publish} disabled={published}>{published ? "Published" : "Publish course"}</button>
               </div>
             )}
           </div>

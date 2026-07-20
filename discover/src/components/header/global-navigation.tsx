@@ -21,10 +21,10 @@ const learnGroup: NavGroup = {
   label: "Learn",
   items: [
     { label: "Courses", href: "/courses" },
-    { label: "Skills", href: "/skills" },
+    { label: "Tutors", href: "/people" },
     { label: "For You", href: "/discover/for-you" },
   ],
-  matchPatterns: ["/courses", "/skills", "/discover/for-you"],
+  matchPatterns: ["/courses", "/people", "/discover/for-you"],
 };
 
 const createGroup: NavGroup = {
@@ -43,10 +43,10 @@ const communityGroup: NavGroup = {
   items: [
     { label: "Discussions", href: "/discussions" },
     { label: "Communities", href: "/communities" },
-    { label: "People", href: "/people" },
-    { label: "Events", href: "/events" },
+    { label: "Tutors", href: "/people" },
+    { label: "Workshops/Events", href: "/events" },
   ],
-  matchPatterns: ["/discussions", "/communities", "/people", "/events"],
+  matchPatterns: ["/discussions", "/communities", "/events"],
 };
 
 const navGroups = [learnGroup, createGroup, communityGroup];

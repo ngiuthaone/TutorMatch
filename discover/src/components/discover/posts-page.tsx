@@ -11,6 +11,8 @@ import type { PublishedPost, PublishedArticle } from "@/lib/types";
 import styles from "./discussions.module.css";
 
 const ALL_TAGS = ["Photography", "IELTS", "Languages", "Business", "Technology", "Creative", "Cooking", "Personal development", "Academic", "Community"];
+const publicProfileHref = (name: string) =>
+  `http://localhost:4173/profile-preview.html?name=${encodeURIComponent(name)}`;
 
 const POSTS = [
   { id: "p1", author: "Duc Pham", role: "Photography Artist", avatar: "https://picsum.photos/seed/duc-avatar/60/60", content: "Golden hour at West Lake today. The light was absolutely incredible \u{1F305}\n\nSometimes you just need to stop and appreciate the moment.", image: "https://picsum.photos/seed/golden-hour/600/400", likes: 142, comments: 8, tags: ["Photography"], createdAt: "1h ago" },
@@ -328,13 +330,13 @@ function PostsTab({ searchQuery, feedMode }: {
             return (
               <div key={post.id} onClick={() => setSelectedPost(post)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter") setSelectedPost(post); }}
                 className={styles.post}>
-                  <div className={styles.avatarRail} onClick={(e) => { e.stopPropagation(); router.push(`/profile/${encodeURIComponent(post.author)}`); }}>
+                  <div className={styles.avatarRail} onClick={(e) => { e.stopPropagation(); window.location.assign(publicProfileHref(post.author)); }}>
                     <img src={post.avatar} alt={`${post.author}'s profile`} loading="lazy" width="40" height="40" />
                     <span className={styles.threadLine} aria-hidden="true" />
                   </div>
                   <div className={styles.postBody}>
                     <div className={styles.postMeta}>
-                      <button onClick={(e) => { e.stopPropagation(); router.push(`/profile/${encodeURIComponent(post.author)}`); }}
+                      <button onClick={(e) => { e.stopPropagation(); window.location.assign(publicProfileHref(post.author)); }}
                         className={styles.author}>{post.author}</button>
                       <span className={styles.role}>· {post.role}</span>
                       <span className={styles.time}>· {post.createdAt}</span>
@@ -496,12 +498,12 @@ function ThreadModal({ post, onClose, likes, saves, onLike, onSave, following, o
 
         <div className="p-5">
           <div className="flex items-start gap-3">
-            <div onClick={() => { router.push(`/profile/${encodeURIComponent(post.author)}`); }} className="shrink-0 cursor-pointer">
+            <div onClick={() => { window.location.assign(publicProfileHref(post.author)); }} className="shrink-0 cursor-pointer">
               <img src={post.avatar} alt={post.author} className="w-10 h-10 rounded-full object-cover hover:ring-2 hover:ring-primary transition-all" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 text-xs flex-wrap">
-                <button onClick={() => router.push(`/profile/${encodeURIComponent(post.author)}`)}
+                <button onClick={() => window.location.assign(publicProfileHref(post.author))}
                   className="font-semibold text-foreground hover:text-primary transition-colors">{post.author}</button>
                 <span className="text-muted">{post.role}</span>
                 <span className="w-1 h-1 rounded-full bg-border" />
@@ -651,13 +653,13 @@ function BlogsTab({ searchQuery, feedMode }: {
             onClick={() => router.push(`/discussions/blogs/${blog.id}`)}
             onKeyDown={(e) => { if (e.key === "Enter") router.push(`/discussions/blogs/${blog.id}`); }}
             className={styles.post}>
-            <div className={styles.avatarRail} onClick={(e) => { e.stopPropagation(); router.push(`/profile/${encodeURIComponent(blog.author)}`); }}>
+            <div className={styles.avatarRail} onClick={(e) => { e.stopPropagation(); window.location.assign(publicProfileHref(blog.author)); }}>
               <img src={avatar} alt={`${blog.author}'s profile`} loading="lazy" width="40" height="40" />
               <span className={styles.threadLine} aria-hidden="true" />
             </div>
             <div className={styles.postBody}>
               <div className={styles.postMeta}>
-                <button onClick={(e) => { e.stopPropagation(); router.push(`/profile/${encodeURIComponent(blog.author)}`); }} className={styles.author}>{blog.author}</button>
+                <button onClick={(e) => { e.stopPropagation(); window.location.assign(publicProfileHref(blog.author)); }} className={styles.author}>{blog.author}</button>
                 <span className={styles.role}>· {blog.role}</span>
                 <span className={styles.time}>· {blog.createdAt}</span>
                 <button onClick={(e) => e.stopPropagation()} className={styles.moreButton} aria-label={`More options for ${blog.title}`}><IconDots size={20} /></button>

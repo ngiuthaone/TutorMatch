@@ -1,34 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { IconSearch, IconStar, IconClock, IconUsers, IconBookmark, IconBook2, IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { useFilterParams } from "@/components/ui/use-filter-params";
 import { ActiveFilters } from "@/components/ui/active-filters";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
 import { FilterRadio } from "@/components/ui/filter-section";
+import { allCourses, PUBLISHED_COURSES_EVENT, PUBLISHED_COURSES_KEY, readPublishedCourses, type CourseListing } from "@/lib/course-data";
 import styles from "./marketplace-pages.module.css";
-
-interface Course {
-  title: string; instructor: string; category: string;
-  lessons: number; duration: string; rating: number;
-  students: number; level: string; price: string; image: string;
-}
-
-const allCourses: Course[] = [
-  { title: "Complete Web Development Bootcamp 2026", instructor: "Huy Tran", category: "Technology", lessons: 48, duration: "16h", rating: 4.8, students: 1200, level: "Beginner", price: "Free", image: "https://picsum.photos/seed/web-cat/400/240" },
-  { title: "IELTS Speaking Masterclass", instructor: "Linh Nguyen", category: "Languages", lessons: 24, duration: "8h", rating: 4.9, students: 890, level: "Intermediate", price: "499,000 đ", image: "https://picsum.photos/seed/ielts-cat/400/240" },
-  { title: "Public Speaking for Professionals", instructor: "Minh Anh", category: "Personal development", lessons: 16, duration: "6h", rating: 4.7, students: 650, level: "All levels", price: "350,000 đ", image: "https://picsum.photos/seed/speaking-cat/400/240" },
-  { title: "Digital Photography Fundamentals", instructor: "Duc Pham", category: "Creative", lessons: 32, duration: "12h", rating: 4.8, students: 720, level: "Beginner", price: "Free", image: "https://picsum.photos/seed/photo-cat/400/240" },
-  { title: "Vietnamese Home Cooking", instructor: "Thu Ha", category: "Lifestyle", lessons: 20, duration: "10h", rating: 4.9, students: 2100, level: "Beginner", price: "299,000 đ", image: "https://picsum.photos/seed/cooking-cat/400/240" },
-  { title: "Startup Fundamentals", instructor: "Bao Long", category: "Business", lessons: 12, duration: "5h", rating: 4.6, students: 430, level: "Beginner", price: "Free", image: "https://picsum.photos/seed/startup-cat/400/240" },
-  { title: "Advanced React & Next.js", instructor: "Huy Tran", category: "Technology", lessons: 36, duration: "14h", rating: 4.8, students: 560, level: "Advanced", price: "599,000 đ", image: "https://picsum.photos/seed/react-cat/400/240" },
-  { title: "English for Beginners", instructor: "Linh Nguyen", category: "Languages", lessons: 30, duration: "20h", rating: 4.8, students: 3400, level: "Beginner", price: "Free", image: "https://picsum.photos/seed/english-cat/400/240" },
-  { title: "Music Production with Ableton", instructor: "Quoc Anh", category: "Creative", lessons: 28, duration: "18h", rating: 4.6, students: 320, level: "Intermediate", price: "750,000 đ", image: "https://picsum.photos/seed/music-cat/400/240" },
-  { title: "Yoga for Beginners", instructor: "Ngoc Tram", category: "Sports", lessons: 40, duration: "15h", rating: 4.8, students: 980, level: "Beginner", price: "Free", image: "https://picsum.photos/seed/yoga-cat/400/240" },
-  { title: "Makeup & Nail Art", instructor: "Phuong Anh", category: "Beauty", lessons: 18, duration: "7h", rating: 4.5, students: 410, level: "Beginner", price: "249,000 đ", image: "https://picsum.photos/seed/beauty-cat/400/240" },
-  { title: "IELTS Writing Workshop", instructor: "Linh Nguyen", category: "Academic", lessons: 12, duration: "6h", rating: 4.7, students: 1100, level: "Intermediate", price: "399,000 đ", image: "https://picsum.photos/seed/writing-cat/400/240" },
-];
 
 const allLevels = ["Beginner", "Intermediate", "Advanced", "All levels"];
 
@@ -47,6 +28,16 @@ const sortOptions = [
 ];
 
 export function CoursesPage() {
+  const [publishedCourses, setPublishedCourses] = useState<CourseListing[]>([]);
+  useEffect(() => {
+    const refresh = () => setPublishedCourses(readPublishedCourses());
+    const onStorage = (event: StorageEvent) => { if (event.key === PUBLISHED_COURSES_KEY) refresh(); };
+    refresh();
+    window.addEventListener(PUBLISHED_COURSES_EVENT, refresh);
+    window.addEventListener("storage", onStorage);
+    return () => { window.removeEventListener(PUBLISHED_COURSES_EVENT, refresh); window.removeEventListener("storage", onStorage); };
+  }, []);
+  const courses = useMemo(() => [...publishedCourses, ...allCourses], [publishedCourses]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const params = useFilterParams();
   const query = params.get("q", "");
@@ -58,7 +49,7 @@ export function CoursesPage() {
   const sort = params.get("sort", "relevant");
 
   const filtered = useMemo(() => {
-    let result = [...allCourses];
+    let result = [...courses];
 
     if (query) {
       const q = query.toLowerCase();
@@ -92,7 +83,7 @@ export function CoursesPage() {
     else if (sort === "shortest") result.sort((a, b) => parseDuration(a.duration) - parseDuration(b.duration));
 
     return result;
-  }, [query, levelFilter, priceFilter, durationFilter, categoryFilter, ratingFilter, sort]);
+  }, [courses, query, levelFilter, priceFilter, durationFilter, categoryFilter, ratingFilter, sort]);
 
   const activeFilters = [
     levelFilter ? { key: "level", label: levelFilter, value: levelFilter } : null,
@@ -139,7 +130,7 @@ export function CoursesPage() {
       <details open>
         <summary>Duration</summary>
         <div className={styles.filterOptions}>
-          {[{ value: "", label: "Any duration" }, { value: "under_1h", label: "Under 1 hour" }, { value: "1_3h", label: "1–3 hours" }, { value: "3_10h", label: "3–10 hours" }, { value: "10_20h", label: "10–20 hours" }, { value: "over_20h", label: "20+ hours" }].map((option) => (
+          {[{ value: "", label: "Any duration" }, { value: "under_1h", label: "Under 1 hour" }, { value: "1_3h", label: "1-3 hours" }, { value: "3_10h", label: "3-10 hours" }, { value: "10_20h", label: "10-20 hours" }, { value: "over_20h", label: "20+ hours" }].map((option) => (
             <FilterRadio key={option.value || "any-duration"} name="course-duration" label={option.label} selected={durationFilter === option.value} onSelect={() => params.set("duration", option.value)} />
           ))}
         </div>
@@ -147,7 +138,7 @@ export function CoursesPage() {
       <details open>
         <summary>Price</summary>
         <div className={styles.filterOptions}>
-          {[{ value: "", label: "Any price" }, { value: "free", label: "Free" }, { value: "under_300k", label: "Under 300,000₫" }, { value: "300k_700k", label: "300,000₫–700,000₫" }, { value: "over_700k", label: "700,000₫+" }].map((option) => (
+          {[{ value: "", label: "Any price" }, { value: "free", label: "Free" }, { value: "under_300k", label: "Under 300,000₫" }, { value: "300k_700k", label: "300,000₫-700,000₫" }, { value: "over_700k", label: "700,000₫+" }].map((option) => (
             <FilterRadio key={option.value || "any-price"} name="course-price" label={option.label} selected={priceFilter === option.value} onSelect={() => params.set("price", option.value)} />
           ))}
         </div>
@@ -192,25 +183,27 @@ export function CoursesPage() {
           <div className={`${styles.courseGrid} ${styles.courseGridWithSidebar}`}>
             {filtered.map((course) => (
               <article key={course.title} className={styles.courseCard}>
-                <div className={styles.cardImage}>
-                  <Image src={course.image} alt={course.title} fill unoptimized sizes="(max-width: 620px) 100vw, (max-width: 1100px) 50vw, 25vw" />
-                  <span className={styles.mediaLabel}>{course.level}</span>
-                  <button type="button" className={`${styles.iconButton} ${styles.mediaAction}`} aria-label={`Save ${course.title}`}><IconBookmark size={18} /></button>
-                </div>
-                <div className={styles.cardBody}>
-                  <p className={styles.cardKicker}>{course.category}</p>
-                  <a href="#" className={styles.cardTitle}>{course.title}</a>
-                  <p className={styles.description}>Taught by {course.instructor}</p>
-                  <div className={styles.metaRow}>
-                    <span className={styles.metaItem}><IconClock size={14} />{course.duration}</span>
-                    <span className={styles.metaItem}><IconBook2 size={14} />{course.lessons} lessons</span>
-                    <span className={styles.metaItem}><IconStar size={14} className={styles.star} />{course.rating}</span>
+                <button type="button" className={`${styles.iconButton} ${styles.mediaAction} ${styles.courseSaveAction}`} aria-label={`Save ${course.title}`}><IconBookmark size={18} /></button>
+                <Link className={styles.courseCardLink} href={`/courses/${course.slug}`} aria-label={`View ${course.title}`}>
+                  <div className={styles.cardImage}>
+                    <Image src={course.image} alt={course.title} fill unoptimized sizes="(max-width: 620px) 100vw, (max-width: 1100px) 50vw, 25vw" />
+                    <span className={styles.mediaLabel}>{course.level}</span>
                   </div>
-                  <div className={styles.priceRow}>
-                    <span className={styles.metaItem}><IconUsers size={14} />{course.students.toLocaleString("en-US")}</span>
-                    <span className={`${styles.price} ${course.price === "Free" ? styles.free : ""}`}>{course.price}</span>
+                  <div className={styles.cardBody}>
+                    <p className={styles.cardKicker}>{course.category}</p>
+                    <h2 className={styles.cardTitle}>{course.title}</h2>
+                    <p className={styles.description}>Taught by {course.instructor}</p>
+                    <div className={styles.metaRow}>
+                      <span className={styles.metaItem}><IconClock size={14} />{course.duration}</span>
+                      <span className={styles.metaItem}><IconBook2 size={14} />{course.lessons} lessons</span>
+                      <span className={styles.metaItem}><IconStar size={14} className={styles.star} />{course.rating}</span>
+                    </div>
+                    <div className={styles.priceRow}>
+                      <span className={styles.metaItem}><IconUsers size={14} />{course.students.toLocaleString("en-US")}</span>
+                      <span className={`${styles.price} ${course.price === "Free" ? styles.free : ""}`}>{course.price}</span>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </article>
             ))}
           </div>

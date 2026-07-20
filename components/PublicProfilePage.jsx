@@ -157,7 +157,7 @@ export default function PublicProfilePage({
 function SimilarPeople({ people }) {
   return <section className="pp-similar" aria-labelledby="similar-people-title">
     <div><p>Keep exploring</p><h2 id="similar-people-title">Similar people</h2></div>
-    <div className="pp-similar-grid">{people.map((person) => <a key={person.name} href={`/profile/${encodeURIComponent(person.name)}`}>
+    <div className="pp-similar-grid">{people.map((person) => <a key={person.name} href={`/profile-preview.html?name=${encodeURIComponent(person.name)}`}>
       <img src={person.avatar} alt={`${person.name}, ${person.role}`} loading="lazy" />
       <span><strong>{person.name}</strong><small>{person.role}</small></span>
       <span aria-hidden="true">→</span>

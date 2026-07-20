@@ -1,34 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { IconCalendar, IconClock, IconMapPin, IconUsers, IconBookmark, IconSearch, IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import { useFilterParams } from "@/components/ui/use-filter-params";
 import { ActiveFilters } from "@/components/ui/active-filters";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
 import { FilterRadio } from "@/components/ui/filter-section";
+import { allEvents, PUBLISHED_EVENTS_EVENT, PUBLISHED_EVENTS_KEY, readPublishedEvents, type EventListing } from "@/lib/event-data";
 import styles from "./marketplace-pages.module.css";
-
-interface Event {
-  title: string; host: string; date: string; time: string;
-  location: string; type: string; price: string;
-  attending: number; capacity: number; image: string; topic?: string; level?: string;
-}
 
 const quickTabs = ["All", "Near me", "Online", "Today", "This week", "This weekend", "Free"];
 
-const allEvents: Event[] = [
-  { title: "Beginner Pottery Workshop", host: "Thu Ha", date: "Sunday, 14 Jul", time: "2:00 PM", location: "Tay Ho, Ha Noi", type: "In person", price: "350,000 đ", attending: 12, capacity: 20, image: "https://picsum.photos/seed/ev-pottery/400/240", topic: "Creative arts", level: "Beginner" },
-  { title: "IELTS Speaking Practice Group", host: "Linh Nguyen", date: "Saturday, 13 Jul", time: "10:00 AM", location: "Online", type: "Online", price: "Free", attending: 8, capacity: 15, image: "https://picsum.photos/seed/ev-ielts/400/240", topic: "Languages", level: "Intermediate" },
-  { title: "Startup Networking Night", host: "Bao Long", date: "Friday, 19 Jul", time: "6:30 PM", location: "Hoan Kiem, Ha Noi", type: "In person", price: "Free", attending: 45, capacity: 60, image: "https://picsum.photos/seed/ev-startup/400/240", topic: "Business", level: "All levels" },
-  { title: "Watercolor Painting Session", host: "Duc Pham", date: "Tuesday, 16 Jul", time: "3:00 PM", location: "Online", type: "Online", price: "200,000 đ", attending: 20, capacity: 25, image: "https://picsum.photos/seed/ev-watercolor/400/240", topic: "Creative arts", level: "Beginner" },
-  { title: "Photography Walk: Old Quarter", host: "Duc Pham", date: "Sunday, 21 Jul", time: "7:00 AM", location: "Hoan Kiem, Ha Noi", type: "In person", price: "Free", attending: 15, capacity: 15, image: "https://picsum.photos/seed/ev-photowalk/400/240", topic: "Photography", level: "All levels" },
-  { title: "Yoga in the Park", host: "Ngoc Tram", date: "Saturday, 20 Jul", time: "6:30 AM", location: "Tay Ho, Ha Noi", type: "In person", price: "Free", attending: 28, capacity: 30, image: "https://picsum.photos/seed/ev-yoga/400/240", topic: "Wellness", level: "Beginner" },
-  { title: "Cooking Class: Pho Masterclass", host: "Thu Ha", date: "Wednesday, 17 Jul", time: "5:00 PM", location: "Online", type: "Online", price: "400,000 đ", attending: 10, capacity: 12, image: "https://picsum.photos/seed/ev-pho/400/240", topic: "Cooking", level: "Intermediate" },
-  { title: "Public Speaking Workshop", host: "Minh Anh", date: "Thursday, 18 Jul", time: "7:00 PM", location: "Online", type: "Online", price: "Free", attending: 35, capacity: 50, image: "https://picsum.photos/seed/ev-speaking/400/240", topic: "Personal development", level: "All levels" },
-];
-
-const allTopics = [...new Set(allEvents.filter((e) => e.topic).map((e) => e.topic!))];
+const allTopics = [...new Set(allEvents.map((event) => event.topic))];
 const allLevels = ["Beginner", "Intermediate", "Advanced", "All levels"];
 
 const parsePrice = (p: string) => p === "Free" ? 0 : parseInt(p.replace(/[^0-9]/g, ""));
@@ -43,6 +28,16 @@ const sortOptions = [
 ];
 
 export function EventsPage() {
+  const [publishedEvents, setPublishedEvents] = useState<EventListing[]>([]);
+  useEffect(() => {
+    const refresh = () => setPublishedEvents(readPublishedEvents());
+    const storage = (event: StorageEvent) => { if (event.key === PUBLISHED_EVENTS_KEY) refresh(); };
+    refresh();
+    window.addEventListener(PUBLISHED_EVENTS_EVENT, refresh);
+    window.addEventListener("storage", storage);
+    return () => { window.removeEventListener(PUBLISHED_EVENTS_EVENT, refresh); window.removeEventListener("storage", storage); };
+  }, []);
+  const events = useMemo(() => [...publishedEvents, ...allEvents], [publishedEvents]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const params = useFilterParams();
   const query = params.get("q", "");
@@ -54,7 +49,7 @@ export function EventsPage() {
   const sort = params.get("sort", "soonest");
 
   const filtered = useMemo(() => {
-    let result = [...allEvents];
+    let result = [...events];
     if (query) { const q = query.toLowerCase(); result = result.filter((e) => e.title.toLowerCase().includes(q) || e.host.toLowerCase().includes(q) || e.topic?.toLowerCase().includes(q)); }
 
     if (tab === "Online") result = result.filter((e) => e.type === "Online");
@@ -77,7 +72,7 @@ export function EventsPage() {
     else if (sort === "price_asc") result.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
 
     return result;
-  }, [query, tab, format, priceFilter, topicFilter, levelFilter, sort]);
+  }, [events, query, tab, format, priceFilter, topicFilter, levelFilter, sort]);
 
   const activeFilters = [
     format ? { key: "format", label: format === "online" ? "Online" : "In person", value: format } : null,
@@ -92,7 +87,7 @@ export function EventsPage() {
     <details open><summary>Format</summary>{group("format", format, "format", [{ value: "", label: "Any format" }, { value: "online", label: "Online" }, { value: "inperson", label: "In person" }])}</details>
     <details open><summary>Topic</summary>{group("topic", topicFilter, "topic", [{ value: "", label: "All topics" }, ...allTopics.map((value) => ({ value, label: value }))])}</details>
     <details open><summary>Level</summary>{group("level", levelFilter, "level", [{ value: "", label: "All levels" }, ...allLevels.map((value) => ({ value, label: value }))])}</details>
-    <details open><summary>Price</summary>{group("price", priceFilter, "price", [{ value: "", label: "Any price" }, { value: "free", label: "Free" }, { value: "under_200k", label: "Under 200,000₫" }, { value: "200k_500k", label: "200,000₫–500,000₫" }, { value: "over_500k", label: "500,000₫+" }])}</details>
+    <details open><summary>Price</summary>{group("price", priceFilter, "price", [{ value: "", label: "Any price" }, { value: "free", label: "Free" }, { value: "under_200k", label: "Under 200,000₫" }, { value: "200k_500k", label: "200,000₫-500,000₫" }, { value: "over_500k", label: "500,000₫+" }])}</details>
   </div>;
 
   return (
@@ -118,14 +113,15 @@ export function EventsPage() {
               const remaining = event.capacity - event.attending;
               return (
                 <article key={event.title} className={styles.eventCard}>
+                  <Link className={styles.eventCardLink} href={`/events/${event.slug}`} aria-label={`View ${event.title}`} />
                   <div className={styles.eventImage}>
                     <Image src={event.image} alt={event.title} fill unoptimized sizes="(max-width: 420px) 100vw, 136px" />
                     <span className={styles.mediaLabel}>{event.type}</span>
-                    <button type="button" className={`${styles.iconButton} ${styles.mediaAction}`} aria-label={`Save ${event.title}`}><IconBookmark size={18} /></button>
                   </div>
+                  <button type="button" className={`${styles.iconButton} ${styles.mediaAction} ${styles.eventSaveAction}`} aria-label={`Save ${event.title}`}><IconBookmark size={18} /></button>
                   <div className={styles.cardBody}>
                     <p className={styles.cardKicker}>{event.topic}</p>
-                    <a href="#" className={styles.cardTitle}>{event.title}</a>
+                    <h2 className={styles.cardTitle}>{event.title}</h2>
                     <p className={styles.description}>Hosted by {event.host} · {event.level}</p>
                     <div className={styles.eventDetails}>
                       <span className={styles.metaItem}><IconCalendar size={14} />{event.date}</span>

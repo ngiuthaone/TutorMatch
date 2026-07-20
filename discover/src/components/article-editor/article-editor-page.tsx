@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect } from "react";
 import { IconArrowLeft, IconEye, IconSend, IconDeviceFloppy, IconX, IconChevronDown, IconPhoto, IconClock, IconCheck } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { ArticleRichText } from "./article-rich-text";
-import { ArticleTemplateSelector } from "./article-template-selector";
 import { generateId, getUserFromStorage, estimateReadingTime, TOPICS, SKILLS, COMMUNITIES } from "@/lib/types";
 import type { ArticleDraft, ContentVisibility, ContentLevel } from "@/lib/types";
 import { saveArticleDraft, getArticleDrafts, publishArticle } from "@/lib/storage";
@@ -27,7 +26,6 @@ export function ArticleEditorPage({ articleId }: { articleId?: string }) {
   const [level, setLevel] = useState<ContentLevel | undefined>();
   const [commentsEnabled, setCommentsEnabled] = useState(true);
   const [showPublishPanel, setShowPublishPanel] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(true);
   const [publishing, setPublishing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [excerpt, setExcerpt] = useState("");
@@ -59,7 +57,6 @@ export function ArticleEditorPage({ articleId }: { articleId?: string }) {
         setLevel(existing.level);
         setCommentsEnabled(existing.commentsEnabled);
         setExcerpt(existing.excerpt || "");
-        setShowTemplates(false);
       }
     }
   }, [articleId]);
@@ -95,16 +92,10 @@ export function ArticleEditorPage({ articleId }: { articleId?: string }) {
     return () => clearTimeout(timer);
   }, [title, subtitle, excerpt, coverImage, content, contentHtml, visibility, communityId, topicName, skillNames, level, commentsEnabled, readingTime, draftId]);
 
-  const handleTemplateSelect = useCallback((structure: Record<string, unknown>) => {
-    setContent(structure);
-    setShowTemplates(false);
-  }, []);
-
   const handleContentChange = useCallback((json: Record<string, unknown>, html: string) => {
     setContent(json);
     setContentHtml(html);
-    if (showTemplates) setShowTemplates(false);
-  }, [showTemplates]);
+  }, []);
 
   const handleCoverUpload = useCallback(() => {
     const input = document.createElement("input");
@@ -228,10 +219,6 @@ export function ArticleEditorPage({ articleId }: { articleId?: string }) {
 
       <div className="flex-1 flex">
         <main className="flex-1 max-w-[760px] mx-auto w-full px-4 pt-8 pb-24">
-          {showTemplates && (
-            <ArticleTemplateSelector onSelect={handleTemplateSelect} />
-          )}
-
           {!coverImage && (
             <button onClick={handleCoverUpload}
               className="w-full aspect-[16/9] rounded-2xl border-2 border-dashed border-border bg-surface hover:border-primary/30 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 mb-6">

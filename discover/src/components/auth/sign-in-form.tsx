@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { IconBrandGoogle, IconBrandApple, IconCircleCheck } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export function SignInForm() {
+export function SignInForm({ nextPath = "/discover" }: { nextPath?: string }) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -28,8 +30,8 @@ export function SignInForm() {
       const name = email.split("@")[0];
       localStorage.setItem("tutoria_signup", JSON.stringify({ email, name, completed: true }));
     } catch {}
-    await new Promise((r) => setTimeout(r, 1800));
-    window.location.href = "/discover";
+    await new Promise((r) => setTimeout(r, 600));
+    router.replace(nextPath);
   };
 
   if (success) {
@@ -65,7 +67,7 @@ export function SignInForm() {
         Continue learning, sharing, and connecting with people who inspire you.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
+      <form action="/discover" method="get" onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
         <Input
           label="Email address"
           type="email"
@@ -133,7 +135,7 @@ export function SignInForm() {
 
       <p className="mt-8 text-center text-sm text-muted">
         New to Tutoria?{" "}
-        <a href="/auth/sign-up" className="text-primary hover:text-primary-dark font-medium transition-colors">
+        <a href={`/auth/sign-up?next=${encodeURIComponent(nextPath)}`} className="text-primary hover:text-primary-dark font-medium transition-colors">
           Create an account
         </a>
       </p>

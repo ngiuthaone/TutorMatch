@@ -33,9 +33,10 @@ import {
 } from "react";
 
 import styles from "./event-creator.module.css";
+import { savePublishedEvent, type EventDetail } from "@/lib/event-data";
 
 type EventType = "Workshop" | "Event";
-type EventFormat = "In person" | "Online" | "Hybrid";
+type EventFormat = "In person" | "Online";
 type ExperienceLevel = "Beginner" | "Intermediate" | "Advanced" | "All levels";
 type AccessType = "Free" | "Paid" | "Request to join" | "Invitation only";
 
@@ -66,6 +67,12 @@ type StoredSessionDate = Partial<SessionDate> & {
   end?: string;
 };
 
+type CreatorFaq = {
+  id: string;
+  question: string;
+  answer: string;
+};
+
 type EventDraft = {
   type: EventType;
   format: EventFormat;
@@ -76,13 +83,17 @@ type EventDraft = {
   level: ExperienceLevel;
   included: string[];
   bring: string;
+  requirements: string[];
+  faqs: CreatorFaq[];
   languages: string[];
   coverImage: string;
   galleryImages: string[];
   plan: PlanItem[];
   sessions: SessionDate[];
   timezone: string;
+  venueName: string;
   location: string;
+  meetingLink: string;
   arrival: string;
   capacity: number;
   access: AccessType;
@@ -105,6 +116,11 @@ const defaultDraft: EventDraft = {
   level: "Beginner",
   included: ["Clay", "Glazes", "Firing", "Apron", "Tools"],
   bring: "Comfortable clothes that can get a little messy",
+  requirements: ["No previous pottery experience is required", "Participants must be at least 12 years old"],
+  faqs: [
+    { id: "faq-experience", question: "Do I need previous experience?", answer: "No. This workshop is designed for complete beginners." },
+    { id: "faq-clothing", question: "What should I wear?", answer: "Wear comfortable clothes that can get a little messy." },
+  ],
   languages: ["English", "Vietnamese"],
   coverImage: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=1400&q=85",
   galleryImages: [],
@@ -124,7 +140,9 @@ const defaultDraft: EventDraft = {
     },
   ],
   timezone: "(GMT+7) Bangkok, Hanoi, Jakarta",
-  location: "ClaySpace Studio, Tay Ho, Ha Noi",
+  venueName: "ClaySpace Studio",
+  location: "123 Ceramic Road, Tay Ho, Ha Noi",
+  meetingLink: "https://meet.example.com/pottery-workshop",
   arrival: "Please arrive 10-15 minutes early. The studio is on the second floor.",
   capacity: 20,
   access: "Paid",
@@ -193,7 +211,8 @@ function parseDraft(snapshot: string): EventDraft {
     const galleryImages = Array.isArray(parsed.galleryImages)
       ? parsed.galleryImages.filter((image): image is string => typeof image === "string" && Boolean(image))
       : [];
-    return { ...defaultDraft, ...parsed, coverImage, galleryImages, sessions } as EventDraft;
+    const format: EventFormat = parsed.format === "Online" ? "Online" : "In person";
+    return { ...defaultDraft, ...parsed, format, coverImage, galleryImages, sessions } as EventDraft;
   } catch {
     return defaultDraft;
   }
@@ -212,6 +231,38 @@ function readFileAsDataUrl(file: File) {
   });
 }
 
+function optimizeImageDataUrl(value: string, maxDimension = 1280, quality = 0.72) {
+  if (!value.startsWith("data:image/")) return Promise.resolve(value);
+  return new Promise<string>((resolve) => {
+    const image = new window.Image();
+    image.onload = () => {
+      const largestSide = Math.max(image.naturalWidth, image.naturalHeight);
+      const scale = Math.min(1, maxDimension / Math.max(largestSide, 1));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const context = canvas.getContext("2d");
+      if (!context) {
+        resolve(value);
+        return;
+      }
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const optimized = canvas.toDataURL("image/webp", quality);
+      resolve(optimized.length < value.length ? optimized : value);
+    };
+    image.onerror = () => resolve(value);
+    image.src = value;
+  });
+}
+
+async function optimizePublishedEventImages(event: EventDetail, compact = false): Promise<EventDetail> {
+  const image = await optimizeImageDataUrl(event.image, compact ? 900 : 1280, compact ? 0.52 : 0.72);
+  const galleryImage = compact
+    ? image
+    : await optimizeImageDataUrl(event.galleryImage, 1280, 0.72);
+  return { ...event, image, galleryImage };
+}
+
 function formatPrice(value: number) {
   return `${new Intl.NumberFormat("vi-VN").format(value)} đ`;
 }
@@ -226,6 +277,49 @@ function formatSessionDate(value: string) {
     day: "numeric",
     year: "numeric",
   }).format(date);
+}
+
+function createSlug(title: string) {
+  const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return `${base || "event"}-${Date.now().toString(36)}`;
+}
+
+function toPublishedEvent(draft: EventDraft): EventDetail {
+  const firstSession = draft.sessions[0];
+  const firstInterval = firstSession?.intervals[0];
+  const duration = draft.plan.reduce((sum, item) => sum + Number(item.duration || 0), 0);
+  const isOnline = draft.format === "Online";
+  const dateLabel = firstSession?.date ? new Intl.DateTimeFormat("en", { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${firstSession.date}T00:00:00`)) : "Date TBA";
+  const location = isOnline ? "Online" : `${draft.venueName} · ${draft.location}`;
+  const cancellation = [`Cancel ${draft.cancellation.toLowerCase()} for a ${draft.refund.toLowerCase()}.`, "If the host cancels, you can choose another session or receive a full refund."];
+  return {
+    slug: createSlug(draft.title), title: draft.title, host: "Sophia Nguyen", date: dateLabel,
+    time: firstInterval?.start || "Time TBA", location, type: isOnline ? "Online" : "In person",
+    price: draft.access === "Paid" ? formatPrice(draft.price) : "Free", attending: 0, capacity: draft.capacity,
+    image: draft.coverImage, topic: draft.category, level: draft.level, subtitle: draft.promise,
+    rating: 0, reviewCount: 0, duration: `${duration} minutes`, languages: draft.languages,
+    minimumAge: "All ages", accessibility: isOnline ? "Join from any device" : "Contact the host for access details",
+    studioName: isOnline ? "Online session" : draft.venueName, address: isOnline ? "Joining link shared after booking" : draft.location,
+    sessions: draft.sessions.map((session) => ({ id: session.id, date: formatSessionDate(session.date), times: session.intervals.map((interval) => `${interval.start} - ${interval.end}`) })),
+    spotsLeft: draft.capacity, about: [draft.promise, draft.outcome], note: draft.arrival || `Suitable for ${draft.level.toLowerCase()} participants.`,
+    highlights: [
+      { title: `${draft.capacity} places`, description: "A focused group experience." },
+      { title: `${duration} minutes`, description: "A clearly structured programme." },
+      { title: draft.format, description: isOnline ? "Join from wherever you are." : "Learn together in person." },
+      { title: draft.level, description: `Designed for ${draft.level.toLowerCase()} participants.` },
+    ],
+    learn: [draft.outcome], included: draft.included, bring: draft.bring ? [draft.bring] : ["Nothing special is required"],
+    plan: draft.plan.map((item) => ({ title: item.title, duration: `${item.duration} min`, description: item.description })),
+    faqs: draft.faqs.map(({ question, answer }) => ({ question, answer })),
+    galleryImage: draft.galleryImages[0] || draft.plan.find((item) => item.image)?.image || draft.coverImage,
+    hostRole: "Tutoria host and educator", hostExperience: "Community educator", hostBio: "Sophia creates practical, welcoming learning experiences on Tutoria.",
+    hostImage: "https://picsum.photos/seed/sophia-nguyen/240/240", hostRecommendation: "New host",
+    beforeYouAttend: [
+      { title: "Requirements", items: draft.requirements },
+      { title: "Arrival", items: [draft.arrival || (isOnline ? "Check your joining details before the session." : "Arrive 10 minutes early.")] },
+      { title: "What to bring", items: draft.bring ? [draft.bring] : ["Nothing special is required."] },
+    ], cancellation, reviews: [],
+  };
 }
 
 function intervalsAreValid(intervals: TimeInterval[]) {
@@ -295,6 +389,7 @@ export function EventCreator() {
   const [stepMessage, setStepMessage] = useState("");
   const [includedInput, setIncludedInput] = useState("");
   const [languageInput, setLanguageInput] = useState("");
+  const [requirementInput, setRequirementInput] = useState("");
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(() => draft.plan[0]?.id ?? null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stepSections = useRef<Array<HTMLElement | null>>([]);
@@ -304,8 +399,14 @@ export function EventCreator() {
   const previewModalRef = useRef<HTMLElement | null>(null);
 
   const saveDraft = useCallback((nextDraft: EventDraft, announce = false) => {
-    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(nextDraft));
-    window.dispatchEvent(new Event(DRAFT_EVENT));
+    try {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(nextDraft));
+      window.dispatchEvent(new Event(DRAFT_EVENT));
+    } catch {
+      setSaveStatus("saved");
+      setNotice("This draft is too large for browser storage. Remove an image or choose a smaller file.");
+      return;
+    }
     setSaveStatus("saving");
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => setSaveStatus("saved"), 550);
@@ -359,11 +460,14 @@ export function EventCreator() {
   const fee = draft.access === "Paid" ? Math.round(draft.price * 0.06) : 0;
   const payout = Math.max(0, draft.price - fee);
   const sessionTimesValid = draft.sessions.every((session) => session.date && intervalsAreValid(session.intervals));
+  const locationComplete = draft.format === "Online"
+    ? Boolean(draft.meetingLink.trim())
+    : Boolean(draft.venueName.trim() && draft.location.trim());
 
   const checklist = [
     { label: "Essential details", complete: Boolean(draft.title.trim() && draft.promise.trim()), step: 0 },
-    { label: "Experience and plan", complete: Boolean(draft.outcome.trim() && draft.plan.length), step: 1 },
-    { label: "Time and location", complete: Boolean(sessionTimesValid && (draft.format === "Online" || draft.location.trim())), step: 2 },
+    { label: "Experience, requirements, and FAQs", complete: Boolean(draft.outcome.trim() && draft.plan.length && draft.requirements.length && draft.requirements.every((item) => item.trim()) && draft.faqs.length && draft.faqs.every((faq) => faq.question.trim() && faq.answer.trim())), step: 1 },
+    { label: "Time and location", complete: Boolean(sessionTimesValid && locationComplete), step: 2 },
     { label: "Capacity and price", complete: draft.capacity > 0 && (draft.access !== "Paid" || draft.price > 0), step: 3 },
     { label: "Cover image", complete: eventImages.length > 0, step: 0 },
     { label: "Cancellation policy", complete: Boolean(draft.cancellation && draft.refund), step: 3 },
@@ -494,14 +598,30 @@ export function EventCreator() {
     updateEventImages(eventImages.filter((_, imageIndex) => imageIndex !== index));
   };
 
-  const publish = () => {
+  const publish = async () => {
     if (!readyToPublish) {
       setNotice("Complete the highlighted review items before publishing.");
       return;
     }
+    const eventData = toPublishedEvent(draft);
+    setNotice("Optimizing images for browser storage…");
+    window.localStorage.removeItem(DRAFT_KEY);
+    let publishedEvent = await optimizePublishedEventImages(eventData);
+    try {
+      savePublishedEvent(publishedEvent);
+    } catch {
+      publishedEvent = await optimizePublishedEventImages(eventData, true);
+      try {
+        savePublishedEvent(publishedEvent);
+      } catch {
+        setNotice("Browser storage is full. Remove an uploaded image or clear an older local draft, then publish again.");
+        return;
+      }
+    }
     setPublished(true);
     setPreviewOpen(false);
-    setNotice(`${draft.type} published successfully.`);
+    setNotice(`${draft.type} published successfully. Opening its public page…`);
+    window.setTimeout(() => { window.location.href = `/events/${publishedEvent.slug}`; }, 500);
   };
 
   return (
@@ -557,7 +677,7 @@ export function EventCreator() {
               <ChoiceButton active={draft.type === "Event"} icon={IconUsers} title="Event" description="A talk, meetup, gathering, or social experience." onClick={() => patchDraft("type", "Event")} />
             </div>
             <div className={styles.formGrid}>
-              <SegmentedControl label="Format" options={["In person", "Online", "Hybrid"] as const} value={draft.format} onChange={(value) => patchDraft("format", value)} />
+              <SegmentedControl label="Format" options={["In person", "Online"] as const} value={draft.format} onChange={(value) => patchDraft("format", value)} />
               <label className={styles.field}><span>Category</span><select value={draft.category} onChange={(event) => patchDraft("category", event.target.value)}><option>Creative arts</option><option>Business</option><option>Technology</option><option>Languages</option><option>Music</option><option>Wellness</option><option>Cooking</option></select></label>
               <label className={styles.field}><span>Working title</span><input required maxLength={80} value={draft.title} onChange={(event) => patchDraft("title", event.target.value)} /><small>{draft.title.length}/80</small></label>
               <label className={styles.field}><span>One-sentence promise</span><textarea required maxLength={120} rows={3} value={draft.promise} onChange={(event) => patchDraft("promise", event.target.value)} /><small>{draft.promise.length}/120</small></label>
@@ -652,6 +772,20 @@ export function EventCreator() {
               </div>
               <label className={styles.field}><span>What participants should bring</span><textarea rows={3} value={draft.bring} onChange={(event) => patchDraft("bring", event.target.value)} /></label>
             </div>
+            <section className={styles.enrollmentInfo} aria-labelledby="event-guest-info-title">
+              <header className={styles.enrollmentInfoHeader}><div><span>Before booking</span><h3 id="event-guest-info-title">Help guests arrive prepared.</h3><p>Set expectations and resolve common questions before someone reserves a place.</p></div><strong>{draft.requirements.length + draft.faqs.length} items</strong></header>
+              <div className={styles.infoBuilderGrid}>
+                <section className={styles.infoBuilder} aria-labelledby="event-requirements-title">
+                  <div className={styles.infoBuilderTitle}><span><IconCheck size={17} /></span><div><strong id="event-requirements-title">Requirements</strong><p>Anything guests must know or have.</p></div></div>
+                  <div className={styles.requirementList}>{draft.requirements.map((requirement, index) => <div key={`requirement-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><input aria-label={`Requirement ${index + 1}`} value={requirement} onChange={(event) => patchDraft("requirements", draft.requirements.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} /><button type="button" aria-label={`Remove requirement ${index + 1}`} onClick={() => patchDraft("requirements", draft.requirements.filter((_, itemIndex) => itemIndex !== index))}><IconTrash size={15} /></button></div>)}</div>
+                  <div className={styles.addRow}><input aria-label="New event requirement" value={requirementInput} placeholder="Add an age, skill, or material requirement" onChange={(event) => setRequirementInput(event.target.value)} /><button type="button" onClick={() => { const value = requirementInput.trim(); if (value) patchDraft("requirements", [...draft.requirements, value]); setRequirementInput(""); }}><IconPlus size={15} /> Add</button></div>
+                </section>
+                <section className={styles.infoBuilder} aria-labelledby="event-faq-title">
+                  <div className={styles.infoBuilderTitle}><span><IconCircleCheck size={17} /></span><div><strong id="event-faq-title">Frequently asked questions</strong><p>Give a direct answer to each common concern.</p></div><button type="button" onClick={() => patchDraft("faqs", [...draft.faqs, { id: createId("faq"), question: "", answer: "" }])}><IconPlus size={15} /> Add question</button></div>
+                  <div className={styles.faqBuilderList}>{draft.faqs.map((faq, index) => <article key={faq.id}><header><span>Question {String(index + 1).padStart(2, "0")}</span><button type="button" aria-label={`Remove FAQ ${index + 1}`} onClick={() => patchDraft("faqs", draft.faqs.filter((item) => item.id !== faq.id))}><IconTrash size={15} /> Remove</button></header><label className={styles.field}><span>Question</span><input value={faq.question} placeholder="What do guests usually ask?" onChange={(event) => patchDraft("faqs", draft.faqs.map((item) => item.id === faq.id ? { ...item, question: event.target.value } : item))} /></label><label className={styles.field}><span>Answer</span><textarea rows={3} value={faq.answer} placeholder="Give a concise, useful answer" onChange={(event) => patchDraft("faqs", draft.faqs.map((item) => item.id === faq.id ? { ...item, answer: event.target.value } : item))} /></label></article>)}</div>
+                </section>
+              </div>
+            </section>
           </section>
 
           <section id="schedule" className={styles.section} hidden={activeStep !== 2} tabIndex={-1} ref={(node) => { stepSections.current[2] = node; }}>
@@ -685,12 +819,24 @@ export function EventCreator() {
               })}
             </div>
             <button type="button" className={styles.addButton} onClick={() => patchDraft("sessions", [...draft.sessions, { id: createId("date"), date: "2026-07-26", intervals: [{ id: createId("interval"), title: "Morning session", start: "10:00", end: "12:00" }] }])}><IconCalendarEvent size={17} /> Add another date</button>
-            <div className={styles.formGrid}>
+            <div className={styles.scheduleBasics}>
               <label className={styles.field}><span>Time zone</span><select value={draft.timezone} onChange={(event) => patchDraft("timezone", event.target.value)}><option>(GMT+7) Bangkok, Hanoi, Jakarta</option><option>(GMT+8) Singapore, Kuala Lumpur</option><option>(GMT+9) Tokyo, Seoul</option><option>(GMT+0) London</option></select></label>
-              <label className={styles.field}><span>{draft.format === "Online" ? "Meeting link" : "Location"}</span><input required value={draft.location} onChange={(event) => patchDraft("location", event.target.value)} /></label>
-              <label className={styles.field}><span>Arrival instructions</span><textarea rows={3} value={draft.arrival} onChange={(event) => patchDraft("arrival", event.target.value)} /></label>
               <label className={styles.field}><span>Capacity</span><input required type="number" min={1} value={draft.capacity} onChange={(event) => patchDraft("capacity", Number(event.target.value))} /></label>
             </div>
+            <section className={styles.locationPanel} aria-labelledby="event-location-title">
+              <div className={styles.locationHeading}><span><IconMapPin size={20} /></span><div><strong id="event-location-title">{draft.format === "Online" ? "Online joining details" : "Venue and location"}</strong><p>Choose the format here, then add the details guests need to attend.</p></div></div>
+              <fieldset className={styles.locationFormat}>
+                <legend>Event format</legend>
+                <div>{(["In person", "Online"] as const).map((format) => <button key={format} type="button" className={draft.format === format ? styles.activeLocationFormat : ""} aria-pressed={draft.format === format} onClick={() => patchDraft("format", format)}>{format}</button>)}</div>
+                <p>{draft.format === "In person" ? "Add a venue name and complete street address." : "Only a meeting link is needed for an online event."}</p>
+              </fieldset>
+              <div className={styles.formGrid}>
+                {draft.format !== "Online" && <label className={styles.field}><span>Venue name</span><input required value={draft.venueName} placeholder="e.g. ClaySpace Studio" onChange={(event) => patchDraft("venueName", event.target.value)} /></label>}
+                {draft.format !== "Online" && <label className={styles.field}><span>Full address</span><input required value={draft.location} placeholder="Street, district, city" onChange={(event) => patchDraft("location", event.target.value)} /></label>}
+                {draft.format === "Online" && <label className={`${styles.field} ${styles.spanTwo}`}><span>Meeting link</span><input required type="url" value={draft.meetingLink} placeholder="https://…" onChange={(event) => patchDraft("meetingLink", event.target.value)} /></label>}
+                {draft.format !== "Online" && <label className={`${styles.field} ${styles.spanTwo}`}><span>Arrival instructions</span><textarea rows={3} value={draft.arrival} placeholder="Entrance, floor, parking, or check-in details" onChange={(event) => patchDraft("arrival", event.target.value)} /></label>}
+              </div>
+            </section>
           </section>
 
           <section id="access" className={styles.section} hidden={activeStep !== 3} tabIndex={-1} ref={(node) => { stepSections.current[3] = node; }}>
@@ -752,6 +898,7 @@ export function EventCreator() {
             <dl>
               <div><dt>Date</dt><dd>{formatSessionDate(draft.sessions[0]?.date || "")}</dd></div>
               <div><dt>Time</dt><dd>{draft.sessions[0]?.intervals[0] ? `${draft.sessions[0].intervals[0].start} - ${draft.sessions[0].intervals[0].end}` : "To be announced"}</dd></div>
+              <div><dt>Location</dt><dd className={styles.previewLocationValue}>{draft.format === "Online" ? <strong>Online</strong> : <><strong>{draft.venueName || "Venue to be announced"}</strong><span>{draft.location || "Address to be announced"}</span></>}</dd></div>
               <div><dt>Access</dt><dd>{draft.access === "Paid" ? formatPrice(draft.price) : draft.access}</dd></div>
             </dl>
           </div>

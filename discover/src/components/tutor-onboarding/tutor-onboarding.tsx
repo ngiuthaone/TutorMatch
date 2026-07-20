@@ -1,22 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   IconAlertTriangle,
   IconArrowLeft,
-  IconChalkboard,
   IconCheck,
   IconChevronDown,
   IconChevronRight,
   IconClock,
   IconDeviceLaptop,
-  IconHome,
   IconInfoCircle,
-  IconLayoutGrid,
   IconMapPin,
-  IconMessageCircle,
-  IconPencil,
   IconPlus,
   IconRocket,
   IconTrash,
@@ -35,6 +31,7 @@ type ValidationError = { fieldId: string; message: string };
 
 type TutorDraft = {
   displayName: string;
+  role: string;
   headline: string;
   about: string;
   photoUrl: string | null;
@@ -48,6 +45,7 @@ type TutorDraft = {
   lessonDescription: string;
   lessonFormat: string;
   sessionLengths: number[];
+  timeSlots: string[];
   availability: string[];
   timeZone: string;
   calendarConnected: boolean;
@@ -73,8 +71,6 @@ type TutorDraft = {
 
 const DRAFT_KEY = "tutoria_tutor_profile_draft";
 const SUBMISSION_KEY = "tutoria_tutor_profile_submission";
-const defaultPhoto = "/images/tutor-profile-thu-ha.png";
-
 const steps = [
   { title: "Profile", description: "Introduce yourself and build trust" },
   { title: "Teaching offer", description: "What you teach and who you help" },
@@ -84,11 +80,8 @@ const steps = [
 ];
 
 const levelOptions = ["Complete beginners", "Intermediate learners", "Advanced learners", "Professional practitioners"];
-const ageOptions = ["Children (8-12)", "Teenagers", "University students", "Adults"];
-const teachingStyleOptions = ["Guided demonstration", "Practice exercises", "Personalized feedback", "Project-based learning", "Homework"];
-const styleIcons = [IconChalkboard, IconPencil, IconMessageCircle, IconLayoutGrid, IconHome];
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const timeSlots = ["09:00-12:00", "14:00-18:00", "18:00-21:00"];
+const defaultTimeSlots = ["09:00-12:00", "14:00-18:00", "18:00-21:00"];
 const formatOptions = [
   { value: "Online", note: "Teach using video calls" },
   { value: "At my teaching space", note: "Learners come to you" },
@@ -111,45 +104,39 @@ const onboardingFaqs = [
 ];
 
 const defaultDraft: TutorDraft = {
-  displayName: "Thu Hà",
-  headline: "Pottery tutor helping beginners build confidence through hands-on practice.",
-  about: "I’m a ceramic artist and educator with 8 years of experience teaching complete beginners. My lessons are practical, relaxed and adapted to each learner’s pace.",
-  photoUrl: defaultPhoto,
+  displayName: "",
+  role: "",
+  headline: "",
+  about: "",
+  photoUrl: null,
   introVideoName: "",
-  languages: ["Vietnamese (Native)", "English (Fluent)", "Mandarin (Conversational)"],
-  skills: ["Pottery", "Hand-building ceramics", "Ceramic glazing"],
-  learnerLevels: ["Complete beginners", "Intermediate learners"],
-  ageGroups: ["Children (8-12)", "Teenagers", "University students", "Adults"],
-  goals: [
-    "Create their first handmade ceramic piece",
-    "Understand essential pottery techniques",
-    "Prepare a portfolio for art-school applications",
-    "Build a consistent personal practice",
-  ],
-  teachingStyles: ["Guided demonstration", "Practice exercises"],
-  lessonDescription: "We begin by reviewing your goal and previous work. I demonstrate a technique, guide you through practice, and finish with feedback and a plan for the next session.",
+  languages: [],
+  skills: [],
+  learnerLevels: [],
+  ageGroups: [],
+  goals: [],
+  teachingStyles: [],
+  lessonDescription: "",
   lessonFormat: "Online",
-  sessionLengths: [30, 50, 60, 90],
-  availability: ["09:00-12:00-0", "09:00-12:00-2", "09:00-12:00-3", "09:00-12:00-4", "14:00-18:00-0", "14:00-18:00-3", "14:00-18:00-4", "18:00-21:00-4"],
+  sessionLengths: [],
+  timeSlots: defaultTimeSlots,
+  availability: [],
   timeZone: "GMT+7 - Asia/Bangkok",
-  calendarConnected: true,
+  calendarConnected: false,
   bookingNotice: "12 hours",
   bookingWindow: "30 days",
   lessonBuffer: "15 minutes",
   sameDayBooking: false,
-  exceptions: ["22-25 Jul 2026: Unavailable", "29 Jul 2026: Extra hours 09:00-15:00"],
-  rates: { "30": 150000, "50": 200000, "60": 250000, "90": 350000 },
+  exceptions: [],
+  rates: {},
   learnerCancellation: "Full refund until 24h before lesson",
   lateCancellation: "50% lesson fee",
   noShowPolicy: "Full lesson fee",
-  consultationEnabled: true,
+  consultationEnabled: false,
   consultationDuration: "15 minutes",
   consultationPrice: "Free",
   consultationPurpose: "Discuss goals and compatibility",
-  faqs: [
-    { id: "faq-first-lesson", question: "What should learners bring to their first lesson?", answer: "Bring your goal and any relevant materials. I’ll tailor the session to your current level." },
-    { id: "faq-experience", question: "Do learners need prior experience?", answer: "No. I adapt lessons for complete beginners as well as more experienced learners." },
-  ],
+  faqs: [],
   visibility: "public",
   status: "draft",
 };
@@ -166,6 +153,7 @@ function normalizeDraft(value: Partial<TutorDraft>): TutorDraft {
     goals: Array.isArray(value.goals) ? value.goals : defaultDraft.goals,
     teachingStyles: Array.isArray(value.teachingStyles) ? value.teachingStyles : defaultDraft.teachingStyles,
     sessionLengths: Array.isArray(value.sessionLengths) ? value.sessionLengths : defaultDraft.sessionLengths,
+    timeSlots: Array.isArray(value.timeSlots) ? value.timeSlots.map(normalizeRange).filter((slot) => /^\d{2}:\d{2}-\d{2}:\d{2}$/.test(slot)) : defaultDraft.timeSlots,
     availability: Array.isArray(value.availability) ? value.availability.map(normalizeRange) : defaultDraft.availability,
     timeZone: value.timeZone ? normalizeRange(value.timeZone) : defaultDraft.timeZone,
     exceptions: Array.isArray(value.exceptions) ? value.exceptions.map((item) => normalizeRange(item).replace(" · ", ": ")) : defaultDraft.exceptions,
@@ -187,6 +175,7 @@ function validateStep(step: number, draft: TutorDraft): ValidationError[] {
     return [
       !draft.photoUrl && { fieldId: "profile-photo", message: "Add a profile photo." },
       !draft.displayName.trim() && { fieldId: "display-name", message: "Enter your display name." },
+      !draft.role.trim() && { fieldId: "role", message: "Add your role." },
       draft.headline.trim().length < 20 && { fieldId: "professional-headline", message: "Write a headline of at least 20 characters." },
       draft.about.trim().length < 80 && { fieldId: "about-you", message: "Tell learners more about yourself (at least 80 characters)." },
       draft.languages.length === 0 && { fieldId: "languages", message: "Add at least one language." },
@@ -196,8 +185,8 @@ function validateStep(step: number, draft: TutorDraft): ValidationError[] {
     return [
       draft.skills.length === 0 && { fieldId: "skills", message: "Add at least one skill." },
       draft.learnerLevels.length === 0 && { fieldId: "learner-levels", message: "Choose at least one learner level." },
-      draft.ageGroups.length === 0 && { fieldId: "age-groups", message: "Choose at least one age group." },
-      draft.teachingStyles.length === 0 && { fieldId: "teaching-styles", message: "Choose at least one teaching style." },
+      draft.ageGroups.length === 0 && { fieldId: "age-groups", message: "Add at least one learner group." },
+      draft.teachingStyles.length === 0 && { fieldId: "teaching-styles", message: "Add at least one teaching style." },
       draft.goals.length === 0 && { fieldId: "learner-goals", message: "Add at least one learner goal." },
       draft.lessonDescription.trim().length < 40 && { fieldId: "lesson-description", message: "Describe what happens in a typical lesson." },
     ].filter(Boolean) as ValidationError[];
@@ -342,6 +331,7 @@ function ProfileStep({ draft, update, errors }: { draft: TutorDraft; update: Dra
         </div>
         <div className={styles.profileFields}>
           <div><FieldLabel htmlFor="display-name">Display name</FieldLabel><input id="display-name" className={styles.input} value={draft.displayName} onChange={(event) => set("displayName", event.target.value)} aria-invalid={hasError("display-name")} aria-describedby={hasError("display-name") ? "display-name-error" : undefined} /><FieldError errors={errors} fieldId="display-name" /></div>
+          <div><FieldLabel htmlFor="role">Role</FieldLabel><input id="role" className={styles.input} value={draft.role} maxLength={80} placeholder="e.g. Karate coach" onChange={(event) => set("role", event.target.value)} aria-invalid={hasError("role")} aria-describedby={hasError("role") ? "role-error" : undefined} /><FieldError errors={errors} fieldId="role" /></div>
           <div><FieldLabel htmlFor="professional-headline">Professional headline</FieldLabel><textarea id="professional-headline" className={`${styles.input} ${styles.headlineInput}`} value={draft.headline} maxLength={100} onChange={(event) => set("headline", event.target.value)} aria-invalid={hasError("professional-headline")} aria-describedby={hasError("professional-headline") ? "professional-headline-error" : "professional-headline-count"} /><span className={styles.counter} id="professional-headline-count">{draft.headline.length}/100</span><FieldError errors={errors} fieldId="professional-headline" /></div>
           <div><FieldLabel htmlFor="about-you">About you</FieldLabel><textarea id="about-you" className={`${styles.input} ${styles.aboutInput}`} value={draft.about} maxLength={500} onChange={(event) => set("about", event.target.value)} aria-invalid={hasError("about-you")} aria-describedby={hasError("about-you") ? "about-you-error" : "about-you-count"} /><span className={styles.counter} id="about-you-count">{draft.about.length}/500</span><FieldError errors={errors} fieldId="about-you" /></div>
         </div>
@@ -377,10 +367,10 @@ function TeachingStep({ draft, update, errors }: { draft: TutorDraft; update: Dr
       <div className={styles.formSection} id="skills" tabIndex={-1} aria-describedby={hasError("skills") ? "skills-error" : undefined}><FieldLabel>Skills &amp; specialties</FieldLabel><div className={styles.chipRow}>{draft.skills.map((skill) => <Chip key={skill} onRemove={() => set("skills", draft.skills.filter((item) => item !== skill))}>{skill}</Chip>)}{!draft.skills.length && <span className={styles.emptyHint}>No skills added yet.</span>}<InlineAdder label="Add another skill" placeholder="e.g. Wheel throwing" onAdd={(value) => { if (!draft.skills.includes(value)) set("skills", [...draft.skills, value]); }} /></div><FieldError errors={errors} fieldId="skills" /></div>
       <div className={styles.twoColumnGrid}>
         <section className={styles.groupPanel} id="learner-levels" tabIndex={-1} aria-describedby={hasError("learner-levels") ? "learner-levels-error" : undefined}><FieldLabel>Learner levels</FieldLabel><div className={styles.optionList}>{levelOptions.map((level) => <CheckRow key={level} label={level} checked={draft.learnerLevels.includes(level)} onChange={() => set("learnerLevels", toggleValue(draft.learnerLevels, level))} />)}</div><FieldError errors={errors} fieldId="learner-levels" /></section>
-        <section className={styles.groupPanel} id="age-groups" tabIndex={-1} aria-describedby={hasError("age-groups") ? "age-groups-error" : undefined}><FieldLabel>Age groups</FieldLabel><div className={styles.optionList}>{ageOptions.map((age) => <CheckRow key={age} label={age} checked={draft.ageGroups.includes(age)} onChange={() => set("ageGroups", toggleValue(draft.ageGroups, age))} />)}</div><InlineAdder label="Add custom group" placeholder="e.g. Retirees" onAdd={(value) => { if (!draft.ageGroups.includes(value)) set("ageGroups", [...draft.ageGroups, value]); }} /><FieldError errors={errors} fieldId="age-groups" /></section>
+        <section className={styles.groupPanel} id="age-groups" tabIndex={-1} aria-describedby={hasError("age-groups") ? "age-groups-error" : undefined}><FieldLabel>Who do you teach?</FieldLabel><p className={styles.fieldHint}>Name the people you teach, in the terms that fit your practice.</p><div className={styles.chipRow}>{draft.ageGroups.map((group) => <Chip key={group} onRemove={() => set("ageGroups", draft.ageGroups.filter((item) => item !== group))}>{group}</Chip>)}{!draft.ageGroups.length && <span className={styles.emptyHint}>Add the learners you’re best placed to help.</span>}<InlineAdder label="Add learner group" placeholder="e.g. Amateur fighters" onAdd={(value) => { if (!draft.ageGroups.includes(value)) set("ageGroups", [...draft.ageGroups, value]); }} /></div><FieldError errors={errors} fieldId="age-groups" /></section>
       </div>
       <div className={styles.twoColumnGrid}>
-        <section className={styles.groupPanel} id="teaching-styles" tabIndex={-1} aria-describedby={hasError("teaching-styles") ? "teaching-styles-error" : undefined}><FieldLabel>Teaching style</FieldLabel><div className={styles.styleChoices}>{teachingStyleOptions.map((style, index) => { const StyleIcon = styleIcons[index]; return <button className={`${styles.styleChoice} ${draft.teachingStyles.includes(style) ? styles.styleChoiceActive : ""}`} key={style} type="button" onClick={() => set("teachingStyles", toggleValue(draft.teachingStyles, style))} aria-pressed={draft.teachingStyles.includes(style)}><StyleIcon size={21} stroke={1.6} aria-hidden="true" /><span>{style}</span></button>; })}</div><FieldError errors={errors} fieldId="teaching-styles" /></section>
+        <section className={styles.groupPanel} id="teaching-styles" tabIndex={-1} aria-describedby={hasError("teaching-styles") ? "teaching-styles-error" : undefined}><FieldLabel>Your teaching style</FieldLabel><p className={styles.fieldHint}>Describe the methods that make your lessons yours.</p><div className={styles.chipRow}>{draft.teachingStyles.map((style) => <Chip key={style} onRemove={() => set("teachingStyles", draft.teachingStyles.filter((item) => item !== style))}>{style}</Chip>)}{!draft.teachingStyles.length && <span className={styles.emptyHint}>Add the methods learners can expect from your lessons.</span>}<InlineAdder label="Add teaching style" placeholder="e.g. Sparring drills and video feedback" onAdd={(value) => { if (!draft.teachingStyles.includes(value)) set("teachingStyles", [...draft.teachingStyles, value]); }} /></div><FieldError errors={errors} fieldId="teaching-styles" /></section>
         <section className={styles.groupPanel} id="learner-goals" tabIndex={-1} aria-describedby={hasError("learner-goals") ? "learner-goals-error" : undefined}><FieldLabel>What can you help learners achieve?</FieldLabel><div className={styles.goalList}>{draft.goals.map((goal, index) => <div className={styles.goal} key={goal}><span>{String(index + 1).padStart(2, "0")}</span><strong>{goal}</strong><button type="button" onClick={() => set("goals", draft.goals.filter((item) => item !== goal))} aria-label={`Remove ${goal}`}><IconX size={15} /></button></div>)}{!draft.goals.length && <span className={styles.emptyHint}>No learner goals added yet.</span>}</div><InlineAdder label="Add another goal" placeholder="Learners will be able to..." onAdd={(value) => set("goals", [...draft.goals, value])} /><FieldError errors={errors} fieldId="learner-goals" /></section>
       </div>
       <div className={styles.formSection}><FieldLabel htmlFor="lesson-description">What happens in a typical lesson?</FieldLabel><textarea id="lesson-description" className={`${styles.input} ${styles.lessonInput}`} value={draft.lessonDescription} onChange={(event) => set("lessonDescription", event.target.value)} aria-invalid={hasError("lesson-description")} aria-describedby={hasError("lesson-description") ? "lesson-description-error" : "lesson-description-count"} /><span className={styles.counter} id="lesson-description-count">{draft.lessonDescription.length} characters</span><FieldError errors={errors} fieldId="lesson-description" /></div>
@@ -400,7 +390,7 @@ function AvailabilityStep({ draft, update, errors }: { draft: TutorDraft; update
           <section className={styles.groupPanel} id="session-lengths" tabIndex={-1} aria-describedby={hasError("session-lengths") ? "session-lengths-error" : undefined}><FieldLabel>Session lengths</FieldLabel><div className={styles.optionList}>{[30, 50, 60, 90].map((length) => <CheckRow key={length} label={`${length} minutes`} checked={draft.sessionLengths.includes(length)} onChange={() => set("sessionLengths", toggleValue(draft.sessionLengths, length).sort((a, b) => a - b))} />)}</div><InlineAdder label="Add another duration" placeholder="Minutes" numeric onAdd={(value) => { const minutes = Number(value); if (minutes >= 15 && !draft.sessionLengths.includes(minutes)) set("sessionLengths", [...draft.sessionLengths, minutes].sort((a, b) => a - b)); }} /><FieldError errors={errors} fieldId="session-lengths" /></section>
         </div>
         <div className={styles.availabilityRight}>
-          <section className={styles.groupPanel} id="weekly-availability" tabIndex={-1} aria-describedby={hasError("weekly-availability") ? "weekly-availability-error" : undefined}><FieldLabel>Weekly availability</FieldLabel><div className={styles.calendarGrid}><span />{days.map((day) => <strong key={day}>{day}</strong>)}{timeSlots.flatMap((slot) => [<small key={`${slot}-label`}>{slot}</small>, ...days.map((_, index) => { const key = `${slot}-${index}`; const active = draft.availability.includes(key); return <button className={active ? styles.timeActive : ""} key={key} type="button" onClick={() => set("availability", toggleValue(draft.availability, key))} aria-label={`${active ? "Remove" : "Add"} ${days[index]} ${slot}`} aria-pressed={active}>{active && <IconCheck size={15} />}</button>; })])}</div><FieldError errors={errors} fieldId="weekly-availability" /></section>
+          <section className={styles.groupPanel} id="weekly-availability" tabIndex={-1} aria-describedby={hasError("weekly-availability") ? "weekly-availability-error" : undefined}><FieldLabel>Weekly availability</FieldLabel><div className={styles.calendarGrid}><span />{days.map((day) => <strong key={day}>{day}</strong>)}{draft.timeSlots.flatMap((slot) => [<small key={`${slot}-label`}>{slot}</small>, ...days.map((_, index) => { const key = `${slot}-${index}`; const active = draft.availability.includes(key); return <button className={active ? styles.timeActive : ""} key={key} type="button" onClick={() => set("availability", toggleValue(draft.availability, key))} aria-label={`${active ? "Remove" : "Add"} ${days[index]} ${slot}`} aria-pressed={active}>{active && <IconCheck size={15} />}</button>; })])}</div><div className={styles.intervalManager}><span>Teaching intervals</span><div className={styles.chipRow}>{draft.timeSlots.map((slot) => <Chip key={slot} onRemove={() => update((current) => ({ ...current, timeSlots: current.timeSlots.filter((item) => item !== slot), availability: current.availability.filter((item) => !item.startsWith(`${slot}-`)) }))}>{slot}</Chip>)}<InlineAdder label="Add interval" placeholder="e.g. 10:00-13:00" onAdd={(value) => { const interval = value.replace(/\s/g, ""); if (/^\d{2}:\d{2}-\d{2}:\d{2}$/.test(interval) && !draft.timeSlots.includes(interval)) set("timeSlots", [...draft.timeSlots, interval]); }} /></div></div><FieldError errors={errors} fieldId="weekly-availability" /></section>
           <div className={styles.twoColumnGridCompact}>
             <section className={styles.groupPanel}><FieldLabel>Booking rules</FieldLabel><div className={styles.stackFields}><SelectControl label="Minimum booking notice" value={draft.bookingNotice} options={["2 hours", "6 hours", "12 hours", "24 hours", "48 hours"]} onChange={(value) => set("bookingNotice", value)} /><SelectControl label="Booking window" value={draft.bookingWindow} options={["14 days", "30 days", "60 days", "90 days"]} onChange={(value) => set("bookingWindow", value)} /><SelectControl label="Lesson buffer" value={draft.lessonBuffer} options={["No buffer", "10 minutes", "15 minutes", "30 minutes"]} onChange={(value) => set("lessonBuffer", value)} /><label className={styles.toggleRow}>Allow same-day booking <input className={styles.toggle} type="checkbox" checked={draft.sameDayBooking} onChange={(event) => set("sameDayBooking", event.target.checked)} /></label></div></section>
             <ExceptionsPanel draft={draft} setExceptions={(exceptions) => set("exceptions", exceptions)} />
@@ -466,7 +456,7 @@ function PreviewStep({ draft, onOpenPreview, onMessage, onReset, onVisibilityCha
     <>
       <SectionHeading step={5} title="Preview & publish" description="Review your profile before it goes live." />
       <div className={styles.previewTopGrid}>
-        <section className={styles.groupPanel}><FieldLabel>Public profile preview</FieldLabel><div className={styles.publicProfile}><div className={`${styles.previewPhoto} ${!draft.photoUrl ? styles.photoPlaceholder : ""}`} style={draft.photoUrl ? { backgroundImage: `url(${draft.photoUrl})` } : undefined} role="img" aria-label={`${draft.displayName || "Tutor"} profile portrait`} /><div><h2>{draft.displayName || "Your name"} <em>New tutor</em></h2><p>{draft.headline || "Your professional headline"}</p><small><IconMapPin size={15} /> Hà Nội, Vietnam</small><small><IconWorld size={15} /> {draft.languages.join(", ") || "Languages not set"}</small><small><IconDeviceLaptop size={15} /> {draft.lessonFormat}</small><strong>{formatVnd(primaryRate)} / {primaryDuration || "Not set"} min</strong></div></div><div className={styles.previewActions}><button className={styles.primaryButton} type="button" onClick={onOpenPreview}>View full profile</button><button className={styles.secondaryButton} type="button" onClick={onMessage}>Message</button></div></section>
+        <section className={styles.groupPanel}><FieldLabel>Public profile preview</FieldLabel><div className={styles.publicProfile}><div className={`${styles.previewPhoto} ${!draft.photoUrl ? styles.photoPlaceholder : ""}`} style={draft.photoUrl ? { backgroundImage: `url(${draft.photoUrl})` } : undefined} role="img" aria-label={`${draft.displayName || "Tutor"} profile portrait`} /><div><h2>{draft.displayName || "Your name"} <em>New tutor</em></h2><p><strong>{draft.role || "Your role"}</strong><br />{draft.headline || "Your professional headline"}</p><small><IconMapPin size={15} /> Hà Nội, Vietnam</small><small><IconWorld size={15} /> {draft.languages.join(", ") || "Languages not set"}</small><small><IconDeviceLaptop size={15} /> {draft.lessonFormat}</small><strong>{formatVnd(primaryRate)} / {primaryDuration || "Not set"} min</strong></div></div><div className={styles.previewActions}><button className={styles.primaryButton} type="button" onClick={onOpenPreview}>View full profile</button><button className={styles.secondaryButton} type="button" onClick={onMessage}>Message</button></div></section>
         <section className={styles.groupPanel}><FieldLabel>What learners see</FieldLabel><ul className={styles.statusList}><StatusItem>About me</StatusItem><StatusItem>What I teach</StatusItem><StatusItem>Lesson format &amp; availability</StatusItem><StatusItem>Rates &amp; policies</StatusItem><StatusItem warning={!draft.faqs.some((faq) => faq.question.trim() && faq.answer.trim())}>Frequently asked questions</StatusItem><StatusItem warning={!draft.introVideoName}>Introduction video {draft.introVideoName ? "added" : "(optional)"}</StatusItem><li className={styles.pendingStatus}><span><IconClock size={15} /></span>Reviews (coming soon)</li></ul></section>
         <section className={styles.groupPanel}><FieldLabel>Publication checklist</FieldLabel><ul className={styles.statusList}><StatusItem warning={!draft.photoUrl}>Profile photo</StatusItem><StatusItem warning={draft.headline.length < 20}>Headline</StatusItem><StatusItem warning={draft.about.length < 80}>About you</StatusItem><StatusItem warning={!draft.skills.length}>Skills &amp; specialties</StatusItem><StatusItem warning={!draft.availability.length}>Availability set</StatusItem><StatusItem warning={!primaryRate}>Rates set</StatusItem><StatusItem>Policies set</StatusItem><StatusItem warning>Identity verified</StatusItem><StatusItem>Payout account connected</StatusItem></ul></section>
       </div>
@@ -486,7 +476,7 @@ function TutorLivePreview({ draft }: { draft: TutorDraft }) {
       <div className={styles.livePreviewTop}><strong>Live profile preview</strong><span>Updates as you type</span></div>
       <div className={`${styles.livePreviewImage} ${!draft.photoUrl ? styles.photoPlaceholder : ""}`} style={draft.photoUrl ? { backgroundImage: `url(${draft.photoUrl})` } : undefined} role="img" aria-label={`${draft.displayName || "Tutor"} profile portrait`}><span>{draft.lessonFormat}</span></div>
       <div className={styles.livePreviewBody}>
-        <small>{draft.skills.slice(0, 2).join(" / ") || "Your teaching offer"}</small>
+        <small>{draft.role || "Your role"}</small>
         <h2>{draft.displayName || "Your name"}</h2>
         <p>{draft.headline || "Add a clear headline so learners know how you can help."}</p>
         <dl>
@@ -514,6 +504,7 @@ function FullProfilePreview({ draft, onClose }: { draft: TutorDraft; onClose: ()
 }
 
 export function TutorOnboarding() {
+  const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [savedAt, setSavedAt] = useState("Draft saved just now");
   const [errors, setErrors] = useState<ValidationError[]>([]);
@@ -527,6 +518,10 @@ export function TutorOnboarding() {
     if (!stored) return;
     try {
       const savedDraft = normalizeDraft(JSON.parse(stored) as Partial<TutorDraft>);
+      if (savedDraft.status === "pending_review") {
+        window.localStorage.removeItem(DRAFT_KEY);
+        return;
+      }
       const frame = window.requestAnimationFrame(() => setDraft(savedDraft));
       return () => window.cancelAnimationFrame(frame);
     } catch {
@@ -610,6 +605,7 @@ export function TutorOnboarding() {
     window.localStorage.setItem(SUBMISSION_KEY, JSON.stringify(submittedDraft));
     setSavedAt("Submitted for review");
     setNotice("Your tutor profile was submitted for review.");
+    router.push(`/profile/${encodeURIComponent(submittedDraft.displayName)}`);
   };
 
   const resetDraft = () => {

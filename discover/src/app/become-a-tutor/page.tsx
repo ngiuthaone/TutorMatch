@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { RequireAuth } from "@/components/auth/require-auth";
 import { TutorOnboarding } from "@/components/tutor-onboarding/tutor-onboarding";
 
 export const metadata: Metadata = {
@@ -8,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function BecomeATutorPage() {
-  return <TutorOnboarding />;
+  return <RequireAuth><TutorOnboarding /></RequireAuth>;
 }

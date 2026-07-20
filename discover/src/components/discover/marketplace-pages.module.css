@@ -563,6 +563,23 @@
   z-index: 2;
 }
 
+.eventCard > .eventCardLink {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+}
+
+.eventCard > .eventCardLink:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: -4px;
+}
+
+.eventCard > .eventSaveAction {
+  position: absolute;
+  z-index: 4;
+}
+
 .personCard::before {
   content: "";
   position: absolute;
@@ -1111,6 +1128,24 @@ a.primaryButton {
 .courseCard > * {
   position: relative;
   z-index: 2;
+}
+
+.courseCard > .courseCardLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.courseCard > .courseCardLink:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 5px;
+}
+
+.courseCard > .courseSaveAction {
+  position: absolute;
+  top: 1.8rem;
+  right: 1.8rem;
+  z-index: 4;
 }
 
 .forYouCard {

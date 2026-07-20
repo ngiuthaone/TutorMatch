@@ -258,11 +258,7 @@
 .optionList { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px 16px; }
 .checkRow { min-height: 44px; display: flex; align-items: center; gap: 10px; color: #d7dce0; font-size: 12px; line-height: 1.4; cursor: pointer; }
 .checkRow input, .formatCard input, .visibilityOptions input { width: 18px; height: 18px; flex: 0 0 18px; accent-color: var(--violetBright); }
-.styleChoices { display: grid; grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 6px; }
-.styleChoice { min-height: 84px; padding: 10px 8px; border: 1px solid var(--lineStrong); border-radius: var(--radiusControl); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; background: var(--field); color: #cbd1d6; font: inherit; font-size: 11px; line-height: 1.35; cursor: pointer; transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }
-.styleChoice span { font-size: inherit; }
-.styleChoice:active { transform: scale(.98); }
-.styleChoiceActive { border-color: var(--violetBright); background: rgba(90,54,214,.13); color: #fff; }
+.fieldHint { margin: -2px 0 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .goalList { display: flex; flex-direction: column; gap: 5px; }
 .goal { min-height: 48px; padding: 4px 4px 4px 11px; border: 1px solid var(--lineStrong); border-radius: var(--radiusControl); display: grid; grid-template-columns: 24px 1fr 40px; align-items: center; gap: 8px; background: var(--field); font-size: 12px; }
 .goal span { color: var(--mutedDim); }
@@ -282,6 +278,8 @@
 .calendarGrid > button { width: 44px; height: 44px; justify-self: center; border: 1px solid var(--line); border-radius: var(--radiusControl); display: grid; place-items: center; background: rgba(255,255,255,.01); color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease; }
 .calendarGrid > button:active { transform: scale(.94); }
 .calendarGrid .timeActive { border-color: #8067e2; background: #5d43c5; color: #fff; }
+.intervalManager { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.intervalManager > span { display: block; margin-bottom: 8px; color: var(--muted); font-size: 11px; font-weight: 600; }
 .stackFields { display: flex; flex-direction: column; gap: 6px; }
 .stackFields .field { min-height: 44px; padding: 8px 10px; font-size: 12px; }
 .toggleRow, .toggleHeading { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #d6dce1; font-size: 12px; }
@@ -337,15 +335,19 @@
 .faqEditor h3 { margin: -2px 0 0; color: var(--text); font-size: 15px; font-weight: 600; }
 .faqEditorTop p { max-width: 56ch; margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .faqEditorTop .addButton { flex: 0 0 auto; }
-.faqEditorList { margin-top: 16px; display: grid; gap: 8px; }
-.faqCard { padding: 12px; border: 1px solid var(--lineStrong); border-radius: var(--radiusControl); display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap: 10px; background: var(--field); }
-.faqCardHeader { grid-column: 1 / -1; padding-bottom: 9px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
-.faqCardHeader > span { color: var(--violetBright); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.faqCardHeader > button { min-height: 32px; padding: 0 6px; border: 0; display: inline-flex; align-items: center; gap: 5px; background: transparent; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; }
-.faqCardHeader > button:hover:not(:disabled) { color: #ffb4a6; }
+.faqEditorList { margin-top: 18px; display: grid; gap: 10px; }
+.faqCard { padding: 14px; border: 1px solid var(--lineStrong); border-radius: 10px; display: grid; gap: 12px; background: linear-gradient(135deg, rgba(19,34,53,.96), rgba(10,22,35,.96)); box-shadow: inset 0 1px rgba(255,255,255,.025); transition: border-color 180ms ease, background-color 180ms ease; }
+.faqCard:focus-within { border-color: rgba(242,180,77,.55); background: linear-gradient(135deg, rgba(24,41,62,.98), rgba(11,23,37,.98)); }
+.faqCardHeader { min-height: 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.faqCardHeader > span { padding: 4px 7px; border: 1px solid rgba(242,180,77,.22); border-radius: 999px; color: var(--gold); background: rgba(242,180,77,.08); font: 700 10px var(--font-geist-mono); letter-spacing: .08em; text-transform: uppercase; }
+.faqCardHeader > button { min-height: 32px; padding: 0 8px; border: 1px solid transparent; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; background: transparent; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease; }
+.faqCardHeader > button:hover:not(:disabled) { border-color: rgba(239,106,106,.28); background: rgba(239,106,106,.07); color: #ffb4a6; }
 .faqCardHeader > button:disabled { opacity: .4; cursor: not-allowed; }
 .faqField { min-width: 0; display: grid; gap: 6px; color: var(--muted); font-size: 11px; }
-.faqField textarea { min-height: 88px; resize: vertical; }
+.faqField > span { color: var(--mutedDim); font-size: 10px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; }
+.faqField .input { min-height: 48px; padding: 10px 12px; border-color: rgba(95,112,130,.56); background: rgba(5,14,24,.45); }
+.faqField:first-of-type .input { color: var(--text); font-size: 13px; font-weight: 550; }
+.faqField textarea { min-height: 76px; resize: vertical; line-height: 1.5; }
 .previewFaqList { margin-top: 10px; border-top: 1px solid var(--line); }
 .previewFaqList details { border-bottom: 1px solid var(--line); }
 .previewFaqList summary { min-height: 42px; padding: 9px 20px 9px 0; position: relative; display: flex; align-items: center; color: #dce1e5; cursor: pointer; font-size: 12px; list-style: none; }
@@ -413,7 +415,6 @@
   .availabilityMeta { display: none; }
   .availabilityRight .twoColumnGridCompact { grid-template-columns: 1fr 1fr; }
   .availabilityRight .twoColumnGridCompact > section:last-child { display: block; }
-  .styleChoices { grid-template-columns: repeat(3, 1fr); }
   .pricingTopGrid { grid-template-columns: 1.2fr 1fr; }
   .pricingTopGrid > section:last-child { grid-column: 1 / -1; }
   .pricingBottomGrid { grid-template-columns: 1fr 1fr; }
@@ -468,7 +469,6 @@
   .sectionHeading h1 { font-size: 30px; }
   .profileGrid { padding: 10px; }
   .optionList, .formatGrid, .twoColumnGridCompact { grid-template-columns: 1fr; }
-  .styleChoices { grid-template-columns: repeat(2, 1fr); }
   .calendarGrid { grid-template-columns: 88px repeat(7, 44px); gap: 4px; overflow-x: auto; }
   .uploadCopy small { display: none; }
   .uploadField .secondaryButton { display: none; }
@@ -644,10 +644,10 @@
 .groupPanel,
 .submitPanel { border-color: var(--line); border-radius: 12px; background: #101d30; }
 .profileGrid { padding: 1rem; }
-.input, .field, .selectControl, .inlineInput, .connectedField, .chip, .goal, .exception, .formatCard, .styleChoice { border-color: var(--lineStrong); background: var(--field); }
+.input, .field, .selectControl, .inlineInput, .connectedField, .chip, .goal, .exception, .formatCard { border-color: var(--lineStrong); background: var(--field); }
 .input:focus, .selectControl:focus-within { border-color: var(--violetBright); box-shadow: 0 0 0 3px rgba(239,196,127,.16); }
 .checkRow input, .formatCard input, .visibilityOptions input { accent-color: var(--gold); }
-.styleChoiceActive, .formatCardActive { border-color: var(--gold); background: rgba(217,165,95,.1); }
+.formatCardActive { border-color: var(--gold); background: rgba(217,165,95,.1); }
 .calendarGrid .timeActive { border-color: var(--gold); background: var(--gold); color: #21180d; }
 .offerNumbers strong { color: var(--violetBright); }
 .addButton, .feeNote strong, .payoutList .payoutTotal dt, .payoutList .payoutTotal dd { color: var(--violetBright); }

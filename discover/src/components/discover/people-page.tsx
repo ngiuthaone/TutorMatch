@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -20,15 +20,33 @@ interface Person {
   image: string; location: string; available: boolean;
 }
 
+type SubmittedTutor = {
+  displayName?: string;
+  role?: string;
+  headline?: string;
+  photoUrl?: string | null;
+  skills?: string[];
+  lessonFormat?: string;
+  availability?: string[];
+  languages?: string[];
+  rates?: Record<string, number>;
+  sessionLengths?: number[];
+  consultationEnabled?: boolean;
+  consultationPrice?: string;
+  status?: string;
+};
+
+const TUTOR_SUBMISSION_KEY = "tutoria_tutor_profile_submission";
+
 const allPeople: Person[] = [
-  { name: "Minh Anh", title: "Public Speaking Coach", skills: ["Public Speaking", "Communication", "Leadership"], bio: "Helped 200+ learners speak with confidence", rating: 4.9, reviews: 124, learners: 1200, price: "250,000 đ", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/minh-anh-p/200/200", location: "Cầu Giấy", available: true },
-  { name: "Huy Tran", title: "Full-stack Developer", skills: ["JavaScript", "React", "Node.js", "Python"], bio: "8 years building web apps for startups", rating: 4.8, reviews: 89, learners: 890, price: "350,000 đ", online: true, verified: true, freeIntro: false, image: "https://picsum.photos/seed/huy-tran-p/200/200", location: "Ba Đình", available: true },
-  { name: "Linh Nguyen", title: "English & IELTS Coach", skills: ["IELTS", "English", "TOEFL", "Academic Writing"], bio: "7.5 IELTS scorer, 5 years teaching", rating: 4.9, reviews: 156, learners: 2000, price: "200,000 đ", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/linh-nguyen-p/200/200", location: "Đống Đa", available: false },
-  { name: "Duc Pham", title: "Photography Artist", skills: ["Photography", "Lightroom", "Photoshop", "Composition"], bio: "Commercial photographer, exhibition curator", rating: 4.7, reviews: 67, learners: 540, price: "400,000 đ", online: false, verified: false, freeIntro: false, image: "https://picsum.photos/seed/duc-pham-p/200/200", location: "Tây Hồ", available: true },
-  { name: "Thu Ha", title: "Cooking Instructor", skills: ["Vietnamese Cuisine", "Baking", "French Culinary"], bio: "French culinary arts, 200+ classes taught", rating: 4.9, reviews: 203, learners: 3100, price: "300,000 đ", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/thu-ha-p/200/200", location: "Hoàn Kiếm", available: true },
-  { name: "Quoc Anh", title: "Music Producer", skills: ["Music Production", "Ableton", "Sound Design", "Mixing"], bio: "Produced for top Vietnamese artists", rating: 4.6, reviews: 45, learners: 320, price: "500,000 đ", online: true, verified: false, freeIntro: false, image: "https://picsum.photos/seed/quoc-anh-p/200/200", location: "Cầu Giấy", available: false },
-  { name: "Ngoc Tram", title: "Yoga & Meditation Coach", skills: ["Yoga", "Meditation", "Mindfulness", "Breathwork"], bio: "RYT-500 certified, 8 years of practice", rating: 4.8, reviews: 112, learners: 980, price: "220,000 đ", online: true, verified: true, freeIntro: true, image: "https://picsum.photos/seed/ngoc-tram-p/200/200", location: "Ba Đình", available: true },
-  { name: "Bao Long", title: "Business Strategy Mentor", skills: ["Startups", "Strategy", "Marketing", "Fundraising"], bio: "Ex-VC, founded 2 successful startups", rating: 4.7, reviews: 78, learners: 650, price: "450,000 đ", online: true, verified: true, freeIntro: false, image: "https://picsum.photos/seed/bao-long-p/200/200", location: "Tây Hồ", available: true },
+  { name: "Minh Anh", title: "Public Speaking Coach", skills: ["Public Speaking", "Communication", "Leadership"], bio: "Helped 200+ learners speak with confidence", rating: 4.9, reviews: 124, learners: 1200, price: "250,000 đ", online: true, verified: true, freeIntro: true, image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=85", location: "Cầu Giấy", available: true },
+  { name: "Huy Tran", title: "Full-stack Developer", skills: ["JavaScript", "React", "Node.js", "Python"], bio: "8 years building web apps for startups", rating: 4.8, reviews: 89, learners: 890, price: "350,000 đ", online: true, verified: true, freeIntro: false, image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=85", location: "Ba Đình", available: true },
+  { name: "Linh Nguyen", title: "English & IELTS Coach", skills: ["IELTS", "English", "TOEFL", "Academic Writing"], bio: "7.5 IELTS scorer, 5 years teaching", rating: 4.9, reviews: 156, learners: 2000, price: "200,000 đ", online: true, verified: true, freeIntro: true, image: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=400&q=85", location: "Đống Đa", available: false },
+  { name: "Duc Pham", title: "Photography Artist", skills: ["Photography", "Lightroom", "Photoshop", "Composition"], bio: "Commercial photographer, exhibition curator", rating: 4.7, reviews: 67, learners: 540, price: "400,000 đ", online: false, verified: false, freeIntro: false, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=85", location: "Tây Hồ", available: true },
+  { name: "Thu Ha", title: "Cooking Instructor", skills: ["Vietnamese Cuisine", "Baking", "French Culinary"], bio: "French culinary arts, 200+ classes taught", rating: 4.9, reviews: 203, learners: 3100, price: "300,000 đ", online: true, verified: true, freeIntro: true, image: "/images/tutor-profile-thu-ha.png", location: "Hoàn Kiếm", available: true },
+  { name: "Quoc Anh", title: "Music Producer", skills: ["Music Production", "Ableton", "Sound Design", "Mixing"], bio: "Produced for top Vietnamese artists", rating: 4.6, reviews: 45, learners: 320, price: "500,000 đ", online: true, verified: false, freeIntro: false, image: "https://images.unsplash.com/photo-1531384441138-2736e62e0919?auto=format&fit=crop&w=400&q=85", location: "Cầu Giấy", available: false },
+  { name: "Ngoc Tram", title: "Yoga & Meditation Coach", skills: ["Yoga", "Meditation", "Mindfulness", "Breathwork"], bio: "RYT-500 certified, 8 years of practice", rating: 4.8, reviews: 112, learners: 980, price: "220,000 đ", online: true, verified: true, freeIntro: true, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=85", location: "Ba Đình", available: true },
+  { name: "Bao Long", title: "Business Strategy Mentor", skills: ["Startups", "Strategy", "Marketing", "Fundraising"], bio: "Ex-VC, founded 2 successful startups", rating: 4.7, reviews: 78, learners: 650, price: "450,000 đ", online: true, verified: true, freeIntro: false, image: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&w=400&q=85", location: "Tây Hồ", available: true },
 ];
 
 const allSkills = ["Public Speaking", "JavaScript", "IELTS", "Photography", "Cooking", "Music", "Yoga", "Business"];
@@ -36,6 +54,29 @@ const allLocations = ["Ba Đình", "Cầu Giấy", "Đống Đa", "Hai Bà Trưn
 const roles = ["Tutor", "Coach", "Mentor", "Creator", "Instructor"];
 
 const parsePrice = (p: string) => parseInt(p.replace(/[^0-9]/g, ""));
+
+function submittedTutorToPerson(tutor: SubmittedTutor): Person | null {
+  if (tutor.status !== "pending_review" || !tutor.displayName?.trim()) return null;
+  const duration = tutor.sessionLengths?.includes(60) ? 60 : tutor.sessionLengths?.[0];
+  const price = duration ? tutor.rates?.[String(duration)] : undefined;
+  const skills = tutor.skills?.filter(Boolean).slice(0, 4) ?? [];
+  return {
+    name: tutor.displayName.trim(),
+    title: tutor.role?.trim() || (skills[0] ? `${skills[0]} tutor` : "Independent tutor"),
+    skills: skills.length ? skills : ["Tutoring"],
+    bio: tutor.headline?.trim() || "A new tutor on Tutoria.",
+    rating: 0,
+    reviews: 0,
+    learners: 0,
+    price: price ? `${price.toLocaleString("vi-VN")} đ` : "Contact for price",
+    online: tutor.lessonFormat === "Online",
+    verified: false,
+    freeIntro: Boolean(tutor.consultationEnabled && tutor.consultationPrice === "Free"),
+    image: tutor.photoUrl || "/images/tutor-profile-thu-ha.png",
+    location: "Hà Nội",
+    available: Boolean(tutor.availability?.length),
+  };
+}
 
 function getRole(title: string): string {
   const t = title.toLowerCase();
@@ -58,6 +99,7 @@ const sortOptions = [
 
 export function PeoplePage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [submittedPeople, setSubmittedPeople] = useState<Person[]>([]);
   const params = useFilterParams();
   const query = params.get("q", "");
   const roleFilter = params.get("role", "");
@@ -70,8 +112,19 @@ export function PeoplePage() {
   const locationFilter = params.get("location", "");
   const sort = params.get("sort", "recommended");
 
+  useEffect(() => {
+    try {
+      const savedTutor = JSON.parse(window.localStorage.getItem(TUTOR_SUBMISSION_KEY) || "null") as SubmittedTutor | null;
+      const person = savedTutor ? submittedTutorToPerson(savedTutor) : null;
+      const frame = window.requestAnimationFrame(() => setSubmittedPeople(person ? [person] : []));
+      return () => window.cancelAnimationFrame(frame);
+    } catch {
+      window.localStorage.removeItem(TUTOR_SUBMISSION_KEY);
+    }
+  }, []);
+
   const filtered = useMemo(() => {
-    let result = [...allPeople];
+    let result = [...submittedPeople, ...allPeople.filter((person) => !submittedPeople.some((submitted) => submitted.name === person.name))];
 
     if (query) {
       const q = query.toLowerCase();
@@ -113,7 +166,7 @@ export function PeoplePage() {
     else if (sort === "experienced") result.sort((a, b) => b.learners - a.learners);
 
     return result;
-  }, [query, roleFilter, skillFilter, format, priceFilter, ratingFilter, availFilter, verifiedFilter, locationFilter, sort]);
+  }, [submittedPeople, query, roleFilter, skillFilter, format, priceFilter, ratingFilter, availFilter, verifiedFilter, locationFilter, sort]);
 
   const activeFilters = [
     roleFilter ? { key: "role", label: roleFilter, value: roleFilter } : null,
@@ -200,8 +253,8 @@ export function PeoplePage() {
                   </div>
                   <div className={styles.cardFooter}>
                     <div className={styles.profileMeta}>
-                      <span className={styles.metaItem}><IconStar size={14} className={styles.star} /><strong>{person.rating}</strong></span>
-                      <span className={styles.metaItem}><IconUsers size={14} />{person.learners.toLocaleString("en-US")}</span>
+                      <span className={styles.metaItem}><IconStar size={14} className={styles.star} /><strong>{person.reviews ? person.rating : "New"}</strong></span>
+                      <span className={styles.metaItem}><IconUsers size={14} />{person.learners ? person.learners.toLocaleString("en-US") : "New tutor"}</span>
                       <span className={styles.metaItem}>{person.online ? <IconGlobe size={14} /> : <IconMapPin size={14} />}{person.online ? "Online" : "In person"}</span>
                       <span className={styles.metaItem}><IconMapPin size={14} />{person.location}</span>
                     </div>

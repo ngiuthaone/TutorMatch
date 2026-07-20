@@ -14,7 +14,7 @@ interface MobileNavigationProps {
 
 const learnItems = [
   { label: "Courses", href: "/courses" },
-  { label: "Skills", href: "/skills" },
+  { label: "Tutors", href: "/people" },
   { label: "For You", href: "/discover/for-you" },
 ];
 
@@ -28,8 +28,8 @@ const createItems = [
 const communityItems = [
   { label: "Discussions", href: "/discussions" },
   { label: "Communities", href: "/communities" },
-  { label: "People", href: "/people" },
-  { label: "Events", href: "/events" },
+  { label: "Tutors", href: "/people" },
+  { label: "Workshops/Events", href: "/events" },
 ];
 
 function ExpandableSection({ label, items, onClose }: {

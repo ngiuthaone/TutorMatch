@@ -10,7 +10,7 @@ import { PreferencesForm } from "./preferences-form";
 
 type SignUpStep = "account" | "roles" | "interests" | "preferences" | "complete";
 
-export function SignUpFlow() {
+export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
   const [step, setStep] = useState<SignUpStep>("account");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -255,7 +255,7 @@ export function SignUpFlow() {
             We have selected creators, skills, communities, and experiences based on what you love.
           </p>
           <div className="mt-8">
-            <a href="/discover">
+            <a href={nextPath}>
               <Button size="lg">
                 Start exploring
               </Button>
