@@ -605,7 +605,7 @@ export function TutorOnboarding() {
     window.localStorage.setItem(SUBMISSION_KEY, JSON.stringify(submittedDraft));
     setSavedAt("Submitted for review");
     setNotice("Your tutor profile was submitted for review.");
-    router.push(`/profile/${encodeURIComponent(submittedDraft.displayName)}`);
+    router.push(`/user/${encodeURIComponent(submittedDraft.displayName)}`);
   };
 
   const resetDraft = () => {

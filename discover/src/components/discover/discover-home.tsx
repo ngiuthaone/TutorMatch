@@ -87,7 +87,7 @@ export function DiscoverHome() {
                             const full = Math.floor(person.rating);
                             return (
                               <Link
-                                href={`/profile/${encodeURIComponent(person.name)}`}
+                                href={`/user/${encodeURIComponent(person.name)}`}
                                 className={styles.personCard}
                                 key={person.name}
                                 tabIndex={duplicateIndex > 0 ? -1 : undefined}

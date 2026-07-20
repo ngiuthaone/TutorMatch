@@ -233,12 +233,12 @@ export function PeoplePage() {
               >
                 <div className={styles.cardBody}>
                   <div className={styles.personCardHeader}>
-                    <Link className={styles.personAvatar} href={`/profile/${encodeURIComponent(person.name)}`} aria-label={`View ${person.name}'s profile`}>
+                    <Link className={styles.personAvatar} href={`/user/${encodeURIComponent(person.name)}`} aria-label={`View ${person.name}'s profile`}>
                       <Image src={person.image} alt={`${person.name}, ${person.title}`} fill unoptimized sizes="60px" />
                     </Link>
                     <div className={styles.personCardHeaderContent}>
                       <div className={styles.personNameRow}>
-                        <h3><Link className={styles.cardTitle} href={`/profile/${encodeURIComponent(person.name)}`}>{person.name}</Link></h3>
+                        <h3><Link className={styles.cardTitle} href={`/user/${encodeURIComponent(person.name)}`}>{person.name}</Link></h3>
                         {person.verified && <IconCircleCheck className={styles.nameVerified} size={16} aria-label="Verified profile" />}
                       </div>
                       <p className={styles.cardKicker}>{person.title}</p>

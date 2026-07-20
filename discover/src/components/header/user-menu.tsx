@@ -43,7 +43,7 @@ export function UserMenu({ user }: UserMenuProps) {
     return () => document.removeEventListener("mousedown", handler);
   }, [menuOpen, close]);
 
-  const profileHref = `/profile/${encodeURIComponent(user.name)}`;
+  const profileHref = `/user/${encodeURIComponent(user.name)}`;
 
   const initials = user.name
     ? user.name
