@@ -1,9 +1,11 @@
 "use client";
 
 import { IconStar, IconClock, IconUsers } from "@tabler/icons-react";
+import Link from "next/link";
 
 const courses = [
   {
+    slug: "complete-web-development-bootcamp-2026",
     title: "Complete Web Development Bootcamp 2026",
     instructor: "Huy Tran",
     lessons: 48,
@@ -14,6 +16,7 @@ const courses = [
     image: "https://picsum.photos/seed/web-course/400/240",
   },
   {
+    slug: "ielts-speaking-masterclass",
     title: "IELTS Speaking Masterclass",
     instructor: "Linh Nguyen",
     lessons: 24,
@@ -24,6 +27,7 @@ const courses = [
     image: "https://picsum.photos/seed/ielts-course/400/240",
   },
   {
+    slug: "public-speaking-for-professionals",
     title: "Public Speaking for Professionals",
     instructor: "Minh Anh",
     lessons: 16,
@@ -34,6 +38,7 @@ const courses = [
     image: "https://picsum.photos/seed/speaking-course/400/240",
   },
   {
+    slug: "digital-photography-fundamentals",
     title: "Digital Photography Fundamentals",
     instructor: "Duc Pham",
     lessons: 32,
@@ -53,16 +58,16 @@ export function CoursesSection() {
           <h2 className="text-xl font-semibold tracking-tight text-foreground">
             Courses to start your journey
           </h2>
-          <a href="/courses" className="text-sm text-primary hover:text-primary-dark font-medium transition-colors">
+          <Link href="/courses" className="text-sm text-primary hover:text-primary-dark font-medium transition-colors">
             Browse courses
-          </a>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {courses.map((course) => (
-            <a
+            <Link
               key={course.title}
-href="/courses"
+              href={`/courses/${course.slug}`}
               className="group rounded-2xl border border-border bg-background hover:shadow-md hover:border-primary/20 transition-all duration-200 overflow-hidden"
             >
               <div className="aspect-[4/3] overflow-hidden bg-surface relative">
@@ -102,7 +107,7 @@ href="/courses"
                   <span className="text-xs font-medium text-primary">{course.lessons} lessons</span>
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

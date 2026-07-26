@@ -3,6 +3,7 @@ dist/
 *.mp4
 *.gif
 node_modules/
+.pnpm-store/
 discover/node_modules/
 discover/.next/
 discover/tsconfig.tsbuildinfo

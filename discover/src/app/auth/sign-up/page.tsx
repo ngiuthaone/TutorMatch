@@ -1,4 +1,5 @@
 import { SignUpFlow } from "@/components/auth/sign-up-flow";
+import "./sign-up-screen.css";
 
 function safeNextPath(next: string | string[] | undefined) {
   const path = Array.isArray(next) ? next[0] : next;
@@ -9,7 +10,7 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
   const { next } = await searchParams;
   const nextPath = safeNextPath(next);
   return (
-    <main className="min-h-[100dvh]">
+    <main className="signup-page">
       <SignUpFlow nextPath={nextPath} />
     </main>
   );

@@ -11,6 +11,7 @@ const context = {
   },
   location: { hash: "#/" },
   window: {
+    TUTORIA_CONFIG: { demoMode: true },
     addEventListener() {}
   },
   document: {

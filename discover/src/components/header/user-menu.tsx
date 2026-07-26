@@ -72,7 +72,8 @@ export function UserMenu({ user }: UserMenuProps) {
   return (
     <>
       {/* Messages */}
-      <button
+      <Link
+        href="/messages"
         className={styles.iconButton}
         aria-label="Messages"
       >
@@ -82,7 +83,7 @@ export function UserMenu({ user }: UserMenuProps) {
             {user.unreadMessages > 9 ? "9+" : user.unreadMessages}
           </span>
         )}
-      </button>
+      </Link>
 
       {/* Notifications */}
       <button

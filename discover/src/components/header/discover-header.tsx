@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useSyncExternalStore } from "react";
+import { useState, useCallback, useMemo, useSyncExternalStore, useEffect, useRef } from "react";
 import Link from "next/link";
 import { IconMenu2, IconX, IconBell } from "@tabler/icons-react";
 import { GlobalNavigation } from "./global-navigation";
@@ -47,10 +47,25 @@ export function DiscoverHeader({ user: userProp }: DiscoverHeaderProps) {
   const storedUser = useMemo(() => parseStoredUser(storedSignup), [storedSignup]);
   const user = userProp !== undefined ? userProp : storedUser;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
+  useEffect(() => {
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      const delta = currentY - lastScrollY.current;
+      if (currentY < 16 || delta < -8) setHeaderHidden(false);
+      else if (delta > 8 && !mobileMenuOpen) setHeaderHidden(true);
+      lastScrollY.current = currentY;
+    };
+    lastScrollY.current = window.scrollY;
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [mobileMenuOpen]);
+
   return (
-    <header className={styles.header}>
+    <header className={`${styles.header} ${headerHidden ? styles.headerHidden : ""}`}>
       <div className={styles.headerInner}>
         <GlobalNavigation />
 
@@ -85,7 +100,10 @@ export function DiscoverHeader({ user: userProp }: DiscoverHeaderProps) {
 
           <button
             className={styles.mobileMenuButton}
-            onClick={() => setMobileMenuOpen((v) => !v)}
+            onClick={() => {
+              setMobileMenuOpen((v) => !v);
+              setHeaderHidden(false);
+            }}
             aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"

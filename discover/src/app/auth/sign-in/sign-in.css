@@ -1,0 +1,198 @@
+body:has(.auth-page) {
+  overflow: auto;
+  background: #101010 !important;
+  background-image: none !important;
+}
+
+.auth-page {
+  --background: #101010;
+  --foreground: #f2f2f2;
+  --muted: #9b9b9b;
+  --border: #343434;
+  --primary: #f2f2f2;
+  --primary-dark: #ffffff;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  min-height: 100dvh;
+  overflow: auto;
+  display: grid;
+  place-items: center;
+  background: #101010;
+  color: #f2f2f2;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.auth-page .auth-form-panel {
+  display: grid;
+  width: 100%;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 3rem 1.5rem;
+}
+
+.auth-page .auth-form-shell {
+  width: min(100%, 25rem);
+  margin: 0 auto;
+}
+
+.auth-page .auth-brand {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid #3c3c3c;
+  background: #191919;
+  color: #f2f2f2;
+}
+
+.auth-page .auth-brand span {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.2rem;
+}
+
+.auth-page .auth-heading {
+  margin: 2rem 0 2.25rem;
+  text-align: center;
+}
+
+body.tutoria-cosmos .auth-page .auth-heading h1 {
+  margin: 0;
+  color: #f2f2f2;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.auth-page .auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.auth-page .auth-form input {
+  width: 100%;
+  min-height: 3.25rem;
+  border: 1px solid #343434;
+  border-radius: 0.4rem;
+  background: #171717 !important;
+  color: #f2f2f2;
+}
+
+.auth-page .auth-form label { color: #d8d8d8; }
+.auth-page .auth-form input::placeholder { color: #707070; }
+
+.auth-page .auth-form input:focus {
+  border-color: #8f8f8f;
+  box-shadow: 0 0 0 1px #8f8f8f;
+}
+
+.auth-page .auth-forgot {
+  align-self: flex-start;
+  margin-top: -0.4rem;
+  color: #c8c8c8;
+  font-size: 0.82rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.auth-page .auth-error {
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.4rem;
+  border: 1px solid #613838;
+  background: #241818;
+  color: #ffb4ad;
+  font-size: 0.82rem;
+}
+
+.auth-page .auth-submit {
+  width: 100%;
+  min-height: 3.25rem;
+  border-radius: 0.4rem !important;
+  background: #f2f2f2 !important;
+  color: #111111 !important;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.auth-page .auth-submit:hover { background: #ffffff !important; }
+
+.auth-page .auth-account-prompt {
+  margin-top: 1.5rem;
+  color: #b8b8b8;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.auth-page .auth-account-prompt a,
+.auth-page .auth-legal a {
+  color: #f2f2f2;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.auth-page .auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+  color: #8b8b8b;
+  font-size: 0.72rem;
+}
+
+.auth-page .auth-divider::before,
+.auth-page .auth-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: #343434;
+}
+
+.auth-page .auth-social-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.auth-page .auth-social-button {
+  width: 100%;
+  min-height: 3.25rem;
+  justify-content: flex-start !important;
+  padding-inline: 1.1rem !important;
+  border-radius: 0.4rem !important;
+  border-color: #343434 !important;
+  background: #171717 !important;
+  color: #e8e8e8 !important;
+  box-shadow: none !important;
+  font-weight: 500 !important;
+}
+
+.auth-page .auth-social-button:hover {
+  background: #202020 !important;
+  border-color: #555555 !important;
+}
+
+.auth-page .auth-legal {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 3rem;
+  color: #777777;
+  font-size: 0.75rem;
+}
+
+.auth-page .auth-success { text-align: center; }
+.auth-page .auth-success svg { margin: 0 auto; color: #f2f2f2; }
+.auth-page .auth-success h2 { margin-top: 1rem; font-size: 1.4rem; font-weight: 700; }
+.auth-page .auth-success p { margin-top: 0.4rem; color: #9b9b9b; font-size: 0.875rem; }
+
+@media (max-width: 480px) {
+  .auth-page .auth-form-panel { align-items: start; padding-top: 2rem; }
+  .auth-page .auth-heading { margin-block: 1.75rem; }
+  body.tutoria-cosmos .auth-page .auth-heading h1 { font-size: 1.75rem; }
+}

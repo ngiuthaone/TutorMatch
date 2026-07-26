@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { IconBrandGoogle, IconBrandApple, IconCircleCheck } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +27,7 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
 
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !password) {
+    if (!name.trim() || !email.trim() || !password) {
       setError("Please fill in all fields");
       return;
     }
@@ -60,8 +61,8 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
 
     if (typeof window !== "undefined") {
       const signupData = {
-        name,
-        email,
+        name: name.trim(),
+        email: email.trim(),
         roles,
         interests,
         completed: true,
@@ -69,35 +70,36 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
       };
       try {
         localStorage.setItem("tutoria_signup", JSON.stringify(signupData));
+        const accounts = JSON.parse(localStorage.getItem("tutoria_accounts") || "{}");
+        accounts[email.trim().toLocaleLowerCase()] = signupData;
+        localStorage.setItem("tutoria_accounts", JSON.stringify(accounts));
       } catch {}
     }
   };
 
   return (
-    <div className="flex flex-col justify-center px-6 lg:px-16 py-12 max-w-2xl mx-auto w-full">
+    <div className="signup-shell">
       {showProgress && (
-        <div className="mb-8">
-          <span className="text-xl font-bold tracking-tight text-primary">
-            Tutoria
-          </span>
-          <div className="mt-4 flex items-center gap-2">
+        <div className="signup-progress">
+          <Link href="/" className="signup-brand" aria-label="Tutoria home">T</Link>
+          <div className="signup-progress-track">
             {Array.from({ length: totalSteps }).map((_, i) => (
               <div
                 key={i}
-                className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+                className={`signup-progress-segment ${
                   i < stepIndex ? "bg-primary" : "bg-border"
                 }`}
               />
             ))}
           </div>
-          <p className="mt-2 text-xs text-muted">
+          <p className="signup-step-label">
             Step {stepIndex} of {totalSteps}
           </p>
         </div>
       )}
 
       {step === "account" && (
-        <>
+        <section className="signup-account">
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
             Join a world built around curiosity.
           </h1>
@@ -148,7 +150,7 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3">
+          <div className="signup-social-stack">
             <Button variant="social" size="md">
               <IconBrandGoogle size={18} />
               Google
@@ -159,13 +161,13 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
             </Button>
           </div>
 
-          <p className="mt-8 text-center text-xs text-muted">
+          <p className="signup-legal">
             By joining Tutoria, you agree to our{" "}
-            <a href="#" className="text-primary hover:text-primary-dark transition-colors">Terms</a>{" "}
+            <Link href="/terms">Terms</Link>{" "}
             and{" "}
-            <a href="#" className="text-primary hover:text-primary-dark transition-colors">Privacy Policy</a>.
+            <Link href="/privacy">Privacy Policy</Link>.
           </p>
-        </>
+        </section>
       )}
 
       {step === "roles" && (

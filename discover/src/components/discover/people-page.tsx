@@ -22,6 +22,7 @@ interface Person {
 
 type SubmittedTutor = {
   displayName?: string;
+  location?: string;
   role?: string;
   headline?: string;
   photoUrl?: string | null;
@@ -73,7 +74,7 @@ function submittedTutorToPerson(tutor: SubmittedTutor): Person | null {
     verified: false,
     freeIntro: Boolean(tutor.consultationEnabled && tutor.consultationPrice === "Free"),
     image: tutor.photoUrl || "/images/tutor-profile-thu-ha.png",
-    location: "Hà Nội",
+    location: tutor.location?.trim() || "Location not set",
     available: Boolean(tutor.availability?.length),
   };
 }
@@ -227,18 +228,20 @@ export function PeoplePage() {
         {filtered.length > 0 ? (
           <div className={styles.peopleGrid}>
             {filtered.map((person) => (
-              <article
+              <Link
                 key={person.name}
                 className={styles.personCard}
+                href={`/tutor/${encodeURIComponent(person.name)}`}
+                aria-label={`View ${person.name}'s tutor profile`}
               >
                 <div className={styles.cardBody}>
                   <div className={styles.personCardHeader}>
-                    <Link className={styles.personAvatar} href={`/user/${encodeURIComponent(person.name)}`} aria-label={`View ${person.name}'s profile`}>
+                    <span className={styles.personAvatar}>
                       <Image src={person.image} alt={`${person.name}, ${person.title}`} fill unoptimized sizes="60px" />
-                    </Link>
+                    </span>
                     <div className={styles.personCardHeaderContent}>
                       <div className={styles.personNameRow}>
-                        <h3><Link className={styles.cardTitle} href={`/user/${encodeURIComponent(person.name)}`}>{person.name}</Link></h3>
+                        <h3><span className={styles.cardTitle}>{person.name}</span></h3>
                         {person.verified && <IconCircleCheck className={styles.nameVerified} size={16} aria-label="Verified profile" />}
                       </div>
                       <p className={styles.cardKicker}>{person.title}</p>
@@ -263,7 +266,7 @@ export function PeoplePage() {
                     </div>
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         ) : (

@@ -1,0 +1,1545 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutoria — Full Schedule</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            app: "#030811",
+            shell: "#07101c",
+            panel: "#0b1523",
+            panel2: "#101c2c",
+            line: "#223148",
+            text: "#f3f6fb",
+            muted: "#8e9aab",
+            gold: {
+              300: "#f6c56a",
+              400: "#e5aa46",
+              500: "#d49535",
+              600: "#b87924"
+            }
+          },
+          boxShadow: {
+            soft: "0 18px 55px rgba(0,0,0,.28)",
+            float: "0 22px 65px rgba(0,0,0,.45)",
+            glow: "0 0 0 1px rgba(229,170,70,.25), 0 16px 38px rgba(0,0,0,.28)"
+          }
+        }
+      }
+    };
+  </script>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      color: #f3f6fb;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 12% 5%, rgba(59, 88, 130, .14), transparent 25rem),
+        radial-gradient(circle at 88% 8%, rgba(229, 170, 70, .06), transparent 22rem),
+        #02060c;
+    }
+    button, input, select, textarea { font: inherit; }
+    .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #2b3b54 transparent; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #2b3b54; border-radius: 999px; }
+    .fade-up { animation: fadeUp .2s ease-out; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+    @media (max-width: 1023px) {
+      .desktop-only { display: none !important; }
+    }
+    @media (min-width: 1024px) {
+      #appShell {
+        grid-template-columns: 224px minmax(0, 1fr);
+        transition: grid-template-columns .24s cubic-bezier(.4,0,.2,1);
+      }
+      #appShell.sidebar-collapsed { grid-template-columns: 82px minmax(0, 1fr); }
+      #appShell.sidebar-collapsed .sidebar-label,
+      #appShell.sidebar-collapsed .brand-label,
+      #appShell.sidebar-collapsed .profile-copy { display: none; }
+      #appShell.sidebar-collapsed .sidebar-link,
+      #appShell.sidebar-collapsed .brand-wrap,
+      #appShell.sidebar-collapsed .profile-wrap { justify-content: center; }
+      #appShell.sidebar-collapsed .sidebar-count { position: absolute; right: 4px; top: 4px; }
+      #appShell.sidebar-collapsed #collapseIcon { transform: rotate(180deg); }
+      #appShell.sidebar-collapsed .sidebar-link[data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 50%;
+        z-index: 80;
+        transform: translateY(-50%);
+        white-space: nowrap;
+        border: 1px solid #223148;
+        border-radius: 10px;
+        background: #0b1523;
+        padding: 7px 10px;
+        color: #f3f6fb;
+        font-size: 12px;
+        font-weight: 600;
+        box-shadow: 0 12px 30px rgba(0,0,0,.34);
+      }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen lg:p-3">
+  <main id="appShell" class="mx-auto grid h-screen max-w-[1840px] overflow-hidden bg-shell lg:h-[calc(100vh-24px)] lg:rounded-[24px] lg:border lg:border-line lg:shadow-soft">
+    <!-- Desktop navigation -->
+    <aside class="desktop-only relative min-h-0 border-r border-line bg-shell p-4 lg:flex lg:flex-col">
+      <button id="sidebarToggle" class="absolute -right-3 top-7 z-30 grid size-7 place-items-center rounded-full border border-line bg-panel text-muted shadow-soft hover:text-gold-300" aria-expanded="true" aria-label="Collapse navigation">
+        <i id="collapseIcon" data-lucide="chevron-left" class="size-4 transition-transform"></i>
+      </button>
+
+      <a href="/discover" target="_top" class="brand-wrap mb-9 flex items-center gap-2 px-3">
+        <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-gold-400 text-[#171108]">
+          <i data-lucide="graduation-cap" class="size-5"></i>
+        </span>
+        <span class="brand-label text-[25px] font-semibold tracking-[-.04em] text-gold-400">Tutoria</span>
+      </a>
+
+      <nav class="space-y-1.5" aria-label="Primary navigation">
+        <a class="sidebar-link" data-tooltip="Home" href="/" target="_top"><i data-lucide="house"></i><span class="sidebar-label">Home</span></a>
+        <a class="sidebar-link" data-tooltip="Explore" href="/discover" target="_top"><i data-lucide="compass"></i><span class="sidebar-label">Explore</span></a>
+        <a class="sidebar-link active" data-tooltip="My learning" href="/learning" target="_top"><i data-lucide="calendar-days"></i><span class="sidebar-label">My learning</span></a>
+        <a class="sidebar-link justify-between" data-tooltip="Messages" href="/messages" target="_top">
+          <span class="flex items-center gap-3"><i data-lucide="messages-square"></i><span class="sidebar-label">Messages</span></span>
+          <span class="sidebar-count grid size-5 place-items-center rounded-full bg-gold-400 text-[11px] font-bold text-[#171108]">5</span>
+        </a>
+        <a class="sidebar-link" data-tooltip="Communities" href="/communities" target="_top"><i data-lucide="users"></i><span class="sidebar-label">Communities</span></a>
+      </nav>
+
+      <div class="mt-auto border-t border-line pt-4">
+        <a class="sidebar-link" data-tooltip="Settings" href="#"><i data-lucide="settings"></i><span class="sidebar-label">Settings</span></a>
+        <div class="profile-wrap mt-4 flex items-center gap-3 rounded-2xl bg-panel2 p-3">
+          <img src="https://i.pravatar.cc/96?img=12" class="size-11 shrink-0 rounded-full object-cover" alt="Khoa Nguyen" />
+          <div class="profile-copy min-w-0">
+            <p class="truncate text-sm font-semibold">Khoa Nguyen</p>
+            <p class="truncate text-xs text-muted">@khoa.nguyen</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main workspace -->
+    <section class="min-h-0 overflow-y-auto bg-[#08111d]">
+      <!-- Mobile header -->
+      <div class="sticky top-0 z-40 flex items-center justify-between border-b border-line bg-[#08111d]/95 px-4 py-3 backdrop-blur lg:hidden">
+        <button id="openMobileNav" class="grid size-10 place-items-center rounded-xl border border-line bg-panel" aria-label="Open navigation"><i data-lucide="menu" class="size-5"></i></button>
+        <div class="flex items-center gap-2">
+          <span class="grid size-8 place-items-center rounded-lg bg-gold-400 text-[#171108]"><i data-lucide="graduation-cap" class="size-4"></i></span>
+          <span class="font-semibold text-gold-400">Tutoria</span>
+        </div>
+        <button class="mobile-add grid size-10 place-items-center rounded-xl border border-gold-600 bg-gold-500/10 text-gold-300" aria-label="Add activity"><i data-lucide="plus" class="size-5"></i></button>
+      </div>
+
+      <div class="mx-auto max-w-[1600px] px-4 pb-10 pt-5 sm:px-6 lg:px-7 lg:pt-7">
+        <!-- Page header -->
+        <header class="flex flex-col gap-5 border-b border-line pb-5 xl:flex-row xl:items-start xl:justify-between">
+          <div class="flex items-center gap-3">
+            <a href="/learning" target="_top" class="grid size-10 place-items-center rounded-xl border border-line bg-panel text-muted hover:text-white" aria-label="Back to My learning"><i data-lucide="arrow-left" class="size-5"></i></a>
+            <div>
+              <h1 class="text-2xl font-bold tracking-[-.03em] sm:text-3xl">Schedule</h1>
+              <p class="mt-1 text-sm text-muted">Sessions, deadlines, study plans, and reminders</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="flex h-11 min-w-[240px] flex-1 items-center gap-3 rounded-xl border border-line bg-panel px-4 xl:w-[280px] xl:flex-none">
+              <i data-lucide="search" class="size-[17px] text-muted"></i>
+              <input id="searchInput" class="w-full bg-transparent text-sm outline-none placeholder:text-muted" placeholder="Search schedule..." />
+              <button id="clearSearch" type="button" class="hidden text-muted hover:text-white" aria-label="Clear search"><i data-lucide="x" class="size-4"></i></button>
+            </label>
+
+            <button id="todayBtn" class="h-11 rounded-xl border border-line bg-panel px-4 text-sm font-semibold hover:border-gold-500">Today</button>
+
+            <div class="flex rounded-xl border border-line bg-panel p-1">
+              <button class="view-btn px-3 py-2 text-sm font-semibold text-muted" data-view="agenda">Agenda</button>
+              <button class="view-btn active px-3 py-2 text-sm font-semibold" data-view="week">Week</button>
+              <button class="view-btn px-3 py-2 text-sm font-semibold text-muted" data-view="month">Month</button>
+            </div>
+
+            <div class="relative">
+              <button id="filterBtn" class="flex h-11 items-center gap-2 rounded-xl border border-line bg-panel px-4 text-sm font-semibold hover:border-gold-500">
+                <i data-lucide="sliders-horizontal" class="size-[17px]"></i>
+                Filters
+                <span id="filterCount" class="hidden grid size-5 place-items-center rounded-full bg-gold-400 text-[10px] font-bold text-[#171108]">0</span>
+              </button>
+              <div id="filterPopover" class="absolute right-0 top-14 z-50 hidden w-[310px] rounded-2xl border border-line bg-panel p-4 shadow-float">
+                <div class="flex items-center justify-between">
+                  <h2 class="font-semibold">Filter schedule</h2>
+                  <button id="clearFilters" class="text-xs font-semibold text-gold-400">Clear all</button>
+                </div>
+                <div class="mt-4 space-y-2">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-muted">Activity type</p>
+                  <label class="filter-row"><input class="filter-check accent-[#e5aa46]" type="checkbox" value="live" /> <span class="type-dot bg-gold-400"></span> Live sessions</label>
+                  <label class="filter-row"><input class="filter-check accent-[#e5aa46]" type="checkbox" value="task" /> <span class="type-dot bg-sky-400"></span> Study tasks</label>
+                  <label class="filter-row"><input class="filter-check accent-[#e5aa46]" type="checkbox" value="deadline" /> <span class="type-dot bg-violet-400"></span> Deadlines</label>
+                  <label class="filter-row"><input class="filter-check accent-[#e5aa46]" type="checkbox" value="group" /> <span class="type-dot bg-emerald-400"></span> Group activities</label>
+                  <label class="filter-row"><input class="filter-check accent-[#e5aa46]" type="checkbox" value="reminder" /> <span class="type-dot bg-orange-400"></span> Personal reminders</label>
+                </div>
+                <div class="mt-4 space-y-2">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-muted">Status</p>
+                  <label class="filter-row"><input class="status-check accent-[#e5aa46]" type="checkbox" value="scheduled" /> Scheduled</label>
+                  <label class="filter-row"><input class="status-check accent-[#e5aa46]" type="checkbox" value="completed" /> Completed</label>
+                  <label class="filter-row"><input class="status-check accent-[#e5aa46]" type="checkbox" value="cancelled" /> Cancelled</label>
+                </div>
+                <button id="applyFilters" class="mt-4 w-full rounded-xl bg-gold-400 px-4 py-3 text-sm font-semibold text-[#171108]">Apply filters</button>
+              </div>
+            </div>
+
+            <div class="relative">
+              <button id="calendarMenuBtn" class="grid size-11 place-items-center rounded-xl border border-line bg-panel hover:border-gold-500" aria-label="Calendar options"><i data-lucide="calendar-sync" class="size-[18px]"></i></button>
+              <div id="calendarMenu" class="absolute right-0 top-14 z-50 hidden w-[265px] rounded-2xl border border-line bg-panel p-3 shadow-float">
+                <button class="calendar-option"><i data-lucide="calendar-plus"></i> Connect Google Calendar</button>
+                <button class="calendar-option"><i data-lucide="calendar-plus"></i> Connect Apple Calendar</button>
+                <button id="exportIcs" class="calendar-option"><i data-lucide="download"></i> Export visible schedule (.ics)</button>
+              </div>
+            </div>
+
+            <button class="add-activity flex h-11 items-center gap-2 rounded-xl bg-gold-400 px-5 text-sm font-semibold text-[#171108] hover:bg-gold-300">
+              <i data-lucide="plus" class="size-[17px]"></i> Add activity
+            </button>
+          </div>
+        </header>
+
+        <!-- Offline/status banner -->
+        <div id="offlineBanner" class="mt-4 hidden items-center justify-between rounded-xl border border-orange-400/25 bg-orange-500/10 px-4 py-3 text-sm">
+          <span class="flex items-center gap-2"><i data-lucide="wifi-off" class="size-[17px] text-orange-300"></i>You’re offline. Recent schedule information is still available.</span>
+          <button id="dismissOffline" class="text-xs font-semibold text-orange-200">Dismiss</button>
+        </div>
+
+        <!-- Chips -->
+        <div id="filterChips" class="mt-4 hidden flex-wrap gap-2"></div>
+
+        <!-- Period navigation -->
+        <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex items-center gap-2">
+            <button id="prevPeriod" class="grid size-10 place-items-center rounded-xl border border-line bg-panel hover:border-gold-500" aria-label="Previous period"><i data-lucide="chevron-left" class="size-5"></i></button>
+            <button id="nextPeriod" class="grid size-10 place-items-center rounded-xl border border-line bg-panel hover:border-gold-500" aria-label="Next period"><i data-lucide="chevron-right" class="size-5"></i></button>
+            <div class="ml-1">
+              <h2 id="periodTitle" class="font-semibold sm:text-lg">July 20–26, 2026</h2>
+              <p id="periodSubtitle" class="text-xs text-muted">Week 30</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 text-xs text-muted">
+            <span class="legend"><span class="bg-gold-400"></span>Live</span>
+            <span class="legend"><span class="bg-sky-400"></span>Study</span>
+            <span class="legend"><span class="bg-violet-400"></span>Deadline</span>
+            <span class="legend"><span class="bg-emerald-400"></span>Group</span>
+            <span class="legend"><span class="bg-orange-400"></span>Reminder</span>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div id="emptyState" class="mt-5 hidden rounded-2xl border border-dashed border-line bg-panel p-10 text-center">
+          <span class="mx-auto grid size-14 place-items-center rounded-2xl bg-panel2 text-muted"><i data-lucide="calendar-x-2" class="size-7"></i></span>
+          <h3 class="mt-4 text-lg font-semibold">No activities match your current view</h3>
+          <p class="mt-2 text-sm text-muted">Clear filters, change the date range, or add a new activity.</p>
+          <button id="emptyClearFilters" class="mt-5 rounded-xl border border-gold-600 px-4 py-2.5 text-sm font-semibold text-gold-300">Clear filters</button>
+        </div>
+
+        <!-- WEEK VIEW -->
+        <div id="view-week" class="schedule-view fade-up mt-4 grid min-h-[700px] gap-4 xl:grid-cols-[minmax(0,1fr)_330px]">
+          <section class="overflow-hidden rounded-2xl border border-line bg-panel">
+            <!-- All-day row -->
+            <div class="border-b border-line bg-panel2/35">
+              <div class="grid min-w-[1070px] grid-cols-[68px_repeat(7,minmax(140px,1fr))]">
+                <div class="border-r border-line px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted">All day</div>
+                <div class="border-r border-line p-2"></div>
+                <div class="border-r border-line p-2"></div>
+                <div class="border-r border-line p-2">
+                  <button class="calendar-event w-full rounded-lg border-l-2 border-violet-400 bg-violet-500/10 px-2 py-1.5 text-left text-[11px]" data-id="essay-deadline">Writing Task 2 due</button>
+                </div>
+                <div class="border-r border-line p-2"></div>
+                <div class="border-r border-line p-2"></div>
+                <div class="border-r border-line p-2"></div>
+                <div class="p-2"></div>
+              </div>
+            </div>
+
+            <div class="scrollbar-thin overflow-x-auto">
+              <div class="min-w-[1070px]">
+                <div class="grid grid-cols-[68px_repeat(7,minmax(140px,1fr))] border-b border-line">
+                  <div class="border-r border-line p-3"></div>
+                  <div class="day-cell"><p>MON</p><strong>20</strong></div>
+                  <div class="day-cell bg-gold-500/[.035]"><p class="text-gold-300">TODAY</p><strong class="grid size-8 place-items-center rounded-full bg-gold-400 text-[#171108]">21</strong></div>
+                  <div class="day-cell"><p>WED</p><strong>22</strong></div>
+                  <div class="day-cell"><p>THU</p><strong>23</strong></div>
+                  <div class="day-cell"><p>FRI</p><strong>24</strong></div>
+                  <div class="day-cell"><p>SAT</p><strong>25</strong></div>
+                  <div class="day-cell border-r-0"><p>SUN</p><strong>26</strong></div>
+                </div>
+
+                <div class="grid h-[620px] grid-cols-[68px_repeat(7,minmax(140px,1fr))]">
+                  <div class="relative border-r border-line">
+                    <span class="time-label top-[12px]">8 AM</span>
+                    <span class="time-label top-[104px]">10 AM</span>
+                    <span class="time-label top-[196px]">12 PM</span>
+                    <span class="time-label top-[288px]">2 PM</span>
+                    <span class="time-label top-[380px]">4 PM</span>
+                    <span class="time-label top-[472px]">6 PM</span>
+                    <span class="time-label top-[564px]">8 PM</span>
+                  </div>
+
+                  <div class="calendar-column">
+                    <button class="calendar-event event-task absolute left-2 right-2 top-[90px]" data-id="algebra-review"></button>
+                  </div>
+                  <div class="calendar-column bg-gold-500/[.025]">
+                    <div class="absolute left-0 right-0 top-[458px] z-10 flex items-center"><span class="size-2.5 -translate-x-1/2 rounded-full bg-red-400"></span><span class="h-px flex-1 bg-red-400/70"></span></div>
+                    <button class="calendar-event event-live absolute left-2 right-2 top-[510px]" data-id="ielts-speaking"></button>
+                  </div>
+                  <div class="calendar-column">
+                    <button class="calendar-event event-deadline absolute left-2 right-2 top-[226px]" data-id="essay-deadline"></button>
+                  </div>
+                  <div class="calendar-column">
+                    <button class="calendar-event event-live absolute left-2 right-2 top-[552px]" data-id="design-qa"></button>
+                  </div>
+                  <div class="calendar-column">
+                    <button class="calendar-event event-group absolute left-2 right-2 top-[330px]" data-id="vocabulary-circle"></button>
+                  </div>
+                  <div class="calendar-column">
+                    <button class="calendar-event event-task absolute left-2 right-2 top-[145px]" data-id="portfolio-task"></button>
+                  </div>
+                  <div class="calendar-column border-r-0">
+                    <button class="calendar-event event-reminder absolute left-2 right-2 top-[55px]" data-id="weekly-review"></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Details panel -->
+          <aside id="detailsPanel" class="rounded-2xl border border-line bg-panel p-5">
+            <div class="flex items-center justify-between">
+              <h2 class="font-semibold">Activity details</h2>
+              <button id="closeDetails" class="grid size-8 place-items-center rounded-lg text-muted hover:bg-panel2 hover:text-white xl:hidden" aria-label="Close details"><i data-lucide="x" class="size-[18px]"></i></button>
+            </div>
+
+            <div id="detailsContent" class="mt-6">
+              <span id="detailType" class="inline-flex items-center gap-1.5 rounded-full bg-gold-500/15 px-3 py-1 text-xs font-semibold text-gold-300"><i data-lucide="video" class="size-3.5"></i>Live session</span>
+              <div class="mt-4 flex items-start justify-between gap-3">
+                <div>
+                  <h3 id="detailTitle" class="text-xl font-semibold leading-7">IELTS Speaking Part 2</h3>
+                  <p id="detailContext" class="mt-1 text-sm text-muted">IELTS Study Circle</p>
+                </div>
+                <button id="detailMenuBtn" class="grid size-9 shrink-0 place-items-center rounded-xl border border-line hover:bg-panel2"><i data-lucide="ellipsis" class="size-4"></i></button>
+              </div>
+
+              <div class="mt-6 space-y-4">
+                <div class="detail-row"><span><i data-lucide="calendar-days"></i></span><div><p>Date</p><strong id="detailDate">Tuesday, July 21</strong></div></div>
+                <div class="detail-row"><span><i data-lucide="clock-3"></i></span><div><p>Time</p><strong id="detailTime">7:00 PM–8:00 PM</strong></div></div>
+                <div class="detail-row"><span><i data-lucide="map-pin"></i></span><div><p>Location</p><strong id="detailLocation">Online room</strong></div></div>
+                <div class="detail-row"><span><i data-lucide="bell-ring"></i></span><div><p>Reminder</p><strong id="detailReminder">15 minutes before</strong></div></div>
+              </div>
+
+              <div class="mt-6 rounded-2xl border border-line bg-[#0c1625] p-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-muted">Notes</p>
+                <p id="detailNotes" class="mt-2 text-sm leading-6 text-[#c4ccd8]">Speaking practice focused on Part 2 cue cards. Bring one topic you want feedback on.</p>
+              </div>
+
+              <div id="conflictBox" class="mt-4 hidden rounded-2xl border border-orange-400/25 bg-orange-500/10 p-4 text-sm">
+                <div class="flex gap-3"><i data-lucide="triangle-alert" class="mt-0.5 size-5 shrink-0 text-orange-300"></i><div><p class="font-semibold">Schedule conflict</p><p id="conflictText" class="mt-1 text-xs leading-5 text-orange-100/75"></p></div></div>
+              </div>
+
+              <button id="primaryAction" class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gold-400 px-4 py-3.5 text-sm font-semibold text-[#171108] hover:bg-gold-300"><i data-lucide="video" class="size-[17px]"></i>Join session</button>
+
+              <div class="mt-2 grid grid-cols-2 gap-2">
+                <button id="completeBtn" class="rounded-xl border border-line px-3 py-3 text-sm font-semibold hover:border-emerald-400">Mark complete</button>
+                <button id="editBtn" class="rounded-xl border border-line px-3 py-3 text-sm font-semibold hover:border-gold-500">Edit activity</button>
+              </div>
+
+              <div class="mt-2 grid grid-cols-2 gap-2">
+                <button id="duplicateBtn" class="rounded-xl border border-line px-3 py-3 text-sm font-semibold hover:border-gold-500">Duplicate</button>
+                <button id="openChatBtn" class="rounded-xl border border-line px-3 py-3 text-sm font-semibold hover:border-gold-500">Open chat</button>
+              </div>
+
+              <div class="mt-7 border-t border-line pt-5">
+                <button id="cancelActivityBtn" class="detail-action text-orange-300"><i data-lucide="ban"></i>Cancel activity</button>
+                <button id="deleteActivityBtn" class="detail-action text-red-400"><i data-lucide="trash-2"></i>Delete activity</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <!-- AGENDA VIEW -->
+        <div id="view-agenda" class="schedule-view hidden fade-up mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_330px]">
+          <section id="agendaList" class="rounded-2xl border border-line bg-panel p-4 sm:p-5"></section>
+
+          <aside class="rounded-2xl border border-line bg-panel p-5">
+            <h2 class="font-semibold">Schedule summary</h2>
+            <div id="summaryStats" class="mt-5 space-y-4"></div>
+            <div class="mt-6 rounded-2xl border border-line bg-panel2 p-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-muted">Next activity</p>
+              <p id="nextActivityTitle" class="mt-2 font-semibold">IELTS Speaking Part 2</p>
+              <p id="nextActivityTime" class="mt-1 text-sm text-muted">Today · 7:00 PM</p>
+              <button id="nextActivityOpen" class="mt-4 w-full rounded-xl border border-gold-600 px-4 py-2.5 text-sm font-semibold text-gold-300">View details</button>
+            </div>
+          </aside>
+        </div>
+
+        <!-- MONTH VIEW -->
+        <div id="view-month" class="schedule-view hidden fade-up mt-4">
+          <section class="overflow-hidden rounded-2xl border border-line bg-panel">
+            <div class="scrollbar-thin overflow-x-auto">
+              <div class="min-w-[820px]">
+                <div class="grid grid-cols-7 border-b border-line text-center text-xs font-semibold text-muted">
+                  <div class="p-3">MON</div><div class="p-3">TUE</div><div class="p-3">WED</div><div class="p-3">THU</div><div class="p-3">FRI</div><div class="p-3">SAT</div><div class="p-3">SUN</div>
+                </div>
+                <div id="monthGrid" class="grid grid-cols-7"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile nav -->
+  <div id="mobileNavOverlay" class="fixed inset-0 z-40 hidden bg-black/55 backdrop-blur-sm lg:hidden"></div>
+  <aside id="mobileNav" class="fixed inset-y-0 left-0 z-50 hidden w-[280px] -translate-x-full border-r border-line bg-shell p-5 shadow-float transition-transform duration-200 lg:hidden">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="grid size-9 place-items-center rounded-xl bg-gold-400 text-[#171108]"><i data-lucide="graduation-cap" class="size-5"></i></span>
+        <span class="text-xl font-semibold text-gold-400">Tutoria</span>
+      </div>
+      <button id="closeMobileNav" class="grid size-10 place-items-center rounded-xl border border-line bg-panel"><i data-lucide="x" class="size-5"></i></button>
+    </div>
+    <nav class="mt-8 space-y-2">
+      <a class="mobile-link" href="/" target="_top"><i data-lucide="house"></i>Home</a>
+      <a class="mobile-link" href="/discover" target="_top"><i data-lucide="compass"></i>Explore</a>
+      <a class="mobile-link active" href="/learning" target="_top"><i data-lucide="calendar-days"></i>My learning</a>
+      <a class="mobile-link" href="/messages" target="_top"><i data-lucide="messages-square"></i>Messages</a>
+      <a class="mobile-link" href="/communities" target="_top"><i data-lucide="users"></i>Communities</a>
+      <a class="mobile-link" href="#"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Add/Edit modal -->
+  <div id="modalOverlay" class="fixed inset-0 z-[70] hidden bg-black/65 backdrop-blur-sm"></div>
+  <div id="activityModal" class="fixed inset-0 z-[80] hidden overflow-y-auto p-4">
+    <div class="flex min-h-full items-center justify-center">
+      <form id="activityForm" class="w-full max-w-[700px] rounded-[24px] border border-line bg-panel p-5 shadow-float sm:p-6">
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 id="modalTitle" class="text-xl font-semibold">Add activity</h2>
+            <p class="mt-1 text-sm text-muted">Create a session, task, deadline, group activity, or reminder.</p>
+          </div>
+          <button id="closeModal" type="button" class="grid size-9 place-items-center rounded-xl border border-line hover:bg-panel2"><i data-lucide="x" class="size-5"></i></button>
+        </div>
+
+        <input id="activityId" type="hidden" />
+
+        <div class="mt-6 grid gap-4 sm:grid-cols-2">
+          <label class="sm:col-span-2">
+            <span class="field-label">Title</span>
+            <input id="formTitle" required class="field-input" placeholder="e.g. Review vocabulary" maxlength="100" />
+          </label>
+
+          <label>
+            <span class="field-label">Type</span>
+            <select id="formType" class="field-input">
+              <option value="task">Study task</option>
+              <option value="live">Study session</option>
+              <option value="deadline">Deadline</option>
+              <option value="group">Group activity</option>
+              <option value="reminder">Personal reminder</option>
+            </select>
+          </label>
+
+          <label>
+            <span class="field-label">Related space</span>
+            <select id="formContext" class="field-input">
+              <option value="Personal planning">Personal planning</option>
+              <option value="IELTS Preparation">IELTS Preparation</option>
+              <option value="IELTS Study Circle">IELTS Study Circle</option>
+              <option value="Web Design Foundations">Web Design Foundations</option>
+              <option value="Web Design Cohort">Web Design Cohort</option>
+              <option value="Algebra Essentials">Algebra Essentials</option>
+            </select>
+          </label>
+
+          <label>
+            <span class="field-label">Date</span>
+            <input id="formDate" type="date" class="field-input" required />
+          </label>
+
+          <label>
+            <span class="field-label">Start time</span>
+            <input id="formStart" type="time" class="field-input" required />
+          </label>
+
+          <label>
+            <span class="field-label">End time</span>
+            <input id="formEnd" type="time" class="field-input" />
+          </label>
+
+          <label>
+            <span class="field-label">Location</span>
+            <input id="formLocation" class="field-input" placeholder="Online room or address" />
+          </label>
+
+          <label>
+            <span class="field-label">Reminder</span>
+            <select id="formReminder" class="field-input">
+              <option>At start time</option>
+              <option>10 minutes before</option>
+              <option selected>15 minutes before</option>
+              <option>30 minutes before</option>
+              <option>1 hour before</option>
+              <option>1 day before</option>
+              <option>None</option>
+            </select>
+          </label>
+
+          <label>
+            <span class="field-label">Repeat</span>
+            <select id="formRepeat" class="field-input">
+              <option>Does not repeat</option>
+              <option>Daily</option>
+              <option>Weekly</option>
+              <option>Every weekday</option>
+              <option>Monthly</option>
+            </select>
+          </label>
+
+          <label class="flex items-center gap-3 rounded-xl border border-line bg-[#08111d] px-4 py-3">
+            <input id="formAllDay" type="checkbox" class="size-4 accent-[#e5aa46]" />
+            <span class="text-sm font-medium">All-day activity</span>
+          </label>
+
+          <label class="sm:col-span-2">
+            <span class="field-label">Notes</span>
+            <textarea id="formNotes" rows="4" class="field-input h-auto resize-none py-3" placeholder="Preparation notes, resources, or goals..."></textarea>
+          </label>
+        </div>
+
+        <div id="formConflict" class="mt-4 hidden rounded-xl border border-orange-400/25 bg-orange-500/10 p-4 text-sm text-orange-100">
+          <div class="flex gap-3"><i data-lucide="triangle-alert" class="mt-0.5 size-5 shrink-0 text-orange-300"></i><div><p class="font-semibold">This time overlaps another activity.</p><p id="formConflictText" class="mt-1 text-xs leading-5 text-orange-100/75"></p></div></div>
+        </div>
+
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button id="cancelModal" type="button" class="h-11 rounded-xl border border-line px-5 text-sm font-semibold hover:bg-panel2">Cancel</button>
+          <button type="submit" class="h-11 rounded-xl bg-gold-400 px-5 text-sm font-semibold text-[#171108] hover:bg-gold-300">Save activity</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm modal -->
+  <div id="confirmOverlay" class="fixed inset-0 z-[90] hidden bg-black/65 backdrop-blur-sm"></div>
+  <div id="confirmModal" class="fixed inset-0 z-[100] hidden p-4">
+    <div class="flex min-h-full items-center justify-center">
+      <div class="w-full max-w-[430px] rounded-[22px] border border-line bg-panel p-5 shadow-float">
+        <span id="confirmIcon" class="grid size-11 place-items-center rounded-xl bg-red-500/15 text-red-300"><i data-lucide="triangle-alert" class="size-5"></i></span>
+        <h2 id="confirmTitle" class="mt-4 text-lg font-semibold">Delete activity?</h2>
+        <p id="confirmText" class="mt-2 text-sm leading-6 text-muted">This action cannot be undone.</p>
+        <div class="mt-6 flex justify-end gap-2">
+          <button id="confirmCancel" class="rounded-xl border border-line px-4 py-2.5 text-sm font-semibold">Keep activity</button>
+          <button id="confirmAction" class="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-5 left-1/2 z-[120] hidden -translate-x-1/2 items-center gap-3 rounded-xl border border-line bg-panel px-4 py-3 text-sm shadow-float">
+    <i data-lucide="circle-check" class="size-5 text-emerald-400"></i>
+    <span id="toastText">Saved.</span>
+  </div>
+
+  <script>
+    const TYPE_CONFIG = {
+      live: {
+        label: "Live session",
+        icon: "video",
+        dot: "bg-gold-400",
+        badge: "bg-gold-500/15 text-gold-300",
+        card: "border-gold-400 bg-gold-500/10",
+        action: "Join session"
+      },
+      task: {
+        label: "Study task",
+        icon: "book-open",
+        dot: "bg-sky-400",
+        badge: "bg-sky-500/15 text-sky-300",
+        card: "border-sky-400 bg-sky-500/10",
+        action: "Start task"
+      },
+      deadline: {
+        label: "Deadline",
+        icon: "file-clock",
+        dot: "bg-violet-400",
+        badge: "bg-violet-500/15 text-violet-300",
+        card: "border-violet-400 bg-violet-500/10",
+        action: "Open assignment"
+      },
+      group: {
+        label: "Group activity",
+        icon: "users",
+        dot: "bg-emerald-400",
+        badge: "bg-emerald-500/15 text-emerald-300",
+        card: "border-emerald-400 bg-emerald-500/10",
+        action: "View activity"
+      },
+      reminder: {
+        label: "Personal reminder",
+        icon: "bell-ring",
+        dot: "bg-orange-400",
+        badge: "bg-orange-500/15 text-orange-300",
+        card: "border-orange-400 bg-orange-500/10",
+        action: "Open reminder"
+      }
+    };
+
+    const DEFAULT_EVENTS = [
+      {
+        id: "algebra-review",
+        title: "Review algebra exercises",
+        type: "task",
+        date: "2026-07-20",
+        start: "10:00",
+        end: "10:45",
+        context: "Algebra Essentials",
+        location: "Personal study",
+        notes: "Complete exercises 4–12 before the problem-solving session.",
+        reminder: "15 minutes before",
+        repeat: "Does not repeat",
+        status: "scheduled",
+        allDay: false
+      },
+      {
+        id: "ielts-speaking",
+        title: "IELTS Speaking Part 2",
+        type: "live",
+        date: "2026-07-21",
+        start: "19:00",
+        end: "20:00",
+        context: "IELTS Study Circle",
+        location: "Online room",
+        notes: "Speaking practice focused on Part 2 cue cards. Bring one topic you want feedback on.",
+        reminder: "15 minutes before",
+        repeat: "Weekly",
+        status: "scheduled",
+        allDay: false
+      },
+      {
+        id: "essay-deadline",
+        title: "IELTS Writing Task 2",
+        type: "deadline",
+        date: "2026-07-22",
+        start: "13:00",
+        end: "13:15",
+        context: "IELTS Preparation",
+        location: "Assignment",
+        notes: "Submit the final essay and include a short reflection on the feedback you used.",
+        reminder: "1 day before",
+        repeat: "Does not repeat",
+        status: "scheduled",
+        allDay: true
+      },
+      {
+        id: "design-qa",
+        title: "Web Design Live Q&A",
+        type: "live",
+        date: "2026-07-23",
+        start: "20:30",
+        end: "21:45",
+        context: "Web Design Cohort",
+        location: "Online room",
+        notes: "Open Q&A covering responsive layout, spacing, and component hierarchy.",
+        reminder: "30 minutes before",
+        repeat: "Weekly",
+        status: "scheduled",
+        allDay: false
+      },
+      {
+        id: "vocabulary-circle",
+        title: "Vocabulary review circle",
+        type: "group",
+        date: "2026-07-24",
+        start: "15:30",
+        end: "16:15",
+        context: "IELTS Study Circle",
+        location: "Library room",
+        notes: "Bring ten new words and one example sentence for each.",
+        reminder: "15 minutes before",
+        repeat: "Does not repeat",
+        status: "scheduled",
+        allDay: false
+      },
+      {
+        id: "portfolio-task",
+        title: "Portfolio case study",
+        type: "task",
+        date: "2026-07-25",
+        start: "11:00",
+        end: "12:30",
+        context: "Web Design Foundations",
+        location: "Personal study",
+        notes: "Draft the problem statement, design choices, and final outcome for one project.",
+        reminder: "1 hour before",
+        repeat: "Does not repeat",
+        status: "scheduled",
+        allDay: false
+      },
+      {
+        id: "weekly-review",
+        title: "Weekly learning review",
+        type: "reminder",
+        date: "2026-07-26",
+        start: "09:30",
+        end: "10:15",
+        context: "Personal planning",
+        location: "Online",
+        notes: "Review completed work, update goals, and plan the next learning week.",
+        reminder: "15 minutes before",
+        repeat: "Weekly",
+        status: "scheduled",
+        allDay: false
+      }
+    ];
+
+    let events = loadEvents();
+    let selectedEventId = "ielts-speaking";
+    let currentView = localStorage.getItem("tutoria-schedule-view") || (window.innerWidth < 768 ? "agenda" : "week");
+    let periodOffset = 0;
+    let selectedTypes = [];
+    let selectedStatuses = [];
+    let searchQuery = "";
+    let confirmCallback = null;
+
+    function loadEvents() {
+      try {
+        const saved = JSON.parse(localStorage.getItem("tutoria-schedule-events"));
+        return Array.isArray(saved) && saved.length ? saved : structuredClone(DEFAULT_EVENTS);
+      } catch {
+        return structuredClone(DEFAULT_EVENTS);
+      }
+    }
+
+    function saveEvents() {
+      localStorage.setItem("tutoria-schedule-events", JSON.stringify(events));
+    }
+
+    function formatDate(dateString) {
+      return new Intl.DateTimeFormat("en-US", {
+        weekday: "long", month: "long", day: "numeric", year: "numeric"
+      }).format(new Date(`${dateString}T12:00:00`));
+    }
+
+    function formatShortDate(dateString) {
+      return new Intl.DateTimeFormat("en-US", {
+        weekday: "short", month: "short", day: "numeric"
+      }).format(new Date(`${dateString}T12:00:00`));
+    }
+
+    function formatTime(time) {
+      if (!time) return "";
+      const [hour, minute] = time.split(":").map(Number);
+      return new Intl.DateTimeFormat("en-US", {
+        hour: "numeric", minute: "2-digit"
+      }).format(new Date(2026, 0, 1, hour, minute));
+    }
+
+    function eventTime(event) {
+      if (event.allDay) return "All day";
+      if (!event.end) return formatTime(event.start);
+      return `${formatTime(event.start)}–${formatTime(event.end)}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>'"]/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
+      })[character]);
+    }
+
+    function escapeCalendarText(value) {
+      return String(value ?? "")
+        .replace(/\\/g, "\\\\")
+        .replace(/\r?\n/g, "\\n")
+        .replace(/([,;])/g, "\\$1");
+    }
+
+    function getSelectedEvent() {
+      return events.find(event => event.id === selectedEventId) || events[0] || null;
+    }
+
+    function passesFilters(event) {
+      const queryText = `${event.title} ${event.context} ${event.location} ${event.notes}`.toLowerCase();
+      const searchMatches = !searchQuery || queryText.includes(searchQuery);
+      const typeMatches = selectedTypes.length === 0 || selectedTypes.includes(event.type);
+      const statusMatches = selectedStatuses.length === 0 || selectedStatuses.includes(event.status);
+      return searchMatches && typeMatches && statusMatches;
+    }
+
+    function visibleEvents() {
+      return events.filter(passesFilters).sort((a, b) => `${a.date}T${a.start}`.localeCompare(`${b.date}T${b.start}`));
+    }
+
+    function findConflict(candidate, ignoreId = null) {
+      if (candidate.allDay || !candidate.start || !candidate.end) return null;
+      const start = candidate.start;
+      const end = candidate.end;
+      return events.find(event =>
+        event.id !== ignoreId &&
+        event.status !== "cancelled" &&
+        !event.allDay &&
+        event.date === candidate.date &&
+        start < event.end &&
+        end > event.start
+      ) || null;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toastText").textContent = message;
+      toast.classList.remove("hidden");
+      toast.classList.add("flex");
+      clearTimeout(showToast.timeout);
+      showToast.timeout = setTimeout(() => {
+        toast.classList.add("hidden");
+        toast.classList.remove("flex");
+      }, 2200);
+    }
+
+    // Base styles
+    document.querySelectorAll(".sidebar-link").forEach(link => {
+      link.classList.add("relative","flex","min-h-11","items-center","gap-3","rounded-xl","px-3","text-sm","font-medium","text-[#a8b2c1]","transition","hover:bg-panel2","hover:text-white");
+      link.querySelectorAll("svg").forEach(icon => icon.classList.add("size-[18px]","shrink-0"));
+    });
+    document.querySelectorAll(".sidebar-link.active").forEach(link => {
+      link.classList.remove("text-[#a8b2c1]");
+      link.classList.add("bg-panel2","text-white","before:absolute","before:left-0","before:h-6","before:w-0.5","before:rounded-full","before:bg-gold-400");
+    });
+    document.querySelectorAll(".mobile-link").forEach(link => {
+      link.classList.add("flex","items-center","gap-3","rounded-xl","px-3","py-3","text-sm","font-medium","text-muted","hover:bg-panel2","hover:text-white");
+      link.querySelectorAll("svg").forEach(icon => icon.classList.add("size-5"));
+    });
+    document.querySelectorAll(".mobile-link.active").forEach(link => {
+      link.classList.remove("text-muted");
+      link.classList.add("bg-panel2","text-white");
+    });
+    document.querySelectorAll(".filter-row").forEach(row => {
+      row.classList.add("flex","cursor-pointer","items-center","gap-3","rounded-xl","border","border-line","px-3","py-2.5","text-sm","hover:bg-panel2");
+    });
+    document.querySelectorAll(".type-dot").forEach(dot => dot.classList.add("size-2.5","rounded-full"));
+    document.querySelectorAll(".calendar-option").forEach(button => {
+      button.classList.add("flex","w-full","items-center","gap-3","rounded-xl","px-3","py-3","text-left","text-sm","hover:bg-panel2");
+      button.querySelectorAll("svg").forEach(icon => icon.classList.add("size-[17px]","text-gold-300"));
+    });
+    document.querySelectorAll(".field-label").forEach(label => label.classList.add("text-sm","font-medium"));
+    document.querySelectorAll(".field-input").forEach(input => input.classList.add("mt-2","h-11","w-full","rounded-xl","border","border-line","bg-[#08111d]","px-4","text-sm","outline-none","focus:border-gold-500"));
+    document.querySelectorAll(".legend").forEach(item => {
+      item.classList.add("flex","items-center","gap-1.5");
+      item.querySelector("span").classList.add("size-2.5","rounded-full");
+    });
+    document.querySelectorAll(".day-cell").forEach(cell => {
+      cell.classList.add("flex","min-h-16","flex-col","items-center","justify-center","gap-1","border-r","border-line","p-2");
+      cell.querySelector("p").classList.add("text-xs","text-muted");
+      cell.querySelector("strong").classList.add("text-lg");
+    });
+    document.querySelectorAll(".time-label").forEach(label => label.classList.add("absolute","right-3","text-[11px]","text-muted"));
+    document.querySelectorAll(".calendar-column").forEach(col => col.classList.add("relative","border-r","border-line","bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_45px,#1b293d_46px)]"));
+    document.querySelectorAll(".detail-row").forEach(row => {
+      row.classList.add("flex","gap-3");
+      row.querySelector(":scope > span").classList.add("grid","size-9","shrink-0","place-items-center","rounded-xl","bg-panel2","text-gold-300");
+      row.querySelectorAll("svg").forEach(icon => icon.classList.add("size-[17px]"));
+      row.querySelector("p").classList.add("text-xs","text-muted");
+      row.querySelector("strong").classList.add("mt-1","block","text-sm","font-medium");
+    });
+    document.querySelectorAll(".detail-action").forEach(button => {
+      button.classList.add("flex","w-full","items-center","gap-3","rounded-xl","px-2","py-2.5","text-left","text-sm","hover:bg-panel2");
+      button.querySelectorAll("svg").forEach(icon => icon.classList.add("size-[17px]"));
+    });
+
+    lucide.createIcons();
+
+    function renderEventButtons() {
+      document.querySelectorAll(".calendar-event[data-id]").forEach(button => {
+        const event = events.find(item => item.id === button.dataset.id);
+        if (!event) {
+          button.classList.add("hidden");
+          return;
+        }
+        button.classList.toggle("hidden", !passesFilters(event));
+        button.disabled = false;
+
+        const config = TYPE_CONFIG[event.type];
+        const compact = button.closest("#monthGrid") || button.classList.contains("w-full");
+        if (button.closest("#view-week") && !button.closest("#monthGrid")) {
+          button.className = `calendar-event absolute left-2 right-2 rounded-xl border-l-4 p-3 text-left transition hover:brightness-110 ${config.card}`;
+          if (event.id === "algebra-review") button.classList.add("top-[90px]");
+          if (event.id === "ielts-speaking") button.classList.add("top-[510px]");
+          if (event.id === "essay-deadline") button.classList.add("top-[226px]");
+          if (event.id === "design-qa") button.classList.add("top-[552px]");
+          if (event.id === "vocabulary-circle") button.classList.add("top-[330px]");
+          if (event.id === "portfolio-task") button.classList.add("top-[145px]");
+          if (event.id === "weekly-review") button.classList.add("top-[55px]");
+          button.innerHTML = `
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-[10px] font-semibold uppercase tracking-wide">${config.label}</p>
+              ${event.status !== "scheduled" ? `<span class="rounded-full bg-black/25 px-2 py-0.5 text-[9px] font-semibold">${event.status}</span>` : ""}
+            </div>
+            <p class="mt-1 text-sm font-semibold ${event.status === "cancelled" ? "line-through opacity-60" : ""}">${escapeHtml(event.title)}</p>
+            <p class="mt-1 text-[11px] text-muted">${eventTime(event)}</p>
+          `;
+        } else if (compact && !button.textContent.trim()) {
+          button.textContent = event.title;
+        }
+      });
+    }
+
+    function renderAgenda() {
+      const container = document.getElementById("agendaList");
+      const items = visibleEvents();
+
+      if (!items.length) {
+        container.innerHTML = `<div class="py-16 text-center text-sm text-muted">No activities match the current filters.</div>`;
+        return;
+      }
+
+      const groups = items.reduce((acc, event) => {
+        (acc[event.date] ||= []).push(event);
+        return acc;
+      }, {});
+
+      container.innerHTML = Object.entries(groups).map(([date, dateEvents]) => `
+        <section class="mb-7 last:mb-0">
+          <div class="flex items-center gap-3">
+            <span class="grid size-10 place-items-center rounded-xl ${date === "2026-07-21" ? "bg-gold-400 text-[#171108]" : "border border-line bg-panel2"} text-sm font-bold">${new Date(date + "T12:00:00").getDate()}</span>
+            <div>
+              <h3 class="font-semibold">${date === "2026-07-21" ? "Today" : formatShortDate(date).split(",")[0]}</h3>
+              <p class="text-xs text-muted">${formatDate(date)}</p>
+            </div>
+          </div>
+          <div class="mt-4 space-y-3">
+            ${dateEvents.map(event => {
+              const config = TYPE_CONFIG[event.type];
+              return `
+                <button class="agenda-event flex w-full items-center gap-4 rounded-2xl border border-line bg-[#0c1625] p-4 text-left transition hover:border-gold-500/50 ${event.status === "cancelled" ? "opacity-55" : ""}" data-id="${event.id}">
+                  <span class="grid size-11 shrink-0 place-items-center rounded-xl ${config.badge}"><i data-lucide="${config.icon}" class="size-5"></i></span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs ${config.badge.split(" ").slice(-1)[0]}">${eventTime(event)} · ${config.label}</p>
+                    <p class="mt-1 truncate font-semibold ${event.status === "cancelled" ? "line-through" : ""}">${escapeHtml(event.title)}</p>
+                    <p class="mt-1 truncate text-xs text-muted">${escapeHtml(event.context)} · ${escapeHtml(event.location)}</p>
+                  </div>
+                  <span class="rounded-lg border border-line px-4 py-2 text-xs font-semibold">${event.status === "completed" ? "Completed" : event.status === "cancelled" ? "Cancelled" : "View"}</span>
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      `).join("");
+
+      container.querySelectorAll(".agenda-event").forEach(button => button.addEventListener("click", () => selectEvent(button.dataset.id)));
+      lucide.createIcons();
+    }
+
+    function renderSummary() {
+      const stats = {
+        live: visibleEvents().filter(e => e.type === "live").length,
+        task: visibleEvents().filter(e => e.type === "task").length,
+        deadline: visibleEvents().filter(e => e.type === "deadline").length,
+        group: visibleEvents().filter(e => e.type === "group").length,
+        reminder: visibleEvents().filter(e => e.type === "reminder").length
+      };
+      document.getElementById("summaryStats").innerHTML = Object.entries(stats).map(([type, count]) => {
+        const config = TYPE_CONFIG[type];
+        return `
+          <div class="flex items-center gap-3">
+            <span class="grid size-9 place-items-center rounded-xl ${config.badge}"><i data-lucide="${config.icon}" class="size-4"></i></span>
+            <span class="text-sm text-muted">${config.label}${count === 1 ? "" : "s"}</span>
+            <strong class="ml-auto text-lg">${count}</strong>
+          </div>
+        `;
+      }).join("");
+
+      const next = visibleEvents().find(event => event.status === "scheduled");
+      document.getElementById("nextActivityTitle").textContent = next?.title || "No upcoming activity";
+      document.getElementById("nextActivityTime").textContent = next ? `${formatShortDate(next.date)} · ${formatTime(next.start)}` : "Your schedule is clear";
+      document.getElementById("nextActivityOpen").disabled = !next;
+      document.getElementById("nextActivityOpen").onclick = () => next && selectEvent(next.id);
+      lucide.createIcons();
+    }
+
+    function renderMonth() {
+      const grid = document.getElementById("monthGrid");
+      const dates = [];
+      for (let day = 29; day <= 30; day++) dates.push({ day, current: false, month: 6 });
+      for (let day = 1; day <= 31; day++) dates.push({ day, current: true, month: 7 });
+      for (let day = 1; day <= 2; day++) dates.push({ day, current: false, month: 8 });
+
+      grid.innerHTML = dates.map(item => {
+        const date = item.current ? `2026-07-${String(item.day).padStart(2, "0")}` : null;
+        const dayEvents = date ? visibleEvents().filter(event => event.date === date) : [];
+        return `
+          <div class="min-h-32 border-b border-r border-line p-3 last:border-r-0 ${item.current ? "" : "text-muted"} ${date === "2026-07-21" ? "bg-gold-500/[.035]" : ""}">
+            <span class="${date === "2026-07-21" ? "grid size-7 place-items-center rounded-full bg-gold-400 font-bold text-[#171108]" : "text-sm"}">${item.day}</span>
+            <div class="mt-3 space-y-1.5">
+              ${dayEvents.slice(0, 3).map(event => {
+                const config = TYPE_CONFIG[event.type];
+                return `<button class="month-event block w-full truncate rounded-lg border-l-2 px-2 py-1.5 text-left text-[11px] ${config.card} ${event.status === "cancelled" ? "line-through opacity-55" : ""}" data-id="${escapeHtml(event.id)}">${event.allDay ? "All day" : formatTime(event.start)} ${escapeHtml(event.title)}</button>`;
+              }).join("")}
+              ${dayEvents.length > 3 ? `<button class="text-[11px] font-semibold text-gold-300">+${dayEvents.length - 3} more</button>` : ""}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      grid.querySelectorAll(".month-event").forEach(button => button.addEventListener("click", () => selectEvent(button.dataset.id)));
+    }
+
+    function renderDetails() {
+      const event = getSelectedEvent();
+      if (!event) return;
+      const config = TYPE_CONFIG[event.type];
+
+      const typeBadge = document.getElementById("detailType");
+      typeBadge.className = `inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${config.badge}`;
+      typeBadge.innerHTML = `<i data-lucide="${config.icon}" class="size-3.5"></i>${config.label}${event.status !== "scheduled" ? ` · ${event.status}` : ""}`;
+
+      document.getElementById("detailTitle").textContent = event.title;
+      document.getElementById("detailContext").textContent = event.context;
+      document.getElementById("detailDate").textContent = formatDate(event.date);
+      document.getElementById("detailTime").textContent = eventTime(event);
+      document.getElementById("detailLocation").textContent = event.location || "Not specified";
+      document.getElementById("detailReminder").textContent = event.reminder || "None";
+      document.getElementById("detailNotes").textContent = event.notes || "No notes added.";
+
+      const conflict = findConflict(event, event.id);
+      const conflictBox = document.getElementById("conflictBox");
+      conflictBox.classList.toggle("hidden", !conflict);
+      if (conflict) {
+        document.getElementById("conflictText").textContent = `This overlaps with ${conflict.title} from ${eventTime(conflict)}.`;
+      }
+
+      const primaryAction = document.getElementById("primaryAction");
+      primaryAction.innerHTML = `<i data-lucide="${config.icon}" class="size-[17px]"></i>${event.status === "cancelled" ? "Activity cancelled" : event.status === "completed" ? "View recap" : config.action}`;
+      primaryAction.disabled = event.status === "cancelled";
+      primaryAction.classList.toggle("opacity-50", event.status === "cancelled");
+      primaryAction.classList.toggle("cursor-not-allowed", event.status === "cancelled");
+
+      document.getElementById("completeBtn").textContent = event.status === "completed" ? "Mark incomplete" : "Mark complete";
+      document.getElementById("cancelActivityBtn").textContent = event.status === "cancelled" ? "Restore activity" : "Cancel activity";
+
+      document.querySelectorAll(".calendar-event, .agenda-event, .month-event").forEach(button => {
+        button.classList.toggle("ring-1", button.dataset.id === event.id);
+        button.classList.toggle("ring-gold-400/60", button.dataset.id === event.id);
+        button.classList.toggle("shadow-glow", button.dataset.id === event.id);
+      });
+
+      lucide.createIcons();
+    }
+
+    function renderEmptyState() {
+      const hasVisible = visibleEvents().length > 0;
+      document.getElementById("emptyState").classList.toggle("hidden", hasVisible);
+      document.querySelectorAll(".schedule-view").forEach(view => {
+        if (view.id === `view-${currentView}`) view.classList.toggle("hidden", !hasVisible);
+      });
+    }
+
+    function renderAll() {
+      renderEventButtons();
+      renderAgenda();
+      renderSummary();
+      renderMonth();
+      renderDetails();
+      renderEmptyState();
+      lucide.createIcons();
+    }
+
+    function selectEvent(id) {
+      selectedEventId = id;
+      renderDetails();
+      if (window.innerWidth < 1280) openMobileDetails();
+    }
+
+    function openMobileDetails() {
+      const event = getSelectedEvent();
+      if (!event) return;
+      const config = TYPE_CONFIG[event.type];
+      document.getElementById("mobileDetailsRuntime")?.remove();
+
+      const overlay = document.createElement("div");
+      overlay.id = "mobileDetailsRuntime";
+      overlay.className = "fixed inset-0 z-[65] bg-black/60 backdrop-blur-sm xl:hidden";
+      overlay.innerHTML = `
+        <div class="absolute inset-x-0 bottom-0 max-h-[84vh] overflow-y-auto rounded-t-[28px] border-t border-line bg-panel p-5 shadow-float">
+          <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[#334158]"></div>
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold ${config.badge}">${config.label}</span>
+              <h2 class="mt-3 text-xl font-semibold">${escapeHtml(event.title)}</h2>
+              <p class="mt-1 text-sm text-muted">${escapeHtml(event.context)}</p>
+            </div>
+            <button id="closeRuntimeDetails" class="grid size-9 place-items-center rounded-xl border border-line"><i data-lucide="x" class="size-5"></i></button>
+          </div>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl bg-panel2 p-4"><p class="text-xs text-muted">Date</p><p class="mt-1 text-sm font-semibold">${formatDate(event.date)}</p></div>
+            <div class="rounded-2xl bg-panel2 p-4"><p class="text-xs text-muted">Time</p><p class="mt-1 text-sm font-semibold">${eventTime(event)}</p></div>
+            <div class="rounded-2xl bg-panel2 p-4 sm:col-span-2"><p class="text-xs text-muted">Location</p><p class="mt-1 text-sm font-semibold">${escapeHtml(event.location)}</p></div>
+          </div>
+          <div class="mt-4 rounded-2xl border border-line p-4"><p class="text-xs font-semibold uppercase tracking-wide text-muted">Notes</p><p class="mt-2 text-sm leading-6 text-[#c4ccd8]">${escapeHtml(event.notes || "No notes added.")}</p></div>
+          <button class="mt-5 w-full rounded-xl bg-gold-400 px-4 py-3.5 text-sm font-semibold text-[#171108]">${config.action}</button>
+          <button id="runtimeEdit" class="mt-2 w-full rounded-xl border border-line px-4 py-3 text-sm font-semibold">Edit activity</button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      lucide.createIcons();
+      overlay.addEventListener("click", eventClick => {
+        if (eventClick.target === overlay) overlay.remove();
+      });
+      document.getElementById("closeRuntimeDetails").onclick = () => overlay.remove();
+      document.getElementById("runtimeEdit").onclick = () => {
+        overlay.remove();
+        openEditModal(event);
+      };
+    }
+
+    // Attach existing week buttons
+    document.querySelectorAll(".calendar-event[data-id]").forEach(button => {
+      button.addEventListener("click", () => selectEvent(button.dataset.id));
+    });
+
+    // Sidebar
+    const appShell = document.getElementById("appShell");
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const savedCollapsed = localStorage.getItem("tutoria-schedule-sidebar-collapsed") === "true";
+
+    function setSidebarCollapsed(collapsed) {
+      appShell.classList.toggle("sidebar-collapsed", collapsed);
+      sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+      sidebarToggle.setAttribute("aria-label", collapsed ? "Expand navigation" : "Collapse navigation");
+      localStorage.setItem("tutoria-schedule-sidebar-collapsed", String(collapsed));
+    }
+    setSidebarCollapsed(savedCollapsed);
+    sidebarToggle.addEventListener("click", () => setSidebarCollapsed(!appShell.classList.contains("sidebar-collapsed")));
+
+    // Views
+    function setView(view) {
+      currentView = view;
+      localStorage.setItem("tutoria-schedule-view", view);
+      document.querySelectorAll(".view-btn").forEach(button => {
+        const active = button.dataset.view === view;
+        button.classList.toggle("bg-panel2", active);
+        button.classList.toggle("text-white", active);
+        button.classList.toggle("text-muted", !active);
+      });
+      document.querySelectorAll(".schedule-view").forEach(panel => panel.classList.toggle("hidden", panel.id !== `view-${view}`));
+      renderEmptyState();
+    }
+    document.querySelectorAll(".view-btn").forEach(button => button.addEventListener("click", () => setView(button.dataset.view)));
+
+    // Search
+    const searchInput = document.getElementById("searchInput");
+    const clearSearch = document.getElementById("clearSearch");
+
+    searchInput.addEventListener("input", () => {
+      searchQuery = searchInput.value.trim().toLowerCase();
+      clearSearch.classList.toggle("hidden", !searchQuery);
+      renderAll();
+    });
+
+    clearSearch.addEventListener("click", () => {
+      searchInput.value = "";
+      searchQuery = "";
+      clearSearch.classList.add("hidden");
+      renderAll();
+    });
+
+    // Filters
+    const filterPopover = document.getElementById("filterPopover");
+    document.getElementById("filterBtn").addEventListener("click", event => {
+      event.stopPropagation();
+      filterPopover.classList.toggle("hidden");
+    });
+
+    function updateFilterChips() {
+      const chips = document.getElementById("filterChips");
+      const all = [
+        ...selectedTypes.map(value => ({ kind: "type", value, label: TYPE_CONFIG[value].label })),
+        ...selectedStatuses.map(value => ({ kind: "status", value, label: value[0].toUpperCase() + value.slice(1) }))
+      ];
+      chips.innerHTML = "";
+      all.forEach(item => {
+        const button = document.createElement("button");
+        button.className = "flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1.5 text-xs font-semibold";
+        button.innerHTML = `${item.label}<i data-lucide="x" class="size-3.5"></i>`;
+        button.onclick = () => {
+          if (item.kind === "type") {
+            selectedTypes = selectedTypes.filter(value => value !== item.value);
+            document.querySelector(`.filter-check[value="${item.value}"]`).checked = false;
+          } else {
+            selectedStatuses = selectedStatuses.filter(value => value !== item.value);
+            document.querySelector(`.status-check[value="${item.value}"]`).checked = false;
+          }
+          applyFilters();
+        };
+        chips.appendChild(button);
+      });
+      chips.classList.toggle("hidden", all.length === 0);
+      chips.classList.toggle("flex", all.length > 0);
+      document.getElementById("filterCount").textContent = all.length;
+      document.getElementById("filterCount").classList.toggle("hidden", all.length === 0);
+      lucide.createIcons();
+    }
+
+    function applyFilters() {
+      selectedTypes = [...document.querySelectorAll(".filter-check:checked")].map(input => input.value);
+      selectedStatuses = [...document.querySelectorAll(".status-check:checked")].map(input => input.value);
+      updateFilterChips();
+      filterPopover.classList.add("hidden");
+      renderAll();
+    }
+
+    document.getElementById("applyFilters").addEventListener("click", applyFilters);
+    document.getElementById("clearFilters").addEventListener("click", () => {
+      document.querySelectorAll(".filter-check, .status-check").forEach(input => input.checked = false);
+      selectedTypes = [];
+      selectedStatuses = [];
+      updateFilterChips();
+      renderAll();
+    });
+    document.getElementById("emptyClearFilters").addEventListener("click", () => {
+      document.querySelectorAll(".filter-check, .status-check").forEach(input => input.checked = false);
+      selectedTypes = [];
+      selectedStatuses = [];
+      searchQuery = "";
+      searchInput.value = "";
+      clearSearch.classList.add("hidden");
+      updateFilterChips();
+      renderAll();
+    });
+    document.addEventListener("click", event => {
+      if (!filterPopover.contains(event.target) && !document.getElementById("filterBtn").contains(event.target)) {
+        filterPopover.classList.add("hidden");
+      }
+    });
+
+    // Period controls
+    const periodSets = {
+      week: ["July 13–19, 2026", "July 20–26, 2026", "July 27–August 2, 2026"],
+      agenda: ["Previous activities", "Upcoming activities", "Later activities"],
+      month: ["June 2026", "July 2026", "August 2026"]
+    };
+
+    function updatePeriod() {
+      document.getElementById("periodTitle").textContent = periodSets[currentView][periodOffset + 1];
+      document.getElementById("periodSubtitle").textContent = currentView === "week" ? `Week ${30 + periodOffset}` : currentView === "month" ? "Monthly overview" : "Chronological list";
+    }
+    document.getElementById("prevPeriod").addEventListener("click", () => {
+      periodOffset = Math.max(-1, periodOffset - 1);
+      updatePeriod();
+    });
+    document.getElementById("nextPeriod").addEventListener("click", () => {
+      periodOffset = Math.min(1, periodOffset + 1);
+      updatePeriod();
+    });
+    document.getElementById("todayBtn").addEventListener("click", () => {
+      periodOffset = 0;
+      updatePeriod();
+      showToast("Returned to today.");
+    });
+    document.querySelectorAll(".view-btn").forEach(button => button.addEventListener("click", updatePeriod));
+
+    // Calendar menu/export
+    const calendarMenu = document.getElementById("calendarMenu");
+    document.getElementById("calendarMenuBtn").addEventListener("click", event => {
+      event.stopPropagation();
+      calendarMenu.classList.toggle("hidden");
+    });
+    document.addEventListener("click", event => {
+      if (!calendarMenu.contains(event.target) && !document.getElementById("calendarMenuBtn").contains(event.target)) {
+        calendarMenu.classList.add("hidden");
+      }
+    });
+
+    document.getElementById("exportIcs").addEventListener("click", () => {
+      const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "CALSCALE:GREGORIAN", "PRODID:-//Tutoria//Schedule//EN"];
+      visibleEvents().forEach(event => {
+        const date = event.date.replaceAll("-", "");
+        const timeLines = event.allDay
+          ? [`DTSTART;VALUE=DATE:${date}`]
+          : [
+              `DTSTART:${date}T${event.start.replace(":", "")}00`,
+              `DTEND:${date}T${(event.end || event.start).replace(":", "")}00`
+            ];
+        lines.push(
+          "BEGIN:VEVENT",
+          `UID:${escapeCalendarText(event.id)}@tutoria.local`,
+          ...timeLines,
+          `SUMMARY:${escapeCalendarText(event.title)}`,
+          `DESCRIPTION:${escapeCalendarText(event.notes)}`,
+          `LOCATION:${escapeCalendarText(event.location)}`,
+          "END:VEVENT"
+        );
+      });
+      lines.push("END:VCALENDAR");
+      const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "tutoria-schedule.ics";
+      link.click();
+      URL.revokeObjectURL(url);
+      calendarMenu.classList.add("hidden");
+      showToast("Calendar file downloaded.");
+    });
+
+    // Modal
+    const modalOverlay = document.getElementById("modalOverlay");
+    const activityModal = document.getElementById("activityModal");
+    const form = document.getElementById("activityForm");
+
+    function openModal() {
+      modalOverlay.classList.remove("hidden");
+      activityModal.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeModal() {
+      modalOverlay.classList.add("hidden");
+      activityModal.classList.add("hidden");
+      document.body.style.overflow = "";
+      document.getElementById("formConflict").classList.add("hidden");
+    }
+
+    function resetForm() {
+      form.reset();
+      document.getElementById("activityId").value = "";
+      document.getElementById("modalTitle").textContent = "Add activity";
+      document.getElementById("formDate").value = "2026-07-21";
+      document.getElementById("formStart").value = "19:00";
+      document.getElementById("formEnd").value = "20:00";
+      document.getElementById("formReminder").value = "15 minutes before";
+    }
+
+    function openAddModal() {
+      resetForm();
+      openModal();
+    }
+
+    function openEditModal(event) {
+      document.getElementById("modalTitle").textContent = "Edit activity";
+      document.getElementById("activityId").value = event.id;
+      document.getElementById("formTitle").value = event.title;
+      document.getElementById("formType").value = event.type;
+      document.getElementById("formContext").value = event.context;
+      document.getElementById("formDate").value = event.date;
+      document.getElementById("formStart").value = event.start;
+      document.getElementById("formEnd").value = event.end || "";
+      document.getElementById("formLocation").value = event.location || "";
+      document.getElementById("formReminder").value = event.reminder || "None";
+      document.getElementById("formRepeat").value = event.repeat || "Does not repeat";
+      document.getElementById("formAllDay").checked = Boolean(event.allDay);
+      document.getElementById("formNotes").value = event.notes || "";
+      openModal();
+    }
+
+    document.querySelectorAll(".add-activity, .mobile-add").forEach(button => button.addEventListener("click", openAddModal));
+    document.getElementById("closeModal").addEventListener("click", closeModal);
+    document.getElementById("cancelModal").addEventListener("click", closeModal);
+    modalOverlay.addEventListener("click", closeModal);
+
+    ["formDate", "formStart", "formEnd"].forEach(id => {
+      document.getElementById(id).addEventListener("input", () => {
+        const candidate = {
+          id: document.getElementById("activityId").value,
+          date: document.getElementById("formDate").value,
+          start: document.getElementById("formStart").value,
+          end: document.getElementById("formEnd").value,
+          allDay: document.getElementById("formAllDay").checked
+        };
+        const conflict = findConflict(candidate, candidate.id || null);
+        document.getElementById("formConflict").classList.toggle("hidden", !conflict);
+        if (conflict) document.getElementById("formConflictText").textContent = `Conflicts with ${conflict.title} from ${eventTime(conflict)}. You may still save both activities.`;
+      });
+    });
+
+    form.addEventListener("submit", eventSubmit => {
+      eventSubmit.preventDefault();
+
+      const id = document.getElementById("activityId").value || `activity-${Date.now()}`;
+      const existing = events.find(event => event.id === id);
+      const activity = {
+        id,
+        title: document.getElementById("formTitle").value.trim(),
+        type: document.getElementById("formType").value,
+        context: document.getElementById("formContext").value,
+        date: document.getElementById("formDate").value,
+        start: document.getElementById("formStart").value,
+        end: document.getElementById("formEnd").value,
+        location: document.getElementById("formLocation").value.trim() || "Not specified",
+        reminder: document.getElementById("formReminder").value,
+        repeat: document.getElementById("formRepeat").value,
+        allDay: document.getElementById("formAllDay").checked,
+        notes: document.getElementById("formNotes").value.trim(),
+        status: existing?.status || "scheduled"
+      };
+
+      if (activity.end && activity.start && activity.end <= activity.start && !activity.allDay) {
+        document.getElementById("formConflict").classList.remove("hidden");
+        document.getElementById("formConflictText").textContent = "End time must be later than the start time.";
+        return;
+      }
+
+      if (existing) {
+        Object.assign(existing, activity);
+      } else {
+        events.push(activity);
+      }
+
+      selectedEventId = id;
+      saveEvents();
+      closeModal();
+      renderAll();
+      showToast(existing ? "Activity updated." : "Activity added to your schedule.");
+    });
+
+    // Detail actions
+    document.getElementById("editBtn").addEventListener("click", () => {
+      const event = getSelectedEvent();
+      if (event) openEditModal(event);
+    });
+
+    document.getElementById("duplicateBtn").addEventListener("click", () => {
+      const event = getSelectedEvent();
+      if (!event) return;
+      const copy = { ...event, id: `activity-${Date.now()}`, title: `${event.title} copy`, status: "scheduled" };
+      events.push(copy);
+      selectedEventId = copy.id;
+      saveEvents();
+      renderAll();
+      showToast("Activity duplicated.");
+    });
+
+    document.getElementById("completeBtn").addEventListener("click", () => {
+      const event = getSelectedEvent();
+      if (!event) return;
+      event.status = event.status === "completed" ? "scheduled" : "completed";
+      saveEvents();
+      renderAll();
+      showToast(event.status === "completed" ? "Activity marked complete." : "Activity marked incomplete.");
+    });
+
+    document.getElementById("cancelActivityBtn").addEventListener("click", () => {
+      const event = getSelectedEvent();
+      if (!event) return;
+      event.status = event.status === "cancelled" ? "scheduled" : "cancelled";
+      saveEvents();
+      renderAll();
+      showToast(event.status === "cancelled" ? "Activity cancelled." : "Activity restored.");
+    });
+
+    function openConfirm({ title, text, actionLabel, callback }) {
+      confirmCallback = callback;
+      document.getElementById("confirmTitle").textContent = title;
+      document.getElementById("confirmText").textContent = text;
+      document.getElementById("confirmAction").textContent = actionLabel;
+      document.getElementById("confirmOverlay").classList.remove("hidden");
+      document.getElementById("confirmModal").classList.remove("hidden");
+    }
+
+    function closeConfirm() {
+      document.getElementById("confirmOverlay").classList.add("hidden");
+      document.getElementById("confirmModal").classList.add("hidden");
+      confirmCallback = null;
+    }
+
+    document.getElementById("deleteActivityBtn").addEventListener("click", () => {
+      const event = getSelectedEvent();
+      if (!event) return;
+      openConfirm({
+        title: "Delete activity?",
+        text: `"${event.title}" will be permanently removed from this prototype.`,
+        actionLabel: "Delete",
+        callback: () => {
+          events = events.filter(item => item.id !== event.id);
+          selectedEventId = events[0]?.id || null;
+          saveEvents();
+          renderAll();
+          showToast("Activity deleted.");
+        }
+      });
+    });
+
+    document.getElementById("confirmCancel").addEventListener("click", closeConfirm);
+    document.getElementById("confirmOverlay").addEventListener("click", closeConfirm);
+    document.getElementById("confirmAction").addEventListener("click", () => {
+      const callback = confirmCallback;
+      closeConfirm();
+      callback?.();
+    });
+
+    document.getElementById("primaryAction").addEventListener("click", () => {
+      const event = getSelectedEvent();
+      if (!event || event.status === "cancelled") return;
+      showToast(TYPE_CONFIG[event.type].action + " opened.");
+    });
+    document.getElementById("openChatBtn").addEventListener("click", () => showToast("Related conversation opened."));
+
+    // Mobile nav
+    const mobileNav = document.getElementById("mobileNav");
+    const mobileNavOverlay = document.getElementById("mobileNavOverlay");
+
+    function openMobileNav() {
+      mobileNav.classList.remove("hidden");
+      mobileNavOverlay.classList.remove("hidden");
+      requestAnimationFrame(() => mobileNav.classList.remove("-translate-x-full"));
+    }
+    function closeMobileNav() {
+      mobileNav.classList.add("-translate-x-full");
+      mobileNavOverlay.classList.add("hidden");
+      setTimeout(() => mobileNav.classList.add("hidden"), 200);
+    }
+    document.getElementById("openMobileNav").addEventListener("click", openMobileNav);
+    document.getElementById("closeMobileNav").addEventListener("click", closeMobileNav);
+    mobileNavOverlay.addEventListener("click", closeMobileNav);
+
+    // Offline demo
+    window.addEventListener("offline", () => document.getElementById("offlineBanner").classList.remove("hidden"));
+    window.addEventListener("online", () => document.getElementById("offlineBanner").classList.add("hidden"));
+    document.getElementById("dismissOffline").addEventListener("click", () => document.getElementById("offlineBanner").classList.add("hidden"));
+    if (!navigator.onLine) document.getElementById("offlineBanner").classList.remove("hidden");
+
+    // Escape
+    document.addEventListener("keydown", event => {
+      if (event.key !== "Escape") return;
+      closeModal();
+      closeConfirm();
+      filterPopover.classList.add("hidden");
+      calendarMenu.classList.add("hidden");
+      document.getElementById("mobileDetailsRuntime")?.remove();
+    });
+
+    // Initialize
+    setView(currentView);
+    updatePeriod();
+    renderAll();
+  </script>
+</body>
+</html>

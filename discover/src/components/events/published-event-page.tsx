@@ -4,9 +4,9 @@ import { useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
 import type { EventDetail, EventListing } from "@/lib/event-data";
 import { PUBLISHED_EVENTS_EVENT, PUBLISHED_EVENTS_KEY } from "@/lib/event-data";
-import { EventDetailPage } from "./event-detail-page";
+import { PizzaWorkshopFrame } from "./pizza-workshop-frame";
 
-export function PublishedEventPage({ slug, fallback, similarEvents }: { slug: string; fallback?: EventDetail; similarEvents: EventListing[] }) {
+export function PublishedEventPage({ slug, fallback }: { slug: string; fallback?: EventDetail; similarEvents: EventListing[] }) {
   const snapshot = useSyncExternalStore(
     (onChange) => {
       const onStorage = (event: StorageEvent) => { if (event.key === PUBLISHED_EVENTS_KEY) onChange(); };
@@ -27,5 +27,5 @@ export function PublishedEventPage({ slug, fallback, similarEvents }: { slug: st
   }, [fallback, slug, snapshot]);
 
   if (!event) return <main style={{ minHeight: "60vh", display: "grid", placeItems: "center", color: "white", textAlign: "center" }}><div><h1>Event not found</h1><p>This event is not available in this browser.</p><Link href="/events">Back to events</Link></div></main>;
-  return <EventDetailPage event={event} similarEvents={similarEvents} />;
+  return <PizzaWorkshopFrame event={event} />;
 }

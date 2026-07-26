@@ -1,0 +1,1323 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pizza 4P’s Pizza-Making Workshop | Tutoria</title>
+
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            canvas: "#09090b",
+            panel: "#141416",
+            panel2: "#1b1b1e",
+            line: "rgba(255,255,255,.08)",
+            text: "#f5f5f7",
+            muted: "#a1a1aa",
+            quiet: "#71717a",
+            accent: "#d6c1ad"
+          },
+          boxShadow: {
+            apple: "0 24px 80px rgba(0,0,0,.30)",
+            card: "0 28px 80px rgba(0,0,0,.35)"
+          }
+        }
+      }
+    };
+  </script>
+
+
+  <style>
+    html { scroll-behavior: smooth; }
+
+
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,.03), transparent 28%),
+        #09090b;
+    }
+
+
+    .gallery-image {
+      filter: saturate(.8) brightness(.84);
+      transition: transform .45s ease, filter .25s ease;
+    }
+
+
+    .gallery-image:hover {
+      transform: scale(1.02);
+      filter: saturate(.96) brightness(.92);
+    }
+
+
+    .floating-nav::-webkit-scrollbar,
+    .schedule-scroll::-webkit-scrollbar { display: none; }
+
+
+    .floating-nav,
+    .schedule-scroll { scrollbar-width: none; }
+
+
+    .section-nav-link.is-active {
+      background: #f5f5f7;
+      color: #09090b;
+    }
+
+
+    .schedule-view-toggle[data-active="true"] {
+      background: #f5f5f7;
+      color: #09090b;
+    }
+
+
+    .week-day-choice[data-selected="true"],
+    .calendar-day[data-selected="true"],
+    .session-choice[data-selected="true"] {
+      border-color: rgba(255,255,255,.26);
+      background: rgba(255,255,255,.08);
+      color: #fff;
+    }
+
+
+    .session-choice[data-selected="true"] .session-dot {
+      border-color: #fff;
+    }
+
+
+    .session-dot::after {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #fff;
+      opacity: 0;
+    }
+
+
+    .session-choice[data-selected="true"] .session-dot::after {
+      opacity: 1;
+    }
+
+
+    .calendar-day[data-outside="true"] { opacity: .28; }
+
+
+    .faq-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows .22s ease;
+    }
+
+
+    .faq-body > div { overflow: hidden; }
+    .faq-item[data-open="true"] .faq-body { grid-template-rows: 1fr; }
+    .faq-item[data-open="true"] .faq-icon { transform: rotate(45deg); }
+    .faq-icon { transition: transform .18s ease; }
+    details summary::-webkit-details-marker { display: none; }
+    details[open] .details-chevron { transform: rotate(180deg); }
+
+
+    .booking-field {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(255,255,255,.025);
+      color: #f5f5f7;
+      border-radius: 16px;
+      padding: 13px 14px;
+      font-size: 14px;
+      outline: none;
+    }
+
+
+    .booking-field:focus {
+      border-color: rgba(255,255,255,.28);
+      box-shadow: 0 0 0 3px rgba(255,255,255,.035);
+    }
+
+
+    .booking-field::placeholder { color: #71717a; }
+    .booking-field.is-invalid { border-color: rgba(252,165,165,.7); }
+
+
+
+
+
+
+    .checkout-step[data-active="true"] .checkout-step-number {
+      background: #f5f5f7;
+      color: #09090b;
+      border-color: #f5f5f7;
+    }
+    .checkout-step[data-complete="true"] .checkout-step-number {
+      background: rgba(214,193,173,.16);
+      color: #d6c1ad;
+      border-color: rgba(214,193,173,.28);
+    }
+    .payment-choice[data-selected="true"] {
+      border-color: rgba(255,255,255,.26);
+      background: rgba(255,255,255,.07);
+      color: #fff;
+    }
+    .payment-choice[data-selected="true"] .payment-check { opacity: 1; }
+
+
+    .workshop-plan-step {
+      transition: background .22s ease, border-color .22s ease, transform .22s ease;
+    }
+
+
+    .workshop-plan-step[data-active="true"] {
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.18);
+      transform: translateY(-1px);
+    }
+
+
+    .workshop-plan-step[data-active="true"] .workshop-plan-number {
+      background: #f5f5f7;
+      color: #09090b;
+      border-color: #f5f5f7;
+    }
+
+
+    .workshop-plan-step[data-active="true"] .workshop-plan-arrow {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+
+    .workshop-plan-preview-image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transform: scale(1.03);
+      transition: opacity .28s ease, transform .45s ease;
+    }
+
+
+    .workshop-plan-preview-image.is-active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+
+    .workshop-plan-arrow {
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+  </style>
+</head>
+
+
+<body class="bg-canvas text-text antialiased">
+  <header class="sticky top-0 z-50 border-b border-line bg-canvas/80 backdrop-blur-2xl">
+    <div class="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
+      <a href="#" class="flex items-center gap-2 text-sm font-medium text-white">
+        <i data-lucide="chevron-left" class="h-4 w-4"></i>
+        Explore
+      </a>
+
+
+      <div class="hidden text-center md:block">
+        <p class="text-[10px] font-semibold uppercase tracking-[0.24em] text-quiet">Tutoria Experiences</p>
+        <p class="mt-1 text-sm font-medium text-white">Workshop</p>
+      </div>
+
+
+      <div class="flex items-center gap-2">
+        <button class="grid h-10 w-10 place-items-center rounded-full border border-line bg-white/[0.03] text-muted hover:bg-white/[0.06] hover:text-white">
+          <i data-lucide="share-2" class="h-4 w-4"></i>
+        </button>
+        <button id="saveBtn" class="flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-muted hover:bg-white/[0.06] hover:text-white">
+          <i data-lucide="bookmark" class="h-4 w-4"></i>
+          <span>Save</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+
+  <main class="pb-24 lg:pb-0">
+    <section class="mx-auto max-w-[1440px] px-4 pt-10 sm:px-6 lg:px-8 lg:pt-16">
+      <div class="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-10">
+        <div class="min-w-0">
+          <h1 class="max-w-5xl text-4xl font-semibold tracking-[-0.06em] text-white sm:text-5xl lg:text-[58px] lg:leading-[1.02] xl:text-[68px] xl:leading-[0.98]">
+            Pizza 4P’s Pizza-Making Workshop
+          </h1>
+
+
+          <p class="mt-5 max-w-2xl text-[17px] leading-8 text-muted sm:text-lg">
+            Stretch, top, bake, and enjoy your own artisan pizza with the Pizza 4P’s team.
+          </p>
+
+
+          <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted">
+            <span class="flex items-center gap-2">
+              <i data-lucide="star" class="h-4 w-4 fill-current text-accent"></i>
+              <span class="font-medium text-white">4.9</span>
+              <span>(214 reviews)</span>
+            </span>
+            <span class="flex items-center gap-2"><i data-lucide="clock-3" class="h-4 w-4"></i>2.5 hours</span>
+            <span class="flex items-center gap-2"><i data-lucide="map-pin" class="h-4 w-4"></i>Hoan Kiem, Ha Noi</span>
+            <button class="flex items-center gap-2 font-medium text-white" data-gallery>
+              <i data-lucide="images" class="h-4 w-4"></i>View photos
+            </button>
+          </div>
+
+
+          <div class="mt-8 grid gap-2 overflow-hidden rounded-[32px] bg-white/[0.03] p-2 md:grid-cols-[1.5fr_1fr]">
+            <button class="group relative h-[520px] overflow-hidden rounded-[26px]" data-gallery>
+              <img
+                src="https://images.unsplash.com/photo-1579751626657-72bc17010498?auto=format&fit=crop&w=1800&q=88"
+                alt="Pizza 4P’s pizza-making workshop"
+                class="gallery-image h-full w-full object-cover"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+
+
+              <!-- Correct placement: badges replace the old image caption -->
+              <div class="absolute bottom-6 left-6 flex flex-wrap items-center gap-2">
+                <span class="rounded-full border border-white/20 bg-black/45 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-md">
+                  In person
+                </span>
+                <span class="rounded-full border border-white/20 bg-black/45 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-md">
+                  Beginner
+                </span>
+              </div>
+            </button>
+
+
+            <div class="grid gap-2 sm:grid-cols-2 md:grid-cols-1 md:grid-rows-3">
+              <button class="group relative h-[170px] overflow-hidden rounded-[26px]" data-gallery>
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1000&q=88" alt="Fresh artisan pizza" class="gallery-image h-full w-full object-cover" />
+              </button>
+              <button class="group relative h-[170px] overflow-hidden rounded-[26px]" data-gallery>
+                <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=1000&q=88" alt="Pizza preparation" class="gallery-image h-full w-full object-cover" />
+              </button>
+              <button class="group relative h-[170px] overflow-hidden rounded-[26px]" data-gallery>
+                <img src="https://images.unsplash.com/photo-1548365328-8b849e6f31a7?auto=format&fit=crop&w=1000&q=88" alt="Pizza dough and toppings" class="gallery-image h-full w-full object-cover" />
+                <div class="absolute inset-0 bg-black/30"></div>
+                <span class="absolute inset-0 grid place-items-center">
+                  <span class="rounded-full border border-white/20 bg-black/50 px-4 py-2 text-xs font-medium text-white backdrop-blur">View photos</span>
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+
+        <aside class="self-end overflow-hidden rounded-[24px] border border-line bg-panel2/95 shadow-card xl:sticky xl:top-48">
+          <div class="border-b border-line px-5 pb-4 pt-5 sm:px-6">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-[24px] font-semibold tracking-[-0.04em] text-white">650,000 đ</span>
+                  <span class="text-xs font-medium text-muted">/ participant</span>
+                </div>
+              </div>
+              <div class="shrink-0 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-accent">6 spots</div>
+            </div>
+          </div>
+
+          <div class="space-y-2.5 px-4 py-3 sm:px-5">
+            <button id="changeSessionButton" type="button" class="group flex w-full items-center gap-3 rounded-[16px] border border-transparent bg-white/[0.03] p-3.5 text-left transition hover:border-line hover:bg-white/[0.05]">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-white/[0.05] text-muted">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16"/><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 13h3M8 17h3M14 13h2"/></svg>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-[10px] font-bold uppercase tracking-[0.14em] text-quiet">Date &amp; time</span>
+                <span id="bookingSessionSummary" class="mt-1 block text-[14px] font-semibold leading-5 text-white">Fri, 24 Jul 2026</span>
+                <span id="bookingSessionTime" class="mt-0.5 block text-xs text-muted">09:00 – 11:30</span>
+                <span class="mt-0.5 block truncate text-xs text-muted/70">Pizza 4P's Bao Khanh</span>
+              </span>
+              <svg class="h-4 w-4 shrink-0 text-quiet transition group-hover:translate-x-0.5 group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+
+            <div class="flex items-center gap-3 rounded-[16px] bg-white/[0.03] p-3.5">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-white/[0.05] text-muted">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.6-4 2.8-6 6.5-6s5.9 2 6.5 6"/></svg>
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-quiet">Participants</p>
+                <p id="bookingGuestLabel" class="mt-1 text-[14px] font-semibold text-white">1 guest</p>
+              </div>
+              <div class="flex items-center rounded-full border border-line bg-black/20 p-0.5">
+                <button id="minusGuest" type="button" class="flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-white/[0.06] hover:text-white disabled:cursor-not-allowed disabled:opacity-30" aria-label="Remove participant">
+                  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"/></svg>
+                </button>
+                <span id="guestCount" class="w-7 text-center text-sm font-semibold text-white" aria-live="polite">1</span>
+                <button id="plusGuest" type="button" class="flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-white/[0.06] hover:text-white disabled:cursor-not-allowed disabled:opacity-30" aria-label="Add participant">
+                  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-line px-5 py-4 sm:px-6">
+            <div class="flex items-end justify-between gap-3">
+              <div>
+                <p id="totalGuestLabel" class="text-xs text-muted">Total for 1 guest</p>
+                <p id="totalPrice" class="mt-0.5 text-[22px] font-semibold tracking-[-0.035em] text-white">715.000 đ</p>
+              </div>
+              <span class="rounded-full bg-white/[0.06] px-2.5 py-1 text-[10px] font-medium text-muted">VND</span>
+            </div>
+
+            <details class="mt-4 overflow-hidden rounded-[14px] border border-line bg-white/[0.02]">
+              <summary class="flex cursor-pointer items-center justify-between px-3.5 py-3 text-xs font-semibold text-white outline-none transition hover:bg-white/[0.025]">
+                <span>Details</span>
+                <svg class="details-chevron h-3.5 w-3.5 text-quiet transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </summary>
+              <div class="border-t border-line px-3.5 py-3">
+                <div class="space-y-2 text-xs">
+                  <div class="flex justify-between gap-4 text-muted"><span>Workshop booking</span><span id="basePrice" class="text-white">715.000 đ</span></div>
+                  <div class="flex justify-between gap-4 text-muted"><span>Service fee</span><span id="serviceFee" class="text-white">65.000 đ</span></div>
+                </div>
+              </div>
+            </details>
+
+            <button id="startBookingButton" type="button" class="mt-4 flex h-12 w-full items-center justify-center rounded-[14px] bg-white px-5 text-sm font-bold text-black transition hover:bg-neutral-200 active:scale-[0.985]">
+              Continue
+            </button>
+            <p class="mt-2.5 text-center text-[11px] font-medium text-muted">You won't be charged yet</p>
+          </div>
+
+          <div class="flex items-start gap-2.5 border-t border-line bg-black/10 px-5 py-4 sm:px-6">
+            <svg class="mt-0.5 h-4 w-4 shrink-0 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3 5 6v5c0 4.8 2.8 8.1 7 10 4.2-1.9 7-5.2 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+            <p class="text-xs leading-5 text-muted">Free cancellation up to <span class="font-semibold text-white">24 hours</span> before the start.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+
+    <section class="sticky top-16 z-40 mt-10 border-y border-line bg-canvas/85 backdrop-blur-2xl">
+      <div class="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+        <nav class="floating-nav mx-auto flex w-max min-w-full justify-center gap-2.5 overflow-x-auto py-3.5 sm:min-w-0" aria-label="Workshop sections">
+          <a href="#overview" data-section-link class="section-nav-link is-active whitespace-nowrap rounded-full px-5 py-3 text-sm font-medium">Overview</a>
+          <a href="#details" data-section-link class="section-nav-link whitespace-nowrap rounded-full px-5 py-3 text-sm font-medium text-muted hover:bg-white/[0.05] hover:text-white">Details</a>
+          <a href="#schedule" data-section-link class="section-nav-link whitespace-nowrap rounded-full px-5 py-3 text-sm font-medium text-muted hover:bg-white/[0.05] hover:text-white">Schedule</a>
+          <a href="#host-location" data-section-link class="section-nav-link whitespace-nowrap rounded-full px-5 py-3 text-sm font-medium text-muted hover:bg-white/[0.05] hover:text-white">Host &amp; location</a>
+          <a href="#faq" data-section-link class="section-nav-link whitespace-nowrap rounded-full px-5 py-3 text-sm font-medium text-muted hover:bg-white/[0.05] hover:text-white">FAQ</a>
+          <a href="#reviews" data-section-link class="section-nav-link whitespace-nowrap rounded-full px-5 py-3 text-sm font-medium text-muted hover:bg-white/[0.05] hover:text-white">Reviews</a>
+        </nav>
+      </div>
+    </section>
+
+
+    <section id="overview" data-page-section class="scroll-mt-36 mx-auto max-w-[1200px] px-4 py-20 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">About this workshop</p>
+        <h2 class="mx-auto mt-5 max-w-4xl text-3xl font-semibold tracking-[-0.05em] text-white sm:text-4xl lg:text-[44px]">Learn the craft behind a balanced artisan pizza.</h2>
+        <div class="mx-auto mt-7 max-w-3xl space-y-5 text-base leading-8 text-muted">
+          <p>Step into a Pizza 4P’s kitchen and learn how dough, sauce, cheese, toppings, and heat come together in a balanced pizza.</p>
+          <p>Stretch your own dough, choose toppings, build one full pizza, and enjoy it fresh from the oven with the group.</p>
+          <p>No previous cooking experience is required.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="details" data-page-section class="scroll-mt-36 mx-auto max-w-[1200px] px-4 pb-20 sm:px-6 lg:px-8">
+      <div class="grid gap-4 lg:grid-cols-[.82fr_1.18fr]">
+        <div class="rounded-[32px] border border-line bg-white/[0.03] p-8">
+          <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">Workshop facts</p>
+          <div class="mt-8 space-y-6">
+            <div><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Format</p><p class="mt-2 text-[15px] font-medium">In person</p><p class="mt-1 text-sm text-muted">Pizza 4P’s Bao Khanh</p></div>
+            <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Duration</p><p class="mt-2 text-[15px] font-medium">2.5 hours</p><p class="mt-1 text-sm text-muted">Tasting break included</p></div>
+            <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Languages</p><p class="mt-2 text-[15px] font-medium">Vietnamese and English</p></div>
+            <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Minimum age</p><p class="mt-2 text-[15px] font-medium">10+</p><p class="mt-1 text-sm text-muted">Ages 10–15 attend with an adult.</p></div>
+          </div>
+        </div>
+
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-[32px] border border-line bg-white/[0.03] p-8"><h3 class="text-[22px] font-medium">What you will learn</h3><ul class="mt-6 space-y-4 text-sm leading-6 text-muted"><li>✓ Understand dough fermentation</li><li>✓ Stretch pizza dough by hand</li><li>✓ Balance sauce, cheese, and toppings</li><li>✓ Understand high-heat baking</li></ul></div>
+          <div class="rounded-[32px] border border-line bg-white/[0.03] p-8"><h3 class="text-[22px] font-medium">What is included</h3><ul class="mt-6 space-y-4 text-sm leading-6 text-muted"><li>✓ Dough and kitchen tools</li><li>✓ Sauce, cheese, and toppings</li><li>✓ Apron and recipe card</li><li>✓ Welcome drink</li><li>✓ One pizza per participant</li></ul></div>
+          <div class="rounded-[32px] border border-line bg-white/[0.03] p-8 md:col-span-2"><h3 class="text-[22px] font-medium">What to bring</h3><div class="mt-6 grid gap-3 text-sm text-muted sm:grid-cols-3"><span>Comfortable clothes</span><span>Closed-toe shoes</span><span>Hair tie for long hair</span></div></div>
+        </div>
+      </div>
+    </section>
+
+
+    <section aria-labelledby="workshop-plan-title" class="mx-auto max-w-[1200px] px-4 pb-20 sm:px-6 lg:px-8">
+      <div class="rounded-[32px] border border-line bg-white/[0.03] p-6 sm:p-8 lg:p-10">
+        <div class="flex flex-col justify-between gap-5 border-b border-line pb-8 sm:flex-row sm:items-end">
+          <div>
+            <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">Workshop plan</p>
+            <h2 id="workshop-plan-title" class="mt-4 text-3xl font-semibold tracking-[-0.05em] text-white sm:text-4xl">
+              From dough to your first finished pizza.
+            </h2>
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-muted">
+              Hover a step to preview the moment in the kitchen. The flow stays hands-on, beginner-friendly, and paced so every participant finishes one full pizza.
+            </p>
+          </div>
+
+
+          <div class="flex shrink-0 items-center gap-2 rounded-full border border-line bg-white/[0.025] px-4 py-2 text-xs text-muted">
+            <i data-lucide="clock-3" class="h-4 w-4 text-accent"></i>
+            2.5 hours
+          </div>
+        </div>
+
+
+        <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
+          <div class="order-2 lg:order-1">
+            <div class="space-y-3" id="workshopPlanList">
+              <article tabindex="0" data-plan-step="1" data-active="true" class="workshop-plan-step rounded-[24px] border border-line bg-white/[0.02] p-4 sm:p-5 cursor-pointer outline-none focus:ring-2 focus:ring-white/20">
+                <div class="flex gap-4">
+                  <div class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white/[0.025] text-sm font-semibold text-white workshop-plan-number">01</div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-3">
+                          <h3 class="text-lg font-medium tracking-[-0.02em] text-white">Welcome and ingredient introduction</h3>
+                          <span class="workshop-plan-arrow hidden text-accent sm:inline-flex"><i data-lucide="arrow-up-right" class="h-4 w-4"></i></span>
+                        </div>
+                        <p class="mt-2 text-sm leading-7 text-muted">Meet the Pizza 4P’s workshop team, get comfortable in the kitchen, and learn how the dough, sauces, cheeses, and seasonal toppings will be used throughout the session.</p>
+                      </div>
+                      <div class="flex items-center gap-3 sm:ml-4 sm:block sm:text-right">
+                        <div class="h-14 w-20 overflow-hidden rounded-2xl border border-white/10">
+                          <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=86" alt="Ingredients and welcome at Pizza 4P's workshop" class="h-full w-full object-cover" />
+                        </div>
+                        <p class="mt-2 text-sm font-medium text-muted">15 min</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+
+              <article tabindex="0" data-plan-step="2" data-active="false" class="workshop-plan-step rounded-[24px] border border-line bg-white/[0.02] p-4 sm:p-5 cursor-pointer outline-none focus:ring-2 focus:ring-white/20">
+                <div class="flex gap-4">
+                  <div class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white/[0.025] text-sm font-semibold text-white workshop-plan-number">02</div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-3">
+                          <h3 class="text-lg font-medium tracking-[-0.02em] text-white">Dough-stretching demonstration</h3>
+                          <span class="workshop-plan-arrow hidden text-accent sm:inline-flex"><i data-lucide="arrow-up-right" class="h-4 w-4"></i></span>
+                        </div>
+                        <p class="mt-2 text-sm leading-7 text-muted">Watch a chef demonstrate how to open and stretch fermented dough by hand, keep the crust airy, and prepare the base for sauce and toppings without overworking it.</p>
+                      </div>
+                      <div class="flex items-center gap-3 sm:ml-4 sm:block sm:text-right">
+                        <div class="h-14 w-20 overflow-hidden rounded-2xl border border-white/10">
+                          <img src="https://images.unsplash.com/photo-1565299507177-b0ac66763828?auto=format&fit=crop&w=500&q=86" alt="Chef stretching pizza dough" class="h-full w-full object-cover" />
+                        </div>
+                        <p class="mt-2 text-sm font-medium text-muted">25 min</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+
+              <article tabindex="0" data-plan-step="3" data-active="false" class="workshop-plan-step rounded-[24px] border border-line bg-white/[0.02] p-4 sm:p-5 cursor-pointer outline-none focus:ring-2 focus:ring-white/20">
+                <div class="flex gap-4">
+                  <div class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white/[0.025] text-sm font-semibold text-white workshop-plan-number">03</div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-3">
+                          <h3 class="text-lg font-medium tracking-[-0.02em] text-white">Build your own pizza</h3>
+                          <span class="workshop-plan-arrow hidden text-accent sm:inline-flex"><i data-lucide="arrow-up-right" class="h-4 w-4"></i></span>
+                        </div>
+                        <p class="mt-2 text-sm leading-7 text-muted">Stretch your dough, spread sauce, choose cheeses, and balance toppings with one-on-one guidance from the chefs so your pizza bakes evenly and tastes balanced.</p>
+                      </div>
+                      <div class="flex items-center gap-3 sm:ml-4 sm:block sm:text-right">
+                        <div class="h-14 w-20 overflow-hidden rounded-2xl border border-white/10">
+                          <img src="https://images.unsplash.com/photo-1511689660979-10d2b1aada49?auto=format&fit=crop&w=500&q=86" alt="Topping a pizza by hand" class="h-full w-full object-cover" />
+                        </div>
+                        <p class="mt-2 text-sm font-medium text-muted">60 min</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+
+              <article tabindex="0" data-plan-step="4" data-active="false" class="workshop-plan-step rounded-[24px] border border-line bg-white/[0.02] p-4 sm:p-5 cursor-pointer outline-none focus:ring-2 focus:ring-white/20">
+                <div class="flex gap-4">
+                  <div class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white/[0.025] text-sm font-semibold text-white workshop-plan-number">04</div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-3">
+                          <h3 class="text-lg font-medium tracking-[-0.02em] text-white">Bake, taste, and wrap up</h3>
+                          <span class="workshop-plan-arrow hidden text-accent sm:inline-flex"><i data-lucide="arrow-up-right" class="h-4 w-4"></i></span>
+                        </div>
+                        <p class="mt-2 text-sm leading-7 text-muted">See how the high-heat oven finishes your pizza, enjoy the tasting together, and leave with a recipe card plus practical tips for recreating the process at home.</p>
+                      </div>
+                      <div class="flex items-center gap-3 sm:ml-4 sm:block sm:text-right">
+                        <div class="h-14 w-20 overflow-hidden rounded-2xl border border-white/10">
+                          <img src="https://images.unsplash.com/photo-1541745537411-b8046dc6d66c?auto=format&fit=crop&w=500&q=86" alt="Finished pizza ready for tasting" class="h-full w-full object-cover" />
+                        </div>
+                        <p class="mt-2 text-sm font-medium text-muted">50 min</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+
+          </div>
+
+
+          <aside class="order-1 lg:order-2 lg:sticky lg:top-24">
+            <div class="overflow-hidden rounded-[28px] border border-line bg-white/[0.025]">
+              <div class="relative aspect-[4/5] overflow-hidden border-b border-line bg-[#101012]" id="workshopPlanPreview">
+                <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=90" alt="Ingredients and welcome at Pizza 4P's workshop" class="workshop-plan-preview-image is-active" data-plan-preview="1" />
+                <img src="https://images.unsplash.com/photo-1565299507177-b0ac66763828?auto=format&fit=crop&w=1200&q=90" alt="Chef stretching pizza dough" class="workshop-plan-preview-image" data-plan-preview="2" />
+                <img src="https://images.unsplash.com/photo-1511689660979-10d2b1aada49?auto=format&fit=crop&w=1200&q=90" alt="Topping a pizza by hand" class="workshop-plan-preview-image" data-plan-preview="3" />
+                <img src="https://images.unsplash.com/photo-1541745537411-b8046dc6d66c?auto=format&fit=crop&w=1200&q=90" alt="Finished pizza ready for tasting" class="workshop-plan-preview-image" data-plan-preview="4" />
+                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent p-6">
+                  <p class="text-[10px] font-medium uppercase tracking-[0.16em] text-white/70">Live preview</p>
+                  <h3 id="workshopPlanPreviewTitle" class="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">Welcome and ingredient introduction</h3>
+                  <p id="workshopPlanPreviewTime" class="mt-2 text-sm font-medium text-white/80">15 min</p>
+                </div>
+              </div>
+              <div class="p-5 sm:p-6">
+                <p id="workshopPlanPreviewCopy" class="text-sm leading-7 text-muted">
+                  Meet the Pizza 4P’s workshop team, get comfortable in the kitchen, and learn how the dough, sauces, cheeses, and seasonal toppings will be used throughout the session.
+                </p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="schedule" data-page-section class="scroll-mt-36 mx-auto max-w-[1200px] px-4 pb-20 sm:px-6 lg:px-8">
+      <div class="rounded-[32px] border border-line bg-white/[0.03] p-6 sm:p-8 lg:p-10">
+        <div class="flex flex-col justify-between gap-6 border-b border-line pb-8 lg:flex-row lg:items-end">
+          <div><p class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">Schedule</p><h2 class="mt-4 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">Find a session that fits your week.</h2><p class="mt-3 max-w-2xl text-sm leading-6 text-muted">Seven sessions run each day. Use Week view by default or switch to Month.</p></div>
+          <div class="inline-flex w-fit rounded-full border border-line bg-white/[0.025] p-1">
+            <button id="weekViewButton" class="schedule-view-toggle rounded-full px-4 py-2 text-xs font-medium text-black" data-active="true">Week</button>
+            <button id="monthViewButton" class="schedule-view-toggle rounded-full px-4 py-2 text-xs font-medium text-muted" data-active="false">Month</button>
+          </div>
+        </div>
+
+
+        <div id="weeklyScheduleView" class="mt-8">
+          <div class="flex items-center justify-between gap-4">
+            <button id="previousWeekButton" class="grid h-10 w-10 place-items-center rounded-full border border-line"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
+            <div class="text-center"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Weekly availability</p><p id="weekRangeLabel" class="mt-1 text-sm font-medium"></p></div>
+            <button id="nextWeekButton" class="grid h-10 w-10 place-items-center rounded-full border border-line"><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
+          </div>
+          <div id="weekDayStrip" class="schedule-scroll mt-6 grid grid-cols-7 gap-2 overflow-x-auto"></div>
+          <div class="mt-6 rounded-[24px] border border-line bg-white/[0.02] p-5 sm:p-6">
+            <p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Selected day</p>
+            <h3 id="weeklySelectedDateLabel" class="mt-2 text-xl font-medium"></h3>
+            <p class="mt-1 text-sm text-muted">7 sessions · up to 6 participants</p>
+            <div id="weeklySessionGrid" class="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3"></div>
+          </div>
+        </div>
+
+
+        <div id="monthlyScheduleView" class="mt-8 hidden">
+          <div class="flex items-center justify-between gap-4">
+            <button id="previousMonthButton" class="grid h-10 w-10 place-items-center rounded-full border border-line"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
+            <div class="text-center"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Monthly availability</p><p id="monthLabel" class="mt-1 text-sm font-medium"></p></div>
+            <button id="nextMonthButton" class="grid h-10 w-10 place-items-center rounded-full border border-line"><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
+          </div>
+          <div class="mt-6 rounded-[24px] border border-line bg-white/[0.02] p-3 sm:p-5">
+            <div class="grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-[0.12em] text-quiet"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+            <div id="monthCalendarGrid" class="mt-4 grid grid-cols-7 gap-1"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="host-location" data-page-section class="scroll-mt-36 mx-auto max-w-[1200px] px-4 pb-20 sm:px-6 lg:px-8">
+      <div class="grid gap-4 lg:grid-cols-2 lg:items-stretch">
+        <div class="rounded-[32px] border border-line bg-white/[0.03] p-8">
+          <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">Meet your host</p>
+          <div class="mt-7 flex gap-5">
+            <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=420&q=88" alt="Workshop team" class="h-24 w-24 rounded-full object-cover grayscale" />
+            <div><h2 class="text-[26px] font-semibold">Pizza 4P’s Workshop Team</h2><p class="mt-1 text-sm text-muted">Pizza chefs and facilitators</p><div class="mt-4 flex flex-wrap gap-2"><span class="rounded-full border border-line px-3 py-1.5 text-xs text-muted">Chef-led</span><span class="rounded-full border border-line px-3 py-1.5 text-xs text-muted">4.9 (214)</span><span class="rounded-full border border-line px-3 py-1.5 text-xs text-muted">97% recommend</span></div><p class="mt-5 text-sm leading-7 text-muted">The team guides each participant through dough stretching, topping balance, baking, and tasting.</p><div class="mt-5 flex gap-2"><button class="rounded-full border border-line px-4 py-2.5 text-xs">View profile</button><button class="rounded-full bg-white px-4 py-2.5 text-xs text-black">Message host</button></div></div>
+          </div>
+        </div>
+
+
+        <div class="flex h-full flex-col overflow-hidden rounded-[32px] border border-line bg-white/[0.03]">
+          <div class="px-8 pb-6 pt-8"><p class="text-[11px] uppercase tracking-[0.18em] text-muted">Location</p><h2 class="mt-4 text-[26px] font-semibold">Pizza 4P’s Bao Khanh</h2><p class="mt-2 text-sm text-muted">Hoan Kiem, Ha Noi</p><p class="mt-2 text-xs leading-5 text-muted">Exact arrival instructions are provided after booking.</p></div>
+          <div class="relative min-h-[176px] flex-1 border-y border-line bg-[#161619]"><div class="absolute inset-0 opacity-40" style="background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);background-size:34px 34px"></div><div class="absolute inset-0 grid place-items-center"><span class="grid h-12 w-12 place-items-center rounded-full bg-white text-black ring-8 ring-white/10"><i data-lucide="map-pin" class="h-5 w-5"></i></span></div></div>
+          <div class="px-8 py-5"><button class="flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-xs"><i data-lucide="navigation" class="h-4 w-4"></i>Get directions</button></div>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="faq" data-page-section class="scroll-mt-36 mx-auto max-w-[1200px] px-4 pb-20 sm:px-6 lg:px-8">
+      <div class="rounded-[32px] border border-line bg-white/[0.03] px-8">
+        <div class="border-b border-line py-8"><p class="text-[11px] uppercase tracking-[0.18em] text-muted">Frequently asked questions</p><h2 class="mt-4 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">Practical details to help you prepare.</h2></div>
+        <div id="faqList"></div>
+      </div>
+    </section>
+
+
+    <section id="reviews" data-page-section class="scroll-mt-36 mx-auto max-w-[1200px] px-4 pb-20 sm:px-6 lg:px-8">
+      <div class="flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:gap-14">
+        <div class="shrink-0 text-center lg:text-left">
+          <p class="text-[56px] font-semibold tracking-[-0.06em] text-white leading-none">4.9</p>
+          <div class="mt-2 flex items-center justify-center gap-0.5 lg:justify-start">
+            <svg class="h-4 w-4 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+            <svg class="h-4 w-4 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+            <svg class="h-4 w-4 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+            <svg class="h-4 w-4 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+            <svg class="h-4 w-4 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+          </div>
+          <p class="mt-1 text-sm text-muted">214 reviews</p>
+          <div class="mx-auto mt-6 hidden h-px w-10 bg-line lg:block"></div>
+          <p class="mt-6 max-w-[180px] text-xs leading-5 text-muted lg:mx-0 lg:max-w-[200px]">Rated 4.9 out of 5 based on participant feedback from the past 12 months.</p>
+        </div>
+        <div class="grid flex-1 gap-4 sm:grid-cols-3">
+          <article class="rounded-[24px] border border-line bg-white/[0.03] p-6 flex flex-col">
+            <div class="flex items-center gap-3">
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/20 text-xs font-semibold text-accent">AN</span>
+              <div><p class="text-sm font-medium text-white">An Nguyen</p><p class="text-xs text-muted">12 Jul 2026</p></div>
+            </div>
+            <div class="mt-4 flex gap-0.5">
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+            </div>
+            <p class="mt-4 text-sm leading-6 text-muted flex-1">"The chefs explained every step clearly, and stretching the dough was much easier than expected. Highly recommend for anyone curious about pizza-making."</p>
+          </article>
+          <article class="rounded-[24px] border border-line bg-white/[0.03] p-6 flex flex-col">
+            <div class="flex items-center gap-3">
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/20 text-xs font-semibold text-accent">MT</span>
+              <div><p class="text-sm font-medium text-white">Minh Tran</p><p class="text-xs text-muted">05 Jul 2026</p></div>
+            </div>
+            <div class="mt-4 flex gap-0.5">
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+            </div>
+            <p class="mt-4 text-sm leading-6 text-muted flex-1">"The team gave everyone individual help without making the session feel rushed. Great balance of instruction and hands-on practice."</p>
+          </article>
+          <article class="rounded-[24px] border border-line bg-white/[0.03] p-6 flex flex-col">
+            <div class="flex items-center gap-3">
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/20 text-xs font-semibold text-accent">HP</span>
+              <div><p class="text-sm font-medium text-white">Huong Pham</p><p class="text-xs text-muted">28 Jun 2026</p></div>
+            </div>
+            <div class="mt-4 flex gap-0.5">
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+              <svg class="h-3.5 w-3.5 fill-current text-accent" viewBox="0 0 20 20"><path d="M10 1.75l2.48 5.02 5.54.8-4.01 3.91.95 5.52L10 14.39 5.04 17l.95-5.52-4.01-3.91 5.54-.8L10 1.75z"/></svg>
+            </div>
+            <p class="mt-4 text-sm leading-6 text-muted flex-1">"My pizza came out better than I expected. The workshop felt polished, well-paced, and genuinely hands-on from start to finish."</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <div class="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-canvas/90 px-4 py-3 backdrop-blur-2xl lg:hidden">
+    <div class="mx-auto flex max-w-3xl items-center justify-between gap-4">
+      <div><p class="text-sm font-medium">650,000 đ</p><p id="mobileSessionSummary" class="mt-0.5 text-xs text-muted">Sun, 26 Jul · 09:00</p></div>
+      <button id="mobileBookButton" class="rounded-full bg-white px-5 py-3 text-sm font-medium text-black">Continue</button>
+    </div>
+  </div>
+
+
+  <!-- Professional checkout flow -->
+  <div id="bookingFlowModal" class="fixed inset-0 z-[110] hidden bg-black/75 p-0 backdrop-blur-md sm:p-5" role="dialog" aria-modal="true" aria-labelledby="bookingFlowTitle">
+    <div class="mx-auto flex min-h-full max-w-5xl items-center justify-center">
+      <div class="flex max-h-[100dvh] w-full flex-col overflow-hidden bg-[#151517] shadow-[0_36px_120px_rgba(0,0,0,.62)] sm:max-h-[94dvh] sm:rounded-[32px] sm:border sm:border-white/[0.1]">
+        <div class="flex items-center justify-between border-b border-line px-5 py-4 sm:px-7">
+          <div class="flex min-w-0 items-center gap-3">
+            <button id="checkoutBackButton" type="button" class="hidden h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-white/[0.03] text-muted transition hover:bg-white/[0.07] hover:text-white" aria-label="Back">
+              <i data-lucide="arrow-left" class="h-4 w-4"></i>
+            </button>
+            <div class="min-w-0">
+              <p class="text-[10px] font-medium uppercase tracking-[0.18em] text-quiet">Secure checkout</p>
+              <h2 id="bookingFlowTitle" class="mt-1 truncate text-lg font-semibold tracking-[-0.025em] text-white sm:text-xl">Complete your booking</h2>
+            </div>
+          </div>
+          <button id="closeBookingFlow" type="button" class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line bg-white/[0.03] text-muted transition hover:bg-white/[0.07] hover:text-white" aria-label="Close checkout">
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+
+        <div id="bookingCheckoutContent" class="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_360px] lg:overflow-hidden">
+          <div class="min-h-0 p-5 sm:p-7 lg:overflow-y-auto lg:p-8">
+            <div class="mb-8 flex items-center gap-3" aria-label="Checkout progress">
+              <div class="checkout-step flex min-w-0 flex-1 items-center gap-3" data-checkout-step-indicator="1" data-active="true" data-complete="false">
+                <span class="checkout-step-number grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line text-[11px] font-semibold text-muted">1</span>
+                <div class="min-w-0">
+                  <p class="text-xs font-semibold text-white">Your details</p>
+                  <p class="mt-0.5 hidden text-[11px] text-muted sm:block">Contact and participants</p>
+                </div>
+              </div>
+              <div class="h-px w-8 shrink-0 bg-line sm:w-16"></div>
+              <div class="checkout-step flex min-w-0 flex-1 items-center gap-3" data-checkout-step-indicator="2" data-active="false" data-complete="false">
+                <span class="checkout-step-number grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line text-[11px] font-semibold text-muted">2</span>
+                <div class="min-w-0">
+                  <p class="text-xs font-semibold text-muted">Review & pay</p>
+                  <p class="mt-0.5 hidden text-[11px] text-muted sm:block">Confirm and pay securely</p>
+                </div>
+              </div>
+            </div>
+
+            <section id="bookingStep1" data-checkout-panel="1">
+              <p class="text-[10px] font-medium uppercase tracking-[0.16em] text-quiet">Booking details</p>
+              <h3 class="mt-3 text-2xl font-semibold tracking-[-0.04em] text-white sm:text-[30px]">Who should receive the confirmation?</h3>
+              <p class="mt-2 max-w-xl text-sm leading-6 text-muted">We’ll send the booking confirmation, receipt, and arrival instructions to this person.</p>
+
+              <div class="mt-7 grid gap-4 sm:grid-cols-2">
+                <label class="block sm:col-span-2">
+                  <span class="mb-2 block text-xs font-medium text-muted">Full name</span>
+                  <input id="checkoutFullName" class="booking-field" type="text" autocomplete="name" placeholder="Your full name" />
+                </label>
+                <label class="block">
+                  <span class="mb-2 block text-xs font-medium text-muted">Email</span>
+                  <input id="checkoutEmail" class="booking-field" type="email" autocomplete="email" placeholder="you@example.com" />
+                </label>
+                <label class="block">
+                  <span class="mb-2 block text-xs font-medium text-muted">Phone number</span>
+                  <input id="checkoutPhone" class="booking-field" type="tel" autocomplete="tel" placeholder="+84" />
+                </label>
+              </div>
+              <p id="checkoutDetailsError" class="mt-3 hidden text-xs text-red-300">Add a valid name, email, and phone number to continue.</p>
+
+              <div class="mt-8 rounded-[24px] border border-line bg-white/[0.025] p-5">
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <p class="text-sm font-semibold text-white">Participants</p>
+                    <p class="mt-1 text-xs text-muted">Each participant makes one full pizza</p>
+                  </div>
+                  <div class="flex items-center gap-3 rounded-full border border-line bg-black/10 p-1.5">
+                    <button id="modalMinusGuest" type="button" class="grid h-9 w-9 place-items-center rounded-full text-muted transition hover:bg-white/[0.06] hover:text-white" aria-label="Remove participant">
+                      <i data-lucide="minus" class="h-4 w-4"></i>
+                    </button>
+                    <span id="modalGuestCount" class="w-5 text-center text-base font-semibold text-white">1</span>
+                    <button id="modalPlusGuest" type="button" class="grid h-9 w-9 place-items-center rounded-full text-muted transition hover:bg-white/[0.06] hover:text-white" aria-label="Add participant">
+                      <i data-lucide="plus" class="h-4 w-4"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <label class="mt-5 block">
+                <span class="mb-2 flex items-center justify-between gap-3 text-xs font-medium text-muted"><span>Dietary requirements or allergies</span><span class="text-quiet">Optional</span></span>
+                <textarea id="checkoutDietaryNotes" class="booking-field min-h-[104px] resize-none" placeholder="Tell the workshop team anything they should prepare for"></textarea>
+              </label>
+
+              <button id="continueToPaymentStepButton" type="button" class="group mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-4 text-sm font-semibold text-black transition hover:bg-neutral-200">
+                Continue to payment
+                <i data-lucide="arrow-right" class="h-4 w-4 transition group-hover:translate-x-0.5"></i>
+              </button>
+            </section>
+
+            <section id="bookingStep2" data-checkout-panel="2" class="hidden">
+              <p class="text-[10px] font-medium uppercase tracking-[0.16em] text-quiet">Review and pay</p>
+              <h3 class="mt-3 text-2xl font-semibold tracking-[-0.04em] text-white sm:text-[30px]">Choose how you’d like to pay.</h3>
+
+              <div class="mt-7 rounded-[22px] border border-line bg-white/[0.025] p-4">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <p class="text-[10px] font-medium uppercase tracking-[0.15em] text-quiet">Confirmation sent to</p>
+                    <p id="reviewContactName" class="mt-2 text-sm font-medium text-white">—</p>
+                    <p id="reviewContactDetails" class="mt-1 text-xs leading-5 text-muted">—</p>
+                  </div>
+                  <button id="editCheckoutDetailsButton" type="button" class="text-xs font-medium text-white hover:text-accent">Edit</button>
+                </div>
+              </div>
+
+              <div class="mt-6 grid gap-3 sm:grid-cols-2">
+                <button type="button" class="payment-choice relative rounded-[20px] border border-line bg-white/[0.025] p-4 text-left text-muted transition" data-payment-method="card" data-selected="true">
+                  <div class="flex items-center gap-3">
+                    <span class="grid h-10 w-10 place-items-center rounded-full bg-white/[0.05]"><i data-lucide="credit-card" class="h-4 w-4"></i></span>
+                    <div><p class="text-sm font-semibold text-white">Card</p><p class="mt-1 text-xs text-muted">Visa, Mastercard, JCB</p></div>
+                  </div>
+                  <span class="payment-check absolute right-4 top-4 grid h-5 w-5 place-items-center rounded-full bg-white text-black opacity-100"><i data-lucide="check" class="h-3 w-3"></i></span>
+                </button>
+                <button type="button" class="payment-choice relative rounded-[20px] border border-line bg-white/[0.025] p-4 text-left text-muted transition" data-payment-method="momo" data-selected="false">
+                  <div class="flex items-center gap-3">
+                    <span class="grid h-10 w-10 place-items-center rounded-full bg-white/[0.05]"><i data-lucide="wallet-cards" class="h-4 w-4"></i></span>
+                    <div><p class="text-sm font-semibold text-white">MoMo</p><p class="mt-1 text-xs text-muted">Pay in the MoMo app</p></div>
+                  </div>
+                  <span class="payment-check absolute right-4 top-4 grid h-5 w-5 place-items-center rounded-full bg-white text-black opacity-0"><i data-lucide="check" class="h-3 w-3"></i></span>
+                </button>
+              </div>
+
+              <div id="cardPaymentFields" class="mt-5 grid gap-4 sm:grid-cols-2">
+                <label class="block sm:col-span-2"><span class="mb-2 block text-xs font-medium text-muted">Card number</span><input id="checkoutCardNumber" class="booking-field" inputmode="numeric" placeholder="1234 5678 9012 3456" /></label>
+                <label class="block"><span class="mb-2 block text-xs font-medium text-muted">Expiry</span><input id="checkoutCardExpiry" class="booking-field" inputmode="numeric" placeholder="MM / YY" /></label>
+                <label class="block"><span class="mb-2 block text-xs font-medium text-muted">Security code</span><input id="checkoutCardCvc" class="booking-field" inputmode="numeric" placeholder="CVC" /></label>
+              </div>
+
+              <label class="mt-6 flex cursor-pointer items-start gap-3 rounded-[20px] border border-line bg-white/[0.02] p-4">
+                <input id="bookingTermsCheckbox" type="checkbox" class="mt-0.5 h-4 w-4 accent-white" />
+                <span class="text-xs leading-5 text-muted">I agree to the cancellation policy and understand that dietary requirements should be shared before the workshop.</span>
+              </label>
+              <p id="bookingTermsError" class="mt-2 hidden text-xs text-red-300">Review and accept the workshop terms to continue.</p>
+
+              <button id="continueToPaymentButton" type="button" class="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-4 text-sm font-semibold text-black transition hover:bg-neutral-200">
+                Pay <span id="payButtonAmount">715.000 đ</span>
+                <i data-lucide="lock-keyhole" class="h-4 w-4"></i>
+              </button>
+              <p class="mt-3 text-center text-xs text-muted">Payment details are encrypted and processed securely.</p>
+            </section>
+          </div>
+
+          <aside class="border-t border-line bg-black/10 p-5 sm:p-7 lg:overflow-y-auto lg:border-l lg:border-t-0 lg:p-7">
+            <p class="text-[10px] font-medium uppercase tracking-[0.18em] text-quiet">Booking summary</p>
+            <div class="mt-4 flex gap-4">
+              <img src="https://images.unsplash.com/photo-1579751626657-72bc17010498?auto=format&fit=crop&w=260&q=86" alt="Pizza-making workshop" class="h-20 w-24 shrink-0 rounded-2xl object-cover" />
+              <div class="min-w-0"><p class="text-sm font-semibold leading-5 text-white">Pizza 4P’s Pizza-Making Workshop</p><p class="mt-1.5 flex items-center gap-1.5 text-xs text-muted"><i data-lucide="star" class="h-3 w-3 fill-current text-accent"></i>4.9 · 214 reviews</p></div>
+            </div>
+
+            <div class="mt-6 divide-y divide-line overflow-hidden rounded-[22px] border border-line bg-white/[0.025]">
+              <div class="p-4"><div class="flex items-start justify-between gap-3"><div><p class="text-[10px] uppercase tracking-[0.15em] text-quiet">Session</p><p id="checkoutSidebarSessionSummary" class="mt-2 text-sm font-medium leading-6 text-white">Sun, 26 Jul 2026 · 09:00 – 11:30</p></div><button id="modalChangeSessionButton" type="button" class="text-xs font-medium text-white hover:text-accent">Change</button></div></div>
+              <div class="p-4"><p class="text-[10px] uppercase tracking-[0.15em] text-quiet">Participants</p><p id="checkoutSidebarGuestSummary" class="mt-2 text-sm font-medium text-white">1 guest</p></div>
+            </div>
+
+            <div class="mt-6 space-y-3 text-sm">
+              <div class="flex items-center justify-between"><span class="text-muted">Workshop</span><span id="modalBasePrice" class="text-white">650.000 đ</span></div>
+              <div class="flex items-center justify-between"><span class="text-muted">Service fee</span><span id="modalServiceFee" class="text-white">65.000 đ</span></div>
+              <div class="flex items-center justify-between border-t border-line pt-4"><span class="font-semibold text-white">Total</span><span id="modalTotalPrice" class="text-xl font-semibold text-white">715.000 đ</span></div>
+            </div>
+
+            <div class="mt-6 rounded-[20px] border border-accent/15 bg-accent/[0.07] p-4">
+              <div class="flex gap-3"><i data-lucide="rotate-ccw" class="mt-0.5 h-4 w-4 shrink-0 text-accent"></i><div><p class="text-xs font-semibold text-white">Free cancellation</p><p class="mt-1 text-xs leading-5 text-muted">Cancel at least 24 hours before the session for a full refund.</p></div></div>
+            </div>
+          </aside>
+        </div>
+
+        <section id="bookingSuccessStep" class="hidden flex-1 overflow-y-auto px-6 py-14 text-center sm:px-8 sm:py-20">
+          <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-white text-black"><i data-lucide="check" class="h-7 w-7"></i></span>
+          <h3 class="mt-6 text-3xl font-semibold tracking-[-0.045em] text-white">Booking confirmed</h3>
+          <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-muted">A confirmation and arrival details would be sent to <span id="successEmail" class="text-white">your email</span>.</p>
+          <div class="mx-auto mt-7 max-w-sm rounded-[22px] border border-line bg-white/[0.025] p-5 text-left"><p class="text-[10px] uppercase tracking-[0.15em] text-quiet">Workshop</p><p class="mt-2 text-sm font-semibold text-white">Pizza 4P’s Pizza-Making Workshop</p><p id="successSessionSummary" class="mt-2 text-sm leading-6 text-muted">Sun, 26 Jul 2026 · 09:00 – 11:30</p></div>
+          <button id="finishBookingDemoButton" type="button" class="mt-7 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-black">Done</button>
+        </section>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="galleryModal" class="fixed inset-0 z-[100] hidden bg-black/95 p-4 sm:p-8">
+    <button id="closeGallery" class="absolute right-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-white text-black"><i data-lucide="x" class="h-4 w-4"></i></button>
+    <div class="mx-auto grid max-w-6xl gap-3 overflow-y-auto sm:grid-cols-2">
+      <img src="https://images.unsplash.com/photo-1579751626657-72bc17010498?auto=format&fit=crop&w=1600&q=90" alt="Pizza workshop" class="w-full rounded-xl sm:col-span-2" />
+      <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1000&q=90" alt="Pizza" class="h-96 w-full rounded-xl object-cover" />
+      <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=1000&q=90" alt="Pizza" class="h-96 w-full rounded-xl object-cover" />
+    </div>
+  </div>
+
+
+  <script>
+    lucide.createIcons();
+
+
+    const money = (value) => new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+    const unitPrice = 650000;
+    const feeRate = .10;
+    let guests = 1;
+
+
+    const guestCount = document.getElementById('guestCount');
+    const bookingGuestLabel = document.getElementById('bookingGuestLabel');
+    const totalGuestLabel = document.getElementById('totalGuestLabel');
+    const totalPrice = document.getElementById('totalPrice');
+    const basePrice = document.getElementById('basePrice');
+    const serviceFee = document.getElementById('serviceFee');
+    function updateGuests() {
+      const subtotal = guests * unitPrice;
+      const fee = subtotal * feeRate;
+      const label = `${guests} ${guests === 1 ? 'guest' : 'guests'}`;
+      guestCount.textContent = guests;
+      bookingGuestLabel.textContent = label;
+      totalGuestLabel.textContent = label;
+      basePrice.textContent = money(subtotal);
+      serviceFee.textContent = money(fee);
+      totalPrice.textContent = money(subtotal + fee);
+      document.getElementById('minusGuest').disabled = guests === 1;
+      document.getElementById('plusGuest').disabled = guests === 6;
+    }
+
+
+    document.getElementById('minusGuest').onclick = () => { if (guests > 1) { guests--; updateGuests(); } };
+    document.getElementById('plusGuest').onclick = () => { if (guests < 6) { guests++; updateGuests(); } };
+    updateGuests();
+
+
+    document.querySelectorAll('details').forEach((el) => {
+      el.addEventListener('toggle', () => {
+        const chevron = el.querySelector('.details-chevron');
+        if (chevron) chevron.style.transform = el.open ? 'rotate(180deg)' : '';
+      });
+    });
+
+
+    const sessionTimes = [
+      ['09:00','11:30','Morning'],['10:30','13:00','Late morning'],['12:00','14:30','Lunch'],
+      ['13:30','16:00','Early afternoon'],['15:00','17:30','Afternoon'],['16:30','19:00','Early evening'],['18:00','20:30','Evening']
+    ];
+
+
+    const initialDate = new Date(2026, 6, 26);
+    let selectedDate = new Date(initialDate);
+    let selectedSession = 0;
+    let weekStart = startOfWeek(initialDate);
+    let visibleMonth = new Date(2026, 6, 1);
+
+
+    function startOfWeek(date) {
+      const d = new Date(date);
+      const offset = d.getDay() === 0 ? -6 : 1 - d.getDay();
+      d.setDate(d.getDate() + offset);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+
+
+    function addDays(date, amount) { const d = new Date(date); d.setDate(d.getDate() + amount); return d; }
+    function sameDate(a,b) { return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+    function key(date) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
+    function longDate(date) { return new Intl.DateTimeFormat('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(date); }
+    function shortDate(date, year=true) { return new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'2-digit',month:'short',...(year?{year:'numeric'}:{})}).format(date); }
+
+
+    function updateSessionSummary() {
+      const [start,end] = sessionTimes[selectedSession];
+      const dateStr = shortDate(selectedDate);
+      const timeStr = `${start} – ${end}`;
+      document.getElementById('bookingSessionSummary').textContent = dateStr;
+      const timeEl = document.getElementById('bookingSessionTime');
+      if (timeEl) timeEl.textContent = timeStr;
+      const sidebarEl = document.getElementById('checkoutSidebarSessionSummary');
+      if (sidebarEl) sidebarEl.textContent = `${dateStr} · ${timeStr}`;
+      document.getElementById('mobileSessionSummary').textContent = `${shortDate(selectedDate,false)} · ${start}`;
+    }
+
+
+    function renderSessions() {
+      document.getElementById('weeklySessionGrid').innerHTML = sessionTimes.map((s,i) => `
+        <button class="session-choice rounded-xl border border-line bg-white/[0.02] px-4 py-4 text-left text-sm text-muted hover:bg-white/[0.05]" data-session="${i}" data-selected="${i===selectedSession}">
+          <span class="flex gap-3"><span class="session-dot mt-0.5 grid h-4 w-4 place-items-center rounded-full border border-line"></span><span><strong class="block font-medium text-current">${s[0]} – ${s[1]}</strong><span class="mt-1 block text-xs text-muted">${s[2]} · ${2 + ((selectedDate.getDate()+i)%5)} spots</span></span></span>
+        </button>`).join('');
+      document.querySelectorAll('[data-session]').forEach(btn => btn.onclick = () => { selectedSession = Number(btn.dataset.session); renderSessions(); updateSessionSummary(); });
+    }
+
+
+    function renderWeek() {
+      const end = addDays(weekStart,6);
+      document.getElementById('weekRangeLabel').textContent = `${new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short'}).format(weekStart)} – ${new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',year:'numeric'}).format(end)}`;
+      document.getElementById('weekDayStrip').innerHTML = Array.from({length:7},(_,i)=>addDays(weekStart,i)).map(d => `
+        <button class="week-day-choice min-w-[92px] rounded-xl border border-line bg-white/[0.02] px-3 py-4 text-center text-muted" data-date="${key(d)}" data-selected="${sameDate(d,selectedDate)}">
+          <span class="block text-[10px] uppercase tracking-[0.14em] text-quiet">${new Intl.DateTimeFormat('en-GB',{weekday:'short'}).format(d)}</span><span class="mt-2 block text-xl font-medium">${d.getDate()}</span><span class="mt-1 block text-xs">7 sessions</span>
+        </button>`).join('');
+      document.querySelectorAll('.week-day-choice').forEach(btn => btn.onclick = () => { selectedDate = new Date(btn.dataset.date+'T12:00:00'); selectedSession=0; renderWeek(); renderMonth(); renderSessions(); updateSessionSummary(); });
+      document.getElementById('weeklySelectedDateLabel').textContent = longDate(selectedDate);
+      renderSessions();
+    }
+
+
+    function renderMonth() {
+      document.getElementById('monthLabel').textContent = new Intl.DateTimeFormat('en-GB',{month:'long',year:'numeric'}).format(visibleMonth);
+      const first = new Date(visibleMonth.getFullYear(),visibleMonth.getMonth(),1);
+      const start = startOfWeek(first);
+      document.getElementById('monthCalendarGrid').innerHTML = Array.from({length:42},(_,i)=>addDays(start,i)).map(d=>`
+        <button class="calendar-day min-h-[74px] rounded-lg border border-transparent p-2 text-left text-muted hover:border-line hover:bg-white/[0.04]" data-date="${key(d)}" data-outside="${d.getMonth()!==visibleMonth.getMonth()}" data-selected="${sameDate(d,selectedDate)}">
+          <span class="text-xs font-medium">${d.getDate()}</span><span class="mt-4 block text-[10px] text-muted">7 sessions</span>
+        </button>`).join('');
+      document.querySelectorAll('.calendar-day').forEach(btn => btn.onclick = () => {
+        selectedDate = new Date(btn.dataset.date+'T12:00:00');
+        selectedSession = 0;
+        weekStart = startOfWeek(selectedDate);
+        visibleMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+        renderWeek(); renderMonth(); updateSessionSummary();
+        setScheduleView('week');
+      });
+    }
+
+
+    function setScheduleView(view) {
+      const week = view === 'week';
+      document.getElementById('weeklyScheduleView').classList.toggle('hidden', !week);
+      document.getElementById('monthlyScheduleView').classList.toggle('hidden', week);
+      document.getElementById('weekViewButton').dataset.active = String(week);
+      document.getElementById('monthViewButton').dataset.active = String(!week);
+    }
+
+
+    document.getElementById('weekViewButton').onclick = () => setScheduleView('week');
+    document.getElementById('monthViewButton').onclick = () => setScheduleView('month');
+    document.getElementById('previousWeekButton').onclick = () => { weekStart = addDays(weekStart,-7); selectedDate = new Date(weekStart); renderWeek(); updateSessionSummary(); };
+    document.getElementById('nextWeekButton').onclick = () => { weekStart = addDays(weekStart,7); selectedDate = new Date(weekStart); renderWeek(); updateSessionSummary(); };
+    document.getElementById('previousMonthButton').onclick = () => { visibleMonth = new Date(visibleMonth.getFullYear(),visibleMonth.getMonth()-1,1); renderMonth(); };
+    document.getElementById('nextMonthButton').onclick = () => { visibleMonth = new Date(visibleMonth.getFullYear(),visibleMonth.getMonth()+1,1); renderMonth(); };
+
+
+
+
+    renderWeek(); renderMonth(); updateSessionSummary();
+
+
+    const workshopPlanSteps = [...document.querySelectorAll('[data-plan-step]')];
+    const workshopPlanPreviewImages = [...document.querySelectorAll('[data-plan-preview]')];
+    const workshopPlanPreviewTitle = document.getElementById('workshopPlanPreviewTitle');
+    const workshopPlanPreviewTime = document.getElementById('workshopPlanPreviewTime');
+    const workshopPlanPreviewCopy = document.getElementById('workshopPlanPreviewCopy');
+
+
+    function setWorkshopPlanStep(stepId) {
+      workshopPlanSteps.forEach((step) => {
+        const active = step.dataset.planStep === String(stepId);
+        step.dataset.active = String(active);
+      });
+      workshopPlanPreviewImages.forEach((image) => {
+        image.classList.toggle('is-active', image.dataset.planPreview === String(stepId));
+      });
+
+
+      const activeStep = workshopPlanSteps.find((step) => step.dataset.planStep === String(stepId));
+      if (!activeStep) return;
+      const title = activeStep.querySelector('h3')?.textContent?.trim() || '';
+      const time = activeStep.querySelector('p.text-sm.font-medium.text-muted')?.textContent?.trim() || '';
+      const copy = activeStep.querySelector('p.text-sm.leading-7.text-muted')?.textContent?.trim() || '';
+      if (workshopPlanPreviewTitle) workshopPlanPreviewTitle.textContent = title;
+      if (workshopPlanPreviewTime) workshopPlanPreviewTime.textContent = time;
+      if (workshopPlanPreviewCopy) workshopPlanPreviewCopy.textContent = copy;
+    }
+
+
+    workshopPlanSteps.forEach((step) => {
+      const activate = () => setWorkshopPlanStep(step.dataset.planStep);
+      step.addEventListener('mouseenter', activate);
+      step.addEventListener('focus', activate);
+      step.addEventListener('click', activate);
+    });
+    setWorkshopPlanStep(1);
+
+
+    const faqs = [
+      ['Do I need cooking experience?','No. Every step is demonstrated before you try it.'],
+      ['Can dietary restrictions be accommodated?','Share allergies or dietary requirements during booking.'],
+      ['Will I make my own pizza?','Yes. Each participant makes one full pizza.'],
+      ['What should I wear?','Wear comfortable clothes and closed-toe shoes. Aprons are provided.'],
+      ['Is the workshop suitable for children?','Participants must be at least 10 years old.']
+    ];
+
+
+    document.getElementById('faqList').innerHTML = faqs.map((f,i)=>`<article class="faq-item border-b border-line last:border-0" data-open="${i===0}"><button class="flex w-full items-center justify-between py-6 text-left"><span class="text-[15px] font-medium">${f[0]}</span><i data-lucide="plus" class="faq-icon h-4 w-4 text-muted"></i></button><div class="faq-body"><div><p class="pb-6 text-sm leading-6 text-muted">${f[1]}</p></div></div></article>`).join('');
+    document.querySelectorAll('.faq-item > button').forEach(btn => btn.onclick = () => { const item=btn.closest('.faq-item'); item.dataset.open = String(item.dataset.open !== 'true'); });
+
+
+    const sectionLinks = [...document.querySelectorAll('[data-section-link]')];
+    sectionLinks.forEach(link => link.onclick = e => { e.preventDefault(); document.querySelector(link.getAttribute('href')).scrollIntoView({behavior:'smooth',block:'start'}); });
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+      if (!visible) return;
+      sectionLinks.forEach(link => link.classList.toggle('is-active', link.getAttribute('href') === '#'+visible.target.id));
+    }, {rootMargin:'-28% 0px -58% 0px',threshold:[.05,.2,.4]});
+    document.querySelectorAll('[data-page-section]').forEach(s=>observer.observe(s));
+
+
+    // Booking flow
+    const startBookingButton = document.getElementById('startBookingButton');
+    const mobileBookButton = document.getElementById('mobileBookButton');
+    const bookingFlowModal = document.getElementById('bookingFlowModal');
+    const bookingCheckoutContent = document.getElementById('bookingCheckoutContent');
+    const closeBookingFlow = document.getElementById('closeBookingFlow');
+    const checkoutBackButton = document.getElementById('checkoutBackButton');
+    const modalChangeSessionButton = document.getElementById('modalChangeSessionButton');
+    const modalMinusGuest = document.getElementById('modalMinusGuest');
+    const modalPlusGuest = document.getElementById('modalPlusGuest');
+    const modalGuestCount = document.getElementById('modalGuestCount');
+    const modalBasePrice = document.getElementById('modalBasePrice');
+    const modalServiceFee = document.getElementById('modalServiceFee');
+    const modalTotalPrice = document.getElementById('modalTotalPrice');
+    const checkoutSidebarGuestSummary = document.getElementById('checkoutSidebarGuestSummary');
+    const checkoutSidebarSessionSummary = document.getElementById('checkoutSidebarSessionSummary');
+    const continueToPaymentStepButton = document.getElementById('continueToPaymentStepButton');
+    const editCheckoutDetailsButton = document.getElementById('editCheckoutDetailsButton');
+    const bookingTermsCheckbox = document.getElementById('bookingTermsCheckbox');
+    const bookingTermsError = document.getElementById('bookingTermsError');
+    const continueToPaymentButton = document.getElementById('continueToPaymentButton');
+    const finishBookingDemoButton = document.getElementById('finishBookingDemoButton');
+    const bookingSuccessStep = document.getElementById('bookingSuccessStep');
+    const checkoutDetailsError = document.getElementById('checkoutDetailsError');
+    const checkoutFullName = document.getElementById('checkoutFullName');
+    const checkoutEmail = document.getElementById('checkoutEmail');
+    const checkoutPhone = document.getElementById('checkoutPhone');
+    const checkoutDietaryNotes = document.getElementById('checkoutDietaryNotes');
+    const reviewContactName = document.getElementById('reviewContactName');
+    const reviewContactDetails = document.getElementById('reviewContactDetails');
+    const successEmail = document.getElementById('successEmail');
+    const successSessionSummary = document.getElementById('successSessionSummary');
+    const cardPaymentFields = document.getElementById('cardPaymentFields');
+    const paymentChoices = document.querySelectorAll('[data-payment-method]');
+    const checkoutIndicators = document.querySelectorAll('[data-checkout-step-indicator]');
+    const checkoutPanels = document.querySelectorAll('[data-checkout-panel]');
+    let currentCheckoutStep = 1;
+    let selectedPaymentMethod = 'card';
+
+    function scrollToSchedule() {
+      const scheduleSection = document.getElementById('schedule');
+      if (scheduleSection) scheduleSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function setCheckoutStep(step) {
+      currentCheckoutStep = step;
+      checkoutPanels.forEach((panel) => panel.classList.toggle('hidden', Number(panel.dataset.checkoutPanel) !== step));
+      checkoutIndicators.forEach((indicator) => {
+        const indicatorStep = Number(indicator.dataset.checkoutStepIndicator);
+        const isActive = indicatorStep === step;
+        const isComplete = indicatorStep < step;
+        indicator.dataset.active = String(isActive);
+        indicator.dataset.complete = String(isComplete);
+        const title = indicator.querySelector('p');
+        if (title) {
+          title.classList.toggle('text-white', isActive || isComplete);
+          title.classList.toggle('text-muted', !isActive && !isComplete);
+        }
+      });
+      if (checkoutBackButton) { checkoutBackButton.classList.toggle('hidden', step === 1); checkoutBackButton.classList.toggle('grid', step !== 1); }
+      if (bookingTermsError) bookingTermsError.classList.add('hidden');
+      const visiblePanel = bookingFlowModal?.querySelector('[data-checkout-panel]:not(.hidden)');
+      if (visiblePanel) visiblePanel.scrollIntoView({ block: 'start' });
+    }
+
+    function resetCheckoutState() {
+      if (bookingSuccessStep) bookingSuccessStep.classList.add('hidden');
+      if (bookingCheckoutContent) bookingCheckoutContent.classList.remove('hidden');
+      if (bookingTermsCheckbox) bookingTermsCheckbox.checked = false;
+      if (bookingTermsError) bookingTermsError.classList.add('hidden');
+      setCheckoutStep(1);
+    }
+
+    function openBookingFlow() {
+      resetCheckoutState();
+      updateGuests();
+      updateCheckoutSidebar();
+      if (bookingFlowModal) bookingFlowModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => { if (checkoutFullName) checkoutFullName.focus(); }, 120);
+    }
+
+    function hideBookingFlow() {
+      if (bookingFlowModal) bookingFlowModal.classList.add('hidden');
+      document.body.style.overflow = '';
+      resetCheckoutState();
+    }
+
+    function isValidEmail(value) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()); }
+
+    function validateCheckoutDetails() {
+      const fields = [checkoutFullName, checkoutEmail, checkoutPhone];
+      fields.forEach((field) => field?.classList.remove('is-invalid'));
+      let valid = true;
+      if (!checkoutFullName?.value.trim()) { checkoutFullName?.classList.add('is-invalid'); valid = false; }
+      if (!checkoutEmail?.value || !isValidEmail(checkoutEmail.value)) { checkoutEmail?.classList.add('is-invalid'); valid = false; }
+      if (!checkoutPhone?.value.trim() || checkoutPhone.value.replace(/\D/g, '').length < 8) { checkoutPhone?.classList.add('is-invalid'); valid = false; }
+      if (checkoutDetailsError) checkoutDetailsError.classList.toggle('hidden', valid);
+      return valid;
+    }
+
+    function fillReviewContact() {
+      if (reviewContactName) reviewContactName.textContent = checkoutFullName.value.trim();
+      if (reviewContactDetails) reviewContactDetails.textContent = `${checkoutEmail.value.trim()} · ${checkoutPhone.value.trim()}`;
+    }
+
+    function updateCheckoutSidebar() {
+      const [start, end] = sessionTimes[selectedSession];
+      const full = `${shortDate(selectedDate)} · ${start} – ${end}`;
+      if (checkoutSidebarSessionSummary) checkoutSidebarSessionSummary.textContent = full;
+      const subtotal = guests * unitPrice;
+      const fee = subtotal * feeRate;
+      if (modalBasePrice) modalBasePrice.textContent = money(subtotal);
+      if (modalServiceFee) modalServiceFee.textContent = money(fee);
+      if (modalTotalPrice) modalTotalPrice.textContent = money(subtotal + fee);
+      if (checkoutSidebarGuestSummary) checkoutSidebarGuestSummary.textContent = `${guests} ${guests === 1 ? 'guest' : 'guests'}`;
+      if (modalGuestCount) modalGuestCount.textContent = guests;
+      const payBtnAmount = document.getElementById('payButtonAmount');
+      if (payBtnAmount) payBtnAmount.textContent = money(subtotal + fee);
+    }
+
+    document.getElementById('changeSessionButton').onclick = scrollToSchedule;
+    if (modalChangeSessionButton) modalChangeSessionButton.addEventListener('click', () => { hideBookingFlow(); setTimeout(scrollToSchedule, 80); });
+    if (startBookingButton) startBookingButton.addEventListener('click', openBookingFlow);
+    if (mobileBookButton) mobileBookButton.addEventListener('click', openBookingFlow);
+    if (closeBookingFlow) closeBookingFlow.addEventListener('click', hideBookingFlow);
+    if (bookingFlowModal) bookingFlowModal.addEventListener('click', (event) => { if (event.target === bookingFlowModal) hideBookingFlow(); });
+    if (checkoutBackButton) checkoutBackButton.addEventListener('click', () => setCheckoutStep(1));
+    if (editCheckoutDetailsButton) editCheckoutDetailsButton.addEventListener('click', () => setCheckoutStep(1));
+    if (modalMinusGuest) modalMinusGuest.addEventListener('click', () => { if (guests > 1) { guests--; updateGuests(); updateCheckoutSidebar(); } });
+    if (modalPlusGuest) modalPlusGuest.addEventListener('click', () => { if (guests < 6) { guests++; updateGuests(); updateCheckoutSidebar(); } });
+    if (continueToPaymentStepButton) continueToPaymentStepButton.addEventListener('click', () => { if (!validateCheckoutDetails()) return; fillReviewContact(); setCheckoutStep(2); });
+    paymentChoices.forEach((choice) => {
+      choice.addEventListener('click', () => {
+        selectedPaymentMethod = choice.dataset.paymentMethod;
+        paymentChoices.forEach((item) => {
+          const selected = item === choice;
+          item.dataset.selected = String(selected);
+          const check = item.querySelector('.payment-check');
+          if (check) { check.classList.toggle('opacity-100', selected); check.classList.toggle('opacity-0', !selected); }
+        });
+        if (cardPaymentFields) cardPaymentFields.classList.toggle('hidden', selectedPaymentMethod !== 'card');
+      });
+    });
+    if (continueToPaymentButton) continueToPaymentButton.addEventListener('click', () => {
+      if (!bookingTermsCheckbox.checked) { bookingTermsError.classList.remove('hidden'); return; }
+      if (selectedPaymentMethod === 'card') {
+        const cardFieldIds = ['checkoutCardNumber', 'checkoutCardExpiry', 'checkoutCardCvc'];
+        const cardFields = cardFieldIds.map((id) => document.getElementById(id));
+        cardFields.forEach((field) => field?.classList.remove('is-invalid'));
+        const emptyField = cardFields.find((field) => !field?.value.trim());
+        if (emptyField) { emptyField.classList.add('is-invalid'); emptyField.focus(); return; }
+      }
+      if (bookingCheckoutContent) bookingCheckoutContent.classList.add('hidden');
+      if (bookingSuccessStep) bookingSuccessStep.classList.remove('hidden');
+      if (successEmail) successEmail.textContent = checkoutEmail.value.trim();
+      const bookingSessionSummaryText = document.getElementById('bookingSessionSummary')?.textContent;
+      if (successSessionSummary && bookingSessionSummaryText) successSessionSummary.textContent = bookingSessionSummaryText;
+      lucide.createIcons();
+    });
+    if (bookingTermsCheckbox) bookingTermsCheckbox.addEventListener('change', () => { if (bookingTermsCheckbox.checked) bookingTermsError.classList.add('hidden'); });
+    if (finishBookingDemoButton) finishBookingDemoButton.addEventListener('click', hideBookingFlow);
+
+    const galleryModal = document.getElementById('galleryModal');
+    document.querySelectorAll('[data-gallery]').forEach((trigger) => {
+      trigger.addEventListener('click', () => { galleryModal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; });
+    });
+    document.getElementById('closeGallery').addEventListener('click', () => { galleryModal.classList.add('hidden'); document.body.style.overflow = ''; });
+    galleryModal.addEventListener('click', (e) => { if (e.target === galleryModal) { galleryModal.classList.add('hidden'); document.body.style.overflow = ''; } });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !bookingFlowModal?.classList.contains('hidden')) { hideBookingFlow(); return; }
+      if (e.key === 'Escape' && !galleryModal.classList.contains('hidden')) { galleryModal.classList.add('hidden'); document.body.style.overflow = ''; }
+    });
+
+
+    let saved=false;
+    document.getElementById('saveBtn').onclick = () => { saved=!saved; document.getElementById('saveBtn').querySelector('span').textContent=saved?'Saved':'Save'; };
+
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>

@@ -93,57 +93,39 @@ type CourseDraft = {
 const DRAFT_KEY = "tutoria-course-draft-v1";
 
 const defaultDraft: CourseDraft = {
-  title: "Complete Web Development Bootcamp",
-  promise: "Build and publish responsive websites using HTML, CSS, JavaScript, and React.",
-  category: "Technology",
-  topic: "Web development",
+  title: "",
+  promise: "",
+  category: "",
+  topic: "",
   level: "Beginner",
-  languages: ["Vietnamese", "English"],
-  learners: "Beginners who want to build and publish their first polished website.",
-  outcomes: [
-    "Build responsive pages with HTML and CSS",
-    "Add interactions using JavaScript",
-    "Create reusable React components",
-  ],
-  requirements: ["A laptop or desktop computer", "A stable internet connection"],
-  faqs: [
-    { id: "faq-experience", question: "Do I need previous experience?", answer: "No. The course starts with the foundations and guides you through each step." },
-    { id: "faq-access", question: "How long will I have access?", answer: "You can return to the course and its lessons whenever you need them." },
-  ],
+  languages: [],
+  learners: "",
+  outcomes: [],
+  requirements: [],
+  faqs: [],
   chapters: [
     {
-      id: "getting-started",
-      title: "Getting started",
+      id: "chapter-1",
+      title: "",
       open: true,
       lessons: [
-        { id: "welcome", title: "Welcome to the course", type: "Video", duration: 6, description: "Meet your instructor and see the project you will build.", ready: true },
-        { id: "how-it-works", title: "How this course works", type: "Article", duration: 4, description: "Learn how lessons, projects, and feedback fit together.", ready: true },
-        { id: "first-page", title: "Build your first page", type: "Assignment", duration: 13, description: "Create and publish a simple semantic HTML page.", ready: false },
-      ],
-    },
-    {
-      id: "html-foundations",
-      title: "HTML foundations",
-      open: false,
-      lessons: [
-        { id: "semantic-html", title: "Semantic HTML", type: "Video", duration: 11, description: "Use meaningful elements to structure content.", ready: true },
-        { id: "html-practice", title: "HTML practice", type: "Quiz", duration: 8, description: "Check your understanding of the core elements.", ready: true },
+        { id: "lesson-1", title: "", type: "Video", duration: 0, description: "", ready: false },
       ],
     },
   ],
   progression: "Self-paced",
-  discussions: true,
-  community: true,
-  instructorFeedback: true,
-  requireLessons: true,
-  requireProject: true,
-  certificate: true,
-  certificateTitle: "Certificate of Completion",
-  coverImage: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1400&q=85",
-  shortDescription: "A practical course that takes complete beginners from their first HTML page to a published portfolio website.",
-  fullDescription: "You will learn by building real projects step by step. We begin with the foundations of HTML, CSS, and JavaScript, then move into modern React development. By the end of the course, you will build, deploy, and share a responsive portfolio website with confidence.",
-  access: "One-time purchase",
-  price: 699000,
+  discussions: false,
+  community: false,
+  instructorFeedback: false,
+  requireLessons: false,
+  requireProject: false,
+  certificate: false,
+  certificateTitle: "",
+  coverImage: "",
+  shortDescription: "",
+  fullDescription: "",
+  access: "Free",
+  price: 0,
   visibility: "Public",
 };
 
@@ -233,7 +215,14 @@ export function CourseCreator() {
     queueMicrotask(() => {
       try {
         const stored = window.localStorage.getItem(DRAFT_KEY);
-        if (stored) setDraft({ ...defaultDraft, ...(JSON.parse(stored) as Partial<CourseDraft>) });
+        if (stored) {
+          const parsed = JSON.parse(stored) as Partial<CourseDraft>;
+          const isLegacyExample = parsed.title === "Complete Web Development Bootcamp"
+            && parsed.promise === "Build and publish responsive websites using HTML, CSS, JavaScript, and React."
+            && parsed.topic === "Web development";
+          if (isLegacyExample) window.localStorage.removeItem(DRAFT_KEY);
+          else setDraft({ ...defaultDraft, ...parsed });
+        }
       } catch {
         setNotice("The saved draft could not be loaded. A fresh draft is open instead.");
       }
@@ -377,7 +366,7 @@ export function CourseCreator() {
   };
 
   const addChapter = () => {
-    const chapter: Chapter = { id: createId("chapter"), title: "New chapter", open: true, lessons: [] };
+    const chapter: Chapter = { id: createId("chapter"), title: "", open: true, lessons: [] };
     patchDraft("chapters", [...draft.chapters, chapter]);
     setNotice("Chapter added.");
   };
@@ -390,7 +379,7 @@ export function CourseCreator() {
   };
 
   const addLesson = (chapterId: string) => {
-    const lesson: Lesson = { id: createId("lesson"), title: "New lesson", type: "Video", duration: 8, description: "", ready: false };
+    const lesson: Lesson = { id: createId("lesson"), title: "", type: "Video", duration: 0, description: "", ready: false };
     patchDraft("chapters", draft.chapters.map((chapter) => chapter.id === chapterId ? { ...chapter, open: true, lessons: [...chapter.lessons, lesson] } : chapter));
     setSelectedLessonId(lesson.id);
   };
@@ -556,7 +545,7 @@ export function CourseCreator() {
                     {!draft.chapters.length && <button type="button" className={styles.emptyState} onClick={addChapter}><IconBook2 size={25} /><strong>Add your first chapter</strong><span>Give the course a clear starting point.</span></button>}
                   </div>
                   <div className={styles.lessonEditor}>
-                    {selectedLesson ? <><div className={styles.panelTitle}><div><span>Selected lesson</span><strong>{selectedLesson.title}</strong></div><button type="button" onClick={() => setPreviewOpen(true)}><IconPlayerPlay size={15} /> Preview</button></div><label className={styles.field}><span>Lesson type</span><select value={selectedLesson.type} onChange={(event) => updateLesson(selectedLesson.id, { type: event.target.value as LessonType })}><option>Video</option><option>Article</option><option>Quiz</option><option>Assignment</option></select></label><label className={styles.field}><span>Lesson title</span><input value={selectedLesson.title} onChange={(event) => updateLesson(selectedLesson.id, { title: event.target.value })} /></label><div className={styles.lessonMeta}><label className={styles.field}><span>Duration</span><div className={styles.durationInput}><input type="number" min={1} value={selectedLesson.duration} onChange={(event) => updateLesson(selectedLesson.id, { duration: Number(event.target.value) })} /><b>min</b></div></label><label className={styles.checkField}><input type="checkbox" checked={selectedLesson.ready} onChange={(event) => updateLesson(selectedLesson.id, { ready: event.target.checked })} /><span><strong>Ready to publish</strong><small>Include this lesson in the course.</small></span></label></div><label className={styles.field}><span>Short description</span><textarea rows={5} value={selectedLesson.description} onChange={(event) => updateLesson(selectedLesson.id, { description: event.target.value })} /></label><div className={styles.contentDrop}><span className={styles.lessonType}>{lessonIcon(selectedLesson.type)}</span><div><strong>{selectedLesson.type} content</strong><p>Add or replace the learning material for this lesson.</p></div><button type="button" onClick={() => setNotice(`${selectedLesson.type} content picker opened.`)}>Choose file</button></div>{draft.chapters.map((chapter) => chapter.lessons.some((lesson) => lesson.id === selectedLesson.id) ? <button type="button" key={chapter.id} className={styles.dangerButton} onClick={() => removeLesson(chapter.id, selectedLesson.id)}><IconTrash size={15} /> Remove lesson</button> : null)}</> : <div className={styles.emptyEditor}><IconLayoutSidebarRight size={28} /><strong>Select or add a lesson</strong><p>Lesson settings and content will appear here.</p></div>}
+                    {selectedLesson ? <><div className={styles.panelTitle}><div><span>Selected lesson</span><strong>{selectedLesson.title || "Untitled lesson"}</strong></div><button type="button" onClick={() => setPreviewOpen(true)}><IconPlayerPlay size={15} /> Preview</button></div><label className={styles.field}><span>Lesson type</span><select value={selectedLesson.type} onChange={(event) => updateLesson(selectedLesson.id, { type: event.target.value as LessonType })}><option>Video</option><option>Article</option><option>Quiz</option><option>Assignment</option></select></label><label className={styles.field}><span>Lesson title</span><input value={selectedLesson.title} onChange={(event) => updateLesson(selectedLesson.id, { title: event.target.value })} /></label><div className={styles.lessonMeta}><label className={styles.field}><span>Duration</span><div className={styles.durationInput}><input type="number" min={1} value={selectedLesson.duration || ""} onChange={(event) => updateLesson(selectedLesson.id, { duration: Number(event.target.value) })} /><b>min</b></div></label><label className={styles.checkField}><input type="checkbox" checked={selectedLesson.ready} onChange={(event) => updateLesson(selectedLesson.id, { ready: event.target.checked })} /><span><strong>Ready to publish</strong><small>Include this lesson in the course.</small></span></label></div><label className={styles.field}><span>Short description</span><textarea rows={5} value={selectedLesson.description} onChange={(event) => updateLesson(selectedLesson.id, { description: event.target.value })} /></label><div className={styles.contentDrop}><span className={styles.lessonType}>{lessonIcon(selectedLesson.type)}</span><div><strong>{selectedLesson.type} content</strong><p>Add or replace the learning material for this lesson.</p></div><button type="button" onClick={() => setNotice(`${selectedLesson.type} content picker opened.`)}>Choose file</button></div>{draft.chapters.map((chapter) => chapter.lessons.some((lesson) => lesson.id === selectedLesson.id) ? <button type="button" key={chapter.id} className={styles.dangerButton} onClick={() => removeLesson(chapter.id, selectedLesson.id)}><IconTrash size={15} /> Remove lesson</button> : null)}</> : <div className={styles.emptyEditor}><IconLayoutSidebarRight size={28} /><strong>Select or add a lesson</strong><p>Lesson settings and content will appear here.</p></div>}
                   </div>
                 </div>
               </>

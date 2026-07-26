@@ -1,0 +1,1289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutoria — My Learning</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            app: "#03070d",
+            shell: "#07101b",
+            panel: "#0b1522",
+            panel2: "#101c2b",
+            panel3: "#152237",
+            line: "#223148",
+            text: "#f4f7fb",
+            muted: "#8e9bab",
+            gold: {
+              300: "#f5c66d",
+              400: "#e7ac48",
+              500: "#d49535",
+              600: "#b87824"
+            }
+          },
+          boxShadow: {
+            soft: "0 18px 55px rgba(0,0,0,.28)",
+            float: "0 18px 60px rgba(0,0,0,.45)",
+            gold: "0 0 0 1px rgba(231,172,72,.2), 0 16px 35px rgba(0,0,0,.24)"
+          }
+        }
+      }
+    };
+  </script>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 8% 7%, rgba(44, 72, 112, .18), transparent 25rem),
+        radial-gradient(circle at 92% 8%, rgba(231, 172, 72, .08), transparent 22rem),
+        #02060b;
+      color: #f4f7fb;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, textarea, select { font: inherit; }
+    .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #2a3a53 transparent; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #2a3a53; border-radius: 999px; }
+    .glass {
+      background: linear-gradient(180deg, rgba(14, 25, 41, .95), rgba(8, 17, 29, .97));
+      backdrop-filter: blur(18px);
+    }
+    .fade-up { animation: fadeUp .2s ease-out; }
+    .toast-enter { animation: toastEnter .22s ease-out; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes toastEnter {
+      from { opacity: 0; transform: translateY(12px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #101b2b 25%, #17253a 37%, #101b2b 63%);
+      background-size: 400% 100%;
+      animation: shimmer 1.4s ease infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+    @media (max-width: 1023px) {
+      .desktop-only { display: none !important; }
+    }
+    @media (min-width: 1024px) {
+      #appShell {
+        grid-template-columns: 224px minmax(0,1fr);
+        transition: grid-template-columns .24s cubic-bezier(.4,0,.2,1);
+      }
+      #appShell.sidebar-collapsed {
+        grid-template-columns: 82px minmax(0,1fr);
+      }
+      #appShell.sidebar-collapsed .sidebar-label,
+      #appShell.sidebar-collapsed .brand-label,
+      #appShell.sidebar-collapsed .profile-copy {
+        display: none;
+      }
+      #appShell.sidebar-collapsed .sidebar-link,
+      #appShell.sidebar-collapsed .brand-wrap,
+      #appShell.sidebar-collapsed .profile-wrap {
+        justify-content: center;
+      }
+      #appShell.sidebar-collapsed .sidebar-count {
+        position: absolute;
+        right: 4px;
+        top: 4px;
+      }
+      #appShell.sidebar-collapsed #collapseIcon {
+        transform: rotate(180deg);
+      }
+      #appShell.sidebar-collapsed .sidebar-link[data-tooltip]:hover::after,
+      #appShell.sidebar-collapsed .sidebar-link[data-tooltip]:focus-visible::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 90;
+        white-space: nowrap;
+        border: 1px solid #223148;
+        background: #0b1522;
+        color: #f4f7fb;
+        border-radius: 10px;
+        padding: 7px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        box-shadow: 0 12px 30px rgba(0,0,0,.35);
+      }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen lg:p-3">
+  <main
+    id="appShell"
+    class="mx-auto grid min-h-screen max-w-[1840px] overflow-hidden bg-shell lg:h-[calc(100vh-24px)] lg:min-h-0 lg:rounded-[24px] lg:border lg:border-line lg:shadow-soft"
+  >
+    <!-- Desktop sidebar -->
+    <aside class="desktop-only relative min-h-0 border-r border-line bg-[#07101b] p-4 lg:flex lg:flex-col">
+      <button
+        id="sidebarToggle"
+        type="button"
+        class="absolute -right-3 top-7 z-30 grid size-7 place-items-center rounded-full border border-line bg-panel text-muted shadow-soft hover:text-gold-300"
+        aria-label="Collapse navigation"
+        aria-expanded="true"
+      >
+        <i id="collapseIcon" data-lucide="chevron-left" class="size-4 transition-transform"></i>
+      </button>
+
+      <nav class="space-y-1.5" aria-label="Primary navigation">
+        <a class="sidebar-link" data-tooltip="Home" href="/landing" target="_top"><i data-lucide="house"></i><span class="sidebar-label">Home</span></a>
+        <a class="sidebar-link" data-tooltip="Explore" href="/discover" target="_top"><i data-lucide="compass"></i><span class="sidebar-label">Explore</span></a>
+        <a class="sidebar-link active" data-tooltip="My learning" href="/learning" target="_top"><i data-lucide="calendar-days"></i><span class="sidebar-label">My learning</span></a>
+        <a class="sidebar-link justify-between" data-tooltip="Messages" href="/messages" target="_top">
+          <span class="flex items-center gap-3"><i data-lucide="messages-square"></i><span class="sidebar-label">Messages</span></span>
+          <span class="sidebar-count grid size-5 place-items-center rounded-full bg-gold-400 text-[11px] font-bold text-[#15100a]">5</span>
+        </a>
+        <a class="sidebar-link" data-tooltip="Communities" href="/communities" target="_top"><i data-lucide="users"></i><span class="sidebar-label">Communities</span></a>
+      </nav>
+
+      <div class="mt-auto border-t border-line pt-4">
+        <a class="sidebar-link" data-tooltip="Settings" href="#"><i data-lucide="settings"></i><span class="sidebar-label">Settings</span></a>
+
+        <a id="currentProfileLink" href="/user/Khoa%20Nguyen" target="_top" class="profile-wrap mt-4 flex items-center gap-3 rounded-2xl bg-panel2 p-3">
+          <img id="currentProfileAvatar" src="https://i.pravatar.cc/96?img=12" class="size-11 shrink-0 rounded-full object-cover" alt="Current user" />
+          <div class="profile-copy min-w-0">
+            <p id="currentProfileName" class="truncate text-sm font-semibold">Tutoria member</p>
+            <p id="currentProfileHandle" class="truncate text-xs text-muted"></p>
+          </div>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main page -->
+    <section class="scrollbar-thin min-h-0 overflow-y-auto bg-[#08111d]">
+      <!-- Mobile header -->
+      <div class="sticky top-0 z-40 flex items-center justify-between border-b border-line bg-[#08111d]/95 px-4 py-3 backdrop-blur lg:hidden">
+        <button id="openMobileNav" class="grid size-10 place-items-center rounded-xl border border-line bg-panel" aria-label="Open navigation">
+          <i data-lucide="menu" class="size-5"></i>
+        </button>
+        <div class="flex items-center gap-2">
+          <span class="grid size-8 place-items-center rounded-lg bg-gold-400 text-[#15100a]">
+            <i data-lucide="graduation-cap" class="size-4"></i>
+          </span>
+          <span class="font-semibold text-gold-400">Tutoria</span>
+        </div>
+        <button id="mobileCalendarBtn" class="grid size-10 place-items-center rounded-xl border border-line bg-panel" aria-label="Open calendar">
+          <i data-lucide="calendar-days" class="size-5"></i>
+        </button>
+      </div>
+
+      <div class="mx-auto max-w-[1500px] px-4 pb-12 pt-5 sm:px-6 lg:px-7 lg:pt-7">
+        <!-- Header -->
+        <header class="flex flex-col gap-5 border-b border-line pb-5 xl:flex-row xl:items-start xl:justify-between">
+          <div>
+            <h1 class="text-2xl font-bold tracking-[-.03em] sm:text-3xl">My learning</h1>
+            <p class="mt-1 text-sm text-muted">Courses, sessions, resources, and progress in one place</p>
+          </div>
+
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <div class="relative">
+              <label class="flex min-w-0 items-center gap-3 rounded-xl border border-line bg-panel px-4 py-3 focus-within:border-gold-500 sm:w-[300px]">
+                <i data-lucide="search" class="size-[18px] text-muted"></i>
+                <input id="globalSearch" class="w-full bg-transparent text-sm outline-none placeholder:text-muted" placeholder="Search my learning..." autocomplete="off" />
+                <button id="clearSearchBtn" class="hidden text-muted hover:text-white" type="button" aria-label="Clear search">
+                  <i data-lucide="x" class="size-4"></i>
+                </button>
+              </label>
+              <div id="searchResults" class="glass absolute left-0 right-0 top-[calc(100%+8px)] z-50 hidden max-h-[420px] overflow-y-auto rounded-2xl border border-line p-2 shadow-float"></div>
+            </div>
+
+            <button id="calendarBtn" class="hidden size-11 place-items-center rounded-xl border border-line bg-panel hover:border-gold-500 sm:grid" aria-label="Open calendar">
+              <i data-lucide="calendar-days" class="size-[18px]"></i>
+            </button>
+
+            <button id="exploreBtn" class="flex h-11 items-center justify-center gap-2 rounded-xl border border-gold-600 px-5 text-sm font-semibold text-gold-300 hover:bg-gold-500/10">
+              <i data-lucide="compass" class="size-[17px]"></i>
+              Explore more
+            </button>
+          </div>
+        </header>
+
+        <!-- Tabs -->
+        <div class="scrollbar-thin mt-1 flex gap-2 overflow-x-auto border-b border-line" role="tablist" aria-label="My learning sections">
+          <button class="tab-btn active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+          <button class="tab-btn" data-tab="courses" role="tab" aria-selected="false">Courses</button>
+          <button class="tab-btn" data-tab="sessions" role="tab" aria-selected="false">Sessions</button>
+          <button class="tab-btn" data-tab="resources" role="tab" aria-selected="false">Resources</button>
+          <button class="tab-btn" data-tab="completed" role="tab" aria-selected="false">Completed</button>
+        </div>
+
+        <!-- Loading simulation -->
+        <div id="loadingState" class="mt-5 grid gap-4">
+          <div class="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+            <div class="skeleton h-[320px] rounded-2xl"></div>
+            <div class="skeleton h-[320px] rounded-2xl"></div>
+          </div>
+          <div class="grid gap-4 xl:grid-cols-3">
+            <div class="skeleton h-[260px] rounded-2xl"></div>
+            <div class="skeleton h-[260px] rounded-2xl"></div>
+            <div class="skeleton h-[260px] rounded-2xl"></div>
+          </div>
+        </div>
+
+        <!-- Overview -->
+        <div id="tab-overview" class="tab-panel hidden fade-up mt-5 space-y-4" role="tabpanel">
+          <div class="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+            <!-- Today -->
+            <section class="rounded-2xl border border-line bg-panel p-4 shadow-soft">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="sun" class="size-5 text-gold-400"></i>
+                  <h2 class="font-semibold">Today</h2>
+                  <span class="text-xs text-muted">Tuesday, Jul 23</span>
+                </div>
+                <button id="addTaskBtn" class="grid size-8 place-items-center rounded-lg border border-line hover:border-gold-500" aria-label="Add personal learning task">
+                  <i data-lucide="plus" class="size-4"></i>
+                </button>
+              </div>
+
+              <div id="todayList" class="mt-5 space-y-5">
+                <div class="today-item relative grid grid-cols-[12px_58px_minmax(0,1fr)_auto] items-start gap-3" data-title="IELTS Speaking Part 2">
+                  <span class="mt-1.5 size-3 rounded-full border-2 border-gold-400 bg-panel"></span>
+                  <span class="text-xs text-muted">7:00 PM</span>
+                  <div>
+                    <p class="text-sm font-semibold">IELTS Speaking Part 2</p>
+                    <p class="mt-1 text-[11px] text-muted">Study session · IELTS Study Circle</p>
+                  </div>
+                  <button class="action-btn rounded-lg border border-gold-600 px-3 py-1.5 text-xs font-semibold text-gold-300" data-action="Joining session">Join</button>
+                </div>
+
+                <div class="today-item relative grid grid-cols-[12px_58px_minmax(0,1fr)_auto] items-start gap-3" data-title="Web Design Live Q&A">
+                  <span class="mt-1.5 size-3 rounded-full border border-[#40506a] bg-panel"></span>
+                  <span class="text-xs text-muted">8:30 PM</span>
+                  <div>
+                    <p class="text-sm font-semibold">Web Design Live Q&A</p>
+                    <p class="mt-1 text-[11px] text-muted">Live session · Web Design Cohort</p>
+                  </div>
+                  <button class="action-btn rounded-lg border border-line px-3 py-1.5 text-xs font-semibold" data-action="Opening session details">View</button>
+                </div>
+
+                <div class="today-item relative grid grid-cols-[12px_58px_minmax(0,1fr)_auto] items-start gap-3" data-title="Vocabulary review">
+                  <span class="mt-1.5 size-3 rounded-full border border-[#40506a] bg-panel"></span>
+                  <span class="text-xs text-muted">9:30 PM</span>
+                  <div>
+                    <p class="text-sm font-semibold">Vocabulary review</p>
+                    <p class="mt-1 text-[11px] text-muted">15 min · IELTS Preparation</p>
+                  </div>
+                  <button class="action-btn rounded-lg border border-line px-3 py-1.5 text-xs font-semibold" data-action="Starting vocabulary review">Start</button>
+                </div>
+              </div>
+
+              <button id="viewScheduleBtn" class="mt-6 flex w-full items-center justify-between border-t border-line pt-4 text-sm font-semibold text-gold-400">
+                View full schedule
+                <i data-lucide="arrow-right" class="size-4"></i>
+              </button>
+            </section>
+
+            <!-- Continue learning -->
+            <section class="rounded-2xl border border-line bg-panel p-4 shadow-soft">
+              <div class="flex items-center justify-between">
+                <h2 class="font-semibold">Continue learning</h2>
+                <div class="hidden gap-2 sm:flex">
+                  <button id="coursePrev" class="grid size-8 place-items-center rounded-full border border-line hover:border-gold-500" aria-label="Previous course">
+                    <i data-lucide="chevron-left" class="size-4"></i>
+                  </button>
+                  <button id="courseNext" class="grid size-8 place-items-center rounded-full border border-line hover:border-gold-500" aria-label="Next course">
+                    <i data-lucide="chevron-right" class="size-4"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div id="courseScroller" class="scrollbar-thin mt-4 flex snap-x gap-3 overflow-x-auto pb-1">
+                <article class="course-card min-w-[260px] snap-start overflow-hidden rounded-2xl border border-line bg-[#0c1625] sm:min-w-[300px]" data-title="IELTS Preparation" data-category="Language" data-status="in-progress" data-progress="68">
+                  <div class="relative h-32 overflow-hidden bg-[radial-gradient(circle_at_50%_15%,rgba(246,197,106,.32),transparent_18rem),linear-gradient(135deg,#24211c,#0d1623)]">
+                    <div class="absolute inset-0 grid place-items-center">
+                      <div class="text-center">
+                        <p class="text-4xl font-black tracking-[.08em]">IELTS</p>
+                        <p class="mt-1 text-xs text-gold-300">PRACTICE LAB</p>
+                      </div>
+                    </div>
+                    <span class="absolute left-3 top-3 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold">IELTS</span>
+                  </div>
+                  <div class="p-3">
+                    <h3 class="font-semibold">IELTS Preparation</h3>
+                    <p class="mt-1 min-h-10 text-sm leading-5 text-muted">Master all four skills with practice tests and guided feedback.</p>
+                    <div class="mt-4 flex items-center gap-3">
+                      <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-[#26354a]"><div class="course-progress h-full w-[68%] rounded-full bg-gold-400"></div></div>
+                      <span class="course-percent text-xs text-muted">68%</span>
+                    </div>
+                    <div class="mt-1 text-[11px] text-muted">8 of 12 lessons completed</div>
+                    <div class="mt-4 flex gap-2">
+                      <button class="continue-btn flex-1 rounded-lg bg-gold-400 px-4 py-2.5 text-sm font-semibold text-[#171108] hover:bg-gold-300">Continue</button>
+                      <button class="save-course-btn grid size-10 place-items-center rounded-lg border border-line hover:border-gold-500" aria-label="Save IELTS Preparation" aria-pressed="false">
+                        <i data-lucide="bookmark" class="size-[17px]"></i>
+                      </button>
+                      <button class="course-menu-btn grid size-10 place-items-center rounded-lg border border-line hover:border-gold-500" aria-label="Course options">
+                        <i data-lucide="ellipsis" class="size-[17px]"></i>
+                      </button>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="course-card min-w-[260px] snap-start overflow-hidden rounded-2xl border border-line bg-[#0c1625] sm:min-w-[300px]" data-title="Web Design Foundations" data-category="Design" data-status="in-progress" data-progress="42">
+                  <div class="relative h-32 overflow-hidden bg-[radial-gradient(circle_at_30%_20%,rgba(138,92,246,.65),transparent_16rem),linear-gradient(135deg,#271854,#0f1429)]">
+                    <div class="absolute inset-0 flex items-center justify-center gap-3 opacity-90">
+                      <div class="h-16 w-20 rounded-lg border border-white/10 bg-white/10"></div>
+                      <div class="grid size-16 place-items-center rounded-xl bg-violet-400/20"><i data-lucide="play" class="size-7"></i></div>
+                    </div>
+                    <span class="absolute left-3 top-3 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold">Design</span>
+                  </div>
+                  <div class="p-3">
+                    <h3 class="font-semibold">Web Design Foundations</h3>
+                    <p class="mt-1 min-h-10 text-sm leading-5 text-muted">Learn the fundamentals of UI/UX and modern web design.</p>
+                    <div class="mt-4 flex items-center gap-3">
+                      <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-[#26354a]"><div class="course-progress h-full w-[42%] rounded-full bg-gold-400"></div></div>
+                      <span class="course-percent text-xs text-muted">42%</span>
+                    </div>
+                    <div class="mt-1 text-[11px] text-muted">5 of 12 lessons completed</div>
+                    <div class="mt-4 flex gap-2">
+                      <button class="continue-btn flex-1 rounded-lg bg-gold-400 px-4 py-2.5 text-sm font-semibold text-[#171108] hover:bg-gold-300">Continue</button>
+                      <button class="save-course-btn grid size-10 place-items-center rounded-lg border border-line hover:border-gold-500" aria-label="Save Web Design Foundations" aria-pressed="false"><i data-lucide="bookmark" class="size-[17px]"></i></button>
+                      <button class="course-menu-btn grid size-10 place-items-center rounded-lg border border-line hover:border-gold-500" aria-label="Course options"><i data-lucide="ellipsis" class="size-[17px]"></i></button>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="course-card min-w-[260px] snap-start overflow-hidden rounded-2xl border border-line bg-[#0c1625] sm:min-w-[300px]" data-title="Algebra Essentials" data-category="Math" data-status="in-progress" data-progress="27">
+                  <div class="relative h-32 overflow-hidden bg-[radial-gradient(circle_at_80%_20%,rgba(79,175,132,.4),transparent_17rem),linear-gradient(135deg,#163025,#0d1b1c)]">
+                    <div class="absolute inset-0 px-8 py-6 text-emerald-100/70">
+                      <svg viewBox="0 0 300 110" class="h-full w-full">
+                        <path d="M10 85 L52 30 L95 70 L138 20 L185 76 L225 36 L290 80" fill="none" stroke="currentColor" stroke-width="3"/>
+                        <circle cx="52" cy="30" r="4" fill="currentColor"/><circle cx="138" cy="20" r="4" fill="currentColor"/><circle cx="225" cy="36" r="4" fill="currentColor"/>
+                        <path d="M22 96 H280 M38 12 V102" stroke="currentColor" stroke-width="1" opacity=".45"/>
+                      </svg>
+                    </div>
+                    <span class="absolute left-3 top-3 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold">Math</span>
+                  </div>
+                  <div class="p-3">
+                    <h3 class="font-semibold">Algebra Essentials</h3>
+                    <p class="mt-1 min-h-10 text-sm leading-5 text-muted">Build a strong foundation in algebra with step-by-step lessons.</p>
+                    <div class="mt-4 flex items-center gap-3">
+                      <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-[#26354a]"><div class="course-progress h-full w-[27%] rounded-full bg-gold-400"></div></div>
+                      <span class="course-percent text-xs text-muted">27%</span>
+                    </div>
+                    <div class="mt-1 text-[11px] text-muted">3 of 11 lessons completed</div>
+                    <div class="mt-4 flex gap-2">
+                      <button class="continue-btn flex-1 rounded-lg bg-gold-400 px-4 py-2.5 text-sm font-semibold text-[#171108] hover:bg-gold-300">Continue</button>
+                      <button class="save-course-btn grid size-10 place-items-center rounded-lg border border-line hover:border-gold-500" aria-label="Save Algebra Essentials" aria-pressed="false"><i data-lucide="bookmark" class="size-[17px]"></i></button>
+                      <button class="course-menu-btn grid size-10 place-items-center rounded-lg border border-line hover:border-gold-500" aria-label="Course options"><i data-lucide="ellipsis" class="size-[17px]"></i></button>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </div>
+
+          <div class="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)_minmax(0,.95fr)]">
+            <!-- Week -->
+            <section class="rounded-2xl border border-line bg-panel p-4">
+              <div class="flex items-center gap-2"><i data-lucide="trending-up" class="size-5"></i><h2 class="font-semibold">This week</h2></div>
+              <div class="mt-5 space-y-5">
+                <button class="stat-link flex w-full items-center gap-3 text-left" data-open-tab="courses">
+                  <span class="grid size-8 place-items-center rounded-full bg-emerald-500/15 text-emerald-400"><i data-lucide="book-open" class="size-4"></i></span>
+                  <span class="text-sm text-muted">Active courses</span><strong class="ml-auto text-xl">4</strong>
+                </button>
+                <button class="stat-link flex w-full items-center gap-3 text-left" data-open-tab="sessions">
+                  <span class="grid size-8 place-items-center rounded-full bg-sky-500/15 text-sky-400"><i data-lucide="calendar-days" class="size-4"></i></span>
+                  <span class="text-sm text-muted">Sessions this week</span><strong class="ml-auto text-xl">5</strong>
+                </button>
+                <button class="stat-link flex w-full items-center gap-3 text-left" data-open-tab="completed">
+                  <span class="grid size-8 place-items-center rounded-full bg-violet-500/15 text-violet-400"><i data-lucide="badge-check" class="size-4"></i></span>
+                  <span class="text-sm text-muted">Lessons completed</span><strong class="ml-auto text-xl">12</strong>
+                </button>
+                <button id="streakBtn" class="flex w-full items-center gap-3 text-left">
+                  <span class="grid size-8 place-items-center rounded-full bg-gold-500/15 text-gold-300"><i data-lucide="flame" class="size-4"></i></span>
+                  <div><p class="text-sm text-muted">Learning streak</p><p class="text-[11px] text-muted">Keep it up!</p></div>
+                  <strong class="ml-auto text-lg">7 days</strong>
+                </button>
+              </div>
+            </section>
+
+            <!-- Upcoming -->
+            <section class="rounded-2xl border border-line bg-panel p-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2"><i data-lucide="calendar-days" class="size-5"></i><h2 class="font-semibold">Upcoming</h2></div>
+                <button class="open-calendar text-xs font-semibold text-gold-400">View calendar</button>
+              </div>
+              <div class="mt-4 divide-y divide-line">
+                <div class="session-row grid grid-cols-[46px_58px_minmax(0,1fr)_auto] items-center gap-3 py-3" data-title="IELTS Speaking Part 2" data-status="upcoming">
+                  <div class="rounded-lg border border-line p-1.5 text-center"><p class="text-[10px] text-muted">JUL</p><p class="font-semibold">23</p></div>
+                  <div><p class="text-xs font-semibold">7:00 PM</p><p class="text-[10px] text-muted">60 min</p></div>
+                  <div><p class="text-sm font-semibold">IELTS Speaking Part 2</p><p class="text-[11px] text-muted">IELTS Study Circle</p></div>
+                  <button class="action-btn rounded-lg border border-gold-600 px-4 py-2 text-xs font-semibold text-gold-300" data-action="Joining session">Join</button>
+                </div>
+                <div class="session-row grid grid-cols-[46px_58px_minmax(0,1fr)_auto] items-center gap-3 py-3" data-title="Web Design Live Q&A" data-status="upcoming">
+                  <div class="rounded-lg border border-line p-1.5 text-center"><p class="text-[10px] text-muted">JUL</p><p class="font-semibold">23</p></div>
+                  <div><p class="text-xs font-semibold">8:30 PM</p><p class="text-[10px] text-muted">75 min</p></div>
+                  <div><p class="text-sm font-semibold">Web Design Live Q&A</p><p class="text-[11px] text-muted">Web Design Cohort</p></div>
+                  <button class="action-btn rounded-lg border border-line px-4 py-2 text-xs font-semibold" data-action="Opening session details">View</button>
+                </div>
+                <div class="session-row grid grid-cols-[46px_58px_minmax(0,1fr)_auto] items-center gap-3 py-3" data-title="Algebra Problem Solving" data-status="upcoming">
+                  <div class="rounded-lg border border-line p-1.5 text-center"><p class="text-[10px] text-muted">JUL</p><p class="font-semibold">24</p></div>
+                  <div><p class="text-xs font-semibold">7:00 PM</p><p class="text-[10px] text-muted">60 min</p></div>
+                  <div><p class="text-sm font-semibold">Algebra Problem Solving</p><p class="text-[11px] text-muted">Math Circle</p></div>
+                  <button class="action-btn rounded-lg border border-line px-4 py-2 text-xs font-semibold" data-action="Opening session details">View</button>
+                </div>
+              </div>
+              <button class="stat-link mt-2 flex w-full items-center justify-between text-sm font-semibold text-gold-400" data-open-tab="sessions">
+                View all upcoming sessions <i data-lucide="arrow-right" class="size-4"></i>
+              </button>
+            </section>
+
+            <!-- Recent activity -->
+            <section class="rounded-2xl border border-line bg-panel p-4">
+              <div class="flex items-center gap-2"><i data-lucide="activity" class="size-5"></i><h2 class="font-semibold">Recent activity</h2></div>
+              <div class="mt-4 divide-y divide-line">
+                <button class="activity-row flex w-full items-center gap-3 py-3 text-left" data-target="CSS Flexbox Essentials">
+                  <span class="grid size-9 place-items-center rounded-lg bg-violet-500/15 text-violet-400"><i data-lucide="book-open-check" class="size-[18px]"></i></span>
+                  <div class="min-w-0"><p class="text-xs text-muted">Completed lesson</p><p class="truncate text-sm font-semibold">CSS Flexbox Essentials</p><p class="text-[11px] text-muted">Web Design Foundations</p></div>
+                  <time class="ml-auto shrink-0 text-[11px] text-muted">2h ago</time>
+                </button>
+                <button class="activity-row flex w-full items-center gap-3 py-3 text-left" data-target="IELTS Writing Task 2">
+                  <span class="grid size-9 place-items-center rounded-lg bg-emerald-500/15 text-emerald-400"><i data-lucide="circle-check" class="size-[18px]"></i></span>
+                  <div class="min-w-0"><p class="text-xs text-muted">Submitted assignment</p><p class="truncate text-sm font-semibold">IELTS Writing Task 2</p><p class="text-[11px] text-muted">IELTS Preparation</p></div>
+                  <time class="ml-auto shrink-0 text-[11px] text-muted">Yesterday</time>
+                </button>
+                <button class="activity-row flex w-full items-center gap-3 py-3 text-left" data-target="Speaking cue cards.pdf">
+                  <span class="grid size-9 place-items-center rounded-lg bg-gold-500/15 text-gold-300"><i data-lucide="download" class="size-[18px]"></i></span>
+                  <div class="min-w-0"><p class="text-xs text-muted">Downloaded resource</p><p class="truncate text-sm font-semibold">Speaking cue cards.pdf</p><p class="text-[11px] text-muted">IELTS Study Circle</p></div>
+                  <time class="ml-auto shrink-0 text-[11px] text-muted">Jul 21</time>
+                </button>
+              </div>
+              <button id="viewAllActivityBtn" class="mt-2 flex w-full items-center justify-between text-sm font-semibold text-gold-400">
+                View all activity <i data-lucide="arrow-right" class="size-4"></i>
+              </button>
+            </section>
+          </div>
+
+          <!-- Saved resources -->
+          <section class="rounded-2xl border border-line bg-panel p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2"><i data-lucide="folder-open" class="size-5 text-gold-400"></i><h2 class="font-semibold">Saved resources</h2></div>
+              <button class="stat-link text-xs font-semibold text-gold-400" data-open-tab="resources">View all resources</button>
+            </div>
+
+            <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <article class="resource-card flex items-center gap-3 rounded-xl border border-line bg-[#0c1625] p-3" data-title="Speaking cue cards.pdf" data-type="document" data-saved="true">
+                <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-red-500/20 text-red-400"><i data-lucide="file-text" class="size-5"></i></span>
+                <button class="open-resource min-w-0 flex-1 text-left"><p class="truncate text-sm font-semibold">Speaking cue cards.pdf</p><p class="mt-1 text-[11px] text-muted">1.4 MB · PDF</p><p class="text-[11px] text-muted">IELTS Study Circle</p></button>
+                <button class="resource-menu-btn text-muted" aria-label="Resource options"><i data-lucide="ellipsis-vertical" class="size-4"></i></button>
+              </article>
+
+              <article class="resource-card flex items-center gap-3 rounded-xl border border-line bg-[#0c1625] p-3" data-title="Flexbox cheat sheet.pdf" data-type="document" data-saved="true">
+                <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-blue-500/20 text-blue-300"><i data-lucide="file-spreadsheet" class="size-5"></i></span>
+                <button class="open-resource min-w-0 flex-1 text-left"><p class="truncate text-sm font-semibold">Flexbox cheat sheet.pdf</p><p class="mt-1 text-[11px] text-muted">512 KB · PDF</p><p class="text-[11px] text-muted">Web Design Cohort</p></button>
+                <button class="resource-menu-btn text-muted" aria-label="Resource options"><i data-lucide="ellipsis-vertical" class="size-4"></i></button>
+              </article>
+
+              <article class="resource-card flex items-center gap-3 rounded-xl border border-line bg-[#0c1625] p-3" data-title="Algebra basics recap.mp4" data-type="video" data-saved="true">
+                <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-gold-500/20 text-gold-300"><i data-lucide="circle-play" class="size-5"></i></span>
+                <button class="open-resource min-w-0 flex-1 text-left"><p class="truncate text-sm font-semibold">Algebra basics recap.mp4</p><p class="mt-1 text-[11px] text-muted">45 MB · MP4</p><p class="text-[11px] text-muted">Math Circle</p></button>
+                <button class="resource-menu-btn text-muted" aria-label="Resource options"><i data-lucide="ellipsis-vertical" class="size-4"></i></button>
+              </article>
+
+              <article class="resource-card flex items-center gap-3 rounded-xl border border-line bg-[#0c1625] p-3" data-title="Essay outline template.docx" data-type="document" data-saved="true">
+                <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-indigo-500/20 text-indigo-300"><i data-lucide="file" class="size-5"></i></span>
+                <button class="open-resource min-w-0 flex-1 text-left"><p class="truncate text-sm font-semibold">Essay outline template.docx</p><p class="mt-1 text-[11px] text-muted">24 KB · DOCX</p><p class="text-[11px] text-muted">IELTS Preparation</p></button>
+                <button class="resource-menu-btn text-muted" aria-label="Resource options"><i data-lucide="ellipsis-vertical" class="size-4"></i></button>
+              </article>
+            </div>
+          </section>
+        </div>
+
+        <!-- Courses tab -->
+        <div id="tab-courses" class="tab-panel hidden fade-up mt-5" role="tabpanel">
+          <section class="rounded-2xl border border-line bg-panel p-4">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 class="text-xl font-semibold">Courses</h2>
+                <p class="mt-1 text-sm text-muted">Track active, not started, completed, and archived learning.</p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <select id="courseFilter" class="rounded-xl border border-line bg-panel2 px-3 py-2 text-sm outline-none">
+                  <option value="all">All states</option>
+                  <option value="in-progress">In progress</option>
+                  <option value="not-started">Not started</option>
+                  <option value="completed">Completed</option>
+                  <option value="archived">Archived</option>
+                </select>
+                <select id="courseSort" class="rounded-xl border border-line bg-panel2 px-3 py-2 text-sm outline-none">
+                  <option value="recent">Recently opened</option>
+                  <option value="progress-desc">Most progress</option>
+                  <option value="progress-asc">Least progress</option>
+                  <option value="az">A–Z</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="coursesGrid" class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <article class="course-list-card rounded-2xl border border-line bg-[#0c1625] p-4" data-title="IELTS Preparation" data-status="in-progress" data-progress="68">
+                <div class="flex items-start justify-between gap-3">
+                  <div><span class="rounded-full bg-gold-500/15 px-2 py-1 text-[10px] font-semibold text-gold-300">IELTS</span><h3 class="mt-3 font-semibold">IELTS Preparation</h3><p class="mt-1 text-sm text-muted">8 of 12 lessons completed</p></div>
+                  <button class="course-menu-btn text-muted"><i data-lucide="ellipsis" class="size-5"></i></button>
+                </div>
+                <div class="mt-5 h-2 overflow-hidden rounded-full bg-panel3"><div class="h-full w-[68%] rounded-full bg-gold-400"></div></div>
+                <div class="mt-4 flex gap-2"><button class="continue-btn flex-1 rounded-xl bg-gold-400 px-4 py-2.5 text-sm font-semibold text-[#171108]">Continue</button><button class="save-course-btn grid size-10 place-items-center rounded-xl border border-line" aria-pressed="false"><i data-lucide="bookmark" class="size-4"></i></button></div>
+              </article>
+
+              <article class="course-list-card rounded-2xl border border-line bg-[#0c1625] p-4" data-title="Web Design Foundations" data-status="in-progress" data-progress="42">
+                <div class="flex items-start justify-between gap-3">
+                  <div><span class="rounded-full bg-violet-500/15 px-2 py-1 text-[10px] font-semibold text-violet-300">Design</span><h3 class="mt-3 font-semibold">Web Design Foundations</h3><p class="mt-1 text-sm text-muted">5 of 12 lessons completed</p></div>
+                  <button class="course-menu-btn text-muted"><i data-lucide="ellipsis" class="size-5"></i></button>
+                </div>
+                <div class="mt-5 h-2 overflow-hidden rounded-full bg-panel3"><div class="h-full w-[42%] rounded-full bg-gold-400"></div></div>
+                <div class="mt-4 flex gap-2"><button class="continue-btn flex-1 rounded-xl bg-gold-400 px-4 py-2.5 text-sm font-semibold text-[#171108]">Continue</button><button class="save-course-btn grid size-10 place-items-center rounded-xl border border-line" aria-pressed="false"><i data-lucide="bookmark" class="size-4"></i></button></div>
+              </article>
+
+              <article class="course-list-card rounded-2xl border border-line bg-[#0c1625] p-4" data-title="Algebra Essentials" data-status="in-progress" data-progress="27">
+                <div class="flex items-start justify-between gap-3">
+                  <div><span class="rounded-full bg-emerald-500/15 px-2 py-1 text-[10px] font-semibold text-emerald-300">Math</span><h3 class="mt-3 font-semibold">Algebra Essentials</h3><p class="mt-1 text-sm text-muted">3 of 11 lessons completed</p></div>
+                  <button class="course-menu-btn text-muted"><i data-lucide="ellipsis" class="size-5"></i></button>
+                </div>
+                <div class="mt-5 h-2 overflow-hidden rounded-full bg-panel3"><div class="h-full w-[27%] rounded-full bg-gold-400"></div></div>
+                <div class="mt-4 flex gap-2"><button class="continue-btn flex-1 rounded-xl bg-gold-400 px-4 py-2.5 text-sm font-semibold text-[#171108]">Continue</button><button class="save-course-btn grid size-10 place-items-center rounded-xl border border-line" aria-pressed="false"><i data-lucide="bookmark" class="size-4"></i></button></div>
+              </article>
+
+              <article class="course-list-card rounded-2xl border border-line bg-[#0c1625] p-4" data-title="Chemistry Review" data-status="not-started" data-progress="0">
+                <div class="flex items-start justify-between gap-3">
+                  <div><span class="rounded-full bg-cyan-500/15 px-2 py-1 text-[10px] font-semibold text-cyan-300">Chemistry</span><h3 class="mt-3 font-semibold">Chemistry Review</h3><p class="mt-1 text-sm text-muted">Not started</p></div>
+                  <button class="course-menu-btn text-muted"><i data-lucide="ellipsis" class="size-5"></i></button>
+                </div>
+                <div class="mt-5 h-2 overflow-hidden rounded-full bg-panel3"><div class="h-full w-0 rounded-full bg-gold-400"></div></div>
+                <div class="mt-4 flex gap-2"><button class="continue-btn flex-1 rounded-xl bg-gold-400 px-4 py-2.5 text-sm font-semibold text-[#171108]">Start</button><button class="save-course-btn grid size-10 place-items-center rounded-xl border border-line" aria-pressed="false"><i data-lucide="bookmark" class="size-4"></i></button></div>
+              </article>
+
+              <article class="course-list-card rounded-2xl border border-line bg-[#0c1625] p-4" data-title="Introduction to Graphic Design" data-status="completed" data-progress="100">
+                <div class="flex items-start justify-between gap-3">
+                  <div><span class="rounded-full bg-green-500/15 px-2 py-1 text-[10px] font-semibold text-green-300">Completed</span><h3 class="mt-3 font-semibold">Introduction to Graphic Design</h3><p class="mt-1 text-sm text-muted">Completed Jul 12</p></div>
+                  <button class="course-menu-btn text-muted"><i data-lucide="ellipsis" class="size-5"></i></button>
+                </div>
+                <div class="mt-5 h-2 overflow-hidden rounded-full bg-panel3"><div class="h-full w-full rounded-full bg-emerald-400"></div></div>
+                <div class="mt-4"><button class="action-btn w-full rounded-xl border border-line px-4 py-2.5 text-sm font-semibold" data-action="Opening completed course materials">Review materials</button></div>
+              </article>
+            </div>
+
+            <div id="courseEmpty" class="hidden py-16 text-center">
+              <i data-lucide="book-x" class="mx-auto size-8 text-muted"></i>
+              <p class="mt-3 font-semibold">No matching courses</p>
+              <p class="mt-1 text-sm text-muted">Try another filter or search term.</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- Sessions tab -->
+        <div id="tab-sessions" class="tab-panel hidden fade-up mt-5" role="tabpanel">
+          <section class="rounded-2xl border border-line bg-panel p-4">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div><h2 class="text-xl font-semibold">Sessions</h2><p class="mt-1 text-sm text-muted">Manage upcoming, completed, cancelled, online, and in-person sessions.</p></div>
+              <div class="flex flex-wrap gap-2">
+                <select id="sessionFilter" class="rounded-xl border border-line bg-panel2 px-3 py-2 text-sm outline-none">
+                  <option value="all">All sessions</option>
+                  <option value="upcoming">Upcoming</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <button id="sessionListBtn" class="session-view-btn active rounded-xl border border-gold-600 px-3 py-2 text-sm text-gold-300"><i data-lucide="list" class="mr-1 inline size-4"></i>List</button>
+                <button id="sessionCalendarBtn" class="session-view-btn rounded-xl border border-line px-3 py-2 text-sm"><i data-lucide="calendar" class="mr-1 inline size-4"></i>Calendar</button>
+              </div>
+            </div>
+
+            <div id="sessionListView" class="mt-5 space-y-3">
+              <article class="session-card grid gap-3 rounded-2xl border border-line bg-[#0c1625] p-4 md:grid-cols-[70px_minmax(0,1fr)_auto]" data-status="upcoming" data-title="IELTS Speaking Part 2">
+                <div class="rounded-xl bg-panel2 p-3 text-center"><p class="text-xs text-muted">JUL</p><p class="text-2xl font-semibold">23</p></div>
+                <div><h3 class="font-semibold">IELTS Speaking Part 2</h3><p class="mt-1 text-sm text-muted">7:00 PM · 60 min · Online room</p><p class="mt-1 text-xs text-muted">IELTS Study Circle</p></div>
+                <div class="flex flex-wrap items-center gap-2 md:justify-end">
+                  <button class="action-btn rounded-xl border border-line px-3 py-2 text-sm" data-action="Adding session to calendar">Add to calendar</button>
+                  <button class="action-btn rounded-xl bg-gold-400 px-4 py-2 text-sm font-semibold text-[#171108]" data-action="Joining session">Join</button>
+                </div>
+              </article>
+
+              <article class="session-card grid gap-3 rounded-2xl border border-line bg-[#0c1625] p-4 md:grid-cols-[70px_minmax(0,1fr)_auto]" data-status="upcoming" data-title="Web Design Live Q&A">
+                <div class="rounded-xl bg-panel2 p-3 text-center"><p class="text-xs text-muted">JUL</p><p class="text-2xl font-semibold">23</p></div>
+                <div><h3 class="font-semibold">Web Design Live Q&A</h3><p class="mt-1 text-sm text-muted">8:30 PM · 75 min · Online room</p><p class="mt-1 text-xs text-muted">Web Design Cohort</p></div>
+                <div class="flex flex-wrap items-center gap-2 md:justify-end">
+                  <button class="action-btn rounded-xl border border-line px-3 py-2 text-sm" data-action="Opening session details">View details</button>
+                  <button class="action-btn rounded-xl border border-gold-600 px-3 py-2 text-sm text-gold-300" data-action="Setting session reminder">Set reminder</button>
+                </div>
+              </article>
+
+              <article class="session-card grid gap-3 rounded-2xl border border-line bg-[#0c1625] p-4 md:grid-cols-[70px_minmax(0,1fr)_auto]" data-status="completed" data-title="CSS Layout Review">
+                <div class="rounded-xl bg-panel2 p-3 text-center"><p class="text-xs text-muted">JUL</p><p class="text-2xl font-semibold">20</p></div>
+                <div><h3 class="font-semibold">CSS Layout Review</h3><p class="mt-1 text-sm text-muted">Completed · 55 min</p><p class="mt-1 text-xs text-muted">Web Design Cohort</p></div>
+                <div class="flex flex-wrap items-center gap-2 md:justify-end">
+                  <button class="action-btn rounded-xl border border-line px-3 py-2 text-sm" data-action="Opening session notes">View notes</button>
+                  <button class="action-btn rounded-xl border border-line px-3 py-2 text-sm" data-action="Opening recording">Recording</button>
+                </div>
+              </article>
+
+              <article class="session-card grid gap-3 rounded-2xl border border-line bg-[#0c1625] p-4 opacity-70 md:grid-cols-[70px_minmax(0,1fr)_auto]" data-status="cancelled" data-title="Algebra Practice">
+                <div class="rounded-xl bg-panel2 p-3 text-center"><p class="text-xs text-muted">JUL</p><p class="text-2xl font-semibold">19</p></div>
+                <div><h3 class="font-semibold">Algebra Practice</h3><p class="mt-1 text-sm text-muted">Cancelled</p><p class="mt-1 text-xs text-muted">Math Circle</p></div>
+                <div class="flex items-center md:justify-end"><button class="action-btn rounded-xl border border-line px-3 py-2 text-sm" data-action="Opening cancellation details">View details</button></div>
+              </article>
+            </div>
+
+            <div id="sessionCalendarView" class="hidden mt-5">
+              <div class="grid grid-cols-7 gap-px overflow-hidden rounded-2xl border border-line bg-line text-center text-sm">
+                <div class="bg-panel2 p-3 text-muted">Mon</div><div class="bg-panel2 p-3 text-muted">Tue</div><div class="bg-panel2 p-3 text-muted">Wed</div><div class="bg-panel2 p-3 text-muted">Thu</div><div class="bg-panel2 p-3 text-muted">Fri</div><div class="bg-panel2 p-3 text-muted">Sat</div><div class="bg-panel2 p-3 text-muted">Sun</div>
+                <div class="min-h-28 bg-panel p-2 text-left text-muted">22</div>
+                <div class="min-h-28 bg-panel p-2 text-left"><div class="text-muted">23</div><button class="mt-2 w-full rounded-lg bg-gold-500/15 p-2 text-left text-[11px] text-gold-300">7:00 IELTS Speaking</button><button class="mt-1 w-full rounded-lg bg-violet-500/15 p-2 text-left text-[11px] text-violet-300">8:30 Web Design Q&A</button></div>
+                <div class="min-h-28 bg-panel p-2 text-left"><div class="text-muted">24</div><button class="mt-2 w-full rounded-lg bg-emerald-500/15 p-2 text-left text-[11px] text-emerald-300">7:00 Algebra</button></div>
+                <div class="min-h-28 bg-panel p-2 text-left text-muted">25</div>
+                <div class="min-h-28 bg-panel p-2 text-left text-muted">26</div>
+                <div class="min-h-28 bg-panel p-2 text-left text-muted">27</div>
+                <div class="min-h-28 bg-panel p-2 text-left text-muted">28</div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Resources tab -->
+        <div id="tab-resources" class="tab-panel hidden fade-up mt-5" role="tabpanel">
+          <section class="rounded-2xl border border-line bg-panel p-4">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div><h2 class="text-xl font-semibold">Resources</h2><p class="mt-1 text-sm text-muted">Documents, videos, links, saved materials, and custom collections.</p></div>
+              <div class="flex flex-wrap gap-2">
+                <select id="resourceFilter" class="rounded-xl border border-line bg-panel2 px-3 py-2 text-sm outline-none">
+                  <option value="all">All resources</option>
+                  <option value="saved">Saved</option>
+                  <option value="document">Documents</option>
+                  <option value="video">Videos</option>
+                  <option value="link">Links</option>
+                </select>
+                <select id="resourceSort" class="rounded-xl border border-line bg-panel2 px-3 py-2 text-sm outline-none">
+                  <option value="recent">Recently opened</option>
+                  <option value="az">Name A–Z</option>
+                  <option value="type">File type</option>
+                </select>
+                <button id="newCollectionBtn" class="rounded-xl border border-gold-600 px-3 py-2 text-sm text-gold-300">New collection</button>
+              </div>
+            </div>
+
+            <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3" id="resourceGrid">
+              <article class="resource-list-card rounded-2xl border border-line bg-[#0c1625] p-4" data-title="Speaking cue cards.pdf" data-type="document" data-saved="true">
+                <div class="flex items-start gap-3"><span class="grid size-11 place-items-center rounded-xl bg-red-500/20 text-red-400"><i data-lucide="file-text" class="size-5"></i></span><div class="min-w-0 flex-1"><h3 class="truncate font-semibold">Speaking cue cards.pdf</h3><p class="mt-1 text-xs text-muted">PDF · 1.4 MB · IELTS Study Circle</p></div><button class="resource-menu-btn text-muted"><i data-lucide="ellipsis-vertical" class="size-4"></i></button></div>
+                <div class="mt-4 flex gap-2"><button class="open-resource flex-1 rounded-xl bg-gold-400 px-4 py-2 text-sm font-semibold text-[#171108]">Open</button><button class="toggle-resource-save grid size-10 place-items-center rounded-xl border border-gold-600 text-gold-300" aria-pressed="true"><i data-lucide="bookmark-check" class="size-4"></i></button></div>
+              </article>
+
+              <article class="resource-list-card rounded-2xl border border-line bg-[#0c1625] p-4" data-title="Algebra basics recap.mp4" data-type="video" data-saved="true">
+                <div class="flex items-start gap-3"><span class="grid size-11 place-items-center rounded-xl bg-gold-500/20 text-gold-300"><i data-lucide="circle-play" class="size-5"></i></span><div class="min-w-0 flex-1"><h3 class="truncate font-semibold">Algebra basics recap.mp4</h3><p class="mt-1 text-xs text-muted">MP4 · 45 MB · Math Circle</p></div><button class="resource-menu-btn text-muted"><i data-lucide="ellipsis-vertical" class="size-4"></i></button></div>
+                <div class="mt-4 flex gap-2"><button class="open-resource flex-1 rounded-xl bg-gold-400 px-4 py-2 text-sm font-semibold text-[#171108]">Open</button><button class="toggle-resource-save grid size-10 place-items-center rounded-xl border border-gold-600 text-gold-300" aria-pressed="true"><i data-lucide="bookmark-check" class="size-4"></i></button></div>
+              </article>
+
+              <article class="resource-list-card rounded-2xl border border-line bg-[#0c1625] p-4" data-title="Responsive design guide" data-type="link" data-saved="false">
+                <div class="flex items-start gap-3"><span class="grid size-11 place-items-center rounded-xl bg-sky-500/20 text-sky-300"><i data-lucide="link" class="size-5"></i></span><div class="min-w-0 flex-1"><h3 class="truncate font-semibold">Responsive design guide</h3><p class="mt-1 text-xs text-muted">External link · Web Design Cohort</p></div><button class="resource-menu-btn text-muted"><i data-lucide="ellipsis-vertical" class="size-4"></i></button></div>
+                <div class="mt-4 flex gap-2"><button class="open-resource flex-1 rounded-xl bg-gold-400 px-4 py-2 text-sm font-semibold text-[#171108]">Open</button><button class="toggle-resource-save grid size-10 place-items-center rounded-xl border border-line" aria-pressed="false"><i data-lucide="bookmark" class="size-4"></i></button></div>
+              </article>
+
+              <article class="resource-list-card rounded-2xl border border-line bg-[#0c1625] p-4" data-title="Essay outline template.docx" data-type="document" data-saved="true">
+                <div class="flex items-start gap-3"><span class="grid size-11 place-items-center rounded-xl bg-indigo-500/20 text-indigo-300"><i data-lucide="file" class="size-5"></i></span><div class="min-w-0 flex-1"><h3 class="truncate font-semibold">Essay outline template.docx</h3><p class="mt-1 text-xs text-muted">DOCX · 24 KB · IELTS Preparation</p></div><button class="resource-menu-btn text-muted"><i data-lucide="ellipsis-vertical" class="size-4"></i></button></div>
+                <div class="mt-4 flex gap-2"><button class="open-resource flex-1 rounded-xl bg-gold-400 px-4 py-2 text-sm font-semibold text-[#171108]">Open</button><button class="toggle-resource-save grid size-10 place-items-center rounded-xl border border-gold-600 text-gold-300" aria-pressed="true"><i data-lucide="bookmark-check" class="size-4"></i></button></div>
+              </article>
+            </div>
+
+            <div id="resourceEmpty" class="hidden py-16 text-center">
+              <i data-lucide="folder-x" class="mx-auto size-8 text-muted"></i>
+              <p class="mt-3 font-semibold">No matching resources</p>
+              <p class="mt-1 text-sm text-muted">Try another filter or search term.</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- Completed tab -->
+        <div id="tab-completed" class="tab-panel hidden fade-up mt-5" role="tabpanel">
+          <section class="rounded-2xl border border-line bg-panel p-4">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div><h2 class="text-xl font-semibold">Completed</h2><p class="mt-1 text-sm text-muted">Review completed learning and achievements.</p></div>
+              <select id="completedFilter" class="rounded-xl border border-line bg-panel2 px-3 py-2 text-sm outline-none">
+                <option value="all">All completed items</option>
+                <option value="course">Courses</option>
+                <option value="lesson">Lessons</option>
+                <option value="assignment">Assignments</option>
+              </select>
+            </div>
+
+            <div id="completedGrid" class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <article class="completed-card rounded-2xl border border-line bg-[#0c1625] p-4" data-type="course">
+                <div class="flex items-center justify-between"><span class="grid size-10 place-items-center rounded-xl bg-emerald-500/15 text-emerald-300"><i data-lucide="award" class="size-5"></i></span><span class="text-xs text-muted">Completed Jul 12</span></div>
+                <h3 class="mt-4 font-semibold">Introduction to Graphic Design</h3>
+                <p class="mt-1 text-sm text-muted">100% complete</p>
+                <div class="mt-4 flex gap-2"><button class="action-btn flex-1 rounded-xl border border-line px-4 py-2 text-sm font-semibold" data-action="Opening completed course materials">Review materials</button><button class="action-btn rounded-xl border border-gold-600 px-3 py-2 text-sm text-gold-300" data-action="Downloading certificate"><i data-lucide="download" class="size-4"></i></button></div>
+              </article>
+
+              <article class="completed-card rounded-2xl border border-line bg-[#0c1625] p-4" data-type="lesson">
+                <div class="flex items-center justify-between"><span class="grid size-10 place-items-center rounded-xl bg-violet-500/15 text-violet-300"><i data-lucide="book-open-check" class="size-5"></i></span><span class="text-xs text-muted">Completed today</span></div>
+                <h3 class="mt-4 font-semibold">CSS Flexbox Essentials</h3>
+                <p class="mt-1 text-sm text-muted">Web Design Foundations</p>
+                <div class="mt-4"><button class="action-btn w-full rounded-xl border border-line px-4 py-2 text-sm font-semibold" data-action="Reviewing completed lesson">Review lesson</button></div>
+              </article>
+
+              <article class="completed-card rounded-2xl border border-line bg-[#0c1625] p-4" data-type="assignment">
+                <div class="flex items-center justify-between"><span class="grid size-10 place-items-center rounded-xl bg-gold-500/15 text-gold-300"><i data-lucide="file-check-2" class="size-5"></i></span><span class="text-xs text-muted">Submitted yesterday</span></div>
+                <h3 class="mt-4 font-semibold">IELTS Writing Task 2</h3>
+                <p class="mt-1 text-sm text-muted">Feedback available</p>
+                <div class="mt-4"><button class="action-btn w-full rounded-xl border border-line px-4 py-2 text-sm font-semibold" data-action="Opening assignment feedback">View feedback</button></div>
+              </article>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile navigation -->
+  <div id="mobileOverlay" class="fixed inset-0 z-40 hidden bg-black/55 backdrop-blur-sm lg:hidden"></div>
+  <aside id="mobileNav" class="fixed inset-y-0 left-0 z-50 hidden w-[280px] -translate-x-full border-r border-line bg-shell p-5 shadow-soft transition-transform duration-200 lg:hidden">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="grid size-9 place-items-center rounded-xl bg-gold-400 text-[#15100a]"><i data-lucide="graduation-cap" class="size-5"></i></span>
+        <span class="text-xl font-semibold text-gold-400">Tutoria</span>
+      </div>
+      <button id="closeMobileNav" class="grid size-10 place-items-center rounded-xl border border-line bg-panel"><i data-lucide="x" class="size-5"></i></button>
+    </div>
+    <nav class="mt-8 space-y-2">
+      <a class="mobile-link" href="/landing" target="_top"><i data-lucide="house"></i>Home</a>
+      <a class="mobile-link" href="/discover" target="_top"><i data-lucide="compass"></i>Explore</a>
+      <a class="mobile-link active" href="/learning" target="_top"><i data-lucide="calendar-days"></i>My learning</a>
+      <a class="mobile-link" href="/messages" target="_top"><i data-lucide="messages-square"></i>Messages</a>
+      <a class="mobile-link" href="/communities" target="_top"><i data-lucide="users"></i>Communities</a>
+      <a class="mobile-link" href="#"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Calendar modal -->
+  <div id="calendarModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="calendarTitle">
+    <div class="glass max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[24px] border border-line p-5 shadow-float">
+      <div class="flex items-center justify-between">
+        <div><h2 id="calendarTitle" class="text-xl font-semibold">Learning calendar</h2><p class="mt-1 text-sm text-muted">Sessions, deadlines, personal tasks, and reminders</p></div>
+        <button class="close-modal grid size-10 place-items-center rounded-xl border border-line"><i data-lucide="x" class="size-5"></i></button>
+      </div>
+      <div class="mt-5 grid grid-cols-7 gap-px overflow-hidden rounded-2xl border border-line bg-line text-center text-sm">
+        <div class="bg-panel2 p-3 text-muted">Mon</div><div class="bg-panel2 p-3 text-muted">Tue</div><div class="bg-panel2 p-3 text-muted">Wed</div><div class="bg-panel2 p-3 text-muted">Thu</div><div class="bg-panel2 p-3 text-muted">Fri</div><div class="bg-panel2 p-3 text-muted">Sat</div><div class="bg-panel2 p-3 text-muted">Sun</div>
+        <div class="min-h-32 bg-panel p-2 text-left text-muted">22</div>
+        <div class="min-h-32 bg-panel p-2 text-left"><div class="text-muted">23</div><button class="mt-2 w-full rounded-lg bg-gold-500/15 p-2 text-left text-[11px] text-gold-300">7:00 IELTS Speaking</button><button class="mt-1 w-full rounded-lg bg-violet-500/15 p-2 text-left text-[11px] text-violet-300">8:30 Web Design Q&A</button><button class="mt-1 w-full rounded-lg bg-sky-500/15 p-2 text-left text-[11px] text-sky-300">9:30 Vocabulary review</button></div>
+        <div class="min-h-32 bg-panel p-2 text-left"><div class="text-muted">24</div><button class="mt-2 w-full rounded-lg bg-emerald-500/15 p-2 text-left text-[11px] text-emerald-300">7:00 Algebra</button></div>
+        <div class="min-h-32 bg-panel p-2 text-left text-muted">25</div><div class="min-h-32 bg-panel p-2 text-left text-muted">26</div><div class="min-h-32 bg-panel p-2 text-left text-muted">27</div><div class="min-h-32 bg-panel p-2 text-left text-muted">28</div>
+      </div>
+      <div class="mt-5 flex flex-wrap justify-end gap-2">
+        <button class="action-btn rounded-xl border border-line px-4 py-2 text-sm" data-action="Exporting to Apple Calendar">Apple Calendar</button>
+        <button class="action-btn rounded-xl border border-line px-4 py-2 text-sm" data-action="Exporting to Outlook Calendar">Outlook</button>
+        <button class="action-btn rounded-xl bg-gold-400 px-4 py-2 text-sm font-semibold text-[#171108]" data-action="Exporting to Google Calendar">Google Calendar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generic details modal -->
+  <div id="detailsModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
+    <div class="glass w-full max-w-lg rounded-[24px] border border-line p-5 shadow-float">
+      <div class="flex items-center justify-between"><h2 id="detailsTitle" class="text-xl font-semibold">Details</h2><button class="close-modal grid size-10 place-items-center rounded-xl border border-line"><i data-lucide="x" class="size-5"></i></button></div>
+      <div id="detailsBody" class="mt-5"></div>
+    </div>
+  </div>
+
+  <!-- Add task modal -->
+  <div id="taskModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="taskTitle">
+    <form id="taskForm" class="glass w-full max-w-lg rounded-[24px] border border-line p-5 shadow-float">
+      <div class="flex items-center justify-between"><h2 id="taskTitle" class="text-xl font-semibold">Add learning task</h2><button type="button" class="close-modal grid size-10 place-items-center rounded-xl border border-line"><i data-lucide="x" class="size-5"></i></button></div>
+      <div class="mt-5 space-y-4">
+        <label class="block"><span class="mb-2 block text-sm text-muted">Task title</span><input id="taskName" required class="w-full rounded-xl border border-line bg-panel2 px-4 py-3 outline-none focus:border-gold-500" placeholder="Review vocabulary" /></label>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="block"><span class="mb-2 block text-sm text-muted">Time</span><input id="taskTime" type="time" required class="w-full rounded-xl border border-line bg-panel2 px-4 py-3 outline-none focus:border-gold-500" /></label>
+          <label class="block"><span class="mb-2 block text-sm text-muted">Duration</span><select id="taskDuration" class="w-full rounded-xl border border-line bg-panel2 px-4 py-3 outline-none"><option>15 min</option><option>30 min</option><option>45 min</option><option>60 min</option></select></label>
+        </div>
+        <label class="block"><span class="mb-2 block text-sm text-muted">Related learning space</span><input id="taskContext" class="w-full rounded-xl border border-line bg-panel2 px-4 py-3 outline-none focus:border-gold-500" placeholder="Optional" /></label>
+      </div>
+      <div class="mt-6 flex justify-end gap-2"><button type="button" class="close-modal rounded-xl border border-line px-4 py-2.5 text-sm">Cancel</button><button type="submit" class="rounded-xl bg-gold-400 px-5 py-2.5 text-sm font-semibold text-[#171108]">Add task</button></div>
+    </form>
+  </div>
+
+  <!-- New collection modal -->
+  <div id="collectionModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="collectionTitle">
+    <form id="collectionForm" class="glass w-full max-w-md rounded-[24px] border border-line p-5 shadow-float">
+      <div class="flex items-center justify-between"><h2 id="collectionTitle" class="text-xl font-semibold">New collection</h2><button type="button" class="close-modal grid size-10 place-items-center rounded-xl border border-line"><i data-lucide="x" class="size-5"></i></button></div>
+      <label class="mt-5 block"><span class="mb-2 block text-sm text-muted">Collection name</span><input id="collectionName" required class="w-full rounded-xl border border-line bg-panel2 px-4 py-3 outline-none focus:border-gold-500" placeholder="Exam preparation" /></label>
+      <div class="mt-6 flex justify-end gap-2"><button type="button" class="close-modal rounded-xl border border-line px-4 py-2.5 text-sm">Cancel</button><button type="submit" class="rounded-xl bg-gold-400 px-5 py-2.5 text-sm font-semibold text-[#171108]">Create</button></div>
+    </form>
+  </div>
+
+  <!-- Context menu -->
+  <div id="contextMenu" class="glass fixed z-[120] hidden min-w-[210px] rounded-xl border border-line p-1.5 shadow-float">
+    <button class="context-action flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-panel2" data-menu-action="Open details"><i data-lucide="info" class="size-4"></i>View details</button>
+    <button class="context-action flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-panel2" data-menu-action="Opening in a new tab"><i data-lucide="external-link" class="size-4"></i>Open in new tab</button>
+    <button class="context-action flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-panel2" data-menu-action="Adjusting notifications"><i data-lucide="bell" class="size-4"></i>Notifications</button>
+    <button class="context-action flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-red-300 hover:bg-red-500/10" data-menu-action="Removing item from this view"><i data-lucide="eye-off" class="size-4"></i>Hide from view</button>
+  </div>
+
+  <!-- Offline banner -->
+  <div id="offlineBanner" class="fixed left-1/2 top-4 z-[150] hidden -translate-x-1/2 rounded-full border border-amber-400/30 bg-amber-500/15 px-4 py-2 text-sm text-amber-200 shadow-float">
+    You’re offline. Cached content is available; updates will sync later.
+  </div>
+
+  <!-- Toast region -->
+  <div id="toastRegion" class="fixed bottom-4 right-4 z-[160] flex w-[min(92vw,360px)] flex-col gap-2" aria-live="polite"></div>
+
+  <script>
+    const qs = (selector, root = document) => root.querySelector(selector);
+    const qsa = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+    // Keep the shell identity aligned with the signed-in Tutoria profile.
+    function readCurrentProfile() {
+      try {
+        const session = JSON.parse(localStorage.getItem("tutoria_signup") || "{}");
+        const key = String(session.email || session.id || session.name || "").trim().toLowerCase();
+        const profiles = JSON.parse(localStorage.getItem("tutoria_profiles") || "{}");
+        const profile = profiles[key] || {};
+        return {
+          name: String(profile.name || session.name || "Tutoria member"),
+          email: String(session.email || ""),
+          avatar: String(profile.avatar || session.avatarUrl || "https://i.pravatar.cc/96?img=12")
+        };
+      } catch {
+        return { name: "Tutoria member", email: "", avatar: "https://i.pravatar.cc/96?img=12" };
+      }
+    }
+    const currentProfile = readCurrentProfile();
+    const currentProfileHandle = currentProfile.email || `@${currentProfile.name.toLowerCase().replace(/[^a-z0-9]+/g, ".").replace(/^\.|\.$/g, "")}`;
+    qs("#currentProfileLink").href = `/user/${encodeURIComponent(currentProfile.name)}`;
+    qs("#currentProfileAvatar").src = currentProfile.avatar;
+    qs("#currentProfileAvatar").alt = currentProfile.name;
+    qs("#currentProfileName").textContent = currentProfile.name;
+    qs("#currentProfileHandle").textContent = currentProfileHandle;
+
+    // Shared styles
+    qsa(".sidebar-link").forEach(link => {
+      link.classList.add("relative","flex","min-h-11","items-center","gap-3","rounded-xl","px-3","text-sm","font-medium","text-[#a8b2c1]","transition","hover:bg-panel2","hover:text-white");
+      qsa("svg", link).forEach(icon => icon.classList.add("size-[18px]","shrink-0"));
+    });
+    qsa(".sidebar-link.active").forEach(link => {
+      link.classList.remove("text-[#a8b2c1]");
+      link.classList.add("bg-panel2","text-white","before:absolute","before:left-0","before:h-6","before:w-0.5","before:rounded-full","before:bg-gold-400");
+    });
+    qsa(".mobile-link").forEach(link => {
+      link.classList.add("flex","items-center","gap-3","rounded-xl","px-3","py-3","text-sm","font-medium","text-muted","hover:bg-panel2","hover:text-white");
+      qsa("svg", link).forEach(icon => icon.classList.add("size-5"));
+    });
+    qsa(".mobile-link.active").forEach(link => {
+      link.classList.remove("text-muted");
+      link.classList.add("bg-panel2","text-white");
+    });
+    qsa(".tab-btn").forEach(btn => {
+      btn.classList.add("relative","shrink-0","px-4","py-4","text-sm","font-medium","text-muted","transition","hover:text-white");
+    });
+
+    lucide.createIcons();
+
+    // Toast
+    function toast(message, type = "success") {
+      const region = qs("#toastRegion");
+      const item = document.createElement("div");
+      const icon = type === "error" ? "circle-alert" : type === "info" ? "info" : "circle-check";
+      item.className = "toast-enter flex items-center gap-3 rounded-2xl border border-line bg-panel px-4 py-3 shadow-float";
+      item.innerHTML = `<span class="grid size-8 shrink-0 place-items-center rounded-full ${type === "error" ? "bg-red-500/15 text-red-300" : type === "info" ? "bg-sky-500/15 text-sky-300" : "bg-emerald-500/15 text-emerald-300"}"><i data-lucide="${icon}" class="size-4"></i></span><p class="min-w-0 flex-1 text-sm">${message}</p><button class="toast-close text-muted" aria-label="Dismiss"><i data-lucide="x" class="size-4"></i></button>`;
+      region.appendChild(item);
+      lucide.createIcons();
+      const remove = () => item.remove();
+      qs(".toast-close", item).addEventListener("click", remove);
+      setTimeout(remove, 3800);
+    }
+
+    // Simulated loading
+    setTimeout(() => {
+      qs("#loadingState").classList.add("hidden");
+      const initialTab = new URLSearchParams(location.search).get("tab") || localStorage.getItem("tutoria-learning-tab") || "overview";
+      switchTab(initialTab);
+    }, 750);
+
+    // Sidebar collapse
+    const appShell = qs("#appShell");
+    const sidebarToggle = qs("#sidebarToggle");
+    function setCollapsed(collapsed) {
+      appShell.classList.toggle("sidebar-collapsed", collapsed);
+      sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+      sidebarToggle.setAttribute("aria-label", collapsed ? "Expand navigation" : "Collapse navigation");
+      localStorage.setItem("tutoria-learning-sidebar-collapsed", String(collapsed));
+    }
+    setCollapsed(localStorage.getItem("tutoria-learning-sidebar-collapsed") === "true");
+    sidebarToggle.addEventListener("click", () => setCollapsed(!appShell.classList.contains("sidebar-collapsed")));
+
+    // Tabs
+    const tabButtons = qsa(".tab-btn");
+    const tabPanels = qsa(".tab-panel");
+    function switchTab(tab, updateUrl = true) {
+      const valid = ["overview","courses","sessions","resources","completed"];
+      if (!valid.includes(tab)) tab = "overview";
+      tabButtons.forEach(btn => {
+        const active = btn.dataset.tab === tab;
+        btn.classList.toggle("text-gold-300", active);
+        btn.classList.toggle("after:absolute", active);
+        btn.classList.toggle("after:bottom-0", active);
+        btn.classList.toggle("after:left-2", active);
+        btn.classList.toggle("after:right-2", active);
+        btn.classList.toggle("after:h-0.5", active);
+        btn.classList.toggle("after:bg-gold-400", active);
+        btn.classList.toggle("text-muted", !active);
+        btn.setAttribute("aria-selected", String(active));
+      });
+      tabPanels.forEach(panel => panel.classList.toggle("hidden", panel.id !== `tab-${tab}`));
+      localStorage.setItem("tutoria-learning-tab", tab);
+      if (updateUrl) {
+        const url = new URL(location.href);
+        url.searchParams.set("tab", tab);
+        history.pushState({ tab }, "", url);
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    tabButtons.forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
+    window.addEventListener("popstate", event => switchTab(event.state?.tab || new URLSearchParams(location.search).get("tab") || "overview", false));
+    qsa(".stat-link").forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.openTab)));
+
+    // Course carousel
+    qs("#coursePrev").addEventListener("click", () => qs("#courseScroller").scrollBy({ left: -320, behavior: "smooth" }));
+    qs("#courseNext").addEventListener("click", () => qs("#courseScroller").scrollBy({ left: 320, behavior: "smooth" }));
+
+    // Search
+    const searchInput = qs("#globalSearch");
+    const searchResults = qs("#searchResults");
+    const clearSearchBtn = qs("#clearSearchBtn");
+    const searchable = [
+      { type: "Course", title: "IELTS Preparation", tab: "courses", subtitle: "68% complete" },
+      { type: "Course", title: "Web Design Foundations", tab: "courses", subtitle: "42% complete" },
+      { type: "Course", title: "Algebra Essentials", tab: "courses", subtitle: "27% complete" },
+      { type: "Session", title: "IELTS Speaking Part 2", tab: "sessions", subtitle: "Jul 23 · 7:00 PM" },
+      { type: "Session", title: "Web Design Live Q&A", tab: "sessions", subtitle: "Jul 23 · 8:30 PM" },
+      { type: "Resource", title: "Speaking cue cards.pdf", tab: "resources", subtitle: "PDF · 1.4 MB" },
+      { type: "Resource", title: "Algebra basics recap.mp4", tab: "resources", subtitle: "Video · 45 MB" },
+      { type: "Completed", title: "CSS Flexbox Essentials", tab: "completed", subtitle: "Completed today" }
+    ];
+    let searchTimer;
+    function runSearch() {
+      const query = searchInput.value.trim().toLowerCase();
+      clearSearchBtn.classList.toggle("hidden", !query);
+      if (!query) {
+        searchResults.innerHTML = `<div class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted">Recent searches</div><button class="search-item flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-panel2" data-tab="courses" data-title="IELTS Preparation"><i data-lucide="history" class="size-4 text-muted"></i><span class="text-sm">IELTS Preparation</span></button><button class="search-item flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-panel2" data-tab="resources" data-title="Speaking cue cards.pdf"><i data-lucide="history" class="size-4 text-muted"></i><span class="text-sm">Speaking cue cards.pdf</span></button>`;
+        searchResults.classList.remove("hidden");
+        bindSearchItems();
+        lucide.createIcons();
+        return;
+      }
+      const matches = searchable.filter(item => `${item.type} ${item.title} ${item.subtitle}`.toLowerCase().includes(query));
+      searchResults.innerHTML = matches.length
+        ? matches.map(item => `<button class="search-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left hover:bg-panel2" data-tab="${item.tab}" data-title="${item.title}"><span class="grid size-9 place-items-center rounded-xl bg-panel2 text-gold-300"><i data-lucide="${item.type === "Course" ? "book-open" : item.type === "Session" ? "calendar-days" : item.type === "Resource" ? "file" : "circle-check"}" class="size-4"></i></span><span class="min-w-0"><span class="block text-xs text-muted">${item.type}</span><span class="block truncate text-sm font-semibold">${item.title}</span><span class="block text-xs text-muted">${item.subtitle}</span></span></button>`).join("")
+        : `<div class="px-4 py-8 text-center"><i data-lucide="search-x" class="mx-auto size-7 text-muted"></i><p class="mt-3 font-semibold">No results found</p><p class="mt-1 text-sm text-muted">Try another title, subject, session, or resource.</p></div>`;
+      searchResults.classList.remove("hidden");
+      bindSearchItems();
+      lucide.createIcons();
+    }
+    function bindSearchItems() {
+      qsa(".search-item", searchResults).forEach(item => item.addEventListener("click", () => {
+        switchTab(item.dataset.tab);
+        searchInput.value = item.dataset.title;
+        searchResults.classList.add("hidden");
+        clearSearchBtn.classList.remove("hidden");
+        toast(`Opening ${item.dataset.title}`, "info");
+      }));
+    }
+    searchInput.addEventListener("focus", runSearch);
+    searchInput.addEventListener("input", () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(runSearch, 180);
+      filterVisibleContent(searchInput.value);
+    });
+    clearSearchBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      clearSearchBtn.classList.add("hidden");
+      searchResults.classList.add("hidden");
+      filterVisibleContent("");
+      searchInput.focus();
+    });
+    document.addEventListener("click", event => {
+      if (!searchResults.contains(event.target) && event.target !== searchInput) searchResults.classList.add("hidden");
+    });
+    function filterVisibleContent(queryRaw) {
+      const query = queryRaw.trim().toLowerCase();
+      qsa(".course-list-card").forEach(card => card.classList.toggle("hidden", query && !card.dataset.title.toLowerCase().includes(query)));
+      qsa(".session-card").forEach(card => card.classList.toggle("hidden", query && !card.dataset.title.toLowerCase().includes(query)));
+      qsa(".resource-list-card").forEach(card => card.classList.toggle("hidden", query && !card.dataset.title.toLowerCase().includes(query)));
+    }
+
+    // Calendar modal
+    function openModal(modal) {
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      document.body.classList.add("overflow-hidden");
+      qs("button, input, select", modal)?.focus();
+    }
+    function closeModal(modal) {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      document.body.classList.remove("overflow-hidden");
+    }
+    qsa("#calendarBtn, #mobileCalendarBtn, .open-calendar, #viewScheduleBtn").forEach(btn => btn.addEventListener("click", () => openModal(qs("#calendarModal"))));
+    qsa(".close-modal").forEach(btn => btn.addEventListener("click", () => closeModal(btn.closest('[role="dialog"]'))));
+    qsa('[role="dialog"]').forEach(modal => modal.addEventListener("click", event => { if (event.target === modal) closeModal(modal); }));
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        qsa('[role="dialog"]').filter(modal => !modal.classList.contains("hidden")).forEach(closeModal);
+        qs("#contextMenu").classList.add("hidden");
+      }
+    });
+
+    // Explore
+    qs("#exploreBtn").addEventListener("click", () => {
+      qs("#detailsTitle").textContent = "Explore learning";
+      qs("#detailsBody").innerHTML = `<p class="text-sm leading-6 text-muted">Recommended learning spaces based on your active subjects and saved resources.</p><div class="mt-4 grid gap-3"><button class="rounded-xl border border-line bg-panel2 p-4 text-left hover:border-gold-500"><span class="text-xs text-gold-300">Recommended</span><span class="mt-1 block font-semibold">Advanced IELTS Writing</span><span class="mt-1 block text-sm text-muted">Build stronger essays and improve task response.</span></button><button class="rounded-xl border border-line bg-panel2 p-4 text-left hover:border-gold-500"><span class="text-xs text-violet-300">Design</span><span class="mt-1 block font-semibold">Design Systems in Practice</span><span class="mt-1 block text-sm text-muted">Create scalable components and consistent interfaces.</span></button></div>`;
+      openModal(qs("#detailsModal"));
+    });
+
+    // Add task
+    qs("#addTaskBtn").addEventListener("click", () => openModal(qs("#taskModal")));
+    qs("#taskForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const title = qs("#taskName").value.trim();
+      const time = qs("#taskTime").value;
+      const duration = qs("#taskDuration").value;
+      const context = qs("#taskContext").value.trim() || "Personal learning task";
+      const item = document.createElement("div");
+      item.className = "today-item fade-up relative grid grid-cols-[12px_58px_minmax(0,1fr)_auto] items-start gap-3";
+      item.dataset.title = title;
+      item.innerHTML = `<span class="mt-1.5 size-3 rounded-full border border-sky-400 bg-panel"></span><span class="text-xs text-muted">${time}</span><div><p class="text-sm font-semibold"></p><p class="mt-1 text-[11px] text-muted">${duration} · ${context}</p></div><button class="complete-task rounded-lg border border-line px-3 py-1.5 text-xs font-semibold">Complete</button>`;
+      qs("p.text-sm", item).textContent = title;
+      qs("#todayList").appendChild(item);
+      qs(".complete-task", item).addEventListener("click", () => {
+        item.classList.add("opacity-50");
+        qs(".complete-task", item).textContent = "Done";
+        qs(".complete-task", item).disabled = true;
+        toast(`Completed: ${title}`);
+      });
+      closeModal(qs("#taskModal"));
+      event.target.reset();
+      toast("Learning task added");
+    });
+
+    // Collection
+    qs("#newCollectionBtn").addEventListener("click", () => openModal(qs("#collectionModal")));
+    qs("#collectionForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const name = qs("#collectionName").value.trim();
+      closeModal(qs("#collectionModal"));
+      event.target.reset();
+      toast(`Collection “${name}” created`);
+    });
+
+    // Continue course and save
+    qsa(".continue-btn").forEach(btn => btn.addEventListener("click", () => {
+      const card = btn.closest("[data-title]");
+      const title = card?.dataset.title || card?.querySelector("h3")?.textContent || "course";
+      toast(`Resuming ${title}`, "info");
+      const progress = Number(card?.dataset.progress || 0);
+      if (progress < 100 && card?.dataset.progress !== undefined) {
+        const updated = Math.min(100, progress + 1);
+        card.dataset.progress = String(updated);
+        const bar = qs(".course-progress", card);
+        const label = qs(".course-percent", card);
+        if (bar) bar.style.width = `${updated}%`;
+        if (label) label.textContent = `${updated}%`;
+      }
+    }));
+
+    qsa(".save-course-btn").forEach(btn => btn.addEventListener("click", () => {
+      const saved = btn.getAttribute("aria-pressed") === "true";
+      btn.setAttribute("aria-pressed", String(!saved));
+      btn.classList.toggle("border-gold-600", !saved);
+      btn.classList.toggle("text-gold-300", !saved);
+      btn.innerHTML = `<i data-lucide="${saved ? "bookmark" : "bookmark-check"}" class="size-[17px]"></i>`;
+      lucide.createIcons();
+      toast(saved ? "Removed from saved learning" : "Saved for quick access");
+    }));
+
+    // Generic actions
+    qsa(".action-btn").forEach(btn => btn.addEventListener("click", () => toast(btn.dataset.action || "Action completed", "info")));
+    qsa(".activity-row").forEach(btn => btn.addEventListener("click", () => toast(`Opening ${btn.dataset.target}`, "info")));
+    qs("#viewAllActivityBtn").addEventListener("click", () => {
+      qs("#detailsTitle").textContent = "Activity history";
+      qs("#detailsBody").innerHTML = `<div class="space-y-3"><div class="rounded-xl border border-line bg-panel2 p-3"><p class="text-sm font-semibold">Completed CSS Flexbox Essentials</p><p class="mt-1 text-xs text-muted">2 hours ago</p></div><div class="rounded-xl border border-line bg-panel2 p-3"><p class="text-sm font-semibold">Submitted IELTS Writing Task 2</p><p class="mt-1 text-xs text-muted">Yesterday</p></div><div class="rounded-xl border border-line bg-panel2 p-3"><p class="text-sm font-semibold">Downloaded Speaking cue cards.pdf</p><p class="mt-1 text-xs text-muted">Jul 21</p></div></div>`;
+      openModal(qs("#detailsModal"));
+    });
+    qs("#streakBtn").addEventListener("click", () => {
+      qs("#detailsTitle").textContent = "Learning streak";
+      qs("#detailsBody").innerHTML = `<div class="rounded-2xl bg-gold-500/10 p-5 text-center"><i data-lucide="flame" class="mx-auto size-10 text-gold-300"></i><p class="mt-3 text-3xl font-bold">7 days</p><p class="mt-2 text-sm text-muted">Meaningful activity counts when you complete a lesson, submit work, join a session, or finish a personal task.</p></div>`;
+      lucide.createIcons();
+      openModal(qs("#detailsModal"));
+    });
+
+    // Context menu
+    const contextMenu = qs("#contextMenu");
+    let contextTarget = "";
+    function showContextMenu(event, targetName) {
+      event.preventDefault();
+      contextTarget = targetName;
+      contextMenu.style.left = `${Math.min(event.clientX, window.innerWidth - 230)}px`;
+      contextMenu.style.top = `${Math.min(event.clientY, window.innerHeight - 220)}px`;
+      contextMenu.classList.remove("hidden");
+    }
+    qsa(".course-menu-btn").forEach(btn => btn.addEventListener("click", event => {
+      const card = btn.closest("[data-title]") || btn.closest("article");
+      showContextMenu(event, card?.dataset.title || card?.querySelector("h3")?.textContent || "course");
+    }));
+    qsa(".resource-menu-btn").forEach(btn => btn.addEventListener("click", event => {
+      const card = btn.closest("[data-title]") || btn.closest("article");
+      showContextMenu(event, card?.dataset.title || card?.querySelector("h3, p")?.textContent || "resource");
+    }));
+    qsa(".context-action").forEach(btn => btn.addEventListener("click", () => {
+      contextMenu.classList.add("hidden");
+      toast(`${btn.dataset.menuAction}: ${contextTarget}`, "info");
+    }));
+    document.addEventListener("click", event => {
+      if (!contextMenu.contains(event.target) && !event.target.closest(".course-menu-btn, .resource-menu-btn")) contextMenu.classList.add("hidden");
+    });
+
+    // Resource open/save
+    qsa(".open-resource").forEach(btn => btn.addEventListener("click", () => {
+      const card = btn.closest("[data-title]") || btn.closest("article");
+      toast(`Opening ${card?.dataset.title || "resource"}`, "info");
+    }));
+    qsa(".toggle-resource-save").forEach(btn => btn.addEventListener("click", () => {
+      const card = btn.closest(".resource-list-card");
+      const saved = btn.getAttribute("aria-pressed") === "true";
+      btn.setAttribute("aria-pressed", String(!saved));
+      card.dataset.saved = String(!saved);
+      btn.classList.toggle("border-gold-600", !saved);
+      btn.classList.toggle("text-gold-300", !saved);
+      btn.classList.toggle("border-line", saved);
+      btn.innerHTML = `<i data-lucide="${saved ? "bookmark" : "bookmark-check"}" class="size-4"></i>`;
+      lucide.createIcons();
+      toast(saved ? "Removed from saved resources" : "Resource saved");
+      applyResourceFilters();
+    }));
+
+    // Course filters/sort
+    function applyCourseFilters() {
+      const filter = qs("#courseFilter").value;
+      const sort = qs("#courseSort").value;
+      const grid = qs("#coursesGrid");
+      const cards = qsa(".course-list-card", grid);
+      cards.forEach(card => card.classList.toggle("hidden", filter !== "all" && card.dataset.status !== filter));
+      const visible = cards.filter(card => !card.classList.contains("hidden"));
+      visible.sort((a, b) => {
+        if (sort === "progress-desc") return Number(b.dataset.progress) - Number(a.dataset.progress);
+        if (sort === "progress-asc") return Number(a.dataset.progress) - Number(b.dataset.progress);
+        if (sort === "az") return a.dataset.title.localeCompare(b.dataset.title);
+        return 0;
+      }).forEach(card => grid.appendChild(card));
+      qs("#courseEmpty").classList.toggle("hidden", visible.length > 0);
+    }
+    qs("#courseFilter").addEventListener("change", applyCourseFilters);
+    qs("#courseSort").addEventListener("change", applyCourseFilters);
+
+    // Session filters/views
+    function applySessionFilters() {
+      const filter = qs("#sessionFilter").value;
+      qsa(".session-card").forEach(card => card.classList.toggle("hidden", filter !== "all" && card.dataset.status !== filter));
+    }
+    qs("#sessionFilter").addEventListener("change", applySessionFilters);
+    qs("#sessionListBtn").addEventListener("click", () => {
+      qs("#sessionListView").classList.remove("hidden");
+      qs("#sessionCalendarView").classList.add("hidden");
+      qs("#sessionListBtn").classList.add("border-gold-600","text-gold-300");
+      qs("#sessionCalendarBtn").classList.remove("border-gold-600","text-gold-300");
+    });
+    qs("#sessionCalendarBtn").addEventListener("click", () => {
+      qs("#sessionListView").classList.add("hidden");
+      qs("#sessionCalendarView").classList.remove("hidden");
+      qs("#sessionCalendarBtn").classList.add("border-gold-600","text-gold-300");
+      qs("#sessionListBtn").classList.remove("border-gold-600","text-gold-300");
+    });
+
+    // Resource filters/sort
+    function applyResourceFilters() {
+      const filter = qs("#resourceFilter").value;
+      const sort = qs("#resourceSort").value;
+      const grid = qs("#resourceGrid");
+      const cards = qsa(".resource-list-card", grid);
+      cards.forEach(card => {
+        const show = filter === "all" || (filter === "saved" && card.dataset.saved === "true") || card.dataset.type === filter;
+        card.classList.toggle("hidden", !show);
+      });
+      const visible = cards.filter(card => !card.classList.contains("hidden"));
+      visible.sort((a, b) => {
+        if (sort === "az") return a.dataset.title.localeCompare(b.dataset.title);
+        if (sort === "type") return a.dataset.type.localeCompare(b.dataset.type);
+        return 0;
+      }).forEach(card => grid.appendChild(card));
+      qs("#resourceEmpty").classList.toggle("hidden", visible.length > 0);
+    }
+    qs("#resourceFilter").addEventListener("change", applyResourceFilters);
+    qs("#resourceSort").addEventListener("change", applyResourceFilters);
+
+    // Completed filters
+    qs("#completedFilter").addEventListener("change", event => {
+      const filter = event.target.value;
+      qsa(".completed-card").forEach(card => card.classList.toggle("hidden", filter !== "all" && card.dataset.type !== filter));
+    });
+
+    // Mobile navigation
+    const mobileNav = qs("#mobileNav");
+    const mobileOverlay = qs("#mobileOverlay");
+    function openMobileNav() {
+      mobileNav.classList.remove("hidden");
+      mobileOverlay.classList.remove("hidden");
+      requestAnimationFrame(() => mobileNav.classList.remove("-translate-x-full"));
+      document.body.classList.add("overflow-hidden");
+    }
+    function closeMobileNav() {
+      mobileNav.classList.add("-translate-x-full");
+      mobileOverlay.classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+      setTimeout(() => mobileNav.classList.add("hidden"), 200);
+    }
+    qs("#openMobileNav").addEventListener("click", openMobileNav);
+    qs("#closeMobileNav").addEventListener("click", closeMobileNav);
+    mobileOverlay.addEventListener("click", closeMobileNav);
+
+    // Online/offline behavior
+    function updateOnlineStatus() {
+      const offline = !navigator.onLine;
+      qs("#offlineBanner").classList.toggle("hidden", !offline);
+      qsa(".continue-btn, .action-btn").forEach(btn => {
+        if (offline && /join|submit|export/i.test(btn.dataset.action || btn.textContent)) {
+          btn.disabled = true;
+          btn.classList.add("opacity-50","cursor-not-allowed");
+        } else {
+          btn.disabled = false;
+          btn.classList.remove("opacity-50","cursor-not-allowed");
+        }
+      });
+    }
+    window.addEventListener("online", () => { updateOnlineStatus(); toast("Connection restored. Updates are synchronized."); });
+    window.addEventListener("offline", updateOnlineStatus);
+    updateOnlineStatus();
+  </script>
+</body>
+</html>

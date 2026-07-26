@@ -1398,6 +1398,11 @@ a.primaryButton {
 .courseCard .cardTitle {
   display: -webkit-box;
   overflow: hidden;
+  font-family: var(--font-geist-sans, "Inter", sans-serif) !important;
+  font-size: 1.42rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -1414,6 +1419,60 @@ a.primaryButton {
   flex-direction: column;
   gap: 0.38rem;
   margin-top: 0.8rem;
+}
+
+.eventCard .cardKicker {
+  font-family: var(--font-geist-sans, "Inter", sans-serif);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.eventCard .cardTitle {
+  font-family: var(--font-geist-sans, "Inter", sans-serif) !important;
+  font-size: 1.42rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+.eventCard .description {
+  color: #aeb4b2;
+  font-family: var(--font-geist-sans, "Inter", sans-serif);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.eventCard .eventDetails,
+.eventCard .metaItem,
+.eventCard .price {
+  font-family: var(--font-geist-sans, "Inter", sans-serif);
+}
+
+.eventCard .eventDetails {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.eventCard .priceRow > .metaItem,
+.eventCard .price {
+  font-size: 1rem;
+}
+
+.forYouTitle {
+  color: var(--moon);
+  font-family: var(--font-geist-sans, "Inter", sans-serif) !important;
+  font-size: 1.42rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+.forYouAuthor,
+.forYouMeta {
+  color: var(--silver);
+  font-family: var(--font-geist-sans, "Inter", sans-serif);
+  font-size: 0.875rem !important;
 }
 
 .capacity {
@@ -1562,7 +1621,7 @@ a.primaryButton {
     aspect-ratio: 16 / 9;
   }
 
-.eventCard {
+  .eventCard {
     grid-template-columns: 6.75rem minmax(0, 1fr);
   }
 

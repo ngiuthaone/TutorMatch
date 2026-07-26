@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { PublishedEventPage } from "@/components/events/published-event-page";
-import { Footer } from "@/components/discover/footer";
-import { TopNav } from "@/components/discover/top-nav";
 import { allEvents, getEventBySlug, getSimilarEvents } from "@/lib/event-data";
+
+export const dynamicParams = true;
 
 export function generateStaticParams() {
   return allEvents.map((event) => ({ slug: event.slug }));
@@ -32,11 +32,5 @@ export default async function EventPage({
   const { slug } = await params;
   const event = getEventBySlug(slug);
 
-  return (
-    <div className="tutoria-page-shell tutoria-marketplace-shell flex flex-col bg-black">
-      <TopNav />
-      <PublishedEventPage slug={slug} fallback={event} similarEvents={getSimilarEvents(slug)} />
-      <Footer />
-    </div>
-  );
+  return <PublishedEventPage slug={slug} fallback={event} similarEvents={getSimilarEvents(slug)} />;
 }

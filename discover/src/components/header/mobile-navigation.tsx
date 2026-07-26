@@ -139,9 +139,9 @@ export function MobileNavigation({ open, onClose, user }: MobileNavigationProps)
           {user ? (
             <div className={styles.mobileActions}>
               <div className={styles.mobileUtilityRow}>
-                <button className={styles.mobileSecondaryAction}>
+                <Link href="/messages" onClick={onClose} className={styles.mobileSecondaryAction}>
                   Messages
-                </button>
+                </Link>
                 <button className={styles.mobileSecondaryAction}>
                   Notifications
                 </button>

@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutoria Messages</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50:"#182235",100:"#202c40",200:"#3b4658",500:"#e4c58d",
+              600:"#dba45d",700:"#c8944b",800:"#f1d6a5"
+            },
+            line:"rgba(207,218,232,.16)", canvas:"#030812", ink:"#f3f0e8"
+          },
+          boxShadow:{soft:"0 22px 70px rgba(0,0,0,.28)"}
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <style>
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;background:#030812 url('/brand/tutoria-space-sky.png') center top/cover fixed;color:#f3f0e8;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .thin{scrollbar-width:thin;scrollbar-color:#566174 transparent}
+    .thin::-webkit-scrollbar{width:6px}.thin::-webkit-scrollbar-thumb{background:#566174;border-radius:999px}
+    #appShell{background:rgba(7,14,25,.9)!important;backdrop-filter:blur(22px)}
+    .bg-white{background-color:rgba(11,20,34,.94)!important}
+    .bg-slate-50{background-color:rgba(24,34,53,.82)!important}
+    .bg-slate-100{background-color:#202c40!important}
+    .hover\:bg-slate-50:hover{background-color:rgba(32,44,64,.92)!important}
+    .text-slate-600{color:#c1c8d3!important}.text-slate-500{color:#aeb7c5!important}.text-slate-400{color:#7f8999!important}
+    .border-white{border-color:#0b1422!important}
+    input,textarea{color:#f3f0e8}input::placeholder,textarea::placeholder{color:#777f90}
+    .create-action{display:flex;align-items:center;gap:10px;border:1px solid rgba(207,218,232,.16);border-radius:12px;padding:10px;text-align:left;transition:.16s ease}
+    .create-action:hover{border-color:#dba45d;background:#182235}
+    .create-action strong{display:block;font-size:12px}.create-action small{display:block;margin-top:2px;color:#aeb7c5;font-size:10px}
+    .action-field{margin-top:7px;width:100%;border:1px solid rgba(207,218,232,.16);border-radius:12px;background:#08111d;padding:11px 13px;color:#f3f0e8;font-size:14px;outline:none}
+    .action-field:focus{border-color:#dba45d}.action-label{display:block;font-size:13px;font-weight:600}
+    .structured-card{margin:24px auto;max-width:430px;border:1px solid rgba(207,218,232,.16);border-radius:18px;background:rgba(11,20,34,.96);overflow:hidden}
+    .structured-choice{width:100%;border:1px solid rgba(207,218,232,.16);border-radius:12px;padding:11px 12px;text-align:left;font-size:13px;transition:.16s ease}
+    .structured-choice:hover,.structured-choice.selected{border-color:#dba45d;background:#182235}
+    .fade-in{animation:cardIn .18s ease-out}@keyframes cardIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+    .message-actions{opacity:0;pointer-events:none;transform:translateY(2px);transition:.16s ease}.message-host:hover .message-actions,.message-host:focus-within .message-actions{opacity:1;pointer-events:auto;transform:none}
+    .message-action{display:grid;place-items:center;width:26px;height:26px;border:1px solid rgba(207,218,232,.16);border-radius:8px;background:#0b1422;color:#aeb7c5}.message-action:hover{border-color:#dba45d;color:#f3f0e8}
+    @media(min-width:1024px){
+      #appShell{
+        grid-template-columns:220px 360px minmax(0,1fr);
+        transition:grid-template-columns .24s cubic-bezier(.4,0,.2,1);
+      }
+      #appShell.sidebar-collapsed{
+        grid-template-columns:84px 360px minmax(0,1fr);
+      }
+      #appSidebar{
+        transition:padding .24s cubic-bezier(.4,0,.2,1);
+      }
+      #appShell.sidebar-collapsed #appSidebar{
+        padding-left:12px;
+        padding-right:12px;
+      }
+      #appShell.sidebar-collapsed .sidebar-label,
+      #appShell.sidebar-collapsed .sidebar-brand-text,
+      #appShell.sidebar-collapsed .sidebar-profile-copy{
+        display:none;
+      }
+      #appShell.sidebar-collapsed .nav{
+        justify-content:center;
+        gap:0;
+        padding-left:0;
+        padding-right:0;
+      }
+      #appShell.sidebar-collapsed .nav-active-wrap{
+        justify-content:center;
+        gap:0;
+      }
+      #appShell.sidebar-collapsed .sidebar-profile{
+        justify-content:center;
+        padding-left:0;
+        padding-right:0;
+      }
+      #appShell.sidebar-collapsed .sidebar-brand{
+        justify-content:center;
+        padding-left:0;
+        padding-right:0;
+      }
+      #appShell.sidebar-collapsed .sidebar-count{
+        position:absolute;
+        right:3px;
+        top:3px;
+        width:16px;
+        height:16px;
+        font-size:9px;
+        border:2px solid white;
+      }
+      #appShell.sidebar-collapsed #sidebarToggleIcon{
+        transform:rotate(180deg);
+      }
+      .nav{
+        position:relative;
+        min-height:44px;
+        white-space:nowrap;
+      }
+      .sidebar-label,
+      .sidebar-brand-text,
+      .sidebar-profile-copy{
+        transition:opacity .16s ease;
+      }
+      #sidebarToggleIcon{
+        transition:transform .24s cubic-bezier(.4,0,.2,1);
+      }
+      #sidebarToggle{
+        transition:background-color .16s ease, transform .16s ease;
+      }
+      #sidebarToggle:hover{
+        transform:scale(1.05);
+      }
+      #appShell.sidebar-collapsed .nav[data-tooltip]:hover::after{
+        content:attr(data-tooltip);
+        position:absolute;
+        left:calc(100% + 14px);
+        top:50%;
+        z-index:80;
+        transform:translateY(-50%);
+        border:1px solid rgba(207,218,232,.16);
+        border-radius:10px;
+        background:#0b1422;
+        padding:7px 10px;
+        color:#f3f0e8;
+        font-size:12px;
+        font-weight:600;
+        box-shadow:0 10px 28px rgba(20,88,92,.12);
+        pointer-events:none;
+      }
+    }
+    @media(max-width:1023px){.desktop{display:none!important}}
+  </style>
+</head>
+<body class="lg:p-3">
+<main id="appShell" class="mx-auto grid h-screen max-w-[1800px] overflow-hidden bg-white lg:h-[calc(100vh-24px)] lg:rounded-[22px] lg:border lg:border-line lg:shadow-soft">
+
+  <!-- App navigation -->
+  <aside id="appSidebar" class="desktop relative min-h-0 border-r border-line p-4 lg:flex lg:flex-col">
+    <button
+      id="sidebarToggle"
+      type="button"
+      class="absolute -right-3 top-7 z-30 grid size-7 place-items-center rounded-full border border-line bg-white text-slate-500 shadow-sm hover:bg-brand-50 hover:text-brand-700"
+      aria-label="Collapse navigation"
+      aria-expanded="true"
+      title="Collapse navigation"
+    >
+      <i id="sidebarToggleIcon" data-lucide="chevron-left" class="size-4"></i>
+    </button>
+
+    <nav class="space-y-1.5 text-sm" aria-label="Primary navigation">
+      <a class="nav" data-tooltip="Home" href="/" target="_top">
+        <i data-lucide="house"></i>
+        <span class="sidebar-label">Home</span>
+      </a>
+      <a class="nav" data-tooltip="Explore" href="/discover" target="_top">
+        <i data-lucide="compass"></i>
+        <span class="sidebar-label">Explore</span>
+      </a>
+      <a class="nav" data-tooltip="My learning" href="/learning" target="_top">
+        <i data-lucide="calendar-days"></i>
+        <span class="sidebar-label">My learning</span>
+      </a>
+      <a class="nav active justify-between" data-tooltip="Messages" href="/messages" target="_top">
+        <span class="nav-active-wrap flex items-center gap-3">
+          <i data-lucide="messages-square"></i>
+          <span class="sidebar-label">Messages</span>
+        </span>
+        <span class="sidebar-count grid size-5 place-items-center rounded-full bg-brand-700 text-[11px] text-white">5</span>
+      </a>
+      <a class="nav" data-tooltip="Communities" href="/communities" target="_top">
+        <i data-lucide="users"></i>
+        <span class="sidebar-label">Communities</span>
+      </a>
+    </nav>
+
+    <div class="mt-auto border-t border-line pt-4">
+      <a class="nav" data-tooltip="Settings" href="#">
+        <i data-lucide="settings"></i>
+        <span class="sidebar-label">Settings</span>
+      </a>
+
+      <a id="currentProfileLink" href="/user/Khoa%20Nguyen" target="_top" class="sidebar-profile mt-3 flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
+        <img id="currentProfileAvatar" src="https://i.pravatar.cc/96?img=12" class="size-11 shrink-0 rounded-full object-cover" alt="Current user">
+        <div class="sidebar-profile-copy min-w-0">
+          <p id="currentProfileName" class="truncate text-sm font-semibold">Current user</p>
+          <p id="currentProfileHandle" class="truncate text-xs text-slate-500"></p>
+        </div>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Conversation list -->
+  <section id="listPanel" class="flex min-h-0 flex-col border-r border-line">
+    <header class="border-b border-line px-5 pb-4 pt-5 lg:border-b-0 lg:px-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button id="menuBtn" class="grid size-10 place-items-center rounded-xl border border-line lg:hidden"><i data-lucide="menu" class="size-5"></i></button>
+          <div><h1 class="text-2xl font-bold tracking-[-.03em]">Messages</h1><p class="mt-0.5 text-xs text-slate-500">People and groups</p></div>
+        </div>
+        <button class="grid size-10 place-items-center rounded-xl hover:bg-slate-50"><i data-lucide="square-pen" class="size-5"></i></button>
+      </div>
+      <label class="mt-5 flex items-center gap-3 rounded-xl border border-line px-4 py-3 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-50">
+        <i data-lucide="search" class="size-[18px] text-slate-500"></i>
+        <input id="search" class="w-full bg-transparent text-sm outline-none" placeholder="Search conversations...">
+      </label>
+      <div class="mt-4 flex gap-1 overflow-x-auto text-sm">
+        <button class="filter rounded-full bg-brand-50 px-3.5 py-2 font-semibold text-brand-800" data-filter="all">All</button>
+        <button class="filter rounded-full px-3.5 py-2 text-slate-600 hover:bg-slate-50" data-filter="people">People</button>
+        <button class="filter rounded-full px-3.5 py-2 text-slate-600 hover:bg-slate-50" data-filter="groups">Groups</button>
+      </div>
+    </header>
+
+    <div id="conversations" class="thin min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+      <button class="conversation w-full rounded-2xl bg-brand-50 p-4 text-left" data-chat-id="ielts" data-tags="all groups" data-name="IELTS Study Circle" data-meta="5 members" data-type="Group" data-space="IELTS preparation" data-avatar="47">
+        <div class="flex gap-3">
+          <div class="relative size-14 shrink-0"><img src="https://i.pravatar.cc/80?img=47" class="absolute left-0 top-0 size-9 rounded-full border-2 border-white object-cover"><img src="https://i.pravatar.cc/80?img=12" class="absolute bottom-0 right-0 size-9 rounded-full border-2 border-white object-cover"></div>
+          <div class="min-w-0 flex-1">
+            <div class="flex justify-between gap-2"><p class="truncate text-sm font-semibold">IELTS Study Circle</p><time class="text-[11px] text-slate-500">10:42 AM</time></div>
+            <p class="mt-1 flex items-center gap-1.5 text-xs text-slate-500"><i data-lucide="users" class="size-3.5"></i>5 members</p>
+            <div class="mt-2 flex items-center gap-2"><p class="min-w-0 flex-1 truncate text-xs text-slate-600"><strong>Lan:</strong> Tuesday works for me.</p><span class="grid size-5 place-items-center rounded-full bg-brand-700 text-[10px] text-white">3</span></div>
+          </div>
+        </div>
+      </button>
+
+      <button class="conversation mt-1 w-full rounded-2xl p-4 text-left hover:bg-slate-50" data-chat-id="nam" data-tags="all people" data-name="Trần Hoàng Nam" data-meta="Online" data-type="Person" data-space="Private conversation" data-avatar="11">
+        <div class="flex gap-3"><img src="https://i.pravatar.cc/96?img=11" class="size-14 rounded-full object-cover">
+          <div class="min-w-0 flex-1"><div class="flex justify-between gap-2"><p class="truncate text-sm font-semibold">Trần Hoàng Nam</p><time class="text-[11px] text-slate-500">Yesterday</time></div>
+          <p class="mt-2 truncate text-xs text-slate-600">I’ll send the worksheet tonight.</p></div>
+        </div>
+      </button>
+
+      <button class="conversation mt-1 w-full rounded-2xl p-4 text-left hover:bg-slate-50" data-chat-id="vy" data-tags="all people" data-name="Phạm Thanh Vy" data-meta="Online" data-type="Person" data-space="Private conversation" data-avatar="44">
+        <div class="flex gap-3"><img src="https://i.pravatar.cc/96?img=44" class="size-14 rounded-full object-cover">
+          <div class="min-w-0 flex-1"><div class="flex justify-between gap-2"><p class="truncate text-sm font-semibold">Phạm Thanh Vy</p><time class="text-[11px] text-slate-500">Mon</time></div>
+          <p class="mt-2 truncate text-xs text-slate-600">Can you share your notes from class?</p></div>
+        </div>
+      </button>
+
+      <button class="conversation mt-1 w-full rounded-2xl p-4 text-left hover:bg-slate-50" data-chat-id="ha" data-tags="all people" data-name="Ms. Hà" data-meta="Last active Sunday" data-type="Person" data-space="Private conversation" data-avatar="32">
+        <div class="flex gap-3"><img src="https://i.pravatar.cc/96?img=32" class="size-14 rounded-full object-cover">
+          <div class="min-w-0 flex-1"><div class="flex justify-between gap-2"><p class="truncate text-sm font-semibold">Ms. Hà</p><time class="text-[11px] text-slate-500">Sun</time></div>
+          <p class="mt-2 truncate text-xs text-slate-600">Thank you for the update.</p></div>
+        </div>
+      </button>
+
+      <button class="conversation mt-1 w-full rounded-2xl p-4 text-left hover:bg-slate-50" data-chat-id="web-design" data-tags="all groups" data-name="Web Design Cohort" data-meta="18 members" data-type="Group" data-space="Web design resources" data-avatar="12">
+        <div class="flex gap-3"><div class="grid size-14 place-items-center rounded-2xl bg-indigo-50 text-indigo-700"><i data-lucide="palette" class="size-6"></i></div>
+          <div class="min-w-0 flex-1"><div class="flex justify-between gap-2"><p class="truncate text-sm font-semibold">Web Design Cohort</p><time class="text-[11px] text-slate-500">Sat</time></div>
+          <p class="mt-1 flex items-center gap-1.5 text-xs text-slate-500"><i data-lucide="users" class="size-3.5"></i>18 members</p><p class="mt-2 truncate text-xs text-slate-600"><strong>An:</strong> New resources are pinned.</p></div>
+        </div>
+      </button>
+
+      <p id="empty" class="hidden px-5 py-14 text-center text-sm text-slate-500">No conversations found.</p>
+    </div>
+  </section>
+
+  <!-- Chat -->
+  <section id="chatPanel" class="desktop min-h-0 lg:grid lg:grid-rows-[88px_72px_minmax(0,1fr)]">
+    <header class="flex items-center justify-between border-b border-line px-5 lg:px-7">
+      <div class="flex min-w-0 items-center gap-3">
+        <button id="backBtn" class="grid size-10 place-items-center rounded-xl border border-line lg:hidden"><i data-lucide="arrow-left" class="size-5"></i></button>
+        <a id="profileLink" href="/communities" target="_top" class="flex min-w-0 items-center gap-3" aria-label="Open conversation profile">
+          <div id="chatAvatar" class="relative size-12 shrink-0"><img src="https://i.pravatar.cc/80?img=47" class="absolute left-0 top-0 size-8 rounded-full border-2 border-white object-cover"><img src="https://i.pravatar.cc/80?img=12" class="absolute bottom-0 right-0 size-8 rounded-full border-2 border-white object-cover"></div>
+          <div class="min-w-0"><div class="flex items-center gap-2"><h2 id="chatTitle" class="truncate text-[17px] font-semibold">IELTS Study Circle</h2><span id="chatType" class="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-700">Group</span></div><p id="chatMeta" class="text-sm text-slate-500">5 members</p></div>
+        </a>
+      </div>
+      <div class="flex gap-2"><button class="hidden rounded-xl border border-line px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 sm:block">Search chat</button><button id="infoBtn" class="grid size-10 place-items-center rounded-xl border border-line hover:bg-slate-50"><i data-lucide="info" class="size-[18px]"></i></button><button id="headerMoreBtn" class="grid size-10 place-items-center rounded-xl border border-line hover:bg-slate-50" aria-label="More conversation options"><i data-lucide="ellipsis" class="size-[18px]"></i></button></div>
+    </header>
+
+    <div id="conversationTools" class="flex items-center justify-between border-b border-line px-5 py-3 lg:px-7">
+      <div class="flex min-w-0 items-center gap-3"><span class="grid size-9 place-items-center rounded-xl bg-brand-50 text-brand-700"><i data-lucide="folder-open" class="size-[18px]"></i></span><div><p class="text-xs text-slate-500">Shared space</p><p id="sharedSpaceTitle" class="truncate text-sm font-medium">IELTS preparation</p></div></div>
+      <div class="flex gap-1"><button class="hidden items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 sm:flex"><i data-lucide="files" class="size-4"></i>Files</button><button class="hidden items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 sm:flex"><i data-lucide="users" class="size-4"></i>Members</button><button id="mobileInfoBtn" class="rounded-xl border border-brand-200 px-3 py-2 text-sm font-semibold text-brand-800 xl:hidden">Details</button></div>
+    </div>
+
+    <div id="chatGrid" class="grid min-h-0 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_280px]">
+      <div class="grid min-h-0 grid-rows-[minmax(0,1fr)_84px]">
+        <div id="messages" class="thin min-h-0 overflow-y-auto px-5 py-6 lg:px-8">
+          <div class="mx-auto max-w-3xl">
+            <div class="mb-7 text-center"><span class="rounded-full px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-line">Today</span></div>
+
+            <div class="mb-5 flex max-w-[82%] items-end gap-2"><a href="/user/Nguy%E1%BB%85n%20Minh%20Lan" target="_top" aria-label="Open Nguyễn Minh Lan profile"><img src="https://i.pravatar.cc/80?img=47" class="size-8 rounded-full object-cover"></a><div><p class="mb-1 px-1 text-xs font-semibold text-slate-500">Lan</p><div class="rounded-[18px] rounded-bl-md bg-slate-100 px-4 py-3 text-sm leading-6">Should we meet on Tuesday evening to practice speaking?</div><p class="mt-1.5 px-1 text-[11px] text-slate-400">10:30 AM</p></div></div>
+
+            <div class="mb-5 flex max-w-[82%] items-end gap-2"><a href="/user/Tr%E1%BA%A7n%20Ho%C3%A0ng%20Nam" target="_top" aria-label="Open Trần Hoàng Nam profile"><img src="https://i.pravatar.cc/80?img=11" class="size-8 rounded-full object-cover"></a><div><p class="mb-1 px-1 text-xs font-semibold text-slate-500">Nam</p><div class="rounded-[18px] rounded-bl-md bg-slate-100 px-4 py-3 text-sm leading-6">Tuesday works. I can prepare a few Part 2 topics for everyone.</div><p class="mt-1.5 px-1 text-[11px] text-slate-400">10:31 AM</p></div></div>
+
+            <div class="mb-5 ml-auto flex max-w-[82%] items-end justify-end gap-2"><div class="text-right"><div class="rounded-[18px] rounded-br-md bg-brand-700 px-4 py-3 text-left text-sm leading-6 text-white">Great. I’ll join at 7 PM and bring my vocabulary notes.</div><p class="mt-1.5 flex items-center justify-end gap-1 px-1 text-[11px] text-slate-400">10:32 AM <i data-lucide="check-check" class="size-3.5 text-brand-600"></i></p></div><a href="/user/Khoa%20Nguyen" target="_top" aria-label="Open Khoa Nguyen profile"><img src="https://i.pravatar.cc/80?img=12" class="size-8 rounded-full object-cover"></a></div>
+
+            <div class="my-6 mx-auto max-w-[420px] overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
+              <div class="p-4"><div class="flex items-center gap-3"><span class="grid size-9 place-items-center rounded-xl bg-brand-50 text-brand-700"><i data-lucide="calendar-clock" class="size-[18px]"></i></span><div><p class="text-sm font-semibold">Study session</p><p class="text-xs text-slate-500">Shared with this conversation</p></div></div>
+              <dl class="mt-4 grid grid-cols-[72px_1fr] gap-x-3 gap-y-2 text-sm"><dt class="font-semibold">When</dt><dd class="text-slate-600">Tuesday · 7:00 PM</dd><dt class="font-semibold">Topic</dt><dd class="text-slate-600">IELTS Speaking Part 2</dd><dt class="font-semibold">Where</dt><dd class="text-slate-600">Online room</dd></dl></div>
+              <div class="grid grid-cols-2 border-t border-line"><button class="border-r border-line px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50">View</button><button class="px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50">Add to calendar</button></div>
+            </div>
+
+            <div class="mb-5 flex max-w-[82%] items-end gap-2"><a href="/user/Ph%E1%BA%A1m%20Thanh%20Vy" target="_top" aria-label="Open Phạm Thanh Vy profile"><img src="https://i.pravatar.cc/80?img=44" class="size-8 rounded-full object-cover"></a><div><p class="mb-1 px-1 text-xs font-semibold text-slate-500">Vy</p><div class="rounded-[18px] rounded-bl-md bg-slate-100 px-4 py-3 text-sm leading-6">I added a sample cue-card document to the shared files.</div>
+            <div class="mt-2 flex items-center gap-3 rounded-2xl border border-line p-3"><span class="grid size-10 place-items-center rounded-xl bg-red-50 text-red-600"><i data-lucide="file-text" class="size-5"></i></span><div class="min-w-0"><p class="truncate text-sm font-semibold">Speaking cue cards.pdf</p><p class="text-xs text-slate-500">1.4 MB · PDF</p></div><button class="ml-auto grid size-9 place-items-center rounded-xl hover:bg-slate-50"><i data-lucide="download" class="size-4"></i></button></div>
+            <p class="mt-1.5 px-1 text-[11px] text-slate-400">10:38 AM</p></div></div>
+            <div id="newMessages"></div>
+          </div>
+        </div>
+
+        <form id="form" class="relative border-t border-line px-4 py-4 lg:px-6">
+          <div id="createMenu" class="absolute bottom-[74px] left-4 z-50 hidden w-[330px] max-w-[calc(100vw-32px)] rounded-2xl border border-line bg-white p-3 shadow-2xl lg:left-6">
+            <div class="flex items-center justify-between px-1 pb-2"><div><p class="text-sm font-semibold">Create or share</p><p class="text-[11px] text-slate-500">Add something to this conversation</p></div><button id="closeCreateMenu" type="button" class="grid size-8 place-items-center rounded-lg hover:bg-slate-50" aria-label="Close"><i data-lucide="x" class="size-4"></i></button></div>
+            <div class="mt-2 grid grid-cols-2 gap-2">
+              <button type="button" class="create-action" data-action="session"><i data-lucide="calendar-clock" class="size-5 text-brand-600"></i><span><strong>Create session</strong><small>Schedule a meeting</small></span></button>
+              <button type="button" class="create-action" data-action="poll"><i data-lucide="chart-no-axes-column" class="size-5 text-violet-400"></i><span><strong>Create poll</strong><small>Let people vote</small></span></button>
+              <button type="button" class="create-action" data-action="task"><i data-lucide="list-checks" class="size-5 text-sky-400"></i><span><strong>Shared task</strong><small>Build a checklist</small></span></button>
+              <button type="button" class="create-action" data-action="resource"><i data-lucide="paperclip" class="size-5 text-emerald-400"></i><span><strong>File or link</strong><small>Share a resource</small></span></button>
+              <button type="button" class="create-action" data-action="announcement"><i data-lucide="megaphone" class="size-5 text-amber-400"></i><span><strong>Announcement</strong><small>Highlight an update</small></span></button>
+              <button type="button" class="create-action" data-action="note"><i data-lucide="notebook-pen" class="size-5 text-indigo-400"></i><span><strong>Shared note</strong><small>Write together</small></span></button>
+            </div>
+            <button type="button" class="create-action mt-2 w-full" data-action="invite"><i data-lucide="user-plus" class="size-5 text-brand-600"></i><span><strong>Invite people</strong><small>Expand this conversation</small></span><i data-lucide="chevron-right" class="ml-auto size-4"></i></button>
+          </div>
+          <div class="mx-auto flex max-w-3xl items-end gap-2"><button id="openCreateMenu" type="button" class="grid size-11 shrink-0 place-items-center rounded-xl border border-line hover:bg-slate-50" aria-label="Create or share" aria-expanded="false"><i id="createPlusIcon" data-lucide="plus" class="size-5 transition-transform"></i></button>
+          <label class="flex min-h-11 flex-1 items-center rounded-xl border border-line px-4 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-50"><textarea id="input" rows="1" class="max-h-28 min-h-6 w-full resize-none bg-transparent py-2 text-sm outline-none" placeholder="Write a message..."></textarea><button type="button" class="ml-2 grid size-8 place-items-center rounded-lg text-slate-500 hover:bg-slate-50"><i data-lucide="smile" class="size-[19px]"></i></button></label>
+          <button class="flex h-11 items-center gap-2 rounded-xl bg-brand-700 px-5 text-sm font-semibold text-white hover:bg-brand-800" type="submit"><span class="hidden sm:inline">Send</span><i data-lucide="send" class="size-[17px]"></i></button></div>
+        </form>
+      </div>
+
+      <aside id="infoPanel" class="desktop thin min-h-0 overflow-y-auto border-l border-line p-5 xl:block">
+        <h3 class="text-[15px] font-semibold">Conversation info</h3>
+        <a id="infoProfileLink" href="/communities" target="_top" class="mt-6 block text-center" aria-label="Open conversation profile"><div id="infoAvatar" class="relative mx-auto size-20"><img src="https://i.pravatar.cc/80?img=47" class="absolute left-0 top-0 size-12 rounded-full border-2 border-white object-cover"><img src="https://i.pravatar.cc/80?img=12" class="absolute bottom-0 right-0 size-12 rounded-full border-2 border-white object-cover"></div><p id="infoTitle" class="mt-3 font-semibold">IELTS Study Circle</p><p id="infoMeta" class="mt-1 text-xs text-slate-500">Private group · 5 members</p></a>
+        <div class="mt-6 grid grid-cols-3 gap-2"><button id="muteConversationBtn" type="button" class="rounded-xl bg-slate-50 px-2 py-3 text-center hover:bg-brand-50"><i data-lucide="bell-off" class="mx-auto size-[18px]"></i><span id="muteConversationLabel" class="mt-1.5 block text-[11px] font-medium">Mute</span></button><button class="rounded-xl bg-slate-50 px-2 py-3 text-center hover:bg-brand-50"><i data-lucide="search" class="mx-auto size-[18px]"></i><span class="mt-1.5 block text-[11px] font-medium">Search</span></button><button id="inviteFromPanel" type="button" data-action="invite" class="rounded-xl bg-slate-50 px-2 py-3 text-center hover:bg-brand-50"><i data-lucide="user-plus" class="mx-auto size-[18px]"></i><span class="mt-1.5 block text-[11px] font-medium">Add</span></button></div>
+        <div id="infoMembers" class="mt-7"><div class="flex justify-between"><h4 class="text-sm font-semibold">Members</h4><button class="text-xs font-semibold text-brand-700">See all</button></div>
+          <div id="peopleList" class="mt-3 space-y-3">
+            <div class="flex items-center gap-3"><img src="https://i.pravatar.cc/80?img=47" class="size-9 rounded-full object-cover"><div><p class="text-sm font-medium">Nguyễn Minh Lan</p></div></div>
+            <div class="flex items-center gap-3"><img src="https://i.pravatar.cc/80?img=11" class="size-9 rounded-full object-cover"><div><p class="text-sm font-medium">Trần Hoàng Nam</p></div></div>
+            <div class="flex items-center gap-3"><img src="https://i.pravatar.cc/80?img=44" class="size-9 rounded-full object-cover"><div><p class="text-sm font-medium">Phạm Thanh Vy</p></div></div>
+          </div>
+        </div>
+        <div id="infoFiles" class="mt-7"><div class="flex justify-between"><h4 class="text-sm font-semibold">Shared files</h4><button class="text-xs font-semibold text-brand-700">View all</button></div><div id="sharedFiles" class="mt-3 space-y-2"><div class="flex items-center gap-3 rounded-2xl border border-line p-3"><span class="grid size-10 place-items-center rounded-xl bg-red-50 text-red-600"><i data-lucide="file-text" class="size-5"></i></span><div class="min-w-0"><p class="truncate text-xs font-semibold">Speaking cue cards.pdf</p><p class="text-[11px] text-slate-500">1.4 MB</p></div></div></div></div>
+        <div id="infoPinned" class="mt-7"><div class="flex justify-between"><h4 class="text-sm font-semibold">Pinned</h4><button class="text-xs font-semibold text-brand-700">View all</button></div><div id="pinnedItems" class="mt-3 rounded-2xl border border-line p-3"><p class="text-xs font-semibold">IELTS Speaking Part 2</p><p class="mt-1 text-[11px] text-slate-500">Tuesday · 7:00 PM</p></div></div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<!-- Mobile menu -->
+<div id="overlay" class="fixed inset-0 z-40 hidden bg-slate-950/30 lg:hidden"></div>
+<aside id="drawer" class="fixed inset-y-0 left-0 z-50 hidden w-[280px] -translate-x-full bg-white p-5 shadow-2xl transition-transform duration-200 lg:hidden">
+  <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="grid size-9 place-items-center rounded-xl bg-brand-700 text-white"><i data-lucide="graduation-cap" class="size-5"></i></span><span class="text-2xl font-semibold text-brand-700">Tutoria</span></div><button id="closeMenu"><i data-lucide="x" class="size-5"></i></button></div>
+  <nav class="mt-8 space-y-1.5 text-sm"><a class="mobileNav" href="/" target="_top"><i data-lucide="house"></i>Home</a><a class="mobileNav" href="/discover" target="_top"><i data-lucide="compass"></i>Explore</a><a class="mobileNav" href="/learning" target="_top"><i data-lucide="calendar-days"></i>My learning</a><a class="mobileNav bg-brand-50 font-semibold text-brand-800" href="/messages" target="_top"><i data-lucide="messages-square"></i>Messages</a><a class="mobileNav" href="/communities" target="_top"><i data-lucide="users"></i>Communities</a><a class="mobileNav" href="#"><i data-lucide="settings"></i>Settings</a></nav>
+</aside>
+
+<!-- Mobile conversation info -->
+<div id="infoOverlay" class="fixed inset-0 z-40 hidden bg-slate-950/30 xl:hidden"></div>
+<aside id="mobileInfo" class="fixed inset-x-0 bottom-0 z-50 hidden translate-y-full rounded-t-[28px] bg-white p-5 shadow-2xl transition-transform duration-200 xl:hidden">
+  <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200"></div>
+  <div class="flex justify-between"><h3 class="font-semibold">Conversation info</h3><button id="closeInfo"><i data-lucide="x" class="size-5"></i></button></div>
+  <div class="mt-5 grid grid-cols-2 gap-3"><div class="rounded-2xl bg-slate-50 p-4"><p class="text-xs text-slate-500">Type</p><p class="mt-1 text-sm font-semibold">Study group</p></div><div class="rounded-2xl bg-slate-50 p-4"><p class="text-xs text-slate-500">Members</p><p id="mobilePeopleCount" class="mt-1 text-sm font-semibold">5 people</p></div><div class="col-span-2 rounded-2xl bg-slate-50 p-4"><p class="text-xs text-slate-500">Shared space</p><p class="mt-1 text-sm font-semibold">IELTS preparation</p></div></div>
+</aside>
+
+<div id="actionOverlay" class="fixed inset-0 z-[70] hidden bg-black/65 backdrop-blur-sm"></div>
+<div id="actionModal" class="fixed inset-0 z-[80] hidden overflow-y-auto p-4">
+  <div class="flex min-h-full items-center justify-center">
+    <form id="actionForm" class="w-full max-w-[620px] rounded-[24px] border border-line bg-white p-5 shadow-2xl sm:p-6">
+      <div class="flex items-start justify-between gap-4">
+        <div><p id="actionEyebrow" class="text-xs font-semibold uppercase tracking-[.12em] text-brand-600">Create</p><h2 id="actionTitle" class="mt-1 text-xl font-semibold">Create session</h2><p id="actionDescription" class="mt-1 text-sm text-slate-500"></p></div>
+        <button id="closeActionModal" type="button" class="grid size-9 place-items-center rounded-xl border border-line hover:bg-slate-50" aria-label="Close"><i data-lucide="x" class="size-5"></i></button>
+      </div>
+      <div id="actionFields" class="mt-6"></div>
+      <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button id="cancelAction" type="button" class="h-11 rounded-xl border border-line px-5 text-sm font-semibold hover:bg-slate-50">Cancel</button><button id="submitAction" type="submit" class="h-11 rounded-xl bg-brand-700 px-5 text-sm font-semibold text-white hover:bg-brand-600">Create</button></div>
+    </form>
+  </div>
+</div>
+<div id="actionToast" class="fixed bottom-5 left-1/2 z-[100] hidden -translate-x-1/2 items-center gap-2 rounded-xl border border-line bg-white px-4 py-3 text-sm shadow-2xl"><i data-lucide="circle-check" class="size-5 text-emerald-400"></i><span id="actionToastText"></span></div>
+<div id="conversationMenu" class="fixed right-5 top-[76px] z-[60] hidden w-56 rounded-2xl border border-line bg-white p-2 shadow-2xl lg:right-7 lg:top-[96px]">
+  <button type="button" class="conversation-control flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm hover:bg-slate-50" data-control="mute"><i data-lucide="bell-off" class="size-4"></i><span id="menuMuteLabel">Mute notifications</span></button>
+  <button type="button" class="conversation-control flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm hover:bg-slate-50" data-control="archive"><i data-lucide="archive" class="size-4"></i>Archive conversation</button>
+  <div class="my-1 border-t border-line"></div>
+  <button type="button" class="conversation-control flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10" data-control="block"><i data-lucide="user-x" class="size-4"></i>Block account</button>
+  <button type="button" class="conversation-control flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10" data-control="report"><i data-lucide="flag" class="size-4"></i>Report conversation</button>
+</div>
+
+<script>
+  const appShell = document.getElementById("appShell");
+  const sidebarToggle = document.getElementById("sidebarToggle");
+  const savedSidebarState = localStorage.getItem("tutoria-sidebar-collapsed") === "true";
+
+  function setSidebarCollapsed(collapsed) {
+    appShell.classList.toggle("sidebar-collapsed", collapsed);
+    sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+    sidebarToggle.setAttribute("aria-label", collapsed ? "Expand navigation" : "Collapse navigation");
+    sidebarToggle.setAttribute("title", collapsed ? "Expand navigation" : "Collapse navigation");
+    localStorage.setItem("tutoria-sidebar-collapsed", String(collapsed));
+  }
+
+  setSidebarCollapsed(savedSidebarState);
+  sidebarToggle.addEventListener("click", () => {
+    setSidebarCollapsed(!appShell.classList.contains("sidebar-collapsed"));
+  });
+
+  document.querySelectorAll(".nav").forEach(x=>{x.classList.add("flex","items-center","gap-3","rounded-xl","px-3","py-3","font-medium","text-slate-600","hover:bg-slate-50");x.querySelectorAll("svg").forEach(i=>i.classList.add("size-[18px]"))});
+  document.querySelector(".nav.active").classList.add("bg-brand-50","font-semibold","text-brand-800");
+  document.querySelectorAll(".mobileNav").forEach(x=>{x.classList.add("flex","items-center","gap-3","rounded-xl","px-3","py-3","text-slate-600");x.querySelectorAll("svg").forEach(i=>i.classList.add("size-5"))});
+  lucide.createIcons();
+
+  function readCurrentProfile(){try{let session=JSON.parse(localStorage.getItem("tutoria_signup")||"{}"),key=String(session.email||session.id||session.name||"").trim().toLowerCase(),profiles=JSON.parse(localStorage.getItem("tutoria_profiles")||"{}"),profile=profiles[key]||{};return{name:String(profile.name||session.name||"Tutoria member"),email:String(session.email||""),avatar:String(profile.avatar||session.avatarUrl||"https://i.pravatar.cc/96?img=12")}}catch{return{name:"Tutoria member",email:"",avatar:"https://i.pravatar.cc/96?img=12"}}}
+  const currentProfile=readCurrentProfile(),currentProfileHref="/user/"+encodeURIComponent(currentProfile.name);
+  document.getElementById("currentProfileLink").href=currentProfileHref;document.getElementById("currentProfileAvatar").src=currentProfile.avatar;document.getElementById("currentProfileAvatar").alt=currentProfile.name;document.getElementById("currentProfileName").textContent=currentProfile.name;document.getElementById("currentProfileHandle").textContent=currentProfile.email||"@"+currentProfile.name.toLowerCase().replace(/[^a-z0-9]+/g,".").replace(/^\.|\.$/g,"");
+  document.querySelectorAll('a[href="/user/Khoa%20Nguyen"]').forEach(link=>{link.href=currentProfileHref;link.setAttribute("aria-label","Open "+currentProfile.name+" profile");let image=link.querySelector("img");if(image){image.src=currentProfile.avatar;image.alt=currentProfile.name}});
+
+  const createMenu=document.getElementById("createMenu"),openCreateMenu=document.getElementById("openCreateMenu"),createPlusIcon=document.getElementById("createPlusIcon");
+  const groupCreateMenuHTML=createMenu.innerHTML;
+  const individualCreateMenuHTML=`
+    <div class="flex items-center justify-between px-1 pb-2"><div><p class="text-sm font-semibold">Create or share</p><p class="text-[11px] text-slate-500">Add something to this private conversation</p></div><button id="closeCreateMenu" type="button" class="grid size-8 place-items-center rounded-lg hover:bg-slate-50" aria-label="Close"><i data-lucide="x" class="size-4"></i></button></div>
+    <p class="mt-2 px-1 pb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-slate-500">Share</p>
+    <div class="grid grid-cols-2 gap-2"><button type="button" class="create-action" data-action="person-photo"><i data-lucide="image" class="size-5 text-pink-400"></i><span><strong>Photo</strong><small>Upload an image</small></span></button><button type="button" class="create-action" data-action="person-file"><i data-lucide="paperclip" class="size-5 text-emerald-400"></i><span><strong>File</strong><small>Share a document</small></span></button><button type="button" class="create-action" data-action="person-link"><i data-lucide="link" class="size-5 text-violet-400"></i><span><strong>Link</strong><small>Share a website</small></span></button><button type="button" class="create-action" data-action="person-resource"><i data-lucide="book-open" class="size-5 text-indigo-400"></i><span><strong>Resource</strong><small>Tutoria material</small></span></button></div>
+    <p class="mt-4 border-t border-line px-1 pb-2 pt-3 text-[10px] font-semibold uppercase tracking-[.12em] text-slate-500">Create</p>
+    <div class="grid grid-cols-2 gap-2"><button type="button" class="create-action" data-action="person-session"><i data-lucide="calendar-clock" class="size-5 text-brand-600"></i><span><strong>Session</strong><small>Propose a time</small></span></button><button type="button" class="create-action" data-action="person-task"><i data-lucide="list-checks" class="size-5 text-sky-400"></i><span><strong>Task</strong><small>Share an activity</small></span></button><button type="button" class="create-action col-span-2" data-action="person-reminder"><i data-lucide="bell-ring" class="size-5 text-amber-400"></i><span><strong>Reminder</strong><small>Create a private or shared reminder</small></span></button></div>`;
+  const actionOverlay=document.getElementById("actionOverlay"),actionModal=document.getElementById("actionModal"),actionForm=document.getElementById("actionForm"),actionFields=document.getElementById("actionFields");
+  const basePeopleHTML=document.getElementById("peopleList").innerHTML,baseFilesHTML=document.getElementById("sharedFiles").innerHTML,basePinnedHTML=document.getElementById("pinnedItems").innerHTML;
+  const baseParticipantCounts={ielts:5,"web-design":18};
+  let activeAction=null;
+  function escapeHTML(value=""){return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[c])}
+  function closeCreateMenu(){createMenu.classList.add("hidden");openCreateMenu.setAttribute("aria-expanded","false");createPlusIcon.classList.remove("rotate-45")}
+  openCreateMenu.onclick=()=>{let opening=createMenu.classList.contains("hidden");createMenu.classList.toggle("hidden");openCreateMenu.setAttribute("aria-expanded",String(opening));createPlusIcon.classList.toggle("rotate-45",opening)};
+  function bindCreateMenuActions(){document.getElementById("closeCreateMenu").onclick=closeCreateMenu;createMenu.querySelectorAll("[data-action]").forEach(button=>button.onclick=()=>openActionModal(button.dataset.action))}
+  function configureCreateMenu(isGroup){createMenu.innerHTML=isGroup?groupCreateMenuHTML:individualCreateMenuHTML;bindCreateMenuActions();lucide.createIcons()}
+  bindCreateMenuActions();
+  document.addEventListener("click",event=>{if(!createMenu.contains(event.target)&&!openCreateMenu.contains(event.target))closeCreateMenu()});
+
+  const field='action-field',label='action-label';
+  const actionConfigs={
+    session:{title:"Create session",description:"Schedule a study or practice session.",submit:"Create session",fields:`<div class="grid gap-4 sm:grid-cols-2"><label class="sm:col-span-2"><span class="${label}">Session title</span><input name="title" required class="${field}" placeholder="IELTS Speaking Part 2"></label><label><span class="${label}">Date</span><input name="date" type="date" required class="${field}"></label><label><span class="${label}">Start time</span><input name="time" type="time" required class="${field}"></label><label><span class="${label}">End time</span><input name="endTime" type="time" class="${field}"></label><label><span class="${label}">Location</span><select name="location" class="${field}"><option>Online room</option><option>Physical location</option><option>To be decided</option></select></label><label class="sm:col-span-2"><span class="${label}">Description</span><textarea name="description" rows="3" class="${field}" placeholder="What should people prepare?"></textarea></label></div>`},
+    poll:{title:"Create poll",description:"Let everyone choose an option.",submit:"Publish poll",fields:`<div class="space-y-4"><label><span class="${label}">Question</span><input name="title" required class="${field}" placeholder="When should we meet?"></label><label><span class="${label}">Options</span><textarea name="options" required rows="4" class="${field}" placeholder="Tuesday evening&#10;Wednesday afternoon&#10;Thursday evening"></textarea><small class="mt-1 block text-xs text-slate-500">One option per line</small></label></div>`},
+    task:{title:"Create shared task",description:"Assign work and track a shared checklist.",submit:"Create task",fields:`<div class="grid gap-4 sm:grid-cols-2"><label class="sm:col-span-2"><span class="${label}">Task title</span><input name="title" required class="${field}" placeholder="Prepare speaking prompts"></label><label><span class="${label}">Due date</span><input name="date" type="date" class="${field}"></label><label><span class="${label}">Assigned to</span><select name="assignee" class="${field}"><option>Everyone</option><option>Me</option><option>Nguyễn Minh Lan</option></select></label><label class="sm:col-span-2"><span class="${label}">Checklist items</span><textarea name="items" rows="4" class="${field}" placeholder="Research topics&#10;Draft answers&#10;Practice aloud"></textarea></label></div>`},
+    resource:{title:"Share file or link",description:"Add a resource to the chat and Shared files.",submit:"Share resource",fields:`<div class="space-y-4"><label><span class="${label}">Title</span><input name="title" required class="${field}" placeholder="Speaking practice guide"></label><label><span class="${label}">Link</span><input name="url" type="url" class="${field}" placeholder="https://"></label><label><span class="${label}">Or choose a file</span><input name="file" type="file" class="${field}"></label><label><span class="${label}">Message</span><textarea name="description" rows="3" class="${field}" placeholder="Why is this useful?"></textarea></label></div>`},
+    announcement:{title:"Create announcement",description:"Publish an important update in the chat.",submit:"Publish announcement",fields:`<div class="space-y-4"><label><span class="${label}">Title</span><input name="title" required class="${field}" placeholder="Room changed for Tuesday"></label><label><span class="${label}">Announcement</span><textarea name="description" required rows="4" class="${field}" placeholder="Share the update..."></textarea></label><label class="flex items-center gap-3 text-sm"><input name="pin" type="checkbox" checked class="size-4 accent-[#c8944b]">Pin this announcement</label></div>`},
+    note:{title:"Create shared note",description:"Start a note everyone can refer to.",submit:"Create note",fields:`<div class="space-y-4"><label><span class="${label}">Note title</span><input name="title" required class="${field}" placeholder="Speaking feedback"></label><label><span class="${label}">Starting content</span><textarea name="description" rows="5" class="${field}" placeholder="Add the first notes..."></textarea></label><label class="flex items-center gap-3 text-sm"><input name="collaborative" type="checkbox" checked class="size-4 accent-[#c8944b]">Allow everyone to edit</label></div>`},
+    invite:{title:"Invite people",description:"Add a participant to this conversation.",submit:"Send invitation",fields:`<div class="space-y-4"><label><span class="${label}">Name or email</span><input name="title" required class="${field}" placeholder="Mai Tran"></label><div class="rounded-xl border border-line bg-[#08111d] p-4"><p class="text-sm font-semibold">Invitation link</p><div class="mt-2 flex gap-2"><input id="inviteLink" readonly value="tutoria.app/invite/conversation" class="${field} !mt-0"><button id="copyInviteLink" type="button" class="rounded-xl border border-line px-4 text-sm font-semibold">Copy</button></div></div></div>`}
+  };
+  Object.assign(actionConfigs,{
+    "person-photo":{title:"Share photo",description:"Upload an image to this private conversation.",submit:"Share photo",fields:`<div class="space-y-4"><label class="block rounded-2xl border border-dashed border-line bg-[#08111d] p-7 text-center"><input name="file" type="file" accept="image/*" required class="${field}"><i data-lucide="image-up" class="mx-auto mt-4 size-8 text-pink-400"></i><p class="mt-2 text-sm font-semibold">Choose an image</p></label><label><span class="${label}">Caption</span><textarea name="description" rows="3" class="${field}" placeholder="Add a caption..."></textarea></label></div>`},
+    "person-file":{title:"Share file",description:"Upload a document to this private conversation.",submit:"Share file",fields:`<div class="space-y-4"><label><span class="${label}">Choose file</span><input name="file" type="file" required class="${field}"></label><label><span class="${label}">Display name</span><input name="title" class="${field}" placeholder="Study notes.pdf"></label><label><span class="${label}">Message</span><textarea name="description" rows="3" class="${field}" placeholder="Why are you sharing this?"></textarea></label></div>`},
+    "person-link":{title:"Share link",description:"Send a useful website or online resource.",submit:"Share link",fields:`<div class="space-y-4"><label><span class="${label}">URL</span><input name="url" type="url" required class="${field}" placeholder="https://..."></label><label><span class="${label}">Title</span><input name="title" required class="${field}" placeholder="IELTS vocabulary list"></label><label><span class="${label}">Message</span><textarea name="description" rows="3" class="${field}" placeholder="Add context..."></textarea></label></div>`},
+    "person-resource":{title:"Share Tutoria resource",description:"Share a course, lesson, or saved resource.",submit:"Share resource",fields:`<div class="space-y-3"><label class="flex items-center gap-3 rounded-2xl border border-line bg-[#08111d] p-4"><input name="resource" type="radio" value="IELTS Speaking Practice Set" checked class="accent-[#c8944b]"><i data-lucide="book-open-check" class="size-6 text-brand-600"></i><span><strong class="block text-sm">IELTS Speaking Practice Set</strong><small class="text-xs text-slate-500">12 exercises · IELTS Preparation</small></span></label><label class="flex items-center gap-3 rounded-2xl border border-line bg-[#08111d] p-4"><input name="resource" type="radio" value="Writing Task 2 Guide" class="accent-[#c8944b]"><i data-lucide="file-text" class="size-6 text-violet-400"></i><span><strong class="block text-sm">Writing Task 2 Guide</strong><small class="text-xs text-slate-500">Saved document</small></span></label><label><span class="${label}">Message</span><textarea name="description" rows="3" class="${field}" placeholder="Add a note..."></textarea></label></div>`},
+    "person-session":{title:"Propose session",description:"Suggest a private learning session.",submit:"Send proposal",fields:`<div class="grid gap-4 sm:grid-cols-2"><label class="sm:col-span-2"><span class="${label}">Session title</span><input name="title" required class="${field}" placeholder="IELTS speaking practice"></label><label><span class="${label}">Date</span><input name="date" type="date" required class="${field}"></label><label><span class="${label}">Start time</span><input name="time" type="time" required class="${field}"></label><label><span class="${label}">End time</span><input name="endTime" type="time" class="${field}"></label><label><span class="${label}">Location</span><select name="location" class="${field}"><option>Online room</option><option>Physical location</option><option>To be decided</option></select></label><label class="sm:col-span-2"><span class="${label}">Description</span><textarea name="description" rows="3" class="${field}" placeholder="What should both people prepare?"></textarea></label></div>`},
+    "person-task":{title:"Create task",description:"Share a learning activity with a due date.",submit:"Create task",fields:`<div class="grid gap-4 sm:grid-cols-2"><label class="sm:col-span-2"><span class="${label}">Task title</span><input name="title" required class="${field}" placeholder="Review cue cards 1–5"></label><label><span class="${label}">Due date</span><input name="date" type="date" class="${field}"></label><label><span class="${label}">Attached resource</span><select name="attachment" class="${field}"><option>None</option><option>Speaking cue cards.pdf</option><option>IELTS Speaking Practice Set</option></select></label><label class="sm:col-span-2"><span class="${label}">Description</span><textarea name="description" rows="3" class="${field}" placeholder="Add instructions..."></textarea></label></div>`},
+    "person-reminder":{title:"Set reminder",description:"Create a private reminder or share it in the chat.",submit:"Set reminder",fields:`<div class="grid gap-4 sm:grid-cols-2"><label class="sm:col-span-2"><span class="${label}">Reminder title</span><input name="title" required class="${field}" placeholder="Review vocabulary"></label><label><span class="${label}">Date</span><input name="date" type="date" class="${field}"></label><label><span class="${label}">Time</span><input name="time" type="time" class="${field}"></label><label class="sm:col-span-2 flex items-center gap-3 rounded-xl border border-line bg-[#08111d] p-4"><input name="shared" type="checkbox" class="size-4 accent-[#c8944b]"><span><strong class="block text-sm">Share reminder in the chat</strong><small class="text-xs text-slate-500">Private reminders stay out of the conversation.</small></span></label></div>`}
+  });
+  function openActionModal(action){activeAction=action;closeCreateMenu();let c=actionConfigs[action];document.getElementById("actionTitle").textContent=c.title;document.getElementById("actionDescription").textContent=c.description;document.getElementById("submitAction").textContent=c.submit;actionFields.innerHTML=c.fields;actionOverlay.classList.remove("hidden");actionModal.classList.remove("hidden");document.body.style.overflow="hidden";lucide.createIcons();if(action==="invite")document.getElementById("copyInviteLink").onclick=async()=>{try{await navigator.clipboard.writeText("https://tutoria.app/invite/conversation");showActionToast("Invitation link copied.")}catch{showActionToast("Select and copy the invitation link.")}}}
+  function closeActionModal(){actionModal.classList.add("hidden");actionOverlay.classList.add("hidden");document.body.style.overflow="";actionForm.reset();activeAction=null}
+  document.querySelectorAll("[data-action]").forEach(button=>{if(!button.closest("#createMenu"))button.addEventListener("click",()=>openActionModal(button.dataset.action))});
+  document.getElementById("closeActionModal").onclick=closeActionModal;document.getElementById("cancelAction").onclick=closeActionModal;actionOverlay.onclick=closeActionModal;
+  function showActionToast(text){let toast=document.getElementById("actionToast");document.getElementById("actionToastText").textContent=text;toast.classList.remove("hidden");toast.classList.add("flex");setTimeout(()=>{toast.classList.add("hidden");toast.classList.remove("flex")},2200)}
+  function structuredStorageKey(){return "tutoria-chat-structured-v1-"+activeChatId}
+  function readStructuredCards(){try{return JSON.parse(localStorage.getItem(structuredStorageKey())||"[]")}catch{return[]}}
+  function writeStructuredCards(cards){localStorage.setItem(structuredStorageKey(),JSON.stringify(cards))}
+  function formatCardDate(value){if(!value)return "Date not set";return new Intl.DateTimeFormat("en",{weekday:"short",month:"short",day:"numeric"}).format(new Date(value+"T12:00:00"))}
+  function cardMarkup(card){
+    let icon={session:"calendar-clock",poll:"chart-no-axes-column",task:"list-checks",resource:card.url?"link":"file-text",announcement:"megaphone",note:"notebook-pen",invite:"user-plus","person-photo":"image","person-file":"file-text","person-link":"link","person-resource":"book-open-check","person-session":"calendar-clock","person-task":"list-checks","person-reminder":"bell-ring"}[card.type];
+    if(card.type==="invite")return `<div class="my-5 text-center" data-card-id="${card.id}"><span class="rounded-full border border-line bg-white px-3 py-1.5 text-xs text-slate-500">${escapeHTML(card.title)} joined the conversation.</span></div>`;
+    let body="";
+    if(card.type==="session")body=`<dl class="mt-4 grid grid-cols-[64px_1fr] gap-2 text-sm"><dt class="font-semibold">When</dt><dd class="text-slate-500">${formatCardDate(card.date)} · ${escapeHTML(card.time||"")}${card.endTime?"–"+escapeHTML(card.endTime):""}</dd><dt class="font-semibold">Where</dt><dd class="text-slate-500">${escapeHTML(card.location)}</dd><dt class="font-semibold">Going</dt><dd class="text-slate-500">${card.attendance==="going"?"2":"1"} people</dd></dl><div class="mt-4 grid grid-cols-3 border-t border-line -mx-4 -mb-4"><button type="button" data-attendance="going" class="p-3 text-xs font-semibold ${card.attendance==="going"?"bg-brand-50 text-brand-800":"text-slate-500"}">Going</button><button type="button" data-attendance="maybe" class="border-x border-line p-3 text-xs font-semibold ${card.attendance==="maybe"?"bg-brand-50 text-brand-800":"text-slate-500"}">Maybe</button><button type="button" data-attendance="not-going" class="p-3 text-xs font-semibold ${card.attendance==="not-going"?"bg-brand-50 text-brand-800":"text-slate-500"}">Can't go</button></div>`;
+    if(card.type==="poll")body=`<div class="mt-4 space-y-2">${card.options.map((option,index)=>`<button type="button" data-poll-index="${index}" class="structured-choice ${card.vote===index?"selected":""}">${escapeHTML(option)}</button>`).join("")}</div><p class="mt-3 text-xs text-slate-500">${card.vote===null?"0":"1"} vote${card.vote===null?"s":""}</p>`;
+    if(card.type==="task")body=`<p class="mt-2 text-xs text-slate-500">Due ${formatCardDate(card.date)} · ${escapeHTML(card.assignee)}</p><div class="mt-4 space-y-2">${card.items.map((item,index)=>`<label class="flex items-center gap-3 rounded-xl bg-slate-50 p-3"><input data-task-index="${index}" type="checkbox" ${card.checked[index]?"checked":""} class="size-4 accent-[#c8944b]"><span class="text-sm ${card.checked[index]?"line-through text-slate-500":""}">${escapeHTML(item)}</span></label>`).join("")}</div>`;
+    if(card.type==="resource")body=`<p class="mt-2 truncate text-xs text-slate-500">${escapeHTML(card.fileName||card.url||"Shared resource")}</p>${card.description?`<p class="mt-3 text-sm leading-6 text-slate-500">${escapeHTML(card.description)}</p>`:""}`;
+    if(card.type==="announcement")body=`<p class="mt-3 text-sm leading-6 text-slate-600">${escapeHTML(card.description)}</p><button type="button" data-acknowledge class="mt-4 w-full rounded-xl border border-line p-2.5 text-sm font-semibold ${card.acknowledged?"bg-brand-50 text-brand-800":""}">${card.acknowledged?"Acknowledged":"Acknowledge"}</button>`;
+    if(card.type==="note")body=`<p class="mt-2 text-xs text-slate-500">${card.collaborative?"Everyone can edit":"View only"}</p>${card.description?`<p class="mt-3 text-sm leading-6 text-slate-500">${escapeHTML(card.description)}</p>`:""}<button type="button" class="mt-4 w-full rounded-xl border border-line p-2.5 text-sm font-semibold text-brand-800">Open note</button>`;
+    if(card.type==="person-photo")body=`<div class="mt-3 grid aspect-[4/3] place-items-center rounded-xl bg-[radial-gradient(circle_at_45%_35%,rgba(219,164,93,.28),transparent_13rem),linear-gradient(135deg,#1d2f48,#0a1422)]"><div class="text-center"><i data-lucide="image" class="mx-auto size-10 text-brand-600"></i><p class="mt-2 text-xs text-slate-500">${escapeHTML(card.fileName||"Shared photo")}</p></div></div>${card.description?`<p class="mt-3 text-sm">${escapeHTML(card.description)}</p>`:""}`;
+    if(card.type==="person-file")body=`<p class="mt-2 truncate text-xs text-slate-500">${escapeHTML(card.fileName||"Document")}</p>${card.description?`<p class="mt-3 text-sm text-slate-500">${escapeHTML(card.description)}</p>`:""}<button type="button" class="mt-4 w-full rounded-xl border border-line p-2.5 text-sm font-semibold text-brand-800">Download</button>`;
+    if(card.type==="person-link")body=`<p class="mt-2 truncate text-xs text-slate-500">${escapeHTML(card.url)}</p>${card.description?`<p class="mt-3 text-sm text-slate-500">${escapeHTML(card.description)}</p>`:""}<a href="${escapeHTML(card.url)}" target="_blank" rel="noopener" class="mt-4 block w-full rounded-xl border border-line p-2.5 text-center text-sm font-semibold text-brand-800">Open link</a>`;
+    if(card.type==="person-resource")body=`${card.description?`<p class="mt-3 text-sm text-slate-500">${escapeHTML(card.description)}</p>`:""}<div class="mt-4 grid grid-cols-2 gap-2"><button type="button" class="rounded-xl border border-line p-2.5 text-sm font-semibold text-brand-800">Open</button><button type="button" data-resource-save class="rounded-xl border border-line p-2.5 text-sm font-semibold ${card.saved?"bg-brand-50 text-brand-800":"text-slate-500"}">${card.saved?"Saved":"Save"}</button></div>`;
+    if(card.type==="person-session")body=`<dl class="mt-4 grid grid-cols-[64px_1fr] gap-2 text-sm"><dt class="font-semibold">When</dt><dd class="text-slate-500">${formatCardDate(card.date)} · ${escapeHTML(card.time||"")}${card.endTime?"–"+escapeHTML(card.endTime):""}</dd><dt class="font-semibold">Where</dt><dd class="text-slate-500">${escapeHTML(card.location)}</dd></dl>${card.description?`<p class="mt-3 text-sm text-slate-500">${escapeHTML(card.description)}</p>`:""}<div class="mt-4 grid grid-cols-2 border-t border-line -mx-4 -mb-4"><button type="button" data-session-response="accepted" class="border-r border-line p-3 text-xs font-semibold ${card.response==="accepted"?"bg-brand-50 text-brand-800":"text-brand-600"}">${card.response==="accepted"?"Accepted":"Accept"}</button><button type="button" data-session-response="suggest" class="p-3 text-xs font-semibold ${card.response==="suggest"?"bg-brand-50 text-brand-800":"text-slate-500"}">${card.response==="suggest"?"Suggesting another time":"Suggest time"}</button></div>`;
+    if(card.type==="person-task")body=`<p class="mt-2 text-xs text-slate-500">Due ${formatCardDate(card.date)}${card.attachment&&card.attachment!=="None"?" · Attached: "+escapeHTML(card.attachment):""}</p>${card.description?`<p class="mt-3 text-sm text-slate-500">${escapeHTML(card.description)}</p>`:""}<button type="button" data-person-task-toggle class="mt-4 w-full rounded-xl border border-line p-2.5 text-sm font-semibold ${card.completed?"bg-emerald-500/10 text-emerald-400":"text-brand-800"}">${card.completed?"Completed":"Mark complete"}</button>`;
+    if(card.type==="person-reminder")body=`<p class="mt-2 text-sm text-slate-500">${formatCardDate(card.date)} · ${escapeHTML(card.time||"")}</p><button type="button" data-reminder-done class="mt-4 w-full rounded-xl border border-line p-2.5 text-sm font-semibold ${card.completed?"bg-emerald-500/10 text-emerald-400":"text-brand-800"}">${card.completed?"Done":"Mark done"}</button>`;
+    let typeLabel={"person-photo":"Photo","person-file":"Shared file","person-link":"Shared link","person-resource":"Tutoria resource","person-session":"Session proposal","person-task":"Task","person-reminder":"Reminder"}[card.type]|| (card.type==="resource"?"Shared resource":card.type==="task"?"Shared task":card.type);
+    return `<article class="structured-card fade-in p-4" data-card-id="${card.id}"><div class="flex items-start gap-3"><span class="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i data-lucide="${icon}" class="size-5"></i></span><div class="min-w-0 flex-1"><p class="text-[10px] font-semibold uppercase tracking-[.12em] text-brand-600">${escapeHTML(typeLabel)}</p><h3 class="mt-1 font-semibold">${escapeHTML(card.title)}</h3>${body}</div></div></article>`
+  }
+  function renderStructuredCards(){let target=document.getElementById("newMessages");if(!target)return;target.querySelectorAll("[data-card-id]").forEach(x=>x.remove());readStructuredCards().forEach(card=>target.insertAdjacentHTML("beforeend",cardMarkup(card)));lucide.createIcons()}
+  function updateStructuredCard(id,mutate){let cards=readStructuredCards(),card=cards.find(item=>item.id===id);if(!card)return;mutate(card);writeStructuredCards(cards);renderStructuredCards();refreshConversationInfo()}
+  function refreshConversationInfo(){let cards=readStructuredCards(),conversation=document.querySelector('.conversation[data-chat-id="'+activeChatId+'"]'),isGroup=conversation?.dataset.type==="Group";let invites=cards.filter(card=>card.type==="invite"),count=(baseParticipantCounts[activeChatId]||1)+invites.length;if(isGroup){conversation.dataset.meta=count+" members";document.getElementById("chatMeta").textContent=count+" members";document.getElementById("infoMeta").textContent="Private group · "+count+" members";document.getElementById("mobilePeopleCount").textContent=count+" people"}let people=document.getElementById("peopleList");people.innerHTML=basePeopleHTML+invites.map((card,index)=>`<div class="flex items-center gap-3"><img src="https://i.pravatar.cc/80?img=${48+index}" class="size-9 rounded-full object-cover"><p class="truncate text-sm font-medium">${escapeHTML(card.title)}</p></div>`).join("");let resources=cards.filter(card=>["resource","person-file","person-photo"].includes(card.type));document.getElementById("sharedFiles").innerHTML=baseFilesHTML+resources.map(card=>`<div class="flex items-center gap-3 rounded-2xl border border-line p-3"><i data-lucide="${card.type==="person-photo"?"image":card.url?"link":"file-text"}" class="size-5 text-emerald-400"></i><div class="min-w-0"><p class="truncate text-xs font-semibold">${escapeHTML(card.title)}</p><p class="truncate text-[11px] text-slate-500">${escapeHTML(card.fileName||card.url||"Shared resource")}</p></div></div>`).join("");let pinned=[...cards].reverse().find(card=>card.type==="session"||(card.type==="announcement"&&card.pin));document.getElementById("pinnedItems").innerHTML=pinned?`<p class="text-xs font-semibold">${escapeHTML(pinned.title)}</p><p class="mt-1 text-[11px] text-slate-500">${pinned.type==="session"?formatCardDate(pinned.date)+" · "+escapeHTML(pinned.time||""):escapeHTML(pinned.description)}</p>`:basePinnedHTML;lucide.createIcons()}
+  document.getElementById("messages").addEventListener("click",event=>{let root=event.target.closest("[data-card-id]");if(!root)return;let id=root.dataset.cardId,attendance=event.target.closest("[data-attendance]"),poll=event.target.closest("[data-poll-index]"),ack=event.target.closest("[data-acknowledge]"),sessionResponse=event.target.closest("[data-session-response]"),personTask=event.target.closest("[data-person-task-toggle]"),reminderDone=event.target.closest("[data-reminder-done]"),resourceSave=event.target.closest("[data-resource-save]");if(attendance)updateStructuredCard(id,card=>card.attendance=attendance.dataset.attendance);if(poll)updateStructuredCard(id,card=>card.vote=Number(poll.dataset.pollIndex));if(ack)updateStructuredCard(id,card=>card.acknowledged=true);if(sessionResponse)updateStructuredCard(id,card=>card.response=sessionResponse.dataset.sessionResponse);if(personTask)updateStructuredCard(id,card=>card.completed=!card.completed);if(reminderDone)updateStructuredCard(id,card=>card.completed=!card.completed);if(resourceSave)updateStructuredCard(id,card=>card.saved=!card.saved)});
+  document.getElementById("messages").addEventListener("change",event=>{let checkbox=event.target.closest("[data-task-index]"),root=event.target.closest("[data-card-id]");if(!checkbox||!root)return;updateStructuredCard(root.dataset.cardId,card=>card.checked[Number(checkbox.dataset.taskIndex)]=checkbox.checked)});
+  actionForm.onsubmit=event=>{
+    event.preventDefault();if(!activeAction)return;
+    let action=activeAction,data=new FormData(actionForm),file=data.get("file"),fallbackTitle=action==="person-photo"?"Photo":action==="person-resource"?String(data.get("resource")||"Tutoria resource"):file&&file.name?file.name:"Untitled";
+    let card={id:Date.now().toString(36),type:action,title:String(data.get("title")||fallbackTitle),description:String(data.get("description")||""),createdAt:Date.now()};
+    if(action==="session")Object.assign(card,{date:String(data.get("date")||""),time:String(data.get("time")||""),endTime:String(data.get("endTime")||""),location:String(data.get("location")||"Online room"),attendance:null});
+    if(action==="poll")Object.assign(card,{options:String(data.get("options")||"").split(/\n/).map(x=>x.trim()).filter(Boolean),vote:null});
+    if(action==="task"){let items=String(data.get("items")||"").split(/\n/).map(x=>x.trim()).filter(Boolean);Object.assign(card,{date:String(data.get("date")||""),assignee:String(data.get("assignee")||"Everyone"),items,checked:items.map(()=>false)})}
+    if(action==="resource")Object.assign(card,{url:String(data.get("url")||""),fileName:file&&file.name?file.name:""});
+    if(action==="announcement")Object.assign(card,{pin:data.get("pin")==="on",acknowledged:false});
+    if(action==="note")card.collaborative=data.get("collaborative")==="on";
+    if(action==="person-photo"||action==="person-file")card.fileName=file&&file.name?file.name:"";
+    if(action==="person-link")card.url=String(data.get("url")||"");
+    if(action==="person-resource")card.saved=false;
+    if(action==="person-session")Object.assign(card,{date:String(data.get("date")||""),time:String(data.get("time")||""),endTime:String(data.get("endTime")||""),location:String(data.get("location")||"Online room"),response:null});
+    if(action==="person-task")Object.assign(card,{date:String(data.get("date")||""),attachment:String(data.get("attachment")||"None"),completed:false});
+    if(action==="person-reminder")Object.assign(card,{date:String(data.get("date")||""),time:String(data.get("time")||""),shared:data.get("shared")==="on",completed:false});
+    if(action==="person-reminder"&&!card.shared){let reminders;try{reminders=JSON.parse(localStorage.getItem("tutoria-private-reminders-v1")||"[]")}catch{reminders=[]}reminders.push({...card,chatId:activeChatId});localStorage.setItem("tutoria-private-reminders-v1",JSON.stringify(reminders));closeActionModal();showActionToast("Private reminder set.");return}
+    let cards=readStructuredCards();cards.push(card);writeStructuredCards(cards);renderStructuredCards();refreshConversationInfo();moveActiveConversationToTop(action==="invite"?card.title+" joined":card.title);closeActionModal();
+    showActionToast({session:"Session added.",poll:"Poll published.",task:"Task created.",resource:"Resource shared.",announcement:"Announcement published.",note:"Shared note created.",invite:"Invitation sent.","person-photo":"Photo shared.","person-file":"File shared.","person-link":"Link shared.","person-resource":"Resource shared.","person-session":"Session proposal sent.","person-task":"Task created.","person-reminder":"Reminder shared."}[action]||"Added to the conversation.");messages.scrollTo({top:messages.scrollHeight,behavior:"smooth"})
+  };
+
+  const listPanel=document.getElementById("listPanel"), chatPanel=document.getElementById("chatPanel");
+  const mobile=()=>innerWidth<1024;
+  const messages=document.getElementById("messages"),groupThread=messages.innerHTML;let activeChatId="ielts";
+  const conversationStateKey="tutoria-conversation-states-v1";
+  function readConversationStates(){try{return JSON.parse(localStorage.getItem(conversationStateKey)||"{}")}catch{return{}}}
+  function writeConversationStates(states){localStorage.setItem(conversationStateKey,JSON.stringify(states))}
+  function activeConversationState(){return readConversationStates()[activeChatId]||{}}
+  function updateConversationState(change){let states=readConversationStates();states[activeChatId]={...(states[activeChatId]||{}),...change};writeConversationStates(states);applyConversationControls()}
+  function applyConversationControls(){let state=activeConversationState(),muted=state.muted===true;document.getElementById("muteConversationLabel").textContent=muted?"Unmute":"Mute";document.getElementById("menuMuteLabel").textContent=muted?"Unmute notifications":"Mute notifications"}
+  function decorateMessageActions(){messages.querySelectorAll('[class*="rounded-[18px]"]').forEach(bubble=>{if(bubble.dataset.messageActions)return;bubble.dataset.messageActions="true";let host=bubble.parentElement;if(!host)return;host.classList.add("message-host","relative");let owned=host.closest("[data-message-id]")!==null,actions=document.createElement("div");actions.className="message-actions absolute -top-3 right-0 z-10 flex gap-1";actions.innerHTML=`<button type="button" class="message-action" data-message-action="reply" title="Reply"><i data-lucide="reply" class="size-3.5"></i></button><button type="button" class="message-action" data-message-action="copy" title="Copy"><i data-lucide="copy" class="size-3.5"></i></button>${owned?`<button type="button" class="message-action" data-message-action="delete" title="Delete"><i data-lucide="trash-2" class="size-3.5"></i></button>`:`<button type="button" class="message-action" data-message-action="report" title="Report"><i data-lucide="flag" class="size-3.5"></i></button>`}`;host.appendChild(actions)});lucide.createIcons()}
+  const seededThreads={
+    nam:[{from:"Nam",text:"I’ll send the worksheet tonight.",time:"Yesterday"},{from:"me",text:"Thank you. I’ll review it before our next chat.",time:"Yesterday"}],
+    vy:[{from:"Vy",text:"Can you share your notes from class?",time:"Mon"},{from:"me",text:"Of course. I’ll send the notes when I get home.",time:"Mon"}],
+    ha:[{from:"Ms. Hà",text:"Thank you for the update.",time:"Sun"},{from:"me",text:"You’re welcome. I’ll keep you posted.",time:"Sun"}],
+    "web-design":[{from:"An",text:"New resources are pinned in the shared space.",time:"Sat"},{from:"me",text:"Perfect, I’ll take a look today.",time:"Sat"}]
+  };
+  function personThread(chatId,avatar,chatName){let profileHref="/user/"+encodeURIComponent(chatName),rows=(seededThreads[chatId]||[]).map(item=>item.from==="me"?'<div class="mb-5 ml-auto flex max-w-[82%] items-end justify-end gap-2"><div class="text-right"><div class="rounded-[18px] rounded-br-md bg-brand-700 px-4 py-3 text-left text-sm leading-6 text-white">'+item.text+'</div><p class="mt-1.5 flex items-center justify-end gap-1 px-1 text-[11px] text-slate-400">'+item.time+' <i data-lucide="check-check" class="size-3.5 text-brand-600"></i></p></div><a href="'+currentProfileHref+'" target="_top" aria-label="Open '+currentProfile.name+' profile"><img src="'+currentProfile.avatar+'" class="size-8 rounded-full object-cover" alt="'+currentProfile.name+'"></a></div>':'<div class="mb-5 flex max-w-[82%] items-end gap-2"><a href="'+profileHref+'" target="_top" aria-label="Open '+chatName+' profile"><img src="https://i.pravatar.cc/80?img='+avatar+'" class="size-8 rounded-full object-cover"></a><div><p class="mb-1 px-1 text-xs font-semibold text-slate-500">'+item.from+'</p><div class="rounded-[18px] rounded-bl-md bg-slate-100 px-4 py-3 text-sm leading-6">'+item.text+'</div><p class="mt-1.5 px-1 text-[11px] text-slate-400">'+item.time+'</p></div></div>').join("");return '<div class="mx-auto max-w-3xl"><div class="mb-7 text-center"><span class="rounded-full px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-line">Recent</span></div>'+rows+'<div id="newMessages"></div></div>'}
+  function openConversation(x){document.querySelectorAll(".conversation").forEach(y=>y.classList.remove("bg-brand-50"));x.classList.add("bg-brand-50");activeChatId=x.dataset.chatId;let profileHref=x.dataset.type==="Person"?"/user/"+encodeURIComponent(x.dataset.name):"/communities";document.getElementById("profileLink").href=profileHref;document.getElementById("infoProfileLink").href=profileHref;document.getElementById("chatTitle").textContent=x.dataset.name;document.getElementById("chatMeta").textContent=x.dataset.meta;document.getElementById("chatType").textContent=x.dataset.type;let isGroup=x.dataset.type==="Group";configureCreateMenu(isGroup);document.getElementById("chatType").classList.toggle("hidden",!isGroup);document.getElementById("conversationTools").classList.toggle("hidden",!isGroup);chatPanel.style.gridTemplateRows=isGroup?"88px 72px minmax(0,1fr)":"88px minmax(0,1fr)";document.getElementById("sharedSpaceTitle").textContent=x.dataset.space;document.getElementById("infoTitle").textContent=x.dataset.name;document.getElementById("infoMeta").textContent=(x.dataset.type==="Group"?"Private group · ":"")+x.dataset.meta;let single='<img src="https://i.pravatar.cc/80?img='+x.dataset.avatar+'" class="size-12 rounded-full object-cover">';document.getElementById("chatAvatar").innerHTML=x.dataset.type==="Group"&&activeChatId==="ielts"?'<img src="https://i.pravatar.cc/80?img=47" class="absolute left-0 top-0 size-8 rounded-full border-2 border-white object-cover"><img src="https://i.pravatar.cc/80?img=12" class="absolute bottom-0 right-0 size-8 rounded-full border-2 border-white object-cover">':single;document.getElementById("infoAvatar").innerHTML=single;document.getElementById("infoMembers").classList.toggle("hidden",!isGroup);document.getElementById("infoFiles").classList.remove("hidden");document.getElementById("infoPinned").classList.toggle("hidden",!isGroup);messages.innerHTML=activeChatId==="ielts"?groupThread:personThread(activeChatId,x.dataset.avatar,x.dataset.name);readSavedMessages().forEach(renderSavedMessage);renderStructuredCards();refreshConversationInfo();applyConversationControls();decorateMessageActions();lucide.createIcons();messages.scrollTop=messages.scrollHeight;if(mobile()){listPanel.classList.add("hidden");chatPanel.classList.remove("desktop");chatPanel.classList.add("grid","h-screen","grid-rows-[88px_72px_minmax(0,1fr)]")}}
+  document.querySelectorAll(".conversation").forEach(x=>x.onclick=()=>openConversation(x));
+  document.getElementById("backBtn").onclick=()=>{if(mobile()){chatPanel.classList.add("desktop");chatPanel.classList.remove("grid","h-screen","grid-rows-[88px_72px_minmax(0,1fr)]");listPanel.classList.remove("hidden")}};
+
+  let active="all"; const items=[...document.querySelectorAll(".conversation")], filters=[...document.querySelectorAll(".filter")];
+  function apply(){let n=0,q=document.getElementById("search").value.toLowerCase();items.forEach(x=>{let show=!x.dataset.archived&&(active==="all"||x.dataset.tags.split(" ").includes(active))&&x.dataset.name.toLowerCase().includes(q);x.classList.toggle("hidden",!show);if(show)n++});document.getElementById("empty").classList.toggle("hidden",n>0)}
+  filters.forEach(b=>b.onclick=()=>{active=b.dataset.filter;filters.forEach(x=>{x.classList.remove("bg-brand-50","font-semibold","text-brand-800");x.classList.add("text-slate-600")});b.classList.add("bg-brand-50","font-semibold","text-brand-800");b.classList.remove("text-slate-600");apply()});
+  document.getElementById("search").oninput=apply;
+
+  const form=document.getElementById("form"), input=document.getElementById("input"), storedMessagePrefix="tutoria-chat-v1-";
+  function renderSavedMessage(item){let w=document.createElement("div");w.className="mb-5 ml-auto flex max-w-[82%] items-end justify-end gap-2";w.dataset.messageId=item.id||"";w.innerHTML='<div class="text-right"><div data-message-bubble class="rounded-[18px] rounded-br-md bg-brand-700 px-4 py-3 text-left text-sm leading-6 text-white"></div><p class="mt-1.5 flex items-center justify-end gap-1 text-[11px] text-slate-400"><span data-message-time></span><i data-message-status class="size-3.5 text-brand-600"></i></p></div><a href="'+currentProfileHref+'" target="_top" aria-label="Open '+currentProfile.name+' profile"><img src="'+currentProfile.avatar+'" class="size-8 rounded-full object-cover" alt="'+currentProfile.name+'"></a>';w.querySelector("[data-message-bubble]").textContent=item.text;w.querySelector("[data-message-time]").textContent=item.time||"Just now";w.querySelector("[data-message-status]").setAttribute("data-lucide",item.seen===true?"check-check":"check");document.getElementById("newMessages").appendChild(w);decorateMessageActions();lucide.createIcons()}
+  function activeStorageKey(){return activeChatId==="ielts"?"tutoria-message-drafts-v1":storedMessagePrefix+activeChatId}
+  function readSavedMessages(){try{return JSON.parse(localStorage.getItem(activeStorageKey())||"[]")}catch{return[]}}
+  const conversationOrderKey="tutoria-conversation-order-v1";
+  function normalizeConversationSpacing(){document.querySelectorAll(".conversation").forEach(item=>item.classList.add("mt-1"));document.querySelector(".conversation")?.classList.remove("mt-1")}
+  function updateConversationPreview(conversation,text,timeLabel){let preview=[...conversation.querySelectorAll("p")].at(-1),time=conversation.querySelector("time");if(preview)preview.textContent="You: "+text;if(time)time.textContent=timeLabel}
+  function moveActiveConversationToTop(text){let conversation=document.querySelector('.conversation[data-chat-id="'+activeChatId+'"]');if(!conversation)return;updateConversationPreview(conversation,text,"Now");document.getElementById("conversations").prepend(conversation);normalizeConversationSpacing();let order;try{order=JSON.parse(localStorage.getItem(conversationOrderKey)||"[]")}catch{order=[]}order=order.filter(item=>item.id!==activeChatId);order.unshift({id:activeChatId,text,updatedAt:Date.now()});localStorage.setItem(conversationOrderKey,JSON.stringify(order))}
+  function restoreConversationOrder(){let order;try{order=JSON.parse(localStorage.getItem(conversationOrderKey)||"[]")}catch{order=[]}order.slice().reverse().forEach(item=>{let conversation=document.querySelector('.conversation[data-chat-id="'+item.id+'"]');if(!conversation)return;updateConversationPreview(conversation,item.text,new Date(item.updatedAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}));document.getElementById("conversations").prepend(conversation)});normalizeConversationSpacing()}
+  restoreConversationOrder();
+  readSavedMessages().forEach(renderSavedMessage);
+  renderStructuredCards();
+  refreshConversationInfo();
+  applyConversationControls();
+  decorateMessageActions();
+  form.onsubmit=e=>{e.preventDefault();let t=input.value.trim();if(!t)return;let item={id:Date.now().toString(36),text:t,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),seen:false},saved=readSavedMessages();saved.push(item);localStorage.setItem(activeStorageKey(),JSON.stringify(saved));renderSavedMessage(item);moveActiveConversationToTop(t);input.value="";messages.scrollTo({top:messages.scrollHeight,behavior:"smooth"})};
+  input.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();form.requestSubmit()}};
+
+  messages.addEventListener("click",async event=>{
+    let button=event.target.closest("[data-message-action]");if(!button)return;
+    let host=button.closest(".message-host"),bubble=host?.querySelector("[data-message-bubble]")||host?.querySelector('[class*="rounded-[18px]"]'),text=bubble?.textContent?.trim()||"",action=button.dataset.messageAction;
+    if(action==="reply"){input.value=`Replying to: “${text.slice(0,90)}”\n`;input.focus();return}
+    if(action==="copy"){try{await navigator.clipboard.writeText(text);showActionToast("Message copied.")}catch{showActionToast("Select the message text to copy it.")}return}
+    if(action==="report"){let reports;try{reports=JSON.parse(localStorage.getItem("tutoria-message-reports-v1")||"[]")}catch{reports=[]}reports.push({chatId:activeChatId,text,reportedAt:Date.now()});localStorage.setItem("tutoria-message-reports-v1",JSON.stringify(reports));showActionToast("Message reported.");return}
+    if(action==="delete"){let row=host?.closest("[data-message-id]"),id=row?.dataset.messageId,saved=readSavedMessages().filter(item=>item.id!==id);localStorage.setItem(activeStorageKey(),JSON.stringify(saved));row?.remove();showActionToast("Message deleted.")}
+  });
+
+  const conversationMenu=document.getElementById("conversationMenu");
+  function closeConversationMenu(){conversationMenu.classList.add("hidden")}
+  document.getElementById("headerMoreBtn").onclick=()=>conversationMenu.classList.toggle("hidden");
+  document.addEventListener("click",event=>{if(!conversationMenu.contains(event.target)&&!document.getElementById("headerMoreBtn").contains(event.target))closeConversationMenu()});
+  function removeActiveConversation(reason){let conversation=document.querySelector('.conversation[data-chat-id="'+activeChatId+'"]');if(!conversation)return;conversation.dataset.archived="true";conversation.classList.add("hidden");let next=[...document.querySelectorAll(".conversation")].find(item=>!item.dataset.archived);if(next)openConversation(next);else{document.getElementById("empty").classList.remove("hidden");chatPanel.classList.add("desktop")}showActionToast(reason)}
+  function handleConversationControl(control){if(control==="mute"){let muted=!activeConversationState().muted;updateConversationState({muted});showActionToast(muted?"Conversation muted.":"Conversation unmuted.")}if(control==="archive"){updateConversationState({archived:true});removeActiveConversation("Conversation archived.")}if(control==="block"){updateConversationState({blocked:true,archived:true});removeActiveConversation("Account blocked and conversation removed.")}if(control==="report"){let reports;try{reports=JSON.parse(localStorage.getItem("tutoria-conversation-reports-v1")||"[]")}catch{reports=[]}reports.push({chatId:activeChatId,reportedAt:Date.now()});localStorage.setItem("tutoria-conversation-reports-v1",JSON.stringify(reports));showActionToast("Conversation reported.")}closeConversationMenu()}
+  document.getElementById("muteConversationBtn").onclick=()=>handleConversationControl("mute");
+  document.querySelectorAll(".conversation-control").forEach(button=>button.onclick=()=>handleConversationControl(button.dataset.control));
+  function restoreConversationStates(){let states=readConversationStates();document.querySelectorAll(".conversation").forEach(conversation=>{if(states[conversation.dataset.chatId]?.archived||states[conversation.dataset.chatId]?.blocked){conversation.dataset.archived="true";conversation.classList.add("hidden")}})}
+  restoreConversationStates();
+
+  const drawer=document.getElementById("drawer"), overlay=document.getElementById("overlay");
+  function openMenu(){drawer.classList.remove("hidden");overlay.classList.remove("hidden");requestAnimationFrame(()=>drawer.classList.remove("-translate-x-full"))}
+  function closeMenu(){drawer.classList.add("-translate-x-full");overlay.classList.add("hidden");setTimeout(()=>drawer.classList.add("hidden"),200)}
+  document.getElementById("menuBtn").onclick=openMenu;document.getElementById("closeMenu").onclick=closeMenu;overlay.onclick=closeMenu;
+
+  const mobileInfo=document.getElementById("mobileInfo"), infoOverlay=document.getElementById("infoOverlay");
+  function openInfo(){mobileInfo.classList.remove("hidden");infoOverlay.classList.remove("hidden");requestAnimationFrame(()=>mobileInfo.classList.remove("translate-y-full"))}
+  function closeInfo(){mobileInfo.classList.add("translate-y-full");infoOverlay.classList.add("hidden");setTimeout(()=>mobileInfo.classList.add("hidden"),200)}
+  document.getElementById("infoBtn").onclick=()=>innerWidth<1280?openInfo():document.getElementById("infoPanel").classList.toggle("xl:hidden");
+  document.getElementById("mobileInfoBtn").onclick=openInfo;document.getElementById("closeInfo").onclick=closeInfo;infoOverlay.onclick=closeInfo;
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+import { z } from "zod";
+const currentYear = new Date().getUTCFullYear();
+const clean = (max: number) => z.string().trim().max(max);
+const required = (max: number) => z.string().trim().min(1).max(max);
+const year = z.number().int().min(1900).max(currentYear + 10);
+export const levelCodes = ["primary", "lower_secondary", "upper_secondary", "university", "adult", "beginner", "intermediate", "advanced", "exam_preparation"] as const;
+const language = z.object({ code: required(16).regex(/^[a-z]{2,3}(?:-[A-Z]{2})?$/), displayName: required(60), proficiency: z.enum(["basic", "conversational", "professional", "native"]) }).strict();
+const availability = z.object({ dayOfWeek: z.number().int().min(0).max(6), startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/), endTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/), timezone: required(64) }).strict().refine((v) => v.startTime < v.endTime, { path: ["endTime"], message: "End time must be after start time." });
+const education = z.object({ institution: required(120), qualification: required(120), fieldOfStudy: clean(120).default(""), startYear: year, endYear: year.nullable(), description: clean(500).default("") }).strict().refine((v) => v.endYear === null || v.endYear >= v.startYear, { path: ["endYear"], message: "End year cannot precede start year." });
+const experience = z.object({ title: required(120), organization: required(120), startYear: year, endYear: year.nullable(), description: clean(700).default("") }).strict().refine((v) => v.endYear === null || v.endYear >= v.startYear, { path: ["endYear"], message: "End year cannot precede start year." });
+export const tutorCvProfileSchema = z.object({
+  displayName: required(80), headline: clean(120).nullable(), bio: clean(2000).nullable(), hourlyRateVnd: z.number().int().min(50_000).max(10_000_000).nullable(), currency: z.literal("VND"), teachingFormat: z.enum(["online", "in_person", "both"]).nullable(),
+  subjects: z.array(required(64)).max(10), levels: z.array(z.enum(levelCodes)).max(10), regions: z.array(required(64)).max(20), languages: z.array(language).max(8), availability: z.array(availability).max(28), education: z.array(education).max(5), experience: z.array(experience).max(10)
+}).strict().superRefine((value, ctx) => {
+  const codes = value.languages.map((v) => v.code.toLowerCase()); if (new Set(codes).size !== codes.length) ctx.addIssue({ code: "custom", path: ["languages"], message: "Language codes must be unique." });
+  const slots = [...value.availability].sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime)); slots.forEach((slot, i) => { const next = slots[i + 1]; if (next?.dayOfWeek === slot.dayOfWeek && next.startTime < slot.endTime) ctx.addIssue({ code: "custom", path: ["availability"], message: "Availability slots cannot overlap." }); });
+});
+export const saveTutorCvSchema = z.object({ expectedVersion: z.number().int().positive().nullable(), profile: tutorCvProfileSchema }).strict();
+export const versionSchema = z.object({ expectedVersion: z.number().int().positive() }).strict();
+const prohibited = [/\b[A-Z0-9._%+-]+\s*(?:@|\bat\b)\s*[A-Z0-9.-]+\s*(?:\.|\bdot\b)\s*[A-Z]{2,}\b/i, /(?:https?:\/\/|www\.|\b(?:bit\.ly|tinyurl\.com|t\.me|wa\.me)\b)/i, /\b(?:zalo|whats\s*app|telegram|contact\s+me\s+at|liên\s*hệ)\b/i, /(?:^|\s)@[a-z0-9_.]{3,}/i, /(?:\+?\d[\s().-]*){8,15}/, /\b(?:verified tutor|identity verified|credentials verified|approved by tutoria|certified by tutoria|background checked)\b/i];
+export function containsContactInformation(value: unknown): boolean { if (typeof value === "string") return prohibited.some((p) => p.test(value)); if (Array.isArray(value)) return value.some(containsContactInformation); if (value && typeof value === "object") return Object.values(value).some(containsContactInformation); return false; }
+export const publicTutorQuerySchema = z.object({ subject: z.string().trim().min(1).max(64).optional(), level: z.enum(levelCodes).optional(), region: z.string().trim().min(1).max(64).optional(), format: z.enum(["online", "in_person", "both"]).optional(), minRate: z.coerce.number().int().min(50_000).max(10_000_000).optional(), maxRate: z.coerce.number().int().min(50_000).max(10_000_000).optional(), cursor: z.string().min(1).max(512).optional(), limit: z.coerce.number().int().min(1).max(24).default(12) }).strict().refine((v) => v.minRate === undefined || v.maxRate === undefined || v.minRate <= v.maxRate);
