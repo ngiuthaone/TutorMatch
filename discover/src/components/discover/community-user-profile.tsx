@@ -458,7 +458,7 @@ export function CommunityUserProfile({ name }: { name?: string }) {
     <main className="tr-profile-page">
       <article className="tr-profile-shell">
         <div className={`tr-profile-cover ${profile.isBlank ? "tr-profile-cover-empty" : ""}`}>
-          {profile.cover ? <img src={profile.cover} alt="" style={{ objectPosition: `${profile.coverPositionX ?? 50}% ${profile.coverPositionY ?? 50}%`, transform: cropTransform(profile.coverPositionX ?? 50, profile.coverPositionY ?? 50) }} /> : isOwnProfile ? <span>Add a cover photo</span> : null}
+          {profile.cover ? <img src={profile.cover} alt="" style={{ objectPosition: `${profile.coverPositionX ?? 50}% ${profile.coverPositionY ?? 50}%` }} /> : isOwnProfile ? <span>Add a cover photo</span> : null}
         </div>
         <div className="tr-profile-body">
           <header className="tr-profile-summary">

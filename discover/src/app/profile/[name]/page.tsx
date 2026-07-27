@@ -1,14 +1,12 @@
-import { TopNav } from "@/components/discover/top-nav";
-import { Footer } from "@/components/discover/footer";
-import { ProfileReplacement } from "@/components/discover/profile-replacement";
-
 export default async function ProfilePage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
+  const profileName = encodeURIComponent(decodeURIComponent(name));
+
   return (
-    <div className="tutoria-page-shell flex flex-col">
-      <TopNav />
-      <ProfileReplacement name={decodeURIComponent(name)} />
-      <Footer />
-    </div>
+    <iframe
+      src={`/tutor-profile-exact.html?name=${profileName}`}
+      title="Tutor profile"
+      className="block h-[100dvh] w-full border-0 bg-[#101011]"
+    />
   );
 }

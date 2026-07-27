@@ -17,23 +17,23 @@
 
 :root {
   color-scheme: dark;
-  --background: #030812;
-  --foreground: #f3f0e8;
-  --primary: #c8944b;
-  --primary-light: #e4c58d;
-  --primary-dark: #a86f2f;
-  --accent: #d7dde6;
-  --surface: #0b1422;
-  --muted: #aeb7c5;
-  --border: rgba(207, 218, 232, 0.16);
-  --tutoria-ink: #030812;
-  --tutoria-navy: #071426;
-  --tutoria-moon: #f3f0e8;
-  --tutoria-silver: #aeb7c5;
-  --tutoria-amber: #c8944b;
-  --tutoria-glass: rgba(14, 23, 37, 0.76);
-  --tutoria-glass-strong: rgba(7, 14, 25, 0.92);
-  --tutoria-line: rgba(207, 218, 232, 0.16);
+  --background: #080809;
+  --foreground: #f4f4f2;
+  --primary: #d6d6d7;
+  --primary-light: #f4f4f2;
+  --primary-dark: #8e8e93;
+  --accent: #f4f4f2;
+  --surface: #121214;
+  --muted: #9c9ca3;
+  --border: rgba(255, 255, 255, 0.11);
+  --tutoria-ink: #080809;
+  --tutoria-navy: #101012;
+  --tutoria-moon: #f4f4f2;
+  --tutoria-silver: #9c9ca3;
+  --tutoria-amber: #f4f4f2;
+  --tutoria-glass: rgba(18, 18, 20, 0.78);
+  --tutoria-glass-strong: rgba(11, 11, 12, 0.94);
+  --tutoria-line: rgba(255, 255, 255, 0.11);
   --font-editorial: var(--font-tutoria-display), Georgia, serif;
 }
 
@@ -50,7 +50,7 @@ body {
 }
 
 html {
-  background: #030812;
+  background: #080809;
   scroll-behavior: smooth;
 }
 
@@ -58,13 +58,13 @@ body.tutoria-cosmos {
   position: relative;
   isolation: isolate;
   overflow-x: clip;
-  background-color: #030812;
+  background-color: #080809;
   background-image:
-    linear-gradient(180deg, rgba(3, 8, 18, 0.12), rgba(3, 8, 18, 0.82) 72%, #030812),
-    url("/brand/tutoria-space-sky.png");
-  background-size: 100% auto, 100vw auto;
+    radial-gradient(ellipse at top, rgba(255, 255, 255, 0.035), transparent 30rem),
+    linear-gradient(180deg, #0a0a0b 0%, #080809 42%, #060607 100%);
+  background-size: 100% 100%;
   background-position: top center;
-  background-repeat: repeat-y;
+  background-repeat: no-repeat;
   background-attachment: fixed;
 }
 
@@ -75,9 +75,8 @@ body.tutoria-cosmos::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 14% 18%, rgba(200, 148, 75, 0.12), transparent 22rem),
-    radial-gradient(circle at 86% 36%, rgba(99, 134, 172, 0.14), transparent 28rem),
-    linear-gradient(180deg, transparent 0 64%, rgba(3, 8, 18, 0.62) 88%);
+    radial-gradient(circle at 50% 4%, rgba(255, 255, 255, 0.045), transparent 24rem),
+    linear-gradient(180deg, transparent 0 54%, rgba(0, 0, 0, 0.42) 100%);
 }
 
 body.tutoria-cosmos h1,
@@ -102,11 +101,11 @@ body.tutoria-cosmos :focus-visible {
 }
 
 body.tutoria-cosmos .bg-background {
-  background-color: rgba(7, 14, 25, 0.9);
+  background-color: rgba(12, 12, 13, 0.92);
 }
 
 body.tutoria-cosmos .bg-surface {
-  background-color: rgba(15, 27, 43, 0.92);
+  background-color: rgba(18, 18, 20, 0.94);
 }
 
 body.tutoria-cosmos .border-border {
@@ -1167,8 +1166,8 @@ body.tutoria-cosmos .shadow-xl {
   max-width: 1320px;
   border-color: var(--tutoria-line);
   border-radius: 1.4rem;
-  background: rgba(5, 12, 23, 0.86);
-  box-shadow: 0 36px 110px rgba(0, 0, 0, 0.38), inset 0 1px rgba(255, 255, 255, 0.035);
+  background: rgba(8, 8, 9, 0.9);
+  box-shadow: 0 36px 110px rgba(0, 0, 0, 0.42), inset 0 1px rgba(255, 255, 255, 0.035);
   backdrop-filter: blur(20px);
 }
 
@@ -1181,12 +1180,14 @@ body.tutoria-cosmos .shadow-xl {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 42%, rgba(5, 12, 23, 0.9));
+  background:
+    linear-gradient(180deg, rgba(8, 8, 9, 0.04) 0%, rgba(8, 8, 9, 0.18) 58%, rgba(8, 8, 9, 0.66) 100%),
+    linear-gradient(90deg, rgba(8, 8, 9, 0.18), transparent 32%, transparent 68%, rgba(8, 8, 9, 0.18));
   pointer-events: none;
 }
 
 .tutoria-cosmos .tr-profile-cover img {
-  filter: saturate(0.76) brightness(0.72);
+  filter: saturate(0.68) brightness(0.68) contrast(1.02);
 }
 
 @media (max-width: 720px) {
@@ -1196,8 +1197,8 @@ body.tutoria-cosmos .shadow-xl {
 }
 
 .tutoria-cosmos .tr-profile-avatar {
-  border-color: #071426;
-  box-shadow: 0 0 0 1px var(--tutoria-line), 0 18px 46px rgba(0, 0, 0, 0.42);
+  border-color: #080809;
+  box-shadow: 0 0 0 1px var(--tutoria-line), 0 18px 46px rgba(0, 0, 0, 0.48);
   transform: translateY(-50px);
 }
 
@@ -1245,7 +1246,7 @@ body.tutoria-cosmos .shadow-xl {
 
 .tutoria-cosmos .tr-profile-actions button + button {
   border-color: var(--tutoria-line);
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(255, 255, 255, 0.02);
   color: var(--tutoria-moon);
 }
 
@@ -1263,7 +1264,7 @@ body.tutoria-cosmos .shadow-xl {
 
 .tutoria-cosmos .tr-profile-skills span {
   border-color: var(--tutoria-line);
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(255, 255, 255, 0.025);
   color: var(--tutoria-moon);
 }
 
@@ -1275,8 +1276,8 @@ body.tutoria-cosmos .shadow-xl {
 .tutoria-cosmos .tr-profile-empty,
 .tutoria-cosmos .tr-profile-sidebar section {
   border-color: var(--tutoria-line);
-  background: rgba(10, 20, 35, 0.72);
-  box-shadow: 0 22px 66px rgba(0, 0, 0, 0.2), inset 0 1px rgba(255, 255, 255, 0.025);
+  background: rgba(18, 18, 20, 0.78);
+  box-shadow: 0 22px 66px rgba(0, 0, 0, 0.22), inset 0 1px rgba(255, 255, 255, 0.025);
 }
 
 .tutoria-cosmos .tr-profile-empty h2,
@@ -1298,7 +1299,7 @@ body.tutoria-cosmos .shadow-xl {
 
 .tutoria-cosmos .tr-thread-content > header button:hover,
 .tutoria-cosmos .tr-thread-content > footer button:hover {
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(255, 255, 255, 0.055);
   color: var(--primary-light);
 }
 
@@ -1308,18 +1309,18 @@ body.tutoria-cosmos .shadow-xl {
 
 .tutoria-cosmos .tr-similar a {
   border-color: var(--tutoria-line);
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(18, 18, 20, 0.72);
   color: var(--tutoria-moon);
 }
 
 .tutoria-cosmos .tr-similar a:hover {
-  border-color: rgba(228, 197, 141, 0.48);
-  background: rgba(200, 148, 75, 0.08);
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 @media (max-width: 720px) {
   .tutoria-cosmos .tr-profile-page { padding: 0 0 4rem; background: transparent; }
-  .tutoria-cosmos .tr-profile-shell { border-inline: 0; border-radius: 0; background: rgba(5, 12, 23, 0.92); }
+  .tutoria-cosmos .tr-profile-shell { border-inline: 0; border-radius: 0; background: rgba(8, 8, 9, 0.94); }
   .tutoria-cosmos .tr-profile-body { padding-inline: 1rem; }
 }
 .tutoria-discover-header {

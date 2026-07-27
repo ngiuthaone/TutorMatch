@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, DM_Serif_Display, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
@@ -37,6 +37,11 @@ export const metadata: Metadata = {
   title: "Tutoria | Learn, Share, Connect",
   description:
     "Discover skills, creators, communities, and experiences that help you grow.",
+};
+
+export const viewport: Viewport = {
+  colorScheme: "dark",
+  themeColor: "#0b0b0c",
 };
 
 export default function RootLayout({
