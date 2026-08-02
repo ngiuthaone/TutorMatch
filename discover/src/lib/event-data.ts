@@ -41,6 +41,9 @@ export interface EventFaq {
 }
 
 export interface EventDetail extends EventListing {
+  creatorId?: string;
+  creatorName?: string;
+  publishedAt?: string;
   subtitle: string;
   rating: number;
   reviewCount: number;

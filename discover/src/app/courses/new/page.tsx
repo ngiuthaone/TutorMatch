@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { RequireAuth } from "@/components/auth/require-auth";
-import { CourseCreator } from "@/components/courses/course-creator";
 
 export const metadata: Metadata = {
   title: "Create a course | Tutoria",
@@ -9,5 +8,13 @@ export const metadata: Metadata = {
 };
 
 export default function NewCoursePage() {
-  return <RequireAuth><CourseCreator /></RequireAuth>;
+  return (
+    <RequireAuth>
+      <iframe
+        title="Create a course"
+        src="/course-creator-reference.html"
+        style={{ width: "100%", height: "100dvh", border: 0, display: "block", background: "#e9ebed" }}
+      />
+    </RequireAuth>
+  );
 }

@@ -353,6 +353,7 @@ const SORT_OPTS = [
 ];
 
 function withCoords(t) {
+  if (Number.isFinite(t.lat) && Number.isFinite(t.lng)) return t;
   const c = DISTRICT_COORDS[t.location];
   if (c) { t.lat = c.lat; t.lng = c.lng; }
   return t;
@@ -376,6 +377,7 @@ const tutors = [
 ];
 
 const TUTOR_SUBMISSION_KEY = 'tutoria_tutor_profile_submission';
+let serverPublishedTutors = [];
 const PROFILE_IMAGES_BY_NAME = {
   'Minh Anh': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=85',
   'Huy Tran': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=85',
@@ -414,14 +416,14 @@ function submittedTutorToBrowseTutor(submission) {
       : undefined;
   const price = duration && submission.rates ? submission.rates[String(duration)] : undefined;
 
-  return withCoords({
+  const tutor = {
     id: 9000,
     name,
     headline: String(submission.role || '').trim() || (skills[0] ? `${skills[0]} Tutor` : 'Independent Tutor'),
     category: 'lifestyle',
     skills: skills.length ? skills : ['Tutoring'],
     format,
-    city: 'hanoi',
+    city: String(submission.city || 'hanoi'),
     location: String(submission.location || '').trim() || 'Hoàn Kiếm',
     price: price || 0,
     rating: 0,
@@ -437,11 +439,20 @@ function submittedTutorToBrowseTutor(submission) {
     photoUrl: submission.photoUrl || '',
     bg: 'bg-gray-800',
     tc: 'text-gray-300',
-  });
+  };
+  if (Number.isFinite(submission.latitude) && Number.isFinite(submission.longitude)) {
+    tutor.lat = submission.latitude;
+    tutor.lng = submission.longitude;
+  }
+  return withCoords(tutor);
 }
 
 function getBrowseTutors() {
   let list = tutors.map(tutor => ({ ...tutor, photoUrl: tutor.photoUrl || PROFILE_IMAGES_BY_NAME[tutor.name] || '' }));
+  serverPublishedTutors.forEach(submission => {
+    const submittedTutor = submittedTutorToBrowseTutor(submission);
+    if (submittedTutor) list = [submittedTutor, ...list.filter(tutor => tutor.name !== submittedTutor.name)];
+  });
   try {
     const submittedTutor = submittedTutorToBrowseTutor(JSON.parse(localStorage.getItem(TUTOR_SUBMISSION_KEY) || 'null'));
     if (submittedTutor) {
@@ -947,6 +958,21 @@ Object.assign(state, urlState);
 syncInputs();
 renderSort();
 render();
+function refreshPublishedTutors() {
+  fetch('/api/tutors')
+    .then(response => response.ok ? response.json() : { tutors: [] })
+    .then(payload => {
+      serverPublishedTutors = Array.isArray(payload.tutors) ? payload.tutors : [];
+      render();
+    })
+    .catch(() => {});
+}
+refreshPublishedTutors();
+window.setInterval(refreshPublishedTutors, 5000);
+window.addEventListener('storage', event => {
+  if (event.key === TUTOR_SUBMISSION_KEY) render();
+});
+window.addEventListener('tutoria-tutor-published', render);
 
 </script>
 </body>

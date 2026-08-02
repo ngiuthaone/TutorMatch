@@ -544,6 +544,13 @@
   font-weight: 650;
 }
 
+.optionFieldHint {
+  margin: -.2rem 0 .7rem;
+  color: var(--creator-subtle);
+  font-size: .72rem;
+  line-height: 1.45;
+}
+
 .field input,
 .field textarea,
 .field select,
@@ -1877,6 +1884,29 @@
   color: var(--creator-muted);
   font-size: .875rem;
   line-height: 1.65;
+}
+
+.previewOptionList {
+  display: grid;
+  gap: .5rem;
+  margin: .8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.previewOptionList li {
+  display: flex;
+  align-items: flex-start;
+  gap: .45rem;
+  color: var(--creator-muted);
+  font-size: .8125rem;
+  line-height: 1.5;
+}
+
+.previewOptionList li svg {
+  flex: 0 0 auto;
+  margin-top: .13rem;
+  color: var(--creator-accent-strong);
 }
 
 .previewPlan {

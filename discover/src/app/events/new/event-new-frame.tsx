@@ -15,6 +15,8 @@ function isPublishedEventMessage(data: unknown): data is { type: "tutoria-event-
 }
 
 export function EventNewFrame() {
+  const frameSrc = `/event-creator-reference.html${typeof window === "undefined" ? "" : window.location.search}`;
+
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || !isPublishedEventMessage(event.data)) return;
@@ -28,7 +30,7 @@ export function EventNewFrame() {
   return (
     <iframe
       title="Create an event or workshop"
-      src="/event-creator-reference.html"
+      src={frameSrc}
       style={{ display: "block", width: "100%", height: "100dvh", border: 0 }}
     />
   );

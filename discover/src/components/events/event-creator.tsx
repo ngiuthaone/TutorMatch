@@ -35,6 +35,7 @@ import {
 
 import styles from "./event-creator.module.css";
 import { savePublishedEvent, type EventDetail } from "@/lib/event-data";
+import { getUserFromStorage } from "@/lib/types";
 
 type EventType = "Workshop" | "Event";
 type EventFormat = "In person" | "Online";
@@ -86,10 +87,10 @@ type EventDraft = {
   category: string;
   title: string;
   promise: string;
-  outcome: string;
+  outcome: string[];
   level: ExperienceLevel;
   included: string[];
-  bring: string;
+  bring: string[];
   requirements: string[];
   beforeAttendGroups: AttendGroup[];
   faqs: CreatorFaq[];
@@ -120,10 +121,10 @@ const defaultDraft: EventDraft = {
   category: "",
   title: "",
   promise: "",
-  outcome: "",
+  outcome: [],
   level: "Beginner",
   included: [],
-  bring: "",
+  bring: [],
   requirements: [],
   beforeAttendGroups: [
     { id: "attend-preparation", title: "Preparation", items: [] },
@@ -200,7 +201,11 @@ function getServerDraftSnapshot() {
 
 function parseDraft(snapshot: string): EventDraft {
   try {
-    const parsed = JSON.parse(snapshot) as Partial<EventDraft> & { sessions?: StoredSessionDate[] };
+    const parsed = JSON.parse(snapshot) as Omit<Partial<EventDraft>, "outcome" | "bring"> & {
+      sessions?: StoredSessionDate[];
+      outcome?: unknown;
+      bring?: unknown;
+    };
     const sourceSessions: StoredSessionDate[] = Array.isArray(parsed.sessions) ? parsed.sessions : defaultDraft.sessions;
     const sessions = sourceSessions.map((session, dateIndex) => {
       const id = typeof session.id === "string" ? session.id : `date-${dateIndex + 1}`;
@@ -223,6 +228,15 @@ function parseDraft(snapshot: string): EventDraft {
         intervals,
       };
     });
+    // Drafts created before outcomes and preparation items became individual
+    // options stored these fields as a single block of text. Preserve that work
+    // as one option when an older draft is opened.
+    const outcome = Array.isArray(parsed.outcome)
+      ? parsed.outcome.filter((item): item is string => typeof item === "string" && Boolean(item.trim()))
+      : typeof parsed.outcome === "string" && parsed.outcome.trim() ? [parsed.outcome.trim()] : [];
+    const bring = Array.isArray(parsed.bring)
+      ? parsed.bring.filter((item): item is string => typeof item === "string" && Boolean(item.trim()))
+      : typeof parsed.bring === "string" && parsed.bring.trim() ? [parsed.bring.trim()] : [];
     const coverImage = typeof parsed.coverImage === "string" ? parsed.coverImage : defaultDraft.coverImage;
     const galleryImages = Array.isArray(parsed.galleryImages)
       ? parsed.galleryImages.filter((image): image is string => typeof image === "string" && Boolean(image))
@@ -233,7 +247,7 @@ function parseDraft(snapshot: string): EventDraft {
       : Array.isArray(parsed.requirements) && parsed.requirements.length
         ? [{ id: "attend-requirements", title: "Requirements", items: parsed.requirements.filter((item): item is string => typeof item === "string") }]
         : defaultDraft.beforeAttendGroups;
-    return { ...defaultDraft, ...parsed, format, coverImage, galleryImages, sessions, beforeAttendGroups } as EventDraft;
+    return { ...defaultDraft, ...parsed, outcome, bring, format, coverImage, galleryImages, sessions, beforeAttendGroups } as EventDraft;
   } catch {
     return defaultDraft;
   }
@@ -281,7 +295,11 @@ async function optimizePublishedEventImages(event: EventDetail, compact = false)
   const galleryImage = compact
     ? image
     : await optimizeImageDataUrl(event.galleryImage, 1280, 0.72);
-  return { ...event, image, galleryImage };
+  const plan = await Promise.all(event.plan.map(async (item) => ({
+    ...item,
+    image: item.image ? await optimizeImageDataUrl(item.image, compact ? 720 : 960, compact ? 0.5 : 0.66) : undefined,
+  })));
+  return { ...event, image, galleryImage, plan };
 }
 
 function formatPrice(value: number) {
@@ -306,6 +324,7 @@ function createSlug(title: string) {
 }
 
 function toPublishedEvent(draft: EventDraft): EventDetail {
+  const user = getUserFromStorage();
   const firstSession = draft.sessions[0];
   const firstInterval = firstSession?.intervals[0];
   const duration = draft.plan.reduce((sum, item) => sum + Number(item.duration || 0), 0);
@@ -314,6 +333,8 @@ function toPublishedEvent(draft: EventDraft): EventDetail {
   const location = isOnline ? "Online" : `${draft.venueName} · ${draft.location}`;
   const cancellation = [`Cancel ${draft.cancellation.toLowerCase()} for a ${draft.refund.toLowerCase()}.`, "If the host cancels, you can choose another session or receive a full refund."];
   return {
+    creatorId: user?.id,
+    creatorName: user?.name,
     slug: createSlug(draft.title), title: draft.title, host: "Sophia Nguyen", date: dateLabel,
     time: firstInterval?.start || "Time TBA", location, type: isOnline ? "Online" : "In person",
     price: draft.access === "Paid" ? formatPrice(draft.price) : "Free", attending: 0, capacity: draft.capacity,
@@ -322,14 +343,14 @@ function toPublishedEvent(draft: EventDraft): EventDetail {
     minimumAge: "All ages", accessibility: isOnline ? "Join from any device" : "Contact the host for access details",
     studioName: isOnline ? "Online session" : draft.venueName, address: isOnline ? "Joining link shared after booking" : draft.location,
     sessions: draft.sessions.map((session) => ({ id: session.id, date: formatSessionDate(session.date), times: session.intervals.map((interval) => `${interval.start} - ${interval.end}`) })),
-    spotsLeft: draft.capacity, about: [draft.promise, draft.outcome], note: draft.arrival || `Suitable for ${draft.level.toLowerCase()} participants.`,
+    spotsLeft: draft.capacity, about: [draft.promise, ...draft.outcome], note: draft.arrival || `Suitable for ${draft.level.toLowerCase()} participants.`,
     highlights: [
       { title: `${draft.capacity} places`, description: "A focused group experience." },
       { title: `${duration} minutes`, description: "A clearly structured programme." },
       { title: draft.format, description: isOnline ? "Join from wherever you are." : "Learn together in person." },
       { title: draft.level, description: `Designed for ${draft.level.toLowerCase()} participants.` },
     ],
-    learn: [draft.outcome], included: draft.included, bring: draft.bring ? [draft.bring] : ["Nothing special is required"],
+    learn: draft.outcome, included: draft.included, bring: draft.bring.length ? draft.bring : ["Nothing special is required"],
     plan: draft.plan.map((item) => ({ title: item.title, duration: `${item.duration} min`, description: item.description, image: item.image || undefined })),
     faqs: draft.faqs.map(({ question, answer }) => ({ question, answer })),
     galleryImage: draft.galleryImages[0] || draft.plan.find((item) => item.image)?.image || draft.coverImage,
@@ -407,7 +428,9 @@ export function EventCreator() {
   const [notice, setNotice] = useState("");
   const [activeStep, setActiveStep] = useState(0);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [outcomeInput, setOutcomeInput] = useState("");
   const [includedInput, setIncludedInput] = useState("");
+  const [bringInput, setBringInput] = useState("");
   const [languageInput, setLanguageInput] = useState("");
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(() => draft.plan[0]?.id ?? null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -493,7 +516,7 @@ export function EventCreator() {
 
   const checklist = [
     { label: "Essential details", complete: Boolean(draft.title.trim() && draft.promise.trim()), step: 0 },
-    { label: "Experience and FAQs", complete: Boolean(draft.outcome.trim() && draft.plan.length && draft.plan.every((item) => item.title.trim() && item.description.trim() && item.duration > 0) && draft.faqs.length && draft.faqs.every((faq) => faq.question.trim() && faq.answer.trim())), step: 1 },
+    { label: "Experience and FAQs", complete: Boolean(draft.outcome.length && draft.plan.length && draft.plan.every((item) => item.title.trim() && item.description.trim() && item.duration > 0) && draft.faqs.length && draft.faqs.every((faq) => faq.question.trim() && faq.answer.trim())), step: 1 },
     { label: "Time and location", complete: Boolean(sessionTimesValid && locationComplete), step: 3 },
     { label: "Capacity and price", complete: draft.capacity > 0 && (draft.access !== "Paid" || draft.price > 0), step: 4 },
     { label: "Cover image", complete: eventImages.length > 0, step: 0 },
@@ -502,7 +525,7 @@ export function EventCreator() {
   const readyToPublish = checklist.every((item) => item.complete);
   const stepComplete = [
     checklist[0].complete && checklist[4].complete,
-    Boolean(draft.outcome.trim() && draft.plan.length && draft.plan.every((item) => item.title.trim() && item.description.trim() && item.duration > 0)),
+    Boolean(draft.outcome.length && draft.plan.length && draft.plan.every((item) => item.title.trim() && item.description.trim() && item.duration > 0)),
     Boolean(draft.faqs.length && draft.faqs.every((faq) => faq.question.trim() && faq.answer.trim())),
     checklist[2].complete,
     checklist[3].complete && checklist[5].complete,
@@ -521,12 +544,17 @@ export function EventCreator() {
     patchDraft("plan", draft.plan.map((item) => item.id === id ? { ...item, ...patch } : item));
   };
 
-  const uploadPlanImage = (id: string, event: ChangeEvent<HTMLInputElement>) => {
+  const uploadPlanImage = async (id: string, event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => updatePlan(id, { image: String(reader.result) });
-    reader.readAsDataURL(file);
+    try {
+      const image = await readFileAsDataUrl(file);
+      updatePlan(id, { image: await optimizeImageDataUrl(image, 960, 0.66) });
+    } catch {
+      setNotice("We could not add this moment photo. Please try again.");
+    } finally {
+      event.target.value = "";
+    }
   };
 
   const addPlanItem = () => {
@@ -729,7 +757,12 @@ export function EventCreator() {
           <section id="experience" className={styles.section} tabIndex={-1} ref={(node) => { stepSections.current[1] = node; }}>
             <div className={styles.sectionHeading}><span><b>2</b>The experience</span><h2>What will people do and learn?</h2><p>Describe the outcome, then break the experience into clear moments.</p></div>
             <div className={styles.formGrid}>
-              <label className={`${styles.field} ${styles.spanTwo}`}><span>What participants will make or learn</span><textarea required rows={4} maxLength={300} value={draft.outcome} onChange={(event) => patchDraft("outcome", event.target.value)} /><small>{draft.outcome.length}/300</small></label>
+              <div className={`${styles.tagField} ${styles.spanTwo}`}>
+                <span>What participants will make or learn</span>
+                <p className={styles.optionFieldHint}>Add one clear outcome at a time. Guests will see these as a checklist.</p>
+                <div className={styles.tags}>{draft.outcome.map((item) => <button type="button" key={item} aria-label={`Remove outcome: ${item}`} onClick={() => patchDraft("outcome", draft.outcome.filter((value) => value !== item))}>{item}<IconX size={13} /></button>)}</div>
+                <div className={styles.addRow}><input aria-label="Add a learning outcome" value={outcomeInput} maxLength={160} placeholder="e.g. Shape and glaze a ceramic cup" onChange={(event) => setOutcomeInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); const value = outcomeInput.trim(); if (value && !draft.outcome.includes(value)) patchDraft("outcome", [...draft.outcome, value]); setOutcomeInput(""); } }} /><button type="button" onClick={() => { const value = outcomeInput.trim(); if (value && !draft.outcome.includes(value)) patchDraft("outcome", [...draft.outcome, value]); setOutcomeInput(""); }}>Add outcome</button></div>
+              </div>
               <SegmentedControl label="Experience level" options={["Beginner", "Intermediate", "Advanced", "All levels"] as const} value={draft.level} onChange={(value) => patchDraft("level", value)} />
             </div>
 
@@ -768,7 +801,7 @@ export function EventCreator() {
                           </label>
                         </div>
                         <div className={styles.planImageField}>
-                          <span>Image <small>(optional)</small></span>
+                          <span>Moment photo <small>(optional)</small></span>
                           {item.image ? (
                             <div className={styles.planImagePreview}>
                               <Image src={item.image} alt={`${item.title} workshop moment`} fill unoptimized sizes="(max-width: 700px) 100vw, 280px" />
@@ -776,7 +809,7 @@ export function EventCreator() {
                               <label><IconPhoto size={16} /> Replace<input type="file" accept="image/*" onChange={(event) => uploadPlanImage(item.id, event)} /></label>
                             </div>
                           ) : (
-                            <label className={styles.planImageEmpty}><IconPhoto size={20} /><strong>Add an image</strong><small>JPG or PNG</small><input type="file" accept="image/*" onChange={(event) => uploadPlanImage(item.id, event)} /></label>
+                            <label className={styles.planImageEmpty}><IconPhoto size={20} /><strong>Add a photo</strong><small>JPG or PNG · shown with this moment</small><input type="file" accept="image/*" onChange={(event) => uploadPlanImage(item.id, event)} /></label>
                           )}
                         </div>
                       </div>
@@ -790,6 +823,7 @@ export function EventCreator() {
             <div className={styles.detailsGrid}>
               <div className={styles.tagField}>
                 <span>What is included</span>
+                <p className={styles.optionFieldHint}>Add each material, service, or resource as its own option.</p>
                 <div className={styles.tags}>{draft.included.map((item) => <button type="button" key={item} onClick={() => patchDraft("included", draft.included.filter((value) => value !== item))}>{item}<IconX size={13} /></button>)}</div>
                 <div className={styles.addRow}><input aria-label="Add an included item" value={includedInput} placeholder="Add an item" onChange={(event) => setIncludedInput(event.target.value)} /><button type="button" onClick={() => { const value = includedInput.trim(); if (value && !draft.included.includes(value)) patchDraft("included", [...draft.included, value]); setIncludedInput(""); }}>Add</button></div>
               </div>
@@ -798,7 +832,12 @@ export function EventCreator() {
                 <div className={styles.tags}>{draft.languages.map((item) => <button type="button" key={item} onClick={() => patchDraft("languages", draft.languages.filter((value) => value !== item))}>{item}<IconX size={13} /></button>)}</div>
                 <div className={styles.addRow}><select aria-label="Choose a language" value={languageInput} onChange={(event) => setLanguageInput(event.target.value)}><option value="">Choose a language</option><option>English</option><option>Vietnamese</option><option>Mandarin</option><option>French</option><option>Japanese</option><option>Korean</option></select><button type="button" onClick={() => { if (languageInput && !draft.languages.includes(languageInput)) patchDraft("languages", [...draft.languages, languageInput]); setLanguageInput(""); }}>Add</button></div>
               </div>
-              <label className={styles.field}><span>What participants should bring</span><textarea rows={3} value={draft.bring} onChange={(event) => patchDraft("bring", event.target.value)} /></label>
+              <div className={styles.tagField}>
+                <span>What participants should bring</span>
+                <p className={styles.optionFieldHint}>Add each item guests need to bring, wear, download, or prepare.</p>
+                <div className={styles.tags}>{draft.bring.map((item) => <button type="button" key={item} onClick={() => patchDraft("bring", draft.bring.filter((value) => value !== item))}>{item}<IconX size={13} /></button>)}</div>
+                <div className={styles.addRow}><input aria-label="Add an item to bring" value={bringInput} maxLength={160} placeholder="e.g. Comfortable clothes" onChange={(event) => setBringInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); const value = bringInput.trim(); if (value && !draft.bring.includes(value)) patchDraft("bring", [...draft.bring, value]); setBringInput(""); } }} /><button type="button" onClick={() => { const value = bringInput.trim(); if (value && !draft.bring.includes(value)) patchDraft("bring", [...draft.bring, value]); setBringInput(""); }}>Add item</button></div>
+              </div>
             </div>
             <section className={styles.enrollmentInfo} aria-labelledby="event-guest-info-title">
               <header className={styles.enrollmentInfoHeader}><div><span>Before booking</span><h3 id="event-guest-info-title">Help guests arrive prepared.</h3><p>Edit the exact sections and checklist items shown in “Before you attend.”</p></div><strong>{draft.beforeAttendGroups.reduce((total, group) => total + group.items.filter((item) => item.trim()).length, 0) + draft.faqs.length} items</strong></header>
@@ -971,7 +1010,7 @@ export function EventCreator() {
                 <section className={styles.previewSection}>
                   <span className={styles.previewSectionLabel}>The experience</span>
                   <h3>What you will learn</h3>
-                  <p className={styles.previewCopy}>{draft.outcome || "The learning outcome will be added before publishing."}</p>
+                  {draft.outcome.length ? <ul className={styles.previewOptionList}>{draft.outcome.map((item) => <li key={item}><IconCheck size={15} />{item}</li>)}</ul> : <p className={styles.previewCopy}>Learning outcomes will be added before publishing.</p>}
                 </section>
 
                 <section className={styles.previewSection}>
@@ -1005,7 +1044,7 @@ export function EventCreator() {
                   <section className={styles.previewDetailCard}>
                     <span className={styles.previewSectionLabel}>Before you arrive</span>
                     <h3>What to bring</h3>
-                    <p>{draft.bring || "Nothing special is required."}</p>
+                    {draft.bring.length ? <ul>{draft.bring.map((item) => <li key={item}>{item}</li>)}</ul> : <p>Nothing special is required.</p>}
                   </section>
                 </div>
 

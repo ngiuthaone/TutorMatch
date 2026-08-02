@@ -59,13 +59,13 @@ export function UserMenu({ user }: UserMenuProps) {
   const items = [
     { icon: IconUser, label: "View profile", href: profileHref },
     { icon: IconBook2, label: "My learning", href: "/learning" },
-    { icon: IconCalendarEvent, label: "My bookings", href: "/learning/schedule" },
-    { icon: IconHeart, label: "Saved", href: "/discussions/saved" },
+    { icon: IconCalendarEvent, label: "My bookings", href: "/bookings" },
+    { icon: IconHeart, label: "Saved", href: "/saved" },
     ...(user.isCreator
-      ? [{ icon: IconSparkles, label: "Creator tools", href: "/become-a-tutor" as const }]
+      ? [{ icon: IconSparkles, label: "Creator dashboard", href: "/dashboard" as const }]
       : [{ icon: IconSparkles, label: "Start creating", href: "/auth/sign-up?intent=creator" as const }]),
-    { icon: IconSettings, label: "Edit profile", href: profileHref },
-    { icon: IconHelpCircle, label: "Help", href: "/discover" },
+    { icon: IconSettings, label: "Settings", href: "/settings" },
+    { icon: IconHelpCircle, label: "Help", href: "/help" },
     { icon: IconLogout, label: "Sign out", href: "/auth/sign-in" },
   ];
 

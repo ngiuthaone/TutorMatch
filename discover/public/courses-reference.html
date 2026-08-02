@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutoria — Browse Courses</title>
+  <style>
+    :root {
+      --bg: #08090a;
+      --surface: #111214;
+      --surface-2: #15171a;
+      --surface-3: #1b1d21;
+      --line: #292c31;
+      --line-soft: #202227;
+      --text: #f4f4f2;
+      --muted: #96999f;
+      --subtle: #6e7279;
+      --chip: #202226;
+      --white: #ffffff;
+      --shadow: 0 22px 60px rgba(0,0,0,.32);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 80% 5%, rgba(255,255,255,.035), transparent 24%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      letter-spacing: -0.01em;
+    }
+
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      height: 82px;
+      border-bottom: 1px solid rgba(255,255,255,.045);
+      background: rgba(8,9,10,.88);
+      backdrop-filter: blur(22px);
+    }
+
+    .topbar-inner {
+      max-width: 1500px;
+      height: 100%;
+      margin: 0 auto;
+      padding: 0 34px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 26px;
+    }
+
+    .nav-left, .nav-right, .main-nav { display: flex; align-items: center; }
+    .nav-left { gap: 42px; }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 760;
+      letter-spacing: -0.04em;
+      font-size: 18px;
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(150deg, #f1f1ef, #8d9095);
+      color: #090a0b;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+    }
+
+    .brand-mark svg { width: 17px; height: 17px; }
+    .main-nav { gap: 30px; }
+    .nav-link {
+      border: 0;
+      background: none;
+      padding: 10px 0;
+      color: #a7aab0;
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 590;
+      font-size: 14px;
+      transition: color .2s ease;
+    }
+    .nav-link:hover, .nav-link.active { color: var(--text); }
+    .nav-link.active { position: relative; }
+    .nav-link.active::after {
+      content: "";
+      position: absolute;
+      left: 50%; bottom: 0;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: #c7a466;
+      transform: translateX(-50%);
+    }
+
+    .nav-right { gap: 10px; }
+    .icon-button, .avatar, .view-button, .mobile-filter-button {
+      border: 1px solid var(--line);
+      background: #111315;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .icon-button {
+      width: 42px; height: 42px; border-radius: 50%;
+    }
+    .icon-button:hover, .view-button:hover, .mobile-filter-button:hover { background: #1a1c1f; border-color: #3b3e44; }
+    .icon-button svg, .view-button svg, .mobile-filter-button svg { width: 18px; height: 18px; stroke: #aeb1b7; }
+    .avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: #2d2419;
+      border-color: #5b4428;
+      color: #e8d6b8;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .page {
+      width: min(1440px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 114px 0 64px;
+    }
+
+    .intro {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 30px;
+      margin-bottom: 32px;
+    }
+    .eyebrow {
+      margin: 0 0 13px;
+      color: #8f9298;
+      text-transform: uppercase;
+      letter-spacing: .2em;
+      font-size: 11px;
+      font-weight: 750;
+    }
+    h1 {
+      max-width: 730px;
+      margin: 0;
+      font-size: clamp(36px, 4.5vw, 64px);
+      line-height: .98;
+      letter-spacing: -0.065em;
+      font-weight: 690;
+    }
+    .intro-copy {
+      max-width: 440px;
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 520px) 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+    .search-wrap { position: relative; width: min(520px, 100%); }
+    .search-wrap svg {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      width: 16px; height: 16px; color: #717178; stroke: #717178; pointer-events: none;
+    }
+    .search {
+      width: 100%;
+      height: 40px;
+      padding: 0 14px 0 40px;
+      border-radius: 11px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s ease, background .2s ease;
+    }
+    .search:focus { border-color: #4a4a51; background: #141416; }
+    .search::placeholder { color: #696970; }
+
+    .result-summary {
+      color: #7f838a;
+      font-size: 13px;
+      padding-left: 4px;
+    }
+
+    .sort-select {
+      width: 170px;
+      height: 48px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #111214;
+      color: #c3c5c9;
+      padding: 0 42px 0 15px;
+      outline: none;
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #777 50%), linear-gradient(135deg, #777 50%, transparent 50%);
+      background-position: calc(100% - 18px) 21px, calc(100% - 13px) 21px;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      cursor: pointer;
+    }
+
+    .view-switch {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #111214;
+    }
+    .view-button {
+      width: 39px; height: 39px; border: 0; border-radius: 50%; background: transparent;
+    }
+    .view-button.active { background: #292b2f; }
+    .view-button.active svg { stroke: #fff; }
+
+    .mobile-filter-button {
+      display: none;
+      grid-auto-flow: column;
+      gap: 8px;
+      width: auto; height: 48px;
+      padding: 0 15px;
+      border-radius: 12px;
+      color: #c8c9cc;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 238px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+      margin-top: 54px;
+    }
+
+    .filters {
+      position: sticky;
+      top: 22px;
+      border: 1px solid var(--line);
+      background: rgba(17,18,20,.9);
+      border-radius: 18px;
+      overflow: hidden;
+      max-height: calc(100vh - 44px);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #3a3d42 transparent;
+    }
+    .results {
+      min-width: 0;
+      margin-left: 0;
+    }
+    .filter-head {
+      min-height: 58px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .filter-head h2 { margin: 0; font-size: 15px; letter-spacing: -0.02em; }
+    .clear-button {
+      border: 0; background: none; color: #7b7f86; font-size: 12px; cursor: pointer;
+    }
+    .clear-button:hover { color: #fff; }
+    .filter-section {
+      padding: 18px 16px 14px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .filter-section:last-child { border-bottom: 0; }
+    .filter-title {
+      margin: 0 0 13px;
+      color: #777b82;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-size: 10px;
+      font-weight: 790;
+    }
+    .filter-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 29px;
+      color: #a6a9af;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .filter-option:hover { color: #fff; }
+    .filter-option input { position: absolute; opacity: 0; pointer-events: none; }
+    .control {
+      width: 15px; height: 15px;
+      flex: 0 0 auto;
+      border: 1px solid #74787f;
+      border-radius: 4px;
+      display: grid; place-items: center;
+      transition: .18s ease;
+    }
+    input[type="radio"] + .control { border-radius: 50%; }
+    input:checked + .control { background: #ececeb; border-color: #ececeb; }
+    input[type="radio"]:checked + .control::after {
+      content: ""; width: 5px; height: 5px; border-radius: 50%; background: #151618;
+    }
+    input[type="checkbox"]:checked + .control::after {
+      content: ""; width: 7px; height: 4px; border-left: 1.8px solid #151618; border-bottom: 1.8px solid #151618; transform: rotate(-45deg) translateY(-1px);
+    }
+
+    .active-row { min-height: 34px; margin-top: 14px; display: flex; align-items: center; gap: 8px; overflow-x: auto; }
+    .active-row[hidden] { display: none; }
+    .active-label { color: #6f6f76; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+    .active-list { display: flex; gap: 8px; }
+    .active-chip { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; white-space: nowrap; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: #d7d7db; font-size: 12px; cursor: pointer; }
+    .active-chip:hover { border-color: #4a4a50; color: white; }
+    .active-chip svg { width: 12px; height: 12px; color: #82828a; }
+    .clear-active { border: 0; background: transparent; color: #85858c; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .clear-active:hover { color: white; }
+
+    .course-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .course-card {
+      min-width: 0;
+      border: 1px solid #292c31;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #111214;
+      box-shadow: 0 1px 0 rgba(255,255,255,.02);
+      transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+      cursor: pointer;
+    }
+    .course-card:hover {
+      transform: translateY(-4px);
+      border-color: #42464c;
+      box-shadow: var(--shadow);
+    }
+    .card-media {
+      position: relative;
+      aspect-ratio: 1.42 / 1;
+      overflow: hidden;
+      background: #1a1b1e;
+    }
+    .card-media img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      filter: saturate(.82) contrast(1.03);
+      transition: transform .55s cubic-bezier(.2,.7,.2,1), filter .3s ease;
+    }
+    .course-card:hover .card-media img { transform: scale(1.035); filter: saturate(.98) contrast(1.02); }
+    .card-media::after {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.32), transparent 48%);
+      pointer-events: none;
+    }
+    .media-tag {
+      position: absolute;
+      z-index: 2;
+      left: 16px; top: 16px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      color: #f0f0ee;
+      background: rgba(17,18,20,.78);
+      backdrop-filter: blur(12px);
+      text-transform: uppercase;
+      letter-spacing: .17em;
+      font-size: 9px;
+      font-weight: 800;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .favorite {
+      position: absolute;
+      z-index: 2;
+      top: 14px; right: 14px;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(17,18,20,.64);
+      backdrop-filter: blur(12px);
+      display: grid; place-items: center;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .favorite:hover { transform: scale(1.06); background: rgba(35,37,40,.9); }
+    .favorite svg { width: 17px; height: 17px; stroke: #f2f2ef; fill: transparent; }
+    .favorite.saved svg { fill: #f2f2ef; }
+    .duration {
+      position: absolute;
+      z-index: 2;
+      left: 16px; bottom: 16px;
+      padding: 9px 11px;
+      border-radius: 10px;
+      background: rgba(20,21,23,.82);
+      backdrop-filter: blur(12px);
+      color: #efefed;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+    .preview-pill {
+      position: absolute;
+      z-index: 2;
+      right: 16px; bottom: 16px;
+      padding: 9px 11px;
+      border-radius: 999px;
+      background: #f0f0ed;
+      color: #121315;
+      font-size: 11px;
+      font-weight: 760;
+    }
+
+    .card-body { padding: 20px 20px 18px; }
+    .card-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 13px;
+    }
+    .category {
+      color: #868a91;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-size: 9px;
+      font-weight: 780;
+    }
+    .price { color: #e4e4e2; font-size: 14px; font-weight: 760; white-space: nowrap; }
+    .course-title {
+      margin: 0;
+      min-height: 52px;
+      font-size: 18px;
+      line-height: 1.42;
+      font-weight: 670;
+      letter-spacing: -0.035em;
+    }
+    .instructor {
+      margin: 14px 0 0;
+      color: #7f838a;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-meta {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #24262a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      color: #8d9198;
+      font-size: 12px;
+    }
+    .meta-group { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .meta-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .meta-item svg { width: 14px; height: 14px; stroke: #777b82; }
+    .rating { color: #d6d7d4; }
+    .rating strong { color: #f0f0ed; font-weight: 750; }
+
+    .course-grid.list-view { grid-template-columns: 1fr; }
+    .course-grid.list-view .course-card { display: grid; grid-template-columns: minmax(250px, 32%) 1fr; }
+    .course-grid.list-view .card-media { aspect-ratio: auto; min-height: 240px; }
+    .course-grid.list-view .card-body { display: flex; flex-direction: column; justify-content: center; padding: 28px; }
+    .course-grid.list-view .course-title { min-height: auto; font-size: 22px; }
+    .course-grid.list-view .card-meta { margin-top: auto; }
+
+    .empty-state {
+      display: none;
+      min-height: 420px;
+      border: 1px dashed #34373c;
+      border-radius: 20px;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+      color: #858990;
+    }
+    .empty-state.visible { display: flex; }
+    .empty-state h3 { margin: 0 0 9px; color: #ececea; font-size: 22px; }
+    .empty-state p { margin: 0; max-width: 380px; line-height: 1.6; }
+
+    .load-more-wrap { display: flex; justify-content: center; margin-top: 32px; }
+    .load-more {
+      height: 48px;
+      padding: 0 22px;
+      border: 1px solid #35383d;
+      border-radius: 999px;
+      background: #15171a;
+      color: #d1d3d5;
+      font-weight: 650;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .load-more:hover { background: #1e2024; border-color: #4a4e55; }
+
+    .overlay { display: none; }
+
+    @media (max-width: 1180px) {
+      .course-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .intro { align-items: flex-start; flex-direction: column; }
+      .intro-copy { max-width: 650px; }
+    }
+
+    @media (max-width: 900px) {
+      .main-nav { display: none; }
+      .page {
+        width: auto;
+        max-width: 1500px;
+        padding: 48px 34px 90px;
+      }
+      .toolbar { grid-template-columns: 1fr auto auto; }
+      .result-summary { display: none; }
+      .content { grid-template-columns: 1fr; margin-top: 0; }
+      .results { margin-left: 0; }
+      .filters {
+        position: fixed;
+        z-index: 100;
+        left: 0; top: 0; bottom: 0;
+        width: min(360px, 88vw);
+        max-height: none;
+        border-radius: 0 20px 20px 0;
+        transform: translateX(-105%);
+        transition: transform .3s cubic-bezier(.2,.7,.2,1);
+        box-shadow: 30px 0 80px rgba(0,0,0,.5);
+      }
+      .filters.open { transform: translateX(0); }
+      .overlay {
+        position: fixed; inset: 0; z-index: 90;
+        background: rgba(0,0,0,.58);
+        backdrop-filter: blur(4px);
+      }
+      .overlay.visible { display: block; }
+      .mobile-filter-button { display: grid; }
+      .sort-select { width: 150px; }
+    }
+
+    @media (max-width: 680px) {
+      .topbar { height: 70px; }
+      .topbar-inner { padding: 0 18px; }
+      .brand span:last-child { display: none; }
+      .nav-left { gap: 0; }
+      .nav-right .icon-button:first-child { display: none; }
+      .page {
+        width: auto;
+        max-width: 1500px;
+        padding: 36px 18px 70px;
+      }
+      h1 { font-size: 42px; }
+      .intro { margin-bottom: 26px; }
+      .toolbar {
+        grid-template-columns: 1fr 48px;
+        gap: 10px;
+      }
+      .search-wrap { grid-column: 1 / -1; }
+      .sort-select { width: 100%; }
+      .mobile-filter-button { width: 48px; padding: 0; }
+      .mobile-filter-button span { display: none; }
+      .view-switch { display: none; }
+      .course-grid { grid-template-columns: 1fr; gap: 16px; }
+      .course-grid.list-view .course-card { display: block; }
+      .course-grid.list-view .card-media { min-height: auto; aspect-ratio: 1.42 / 1; }
+      .course-grid.list-view .card-body { padding: 20px; }
+      .card-media { aspect-ratio: 1.5 / 1; }
+      .course-title { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="toolbar" aria-label="Course search and sorting">
+      <label class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="searchInput" class="search" type="search" placeholder="Search courses, skills, or instructors" />
+      </label>
+      <div class="result-summary"><span id="resultCount">24</span> courses selected for you</div>
+      <div class="view-switch" aria-label="View options">
+        <button class="view-button active" data-view="grid" aria-label="Grid view"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button>
+        <button class="view-button" data-view="list" aria-label="List view"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="5" cy="6" r="1" fill="currentColor"/><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="5" cy="18" r="1" fill="currentColor"/></svg></button>
+      </div>
+      <button id="mobileFilterButton" class="mobile-filter-button" aria-label="Open filters"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span>Filters</span></button>
+    </section>
+
+    <section id="activeRow" class="active-row" hidden>
+      <span class="active-label">Active filters</span>
+      <div id="activeFilters" class="active-list"></div>
+      <button id="clearActive" class="clear-active" type="button">Clear all</button>
+    </section>
+
+    <div class="content">
+      <aside id="filtersPanel" class="filters" aria-label="Course filters">
+        <div class="filter-head">
+          <h2>Filters</h2>
+          <button id="clearFilters" class="clear-button">Clear all</button>
+        </div>
+        <div class="filter-section">
+          <h3 class="filter-title">Sort by</h3>
+          <label class="filter-option">Most relevant<input type="radio" name="sort" value="relevant" checked><span class="control"></span></label>
+          <label class="filter-option">Most popular<input type="radio" name="sort" value="popular"><span class="control"></span></label>
+          <label class="filter-option">Highest rated<input type="radio" name="sort" value="rating"><span class="control"></span></label>
+          <label class="filter-option">Most reviewed<input type="radio" name="sort" value="reviewed"><span class="control"></span></label>
+          <label class="filter-option">Newest<input type="radio" name="sort" value="newest"><span class="control"></span></label>
+          <label class="filter-option">Price: low to high<input type="radio" name="sort" value="price-low"><span class="control"></span></label>
+          <label class="filter-option">Price: high to low<input type="radio" name="sort" value="price-high"><span class="control"></span></label>
+          <label class="filter-option">Shortest first<input type="radio" name="sort" value="shortest"><span class="control"></span></label>
+        </div>
+        <div class="filter-section">
+          <h3 class="filter-title">Category</h3>
+          <label class="filter-option">All categories<input type="radio" name="category" value="all" checked><span class="control"></span></label>
+          <label class="filter-option">Technology<input type="radio" name="category" value="technology"><span class="control"></span></label>
+          <label class="filter-option">Languages<input type="radio" name="category" value="languages"><span class="control"></span></label>
+          <label class="filter-option">Business<input type="radio" name="category" value="business"><span class="control"></span></label>
+          <label class="filter-option">Creative<input type="radio" name="category" value="creative"><span class="control"></span></label>
+          <label class="filter-option">Academic<input type="radio" name="category" value="academic"><span class="control"></span></label>
+          <label class="filter-option">Personal development<input type="radio" name="category" value="personal-development"><span class="control"></span></label>
+          <label class="filter-option">Lifestyle<input type="radio" name="category" value="lifestyle"><span class="control"></span></label>
+          <label class="filter-option">Sports<input type="radio" name="category" value="sports"><span class="control"></span></label>
+          <label class="filter-option">Beauty<input type="radio" name="category" value="beauty"><span class="control"></span></label>
+        </div>
+        <div class="filter-section">
+          <h3 class="filter-title">Level</h3>
+          <label class="filter-option">All levels<input type="radio" name="level" value="all" checked><span class="control"></span></label>
+          <label class="filter-option">Beginner<input type="radio" name="level" value="beginner"><span class="control"></span></label>
+          <label class="filter-option">Intermediate<input type="radio" name="level" value="intermediate"><span class="control"></span></label>
+          <label class="filter-option">Advanced<input type="radio" name="level" value="advanced"><span class="control"></span></label>
+        </div>
+        <div class="filter-section">
+          <h3 class="filter-title">Rating</h3>
+          <label class="filter-option">Any rating<input type="radio" name="rating" value="0" checked><span class="control"></span></label>
+          <label class="filter-option">4.5 and up<input type="radio" name="rating" value="4.5"><span class="control"></span></label>
+          <label class="filter-option">4.0 and up<input type="radio" name="rating" value="4.0"><span class="control"></span></label>
+        </div>
+        <div class="filter-section">
+          <h3 class="filter-title">Duration</h3>
+          <label class="filter-option">Any duration<input type="radio" name="duration" value="all" checked><span class="control"></span></label>
+          <label class="filter-option">Under 1 hour<input type="radio" name="duration" value="under-1"><span class="control"></span></label>
+          <label class="filter-option">1–3 hours<input type="radio" name="duration" value="1-3"><span class="control"></span></label>
+          <label class="filter-option">3–10 hours<input type="radio" name="duration" value="3-10"><span class="control"></span></label>
+          <label class="filter-option">10–20 hours<input type="radio" name="duration" value="10-20"><span class="control"></span></label>
+          <label class="filter-option">20+ hours<input type="radio" name="duration" value="20-plus"><span class="control"></span></label>
+        </div>
+        <div class="filter-section">
+          <h3 class="filter-title">Price</h3>
+          <label class="filter-option">Any price<input type="radio" name="price" value="all" checked><span class="control"></span></label>
+          <label class="filter-option">Free<input type="radio" name="price" value="free"><span class="control"></span></label>
+          <label class="filter-option">Under 300,000₫<input type="radio" name="price" value="under-300"><span class="control"></span></label>
+          <label class="filter-option">300,000₫–700,000₫<input type="radio" name="price" value="300-700"><span class="control"></span></label>
+          <label class="filter-option">700,000₫+<input type="radio" name="price" value="700-plus"><span class="control"></span></label>
+        </div>
+      </aside>
+
+      <section class="results">
+        <div id="courseGrid" class="course-grid"></div>
+        <div id="emptyState" class="empty-state">
+          <div>
+            <h3>No matching courses</h3>
+            <p>Try a different search or clear one of the selected filters.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="overlay" class="overlay"></div>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      window.parent.postMessage({ type: 'tutoria-courses-scroll', y: window.scrollY }, '*');
+    }, { passive: true });
+
+    const courses = [{"id":1,"title":"Complete Web Development Bootcamp 2026","instructor":"Huy Tran","category":"Technology","level":"Beginner","price":0,"rating":4.8,"reviews":1200,"students":18400,"lessons":48,"duration":16,"durationLabel":"16h","relevance":100,"newness":24,"image":"https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=88"},{"id":2,"title":"IELTS Speaking Masterclass","instructor":"Linh Nguyen","category":"Languages","level":"Intermediate","price":499000,"rating":4.9,"reviews":890,"students":9100,"lessons":24,"duration":8,"durationLabel":"8h","relevance":99,"newness":22,"image":"https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1200&q=88"},{"id":3,"title":"Public Speaking for Professionals","instructor":"Minh Anh","category":"Personal development","level":"All levels","price":350000,"rating":4.7,"reviews":650,"students":7200,"lessons":16,"duration":6,"durationLabel":"6h","relevance":98,"newness":20,"image":"https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1200&q=88"},{"id":4,"title":"Digital Photography Fundamentals","instructor":"Duc Pham","category":"Creative","level":"Beginner","price":0,"rating":4.8,"reviews":720,"students":8600,"lessons":32,"duration":12,"durationLabel":"12h","relevance":97,"newness":18,"image":"https://images.unsplash.com/photo-1452780212940-6f5c0d14d848?auto=format&fit=crop&w=1200&q=88"},{"id":5,"title":"Vietnamese Home Cooking","instructor":"Thu Ha","category":"Lifestyle","level":"Beginner","price":299000,"rating":4.9,"reviews":2100,"students":23600,"lessons":20,"duration":10,"durationLabel":"10h","relevance":96,"newness":23,"image":"https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=88"},{"id":6,"title":"Startup Fundamentals","instructor":"Bao Long","category":"Business","level":"Beginner","price":0,"rating":4.6,"reviews":430,"students":6100,"lessons":12,"duration":5,"durationLabel":"5h","relevance":95,"newness":17,"image":"https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=88"},{"id":7,"title":"Advanced React & Next.js","instructor":"Huy Tran","category":"Technology","level":"Advanced","price":599000,"rating":4.8,"reviews":560,"students":6800,"lessons":36,"duration":14,"durationLabel":"14h","relevance":94,"newness":25,"image":"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=88"},{"id":8,"title":"English for Beginners","instructor":"Linh Nguyen","category":"Languages","level":"Beginner","price":0,"rating":4.8,"reviews":3400,"students":41200,"lessons":30,"duration":20,"durationLabel":"20h","relevance":93,"newness":15,"image":"https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=88"},{"id":9,"title":"Music Production with Ableton","instructor":"Quoc Anh","category":"Creative","level":"Intermediate","price":750000,"rating":4.6,"reviews":320,"students":3900,"lessons":28,"duration":18,"durationLabel":"18h","relevance":92,"newness":19,"image":"https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=1200&q=88"},{"id":10,"title":"Yoga for Beginners","instructor":"Ngoc Tram","category":"Sports","level":"Beginner","price":0,"rating":4.8,"reviews":980,"students":12100,"lessons":40,"duration":15,"durationLabel":"15h","relevance":91,"newness":14,"image":"https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=88"},{"id":11,"title":"Makeup & Nail Art","instructor":"Phuong Anh","category":"Beauty","level":"Beginner","price":249000,"rating":4.5,"reviews":410,"students":4900,"lessons":18,"duration":7,"durationLabel":"7h","relevance":90,"newness":21,"image":"https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=88"},{"id":12,"title":"IELTS Writing Workshop","instructor":"Linh Nguyen","category":"Academic","level":"Intermediate","price":399000,"rating":4.7,"reviews":1100,"students":10800,"lessons":12,"duration":6,"durationLabel":"6h","relevance":89,"newness":16,"image":"https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=88"},{"id":13,"title":"Designing Interfaces That Feel Effortless","instructor":"Maya Tran","category":"Creative","level":"Intermediate","price":490000,"rating":4.9,"reviews":328,"students":4500,"lessons":18,"duration":4.2,"durationLabel":"4h 12m","relevance":88,"newness":13,"image":"https://images.unsplash.com/photo-1559028012-481c04fa702d?auto=format&fit=crop&w=1200&q=88"},{"id":14,"title":"Build Your First AI-Powered Web Product","instructor":"Minh Le","category":"Technology","level":"Beginner","price":690000,"rating":4.8,"reviews":512,"students":8300,"lessons":24,"duration":6.4,"durationLabel":"6h 25m","relevance":87,"newness":12,"image":"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=88"},{"id":15,"title":"Visual Storytelling for Everyday Photography","instructor":"Linh Pham","category":"Creative","level":"All levels","price":390000,"rating":4.9,"reviews":214,"students":3100,"lessons":16,"duration":3.5,"durationLabel":"3h 31m","relevance":86,"newness":11,"image":"https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=88"},{"id":16,"title":"Confident English for Real Conversations","instructor":"Anh Hoang","category":"Languages","level":"Beginner","price":0,"rating":4.7,"reviews":901,"students":14200,"lessons":21,"duration":5.1,"durationLabel":"5h 06m","relevance":85,"newness":10,"image":"https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=88"},{"id":17,"title":"A Practical Guide to Personal Finance","instructor":"Daniel Vu","category":"Business","level":"Beginner","price":550000,"rating":4.8,"reviews":403,"students":5900,"lessons":20,"duration":4.8,"durationLabel":"4h 48m","relevance":84,"newness":9,"image":"https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1200&q=88"},{"id":18,"title":"Make Better Coffee at Home","instructor":"Huy Nguyen","category":"Lifestyle","level":"All levels","price":290000,"rating":4.6,"reviews":188,"students":2700,"lessons":12,"duration":1.7,"durationLabel":"1h 42m","relevance":83,"newness":8,"image":"https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=88"},{"id":19,"title":"Launch a Brand People Remember","instructor":"Sophie Bui","category":"Business","level":"Intermediate","price":790000,"rating":4.9,"reviews":267,"students":4200,"lessons":26,"duration":7.2,"durationLabel":"7h 14m","relevance":82,"newness":7,"image":"https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=88"},{"id":20,"title":"Figma Foundations: From Blank Canvas to Prototype","instructor":"Quynh Dao","category":"Creative","level":"Beginner","price":0,"rating":4.8,"reviews":637,"students":10500,"lessons":15,"duration":3.9,"durationLabel":"3h 54m","relevance":81,"newness":6,"image":"https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=1200&q=88"},{"id":21,"title":"JavaScript Patterns You Will Actually Use","instructor":"Khoa Phan","category":"Technology","level":"Advanced","price":850000,"rating":4.9,"reviews":176,"students":2900,"lessons":28,"duration":8.3,"durationLabel":"8h 18m","relevance":80,"newness":5,"image":"https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1200&q=88"},{"id":22,"title":"Present Ideas with Clarity and Confidence","instructor":"Thao Nguyen","category":"Personal development","level":"All levels","price":450000,"rating":4.7,"reviews":321,"students":5200,"lessons":14,"duration":2.6,"durationLabel":"2h 36m","relevance":79,"newness":4,"image":"https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1200&q=88"},{"id":23,"title":"Mobile Photography: Light, Framing, Rhythm","instructor":"Bao Chau","category":"Creative","level":"Beginner","price":350000,"rating":4.6,"reviews":119,"students":2100,"lessons":13,"duration":2.1,"durationLabel":"2h 08m","relevance":78,"newness":3,"image":"https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=88"},{"id":24,"title":"Vietnamese Cooking, One Essential Dish at a Time","instructor":"Mai Lan","category":"Lifestyle","level":"Beginner","price":620000,"rating":4.9,"reviews":488,"students":7600,"lessons":22,"duration":5.8,"durationLabel":"5h 49m","relevance":77,"newness":2,"image":"https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=1200&q=88"}];
+    const state = { view: 'grid', saved: new Set() };
+    const courseGrid = document.getElementById('courseGrid');
+    const searchInput = document.getElementById('searchInput');
+    const resultCount = document.getElementById('resultCount');
+    const emptyState = document.getElementById('emptyState');
+    const activeRow = document.getElementById('activeRow');
+    const activeFilters = document.getElementById('activeFilters');
+
+    const courseSlugs = {
+      'Complete Web Development Bootcamp 2026':'complete-web-development-bootcamp-2026',
+      'IELTS Speaking Masterclass':'ielts-speaking-masterclass',
+      'Public Speaking for Professionals':'public-speaking-for-professionals',
+      'Digital Photography Fundamentals':'digital-photography-fundamentals',
+      'Vietnamese Home Cooking':'vietnamese-home-cooking',
+      'Startup Fundamentals':'startup-fundamentals',
+      'Advanced React & Next.js':'advanced-react-and-nextjs',
+      'English for Beginners':'english-for-beginners',
+      'Music Production with Ableton':'music-production-with-ableton',
+      'Yoga for Beginners':'yoga-for-beginners',
+      'Makeup & Nail Art':'makeup-and-nail-art',
+      'IELTS Writing Workshop':'ielts-writing-workshop'
+    };
+    const money = value => value === 0 ? 'Free' : new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+    const formatCount = value => new Intl.NumberFormat('en-US').format(value);
+    const slug = value => value.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const getSelected = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+
+    function matchesDuration(value, range) {
+      return range === 'all' ||
+        (range === 'under-1' && value < 1) ||
+        (range === '1-3' && value >= 1 && value < 3) ||
+        (range === '3-10' && value >= 3 && value < 10) ||
+        (range === '10-20' && value >= 10 && value < 20) ||
+        (range === '20-plus' && value >= 20);
+    }
+
+    function matchesPrice(value, range) {
+      return range === 'all' ||
+        (range === 'free' && value === 0) ||
+        (range === 'under-300' && value > 0 && value < 300000) ||
+        (range === '300-700' && value >= 300000 && value < 700000) ||
+        (range === '700-plus' && value >= 700000);
+    }
+
+    function filteredCourses() {
+      const q = searchInput.value.trim().toLowerCase();
+      const category = getSelected('category') || 'all';
+      const level = getSelected('level') || 'all';
+      const rating = Number(getSelected('rating') || 0);
+      const duration = getSelected('duration') || 'all';
+      const price = getSelected('price') || 'all';
+      const sort = getSelected('sort') || 'relevant';
+      const list = courses.filter(c => {
+        const searchable = `${c.title} ${c.instructor} ${c.category} ${c.level}`.toLowerCase();
+        return (!q || searchable.includes(q)) &&
+          (category === 'all' || slug(c.category) === category) &&
+          (level === 'all' || slug(c.level) === level) &&
+          c.rating >= rating && matchesDuration(c.duration, duration) && matchesPrice(c.price, price);
+      });
+      const sorters = {
+        relevant:(a,b)=>b.relevance-a.relevance,
+        popular:(a,b)=>b.students-a.students,
+        rating:(a,b)=>b.rating-a.rating || b.reviews-a.reviews,
+        reviewed:(a,b)=>b.reviews-a.reviews,
+        newest:(a,b)=>b.newness-a.newness,
+        'price-low':(a,b)=>a.price-b.price || b.rating-a.rating,
+        'price-high':(a,b)=>b.price-a.price || b.rating-a.rating,
+        shortest:(a,b)=>a.duration-b.duration
+      };
+      return list.sort(sorters[sort]);
+    }
+
+    function cardTemplate(c) {
+      const saved = state.saved.has(c.id);
+      return `<article class="course-card" data-id="${c.id}" data-slug="${courseSlugs[c.title] || slug(c.title)}" tabindex="0" aria-label="${c.title}">
+        <div class="card-media">
+          <img src="${c.image}" alt="${c.title}" loading="lazy">
+          <span class="media-tag">${c.level}</span>
+          <button class="favorite ${saved ? 'saved' : ''}" aria-label="${saved ? 'Remove from saved' : 'Save course'}" data-save="${c.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
+          </button>
+          <span class="duration">${c.durationLabel}</span>
+          <span class="preview-pill">${c.lessons} lessons</span>
+        </div>
+        <div class="card-body">
+          <div class="card-topline"><span class="category">${c.category}</span></div>
+          <h2 class="course-title">${c.title}</h2>
+          <p class="instructor">Taught by ${c.instructor}</p>
+          <div class="card-meta">
+            <div class="meta-group"><span class="meta-item rating">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2 7.5 14 3 9.6l6.2-.9L12 3Z"/></svg>
+              <strong>${c.rating}</strong> ${formatCount(c.reviews)}
+            </span></div>
+            <span class="meta-item price">${money(c.price)}</span>
+          </div>
+        </div>
+      </article>`;
+    }
+
+    const filterLabels = {
+      sort:{popular:'Most popular',rating:'Highest rated',reviewed:'Most reviewed',newest:'Newest','price-low':'Price: low to high','price-high':'Price: high to low',shortest:'Shortest first'},
+      category:{technology:'Technology',languages:'Languages',business:'Business',creative:'Creative',academic:'Academic','personal-development':'Personal development',lifestyle:'Lifestyle',sports:'Sports',beauty:'Beauty'},
+      level:{beginner:'Beginner',intermediate:'Intermediate',advanced:'Advanced'},
+      rating:{'4.5':'4.5 and up','4.0':'4.0 and up'},
+      duration:{'under-1':'Under 1 hour','1-3':'1–3 hours','3-10':'3–10 hours','10-20':'10–20 hours','20-plus':'20+ hours'},
+      price:{free:'Free','under-300':'Under 300,000₫','300-700':'300,000₫–700,000₫','700-plus':'700,000₫+'}
+    };
+    const defaults = {sort:'relevant',category:'all',level:'all',rating:'0',duration:'all',price:'all'};
+
+    function renderActiveFilters() {
+      const entries = Object.keys(defaults).flatMap(type => {
+        const value = getSelected(type);
+        return value && value !== defaults[type] ? [{type,label:filterLabels[type][value]}] : [];
+      });
+      activeRow.hidden = entries.length === 0;
+      activeFilters.innerHTML = entries.map(e => `<button class="active-chip" data-remove-type="${e.type}" type="button" aria-label="Remove ${e.label}"><span>${e.label}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 7 10 10M17 7 7 17"></path></svg></button>`).join('');
+    }
+
+    function clearAllFilters() {
+      Object.entries(defaults).forEach(([name,value]) => document.querySelector(`input[name="${name}"][value="${value}"]`).checked = true);
+      searchInput.value = '';
+      render();
+    }
+
+    function render() {
+      const list = filteredCourses();
+      resultCount.textContent = list.length;
+      courseGrid.innerHTML = list.map(cardTemplate).join('');
+      courseGrid.classList.toggle('list-view', state.view === 'list');
+      emptyState.classList.toggle('visible', list.length === 0);
+      renderActiveFilters();
+    }
+
+    document.querySelectorAll('.filters input').forEach(input => input.addEventListener('change', render));
+    searchInput.addEventListener('input', render);
+    document.querySelectorAll('.view-button').forEach(btn => btn.addEventListener('click', () => {
+      state.view = btn.dataset.view;
+      document.querySelectorAll('.view-button').forEach(b => b.classList.toggle('active', b === btn));
+      render();
+    }));
+    courseGrid.addEventListener('click', event => {
+      const save = event.target.closest('[data-save]');
+      if (save) {
+        event.stopPropagation();
+        const id = Number(save.dataset.save);
+        state.saved.has(id) ? state.saved.delete(id) : state.saved.add(id);
+        render();
+        return;
+      }
+      const card = event.target.closest('.course-card[data-slug]');
+      if (card) window.top.location.href = `/courses/${card.dataset.slug}`;
+    });
+    courseGrid.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const card = event.target.closest('.course-card[data-slug]');
+      if (!card) return;
+      event.preventDefault();
+      window.top.location.href = `/courses/${card.dataset.slug}`;
+    });
+    activeFilters.addEventListener('click', event => {
+      const button = event.target.closest('button[data-remove-type]');
+      if (!button) return;
+      const type = button.dataset.removeType;
+      document.querySelector(`input[name="${type}"][value="${defaults[type]}"]`).checked = true;
+      render();
+    });
+    document.getElementById('clearFilters').addEventListener('click', clearAllFilters);
+    document.getElementById('clearActive').addEventListener('click', clearAllFilters);
+    const filtersPanel = document.getElementById('filtersPanel');
+    const overlay = document.getElementById('overlay');
+    const mobileFilterButton = document.getElementById('mobileFilterButton');
+    function closeFilters() { filtersPanel.classList.remove('open'); overlay.classList.remove('visible'); document.body.style.overflow=''; }
+    mobileFilterButton.addEventListener('click', () => { filtersPanel.classList.add('open'); overlay.classList.add('visible'); document.body.style.overflow='hidden'; });
+    overlay.addEventListener('click', closeFilters);
+    window.addEventListener('keydown', event => { if (event.key === 'Escape') closeFilters(); });
+    render();
+  </script>
+</body>
+</html>

@@ -150,7 +150,7 @@ export function MobileNavigation({ open, onClose, user }: MobileNavigationProps)
           ) : (
             <div className={styles.mobileActions}>
               <Link
-                href="/auth/sign-up?intent=creator"
+                href="#"
                 onClick={onClose}
                 className={styles.mobileQuietAction}
               >

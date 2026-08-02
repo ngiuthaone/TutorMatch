@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { PublishedCoursePage } from "@/components/courses/published-course-page";
-import { Footer } from "@/components/discover/footer";
-import { TopNav } from "@/components/discover/top-nav";
-import { allCourses, getCourseBySlug, getSimilarCourses } from "@/lib/course-data";
+import { allCourses, getCourseBySlug } from "@/lib/course-data";
+import { CourseProfileFrame } from "./course-profile-frame";
 
 export function generateStaticParams() {
   return allCourses.map((course) => ({ slug: course.slug }));
@@ -30,13 +28,6 @@ export default async function CoursePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const course = getCourseBySlug(slug);
 
-  return (
-    <div className="tutoria-page-shell tutoria-marketplace-shell flex flex-col bg-black">
-      <TopNav />
-      <PublishedCoursePage slug={slug} fallback={course} similarCourses={getSimilarCourses(slug)} />
-      <Footer />
-    </div>
-  );
+  return <CourseProfileFrame slug={slug} />;
 }

@@ -114,14 +114,29 @@ export function PeoplePage() {
   const sort = params.get("sort", "recommended");
 
   useEffect(() => {
-    try {
-      const savedTutor = JSON.parse(window.localStorage.getItem(TUTOR_SUBMISSION_KEY) || "null") as SubmittedTutor | null;
-      const person = savedTutor ? submittedTutorToPerson(savedTutor) : null;
-      const frame = window.requestAnimationFrame(() => setSubmittedPeople(person ? [person] : []));
-      return () => window.cancelAnimationFrame(frame);
-    } catch {
-      window.localStorage.removeItem(TUTOR_SUBMISSION_KEY);
-    }
+    let frame = 0;
+    const syncSubmittedTutor = () => {
+      try {
+        const savedTutor = JSON.parse(window.localStorage.getItem(TUTOR_SUBMISSION_KEY) || "null") as SubmittedTutor | null;
+        const person = savedTutor ? submittedTutorToPerson(savedTutor) : null;
+        window.cancelAnimationFrame(frame);
+        frame = window.requestAnimationFrame(() => setSubmittedPeople(person ? [person] : []));
+      } catch {
+        window.localStorage.removeItem(TUTOR_SUBMISSION_KEY);
+        setSubmittedPeople([]);
+      }
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === TUTOR_SUBMISSION_KEY) syncSubmittedTutor();
+    };
+    syncSubmittedTutor();
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("tutoria-tutor-published", syncSubmittedTutor);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("tutoria-tutor-published", syncSubmittedTutor);
+    };
   }, []);
 
   const filtered = useMemo(() => {

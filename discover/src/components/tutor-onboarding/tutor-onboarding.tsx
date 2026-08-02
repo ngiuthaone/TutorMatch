@@ -64,16 +64,22 @@ const Icon = {
 type TutorDraftStatus = "draft" | "pending_review";
 type TutorVisibility = "public" | "unlisted" | "paused";
 type TutorFaq = { id: string; question: string; answer: string };
+type TutorCredential = { id: string; title: string; evidenceUrl: string };
+type VietnamDistrict = { code: number; name: string };
+type VietnamProvince = { code: number; name: string; districts?: VietnamDistrict[] };
 type DraftUpdater = (updater: (draft: TutorDraft) => TutorDraft) => void;
 type ValidationError = { fieldId: string; message: string };
-type PersistedTutorDraft = Partial<Omit<TutorDraft, "lessonFormat">> & { lessonFormat?: string | string[] };
 
 type TutorDraft = {
   displayName: string;
+  city: string;
   location: string;
   role: string;
   headline: string;
   about: string;
+  professionalBackground: string;
+  credentials: TutorCredential[];
+  portfolioUrl: string;
   photoUrl: string | null;
   introVideoName: string;
   languages: string[];
@@ -142,18 +148,34 @@ const formatOptions = [
   { value: "Public place", note: "Meet at a public place" },
 ];
 
+const VIETNAM_LOCATION_API = "https://provinces.open-api.vn/api/v1/?depth=2";
+
+function profileCityId(provinceName: string) {
+  const normalized = provinceName.toLowerCase();
+  if (normalized.includes("hà nội") || normalized.includes("ha noi")) return "hanoi";
+  if (normalized.includes("hồ chí minh") || normalized.includes("ho chi minh")) return "hcmc";
+  if (normalized.includes("đà nẵng") || normalized.includes("da nang")) return "danang";
+  if (normalized.includes("hải phòng") || normalized.includes("hai phong")) return "haiphong";
+  if (normalized.includes("cần thơ") || normalized.includes("can tho")) return "cantho";
+  return provinceName;
+}
+
 const onboardingFaqs = [
   { question: "What do I need before I apply?", answer: "Prepare a clear profile photo, a short introduction, the subjects you teach, your availability, and your lesson rates." },
-  { question: "Can I save my progress and finish later?", answer: "Yes. Your draft is saved in this browser, and you can return to update any section before submitting it for review." },
+  { question: "Can I save my progress and finish later?", answer: "Use Save draft while you are on this page. Opening the creator studio again starts a blank profile." },
   { question: "What happens after I submit my profile?", answer: "Tutoria reviews your profile before it is published. You can still preview your information while the review is in progress." },
 ];
 
 const defaultDraft: TutorDraft = {
   displayName: "",
+  city: "",
   location: "",
   role: "",
   headline: "",
   about: "",
+  professionalBackground: "",
+  credentials: [],
+  portfolioUrl: "",
   photoUrl: null,
   introVideoName: "",
   languages: [],
@@ -190,40 +212,6 @@ const defaultDraft: TutorDraft = {
 /* ═══════════════════════════════════════════
    Utilities
    ═══════════════════════════════════════════ */
-
-function normalizeDraft(value: PersistedTutorDraft): TutorDraft {
-  const normalizeRange = (item: string) => item.replace(/[—–]/g, "-");
-  const lessonFormat = Array.isArray(value.lessonFormat)
-    ? value.lessonFormat.filter((item): item is string => typeof item === "string")
-    : typeof value.lessonFormat === "string" && value.lessonFormat.trim()
-      ? [value.lessonFormat]
-      : defaultDraft.lessonFormat;
-
-  return {
-    ...defaultDraft,
-    ...value,
-    languages: Array.isArray(value.languages) ? value.languages : defaultDraft.languages,
-    skills: Array.isArray(value.skills) ? value.skills : defaultDraft.skills,
-    learnerLevels: Array.isArray(value.learnerLevels) ? value.learnerLevels : defaultDraft.learnerLevels,
-    ageGroups: Array.isArray(value.ageGroups) ? value.ageGroups.map(normalizeRange) : defaultDraft.ageGroups,
-    goals: Array.isArray(value.goals) ? value.goals : defaultDraft.goals,
-    teachingStyles: Array.isArray(value.teachingStyles) ? value.teachingStyles : defaultDraft.teachingStyles,
-    lessonFormat,
-    sessionLengths: Array.isArray(value.sessionLengths) ? value.sessionLengths : defaultDraft.sessionLengths,
-    timeSlots: Array.isArray(value.timeSlots) ? value.timeSlots.map(normalizeRange).filter((slot) => /^\d{2}:\d{2}-\d{2}:\d{2}$/.test(slot)) : defaultDraft.timeSlots,
-    availability: Array.isArray(value.availability) ? value.availability.map(normalizeRange) : defaultDraft.availability,
-    timeZone: value.timeZone ? normalizeRange(value.timeZone) : defaultDraft.timeZone,
-    faqs: Array.isArray(value.faqs) ? value.faqs.filter((faq): faq is TutorFaq => Boolean(faq && typeof faq.question === "string" && typeof faq.answer === "string")).map((faq, index) => ({ id: faq.id || `faq-${index}`, question: faq.question, answer: faq.answer })) : defaultDraft.faqs,
-    rates: { ...defaultDraft.rates, ...(value.rates || {}) },
-    displayDuration: typeof value.displayDuration === "number" ? value.displayDuration : null,
-  };
-}
-
-function isLegacyExampleDraft(value: Partial<TutorDraft>): boolean {
-  return value.displayName === "Thu Hà"
-    && value.headline === "Pottery tutor helping beginners build confidence through hands-on practice."
-    && value.photoUrl === "/images/tutor-profile-thu-ha.png";
-}
 
 function toggleValue<T>(values: T[], value: T) {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
@@ -328,6 +316,46 @@ function SelectControl({ value, options, onChange, label }: { value: string; opt
   );
 }
 
+function normalizeLocationSearch(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+}
+
+function LocationDropdown({ label, placeholder, value, options, disabled = false, onChange }: { label: string; placeholder: string; value: string; options: { value: string; label: string }[]; disabled?: boolean; onChange: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const selected = options.find((option) => option.value === value);
+  const filtered = options.filter((option) => normalizeLocationSearch(option.label).includes(normalizeLocationSearch(query)));
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!dropdownRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, [open]);
+
+  return <div className={styles.locationDropdown} ref={dropdownRef}>
+    <span className={styles.locationDropdownLabel}>{label}</span>
+    <button type="button" className={`${styles.locationTrigger} ${open ? styles.locationTriggerOpen : ""}`} disabled={disabled} aria-haspopup="listbox" aria-expanded={open} onClick={() => { setOpen((current) => !current); setQuery(""); }}>
+      <span className={selected ? styles.locationValue : styles.locationPlaceholder}>{selected?.label || placeholder}</span><Icon.ChevronDown size={16} />
+    </button>
+    {open && <div className={styles.locationMenu} role="listbox">
+      <div className={styles.locationSearch}><span aria-hidden="true">⌕</span><input autoFocus type="search" value={query} placeholder={`Search ${label.toLowerCase()}...`} onChange={(event) => setQuery(event.target.value)} /></div>
+      <div className={styles.locationOptions}>{filtered.length ? filtered.map((option) => <button key={option.value} type="button" role="option" aria-selected={option.value === value} className={`${styles.locationOption} ${option.value === value ? styles.locationOptionSelected : ""}`} onClick={() => { onChange(option.value); setOpen(false); setQuery(""); }}>{option.label}{option.value === value && <Icon.Check size={15} />}</button>) : <p className={styles.locationEmpty}>No matching locations</p>}</div>
+    </div>}
+  </div>;
+}
+
+function isProofUrl(value: string) {
+  try {
+    return ["http:", "https:"].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
 function InlineAdder({ label, placeholder, onAdd, numeric = false }: { label: string; placeholder: string; onAdd: (value: string) => void; numeric?: boolean }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
@@ -344,10 +372,32 @@ function InlineAdder({ label, placeholder, onAdd, numeric = false }: { label: st
   return (
     <span className={styles.inlineAdder}>
       <input className={styles.inlineInput} type={numeric ? "number" : "text"} value={value} placeholder={placeholder} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); submit(); } if (event.key === "Escape") setOpen(false); }} autoFocus aria-label={placeholder} />
-      <button type="button" onClick={submit}>Add</button>
+      <button type="button" onClick={submit}><Icon.Plus size={14} /> Add</button>
       <button type="button" onClick={() => setOpen(false)} aria-label="Cancel"><Icon.X size={13} /></button>
     </span>
   );
+}
+
+function CredentialAdder({ onAdd }: { onAdd: (credential: TutorCredential) => void }) {
+  const [title, setTitle] = useState("");
+  const [evidenceUrl, setEvidenceUrl] = useState("");
+
+  const submit = () => {
+    const nextTitle = title.trim();
+    const nextUrl = evidenceUrl.trim();
+    if (!nextTitle || !isProofUrl(nextUrl)) return;
+    onAdd({ id: `credential-${Date.now()}`, title: nextTitle, evidenceUrl: nextUrl });
+    setTitle("");
+    setEvidenceUrl("");
+  };
+
+  return <div className={styles.credentialAdder}>
+    <div className={styles.credentialInputs}>
+      <input className={styles.input} value={title} placeholder="Credential or qualification" onChange={(event) => setTitle(event.target.value)} aria-label="Credential or qualification" />
+      <input className={styles.input} type="url" value={evidenceUrl} placeholder="Proof link or image URL" onChange={(event) => setEvidenceUrl(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); submit(); } }} aria-label="Proof link or image URL" />
+    </div>
+    <button type="button" onClick={submit} disabled={!title.trim() || !isProofUrl(evidenceUrl)}><Icon.Plus size={15} /> Add credential</button>
+  </div>;
 }
 
 function ValidationNotice({ errors }: { errors: ValidationError[] }) {
@@ -362,8 +412,29 @@ function ValidationNotice({ errors }: { errors: ValidationError[] }) {
 function ProfileStep({ draft, update, errors }: { draft: TutorDraft; update: DraftUpdater; errors: ValidationError[] }) {
   const photoInput = useRef<HTMLInputElement>(null);
   const videoInput = useRef<HTMLInputElement>(null);
+  const [provinces, setProvinces] = useState<VietnamProvince[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(true);
+  const [locationLoadError, setLocationLoadError] = useState(false);
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState("");
   const set = <K extends keyof TutorDraft>(key: K, value: TutorDraft[K]) => update((current) => ({ ...current, [key]: value }));
   const hasError = (fieldId: string) => errors.some((error) => error.fieldId === fieldId);
+  const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(VIETNAM_LOCATION_API)
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Location data unavailable")))
+      .then((data: VietnamProvince[]) => {
+        if (!cancelled) {
+          setProvinces(data);
+          const matchingProvince = data.find((province) => province.name === draft.city || province.districts?.some((district) => district.name === draft.location));
+          if (matchingProvince) setSelectedProvinceCode(String(matchingProvince.code));
+        }
+      })
+      .catch(() => { if (!cancelled) setLocationLoadError(true); })
+      .finally(() => { if (!cancelled) setLocationsLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const loadPhoto = (file?: File) => {
     if (!file) return;
@@ -403,11 +474,21 @@ function ProfileStep({ draft, update, errors }: { draft: TutorDraft; update: Dra
         </div>
         <div className={styles.profileFields}>
           <div><FieldLabel htmlFor="display-name">Display name</FieldLabel><input id="display-name" className={styles.input} value={draft.displayName} onChange={(event) => set("displayName", event.target.value)} aria-invalid={hasError("display-name")} aria-describedby={hasError("display-name") ? "display-name-error" : undefined} /><FieldError errors={errors} fieldId="display-name" /></div>
-          <div><FieldLabel htmlFor="location">Location</FieldLabel><input id="location" className={styles.input} value={draft.location} maxLength={100} placeholder="e.g. Ha Noi, Vietnam" autoComplete="address-level2" onChange={(event) => set("location", event.target.value)} aria-invalid={hasError("location")} aria-describedby={hasError("location") ? "location-error" : "location-hint"} /><span className={styles.fieldHint} id="location-hint">Use the city or area learners should see on your profile.</span><FieldError errors={errors} fieldId="location" /></div>
+          <div className={styles.locationField}><div className={styles.locationLabelRow}><FieldLabel>Location</FieldLabel><span>Shown on your public profile</span></div><div className={styles.locationPicker}><LocationDropdown label="Province / municipality" placeholder={locationsLoading ? "Loading locations…" : "Select province"} value={selectedProvinceCode} disabled={locationsLoading} options={provinces.map((province) => ({ value: String(province.code), label: province.name }))} onChange={(value) => { const province = provinces.find((item) => String(item.code) === value); setSelectedProvinceCode(value); set("city", province ? profileCityId(province.name) : ""); set("location", ""); }} /><LocationDropdown label="District / city / town" placeholder={!selectedProvince ? "Choose a province first" : "Select district"} value={draft.location} disabled={!selectedProvince || locationsLoading} options={selectedProvince?.districts?.map((district) => ({ value: district.name, label: district.name })) || []} onChange={(value) => set("location", value)} /></div><span className={styles.fieldHint} id="location-hint">Choose the closest area where you teach. We never ask for a street address.</span>{locationLoadError && <span className={styles.fieldHint}>Location data could not load. Check your connection and try again.</span>}<FieldError errors={errors} fieldId="location" /></div>
           <div><FieldLabel htmlFor="role">Role</FieldLabel><input id="role" className={styles.input} value={draft.role} maxLength={80} placeholder="e.g. Karate coach" onChange={(event) => set("role", event.target.value)} aria-invalid={hasError("role")} aria-describedby={hasError("role") ? "role-error" : "role-hint"} /><span className={styles.fieldHint} id="role-hint">What you do — e.g. Karate coach, Piano teacher.</span><FieldError errors={errors} fieldId="role" /></div>
           <div><FieldLabel htmlFor="professional-headline">Professional headline</FieldLabel><textarea id="professional-headline" className={`${styles.input} ${styles.headlineInput}`} value={draft.headline} maxLength={100} onChange={(event) => set("headline", event.target.value)} aria-invalid={hasError("professional-headline")} aria-describedby={hasError("professional-headline") ? "professional-headline-error" : "professional-headline-hint"} /><span className={styles.fieldHint} id="professional-headline-hint">A short tagline that appears under your name.</span><span className={styles.counter} id="professional-headline-count">{draft.headline.length}/100</span><FieldError errors={errors} fieldId="professional-headline" /></div>
           <div><FieldLabel htmlFor="about-you">About you</FieldLabel><textarea id="about-you" className={`${styles.input} ${styles.aboutInput}`} value={draft.about} maxLength={500} onChange={(event) => set("about", event.target.value)} aria-invalid={hasError("about-you")} aria-describedby={hasError("about-you") ? "about-you-error" : "about-you-hint"} /><span className={styles.fieldHint} id="about-you-hint">Describe your background, teaching style, and what learners can expect.</span><span className={styles.counter} id="about-you-count">{draft.about.length}/500</span><FieldError errors={errors} fieldId="about-you" /></div>
+          <div><FieldLabel htmlFor="professional-background">Professional background <small>(optional)</small></FieldLabel><textarea id="professional-background" className={`${styles.input} ${styles.lessonInput}`} value={draft.professionalBackground} maxLength={700} placeholder="Share relevant training, experience, or the perspective you bring to lessons." onChange={(event) => set("professionalBackground", event.target.value)} /><span className={styles.fieldHint}>This appears as a dedicated background section on your public profile.</span></div>
+          <div><FieldLabel htmlFor="portfolio-url">Portfolio or website <small>(optional)</small></FieldLabel><input id="portfolio-url" className={styles.input} type="url" value={draft.portfolioUrl} placeholder="https://your-site.example" onChange={(event) => set("portfolioUrl", event.target.value)} /><span className={styles.fieldHint}>Link to work samples, a menu, teaching materials, or your professional site.</span></div>
         </div>
+      </div>
+      <div className={`${styles.formSection} ${styles.credentialSection}`}>
+        <FieldLabel>Credentials &amp; highlights <small>(optional)</small></FieldLabel>
+        <span className={styles.fieldHint}>Add qualifications, awards, certifications, or notable experience. Every claim needs a public proof link or image URL.</span>
+        <div className={styles.chipRow}>
+          {draft.credentials.map((credential) => <Chip key={credential.id} onRemove={() => set("credentials", draft.credentials.filter((item) => item.id !== credential.id))}>{credential.title}</Chip>)}
+        </div>
+        <CredentialAdder onAdd={(credential) => { if (!draft.credentials.some((item) => item.title.toLowerCase() === credential.title.toLowerCase())) set("credentials", [...draft.credentials, credential]); }} />
       </div>
       <div className={styles.formSection}>
         <FieldLabel>Introduction video (optional) <Icon.InfoCircle size={16} /></FieldLabel>
@@ -437,7 +518,7 @@ function TeachingStep({ draft, update, errors }: { draft: TutorDraft; update: Dr
   return (
     <>
       <SectionHeading step={2} title="Teaching offer" description="Define what you teach, who you help, and how." />
-      <div className={styles.formSection} id="skills" tabIndex={-1} aria-describedby={hasError("skills") ? "skills-error" : undefined}><FieldLabel>Skills &amp; specialties</FieldLabel><span className={styles.fieldHint}>List the subjects, techniques, or tools you teach.</span><div className={styles.chipRow}>{draft.skills.map((skill) => <Chip key={skill} onRemove={() => set("skills", draft.skills.filter((item) => item !== skill))}>{skill}</Chip>)}<InlineAdder label="Add another skill" placeholder="e.g. Wheel throwing" onAdd={(value) => { if (!draft.skills.includes(value)) set("skills", [...draft.skills, value]); }} /></div><FieldError errors={errors} fieldId="skills" /></div>
+      <section className={`${styles.groupPanel} ${styles.skillsSection}`} id="skills" tabIndex={-1} aria-describedby={hasError("skills") ? "skills-error" : undefined}><FieldLabel>Skills &amp; specialties</FieldLabel><span className={styles.fieldHint}>List the subjects, techniques, or tools you teach.</span><div className={styles.chipRow}>{draft.skills.map((skill) => <Chip key={skill} onRemove={() => set("skills", draft.skills.filter((item) => item !== skill))}>{skill}</Chip>)}<InlineAdder label="Add another skill" placeholder="e.g. Wheel throwing" onAdd={(value) => { if (!draft.skills.includes(value)) set("skills", [...draft.skills, value]); }} /></div><FieldError errors={errors} fieldId="skills" /></section>
       <div className={styles.twoColumnGrid}>
         <section className={styles.groupPanel} id="learner-levels" tabIndex={-1} aria-describedby={hasError("learner-levels") ? "learner-levels-error" : undefined}><FieldLabel>Learner levels</FieldLabel><div className={styles.optionList}>{levelOptions.map((level) => <CheckRow key={level} label={level} checked={draft.learnerLevels.includes(level)} onChange={() => set("learnerLevels", toggleValue(draft.learnerLevels, level))} />)}</div><FieldError errors={errors} fieldId="learner-levels" /></section>
         <section className={styles.groupPanel} id="age-groups" tabIndex={-1} aria-describedby={hasError("age-groups") ? "age-groups-error" : undefined}><FieldLabel>Who do you teach?</FieldLabel><p className={styles.fieldHint}>Name the people you teach, in the terms that fit your practice.</p><div className={styles.chipRow}>{draft.ageGroups.map((group) => <Chip key={group} onRemove={() => set("ageGroups", draft.ageGroups.filter((item) => item !== group))}>{group}</Chip>)}{!draft.ageGroups.length && <span className={styles.emptyHint}>Add the learners you&apos;re best placed to help.</span>}<InlineAdder label="Add learner group" placeholder="e.g. Amateur fighters" onAdd={(value) => { if (!draft.ageGroups.includes(value)) set("ageGroups", [...draft.ageGroups, value]); }} /></div><FieldError errors={errors} fieldId="age-groups" /></section>
@@ -571,6 +652,9 @@ function FullProfilePreview({ draft, onClose }: { draft: TutorDraft; onClose: ()
         <div className={styles.modalHero}><div className={styles.modalPhoto} style={draft.photoUrl ? { backgroundImage: `url(${draft.photoUrl})` } : undefined} role="img" aria-label={`${draft.displayName || "Tutor"} profile portrait`} /><div><span className={styles.stepNumberBadge}>Tutoria tutor preview</span><h2 id="full-preview-title">{draft.displayName || "Your name"}</h2><p>{draft.headline}</p><strong>{formatVnd(duration ? draft.rates[String(duration)] || 0 : 0)} / {duration || "Not set"} min</strong></div></div>
         <div className={styles.modalBody}>
           <section><h3>About me</h3><p>{draft.about}</p></section>
+          {draft.professionalBackground && <section><h3>Professional background</h3><p>{draft.professionalBackground}</p></section>}
+          {draft.credentials.length > 0 && <section><h3>Credentials &amp; highlights</h3><div className={styles.chipRow}>{draft.credentials.map((credential) => <a className={styles.chip} href={credential.evidenceUrl} target="_blank" rel="noreferrer" key={credential.id}>{credential.title}</a>)}</div></section>}
+          {draft.portfolioUrl && <section><h3>Portfolio</h3><a href={draft.portfolioUrl} target="_blank" rel="noreferrer">View work and teaching materials</a></section>}
           <section><h3>What I teach</h3><div className={styles.chipRow}>{draft.skills.map((skill) => <span className={styles.chip} key={skill}>{skill}</span>)}</div></section>
           <section><h3>What you&apos;ll achieve</h3><ul>{draft.goals.map((goal) => <li key={goal}>{goal}</li>)}</ul></section>
           <section><h3>Lesson details</h3><p>{draft.lessonDescription}</p><p>{draft.lessonFormat.join(", ")}: {draft.sessionLengths.map((item) => `${item} min`).join(", ")}</p></section>
@@ -588,37 +672,17 @@ function FullProfilePreview({ draft, onClose }: { draft: TutorDraft; onClose: ()
 export function TutorOnboarding() {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
-  const [savedAt, setSavedAt] = useState("Draft saved just now");
+  const [savedAt, setSavedAt] = useState("Blank draft ready");
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [notice, setNotice] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [draft, setDraft] = useState<TutorDraft>(defaultDraft);
 
-  /* ─── Load draft from localStorage ─── */
+  /* ─── Start fresh whenever the creator studio opens ─── */
   useEffect(() => {
-    const stored = window.localStorage.getItem(DRAFT_KEY);
-    if (!stored) return;
-    try {
-      const parsedDraft = JSON.parse(stored) as Partial<TutorDraft>;
-      if (isLegacyExampleDraft(parsedDraft)) {
-        window.localStorage.removeItem(DRAFT_KEY);
-        const storedSubmission = window.localStorage.getItem(SUBMISSION_KEY);
-        if (storedSubmission) {
-          try {
-            if (isLegacyExampleDraft(JSON.parse(storedSubmission) as Partial<TutorDraft>)) window.localStorage.removeItem(SUBMISSION_KEY);
-          } catch { window.localStorage.removeItem(SUBMISSION_KEY); }
-        }
-        return;
-      }
-      const savedDraft = normalizeDraft(parsedDraft);
-      if (savedDraft.status === "pending_review") {
-        window.localStorage.removeItem(DRAFT_KEY);
-        return;
-      }
-      const frame = window.requestAnimationFrame(() => setDraft(savedDraft));
-      return () => window.cancelAnimationFrame(frame);
-    } catch { window.localStorage.removeItem(DRAFT_KEY); }
+    window.localStorage.removeItem(DRAFT_KEY);
+    window.localStorage.removeItem(SUBMISSION_KEY);
   }, []);
 
   /* ─── Auto-save ─── */
@@ -690,7 +754,7 @@ export function TutorOnboarding() {
   };
 
   /* ─── Submit for review ─── */
-  const submitForReview = () => {
+  const submitForReview = async () => {
     const invalidStep = [0, 1, 2, 3].find((step) => validateStep(step, draft).length > 0);
     if (invalidStep !== undefined) {
       const validation = validateStep(invalidStep, draft);
@@ -704,6 +768,16 @@ export function TutorOnboarding() {
     setDraft(submittedDraft);
     window.localStorage.setItem(DRAFT_KEY, JSON.stringify(submittedDraft));
     window.localStorage.setItem(SUBMISSION_KEY, JSON.stringify(submittedDraft));
+    window.dispatchEvent(new CustomEvent("tutoria-tutor-published", { detail: submittedDraft }));
+    try {
+      await fetch("/api/tutors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submittedDraft),
+      });
+    } catch {
+      // The profile remains available in this browser if the local demo API is unavailable.
+    }
     setSavedAt("Submitted for review");
     setNotice("Your tutor profile was submitted for review.");
     router.push(`/tutor/${encodeURIComponent(submittedDraft.displayName)}`);

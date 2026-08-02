@@ -52,7 +52,75 @@
       background: #1b1c1f;
     }
     .field::placeholder { color: #64676e; }
+    .option-builder {
+      border: 1px solid #303236;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #1b1c1f 0%, #18191b 100%);
+      padding: 13px;
+    }
+    .option-builder-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .option-builder-note { margin: 5px 0 0; color: #898c92; font-size: 11px; line-height: 1.45; }
+    .option-list { display: flex; min-height: 0; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+    .option-list:empty { display: none; }
+    .option-chip {
+      display: inline-flex; align-items: center; gap: 6px; min-height: 30px;
+      border: 1px solid #45484f; border-radius: 7px; background: #24262a;
+      padding: 5px 8px 5px 10px; color: #d9dbe0; font-size: 11px; font-weight: 600;
+      transition: border-color .18s ease, background .18s ease, color .18s ease;
+    }
+    .option-chip:hover { border-color: #70747c; background: #2b2d32; color: #fff; }
+    .option-chip-close { color: #989ba3; font-size: 15px; font-weight: 400; line-height: 1; }
+    .option-entry { display: flex; gap: 8px; border-top: 1px solid #2d2f33; padding-top: 12px; }
+    .option-entry .field { min-width: 0; border-color: #3a3d43; background: #141517; }
+    .option-add {
+      min-width: 82px; border: 1px solid #4b4e55; border-radius: 8px; background: #292b30;
+      padding: 0 12px; color: #eceef2; font-size: 11px; font-weight: 700;
+      transition: background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .option-add:hover { border-color: #777b84; background: #35373d; }
+    .option-add:active { transform: translateY(1px); }
+    .moment-photo-field {
+      display: flex; align-items: center; gap: 10px; margin-top: 12px;
+      border: 1px dashed #40434a; border-radius: 9px; background: #141517; padding: 9px 10px;
+      transition: border-color .18s ease, background .18s ease;
+    }
+    .moment-photo-field:hover { border-color: #70747c; background: #191a1d; }
+    .moment-photo-action { display: inline-flex; align-items: center; gap: 7px; color: #c7c9cf; font-size: 11px; font-weight: 650; }
+    .moment-photo-action > span:first-of-type { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 6px; background: #282a2f; color: #e6e8ed; }
+    .moment-photo-preview { height: 36px; width: 48px; overflow: hidden; border: 1px solid #54575f; border-radius: 6px; }
     select.field option { background: #191a1c; color: #f2f3f5; }
+    select.field {
+      min-height: 44px;
+      appearance: none;
+      -webkit-appearance: none;
+      border-radius: 10px;
+      border-color: rgba(255,255,255,.14);
+      background-color: rgba(255,255,255,.045);
+      background-image:
+        linear-gradient(45deg, transparent 50%, #a7aab0 50%),
+        linear-gradient(135deg, #a7aab0 50%, transparent 50%);
+      background-position:
+        calc(100% - 18px) 52%,
+        calc(100% - 13px) 52%;
+      background-size:
+        5px 5px,
+        5px 5px;
+      background-repeat: no-repeat;
+      padding-right: 2.45rem !important;
+      font-weight: 500;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+      cursor: pointer;
+    }
+    select.field:hover {
+      border-color: rgba(255,255,255,.22);
+      background-color: rgba(255,255,255,.065);
+    }
+    select.field:focus {
+      border-color: rgba(255,255,255,.36);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.045),
+        0 0 0 4px rgba(255,255,255,.07);
+    }
 
     .choice-input:checked + .choice {
       border-color: #d7d9de;
@@ -257,13 +325,12 @@
             </div>
 
             <div class="space-y-6">
-              <label class="block">
-                <div class="mb-2 flex items-center justify-between">
-                  <span class="text-xs font-semibold text-soft">What participants will make or learn</span>
-                  <span id="outcomeCount" class="text-xs text-muted">0/300</span>
-                </div>
-                <textarea id="outcome" maxlength="300" rows="5" class="field resize-none px-3 py-2.5 text-sm" placeholder="Describe the result, skill, or takeaway."></textarea>
-              </label>
+              <div class="option-builder">
+                <div class="option-builder-header"><span class="text-xs font-semibold text-soft">What participants will make or learn</span><span class="text-[10px] font-medium uppercase tracking-[0.12em] text-muted">Outcomes</span></div>
+                <p class="option-builder-note">Add one clear outcome at a time. Guests will see these as a checklist.</p>
+                <div id="outcomeOptions" class="option-list"></div>
+                <div class="option-entry"><input id="outcomeInput" maxlength="160" class="field flex-1 px-3 py-2.5 text-sm" placeholder="e.g. Shape and glaze a ceramic cup"><button id="addOutcome" type="button" class="option-add">Add outcome</button></div>
+              </div>
 
               <div>
                 <span class="mb-2 block text-xs font-semibold text-soft">Experience level</span>
@@ -287,20 +354,24 @@
               </div>
 
               <div class="grid gap-4 md:grid-cols-2">
-                <label>
-                  <span class="mb-2 block text-xs font-semibold text-soft">What is included</span>
-                  <textarea rows="3" class="field resize-none px-3 py-2.5 text-sm" placeholder="Materials, refreshments, resources..."></textarea>
-                </label>
+                <div class="option-builder">
+                  <div class="option-builder-header"><span class="text-xs font-semibold text-soft">What is included</span><span class="text-[10px] font-medium uppercase tracking-[0.12em] text-muted">Provided</span></div>
+                  <p class="option-builder-note">Materials, services, and resources are clearer as individual items.</p>
+                  <div id="includedOptions" class="option-list"></div>
+                  <div class="option-entry"><input id="includedInput" class="field flex-1 px-3 py-2.5 text-sm" placeholder="e.g. Clay and pottery tools"><button id="addIncluded" type="button" class="option-add">Add item</button></div>
+                </div>
                 <label>
                   <span class="mb-2 block text-xs font-semibold text-soft">Languages</span>
                   <input id="languages" class="field px-3 py-2.5 text-sm" placeholder="English, Vietnamese">
                 </label>
               </div>
 
-              <label>
-                <span class="mb-2 block text-xs font-semibold text-soft">What participants should bring</span>
-                <textarea rows="3" class="field resize-none px-3 py-2.5 text-sm" placeholder="Anything guests need to bring, wear, download, or prepare."></textarea>
-              </label>
+              <div class="option-builder">
+                <div class="option-builder-header"><span class="text-xs font-semibold text-soft">What participants should bring</span><span class="text-[10px] font-medium uppercase tracking-[0.12em] text-muted">Preparation</span></div>
+                <p class="option-builder-note">Only list items guests need to bring, wear, download, or prepare.</p>
+                <div id="bringOptions" class="option-list"></div>
+                <div class="option-entry"><input id="bringInput" maxlength="160" class="field flex-1 px-3 py-2.5 text-sm" placeholder="e.g. Comfortable clothes"><button id="addBring" type="button" class="option-add">Add item</button></div>
+              </div>
             </div>
           </section>
 
@@ -343,12 +414,69 @@
               <p class="mt-2 text-sm text-muted">Add dates, session times, capacity, and venue details.</p>
             </div>
 
-            <div>
-              <div class="mb-3 flex items-center justify-between">
-                <p class="text-xs font-semibold text-soft">Dates and time intervals</p>
-                <button id="addDate" type="button" class="rounded-md border border-line bg-raised px-3 py-2 text-xs font-semibold">Add date</button>
+            <div id="schedulePanel">
+              <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p class="text-sm font-semibold">Dates and time intervals <span class="text-red-400">*</span></p>
+                  <p class="mt-1 text-xs leading-5 text-muted">Choose reusable time intervals, then click the dates when each session will run.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span id="selectedSessionsCount" class="rounded-full bg-[#242529] px-3 py-1.5 text-xs font-semibold text-soft">0 sessions</span>
+                  <button id="todayWeekButton" type="button" class="h-9 rounded-xl border border-line bg-panel px-3 text-xs font-semibold transition hover:bg-raised">Today</button>
+                </div>
               </div>
-              <div id="dateList" class="space-y-3"></div>
+
+              <div class="overflow-hidden rounded-2xl border border-line bg-[#17181a]">
+                <div class="flex items-center justify-between gap-3 border-b border-line bg-panel px-3 py-3 sm:px-4">
+                  <button id="previousWeekButton" type="button" class="grid h-9 w-9 place-items-center rounded-xl border border-line text-soft transition hover:bg-raised" aria-label="Previous week">
+                    <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                  </button>
+                  <div class="text-center">
+                    <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Session week</p>
+                    <p id="scheduleWeekLabel" class="mt-0.5 text-sm font-semibold text-whiteish"></p>
+                  </div>
+                  <button id="nextWeekButton" type="button" class="grid h-9 w-9 place-items-center rounded-xl border border-line text-soft transition hover:bg-raised" aria-label="Next week">
+                    <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                  </button>
+                </div>
+
+                <div class="overflow-x-auto p-3 sm:p-4">
+                  <div id="scheduleGrid" class="min-w-[790px]"></div>
+                </div>
+
+                <div class="border-t border-line bg-panel p-3 sm:p-4">
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p class="text-xs font-semibold text-soft">Time intervals</p>
+                      <p class="mt-1 text-[11px] text-muted">Each interval becomes one selectable row in the calendar.</p>
+                    </div>
+                    <button id="addIntervalButton" type="button" class="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#44464d] px-3 text-xs font-semibold text-soft transition hover:border-[#73757d] hover:bg-raised">
+                      <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+                      Add interval
+                    </button>
+                  </div>
+
+                  <div id="intervalChips" class="mt-3 flex flex-wrap gap-2"></div>
+
+                  <div id="intervalEditor" class="mt-3 hidden rounded-xl border border-line bg-[#17181a] p-3">
+                    <div class="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                      <label>
+                        <span class="mb-1.5 block text-xs font-semibold text-soft">Starts</span>
+                        <input id="newIntervalStart" type="time" class="field px-3 py-2.5 text-sm" value="09:00">
+                      </label>
+                      <label>
+                        <span class="mb-1.5 block text-xs font-semibold text-soft">Ends</span>
+                        <input id="newIntervalEnd" type="time" class="field px-3 py-2.5 text-sm" value="11:00">
+                      </label>
+                      <div class="flex gap-2">
+                        <button id="cancelIntervalButton" type="button" class="h-[42px] rounded-xl border border-line bg-panel px-3 text-xs font-semibold hover:bg-raised">Cancel</button>
+                        <button id="saveIntervalButton" type="button" class="h-[42px] rounded-xl bg-whiteish px-4 text-xs font-semibold text-[#111214] hover:bg-white">Add</button>
+                      </div>
+                    </div>
+                    <p id="intervalError" class="mt-2 hidden text-xs font-medium text-red-400"></p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="mt-6 grid gap-4 md:grid-cols-2">
@@ -580,8 +708,17 @@
       { id: "review", title: "Review & publish", subtitle: "Review and launch" }
     ];
 
-    const state = { images: [] };
+    const state = {
+      images: [],
+      outcomes: [],
+      included: [],
+      bring: [],
+      dates: [],
+      scheduleWeekStart: "",
+      scheduleIntervals: []
+    };
     const $ = (id) => document.getElementById(id);
+    const makeId = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
     function stepMarkup() {
       return steps.map((step, index) => `
@@ -637,7 +774,41 @@
 
     bindCount("title", "titleCount", 80);
     bindCount("promise", "promiseCount", 120);
-    bindCount("outcome", "outcomeCount", 300);
+    function renderOptions(kind, label, field = kind) {
+      const target = $(`${field}Options`);
+      target.innerHTML = state[kind].map((item, index) => `
+        <button type="button" data-remove-option="${kind}" data-option-index="${index}" class="option-chip">
+          ${item}<span aria-hidden="true" class="option-chip-close">×</span><span class="sr-only">Remove ${label}: ${item}</span>
+        </button>`).join("");
+      target.querySelectorAll("[data-remove-option]").forEach(button => {
+        button.onclick = () => {
+          state[button.dataset.removeOption].splice(Number(button.dataset.optionIndex), 1);
+          renderOptions(kind, label, field);
+          updatePreview();
+          markSaving();
+        };
+      });
+    }
+
+    function bindOptionInput(kind, label, field = kind) {
+      const input = $(`${field}Input`);
+      const add = () => {
+        const value = input.value.trim();
+        if (!value || state[kind].includes(value)) return;
+        state[kind].push(value);
+        input.value = "";
+        renderOptions(kind, label, field);
+        updatePreview();
+        markSaving();
+      };
+      $(`add${field[0].toUpperCase()}${field.slice(1)}`).addEventListener("click", add);
+      input.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); add(); } });
+      renderOptions(kind, label, field);
+    }
+
+    bindOptionInput("outcomes", "outcome", "outcome");
+    bindOptionInput("included", "included item");
+    bindOptionInput("bring", "item to bring");
 
     let saveTimer;
     function markSaving() {
@@ -723,6 +894,11 @@
             <input type="number" min="0" class="moment-minutes field px-3 py-2.5 text-sm" placeholder="Minutes">
             <textarea rows="2" class="field resize-none px-3 py-2.5 text-sm sm:col-span-2" placeholder="What happens in this part?"></textarea>
           </div>
+          <div class="moment-photo-field">
+            <div class="moment-photo-preview hidden shrink-0"><img class="h-full w-full object-cover" alt="Moment photo preview"></div>
+            <label class="moment-photo-action cursor-pointer"><span><i data-lucide="image-plus" class="h-4 w-4"></i></span><span>Add a photo</span><input type="file" accept="image/*" class="moment-photo hidden"></label>
+            <span class="ml-auto text-[10px] text-muted">Shown with this moment</span>
+          </div>
         </div>
       `;
     }
@@ -738,7 +914,17 @@
           }
         };
         card.querySelector(".moment-minutes").oninput = updateMinutes;
+        const photoInput = card.querySelector(".moment-photo");
+        photoInput.onchange = () => {
+          const file = photoInput.files?.[0];
+          if (!file) return;
+          const preview = card.querySelector(".moment-photo-preview");
+          const image = preview.querySelector("img");
+          image.src = URL.createObjectURL(file);
+          preview.classList.remove("hidden");
+        };
       });
+      lucide.createIcons();
     }
 
     function updateMinutes() {
@@ -824,51 +1010,280 @@
     bindFaqs();
 
     // Dates
-    function dateTemplate() {
-      return `
-        <div class="date-card rounded-lg border border-line bg-[#17181a] p-4">
-          <div class="mb-3 flex items-center justify-between">
-            <span class="date-index text-[10px] font-semibold uppercase tracking-[0.14em] text-muted"></span>
-            <button type="button" class="remove-date text-xs font-semibold text-muted hover:text-whiteish">Remove</button>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-[1fr_120px_120px]">
-            <input type="date" class="event-date field px-3 py-2.5 text-sm">
-            <input type="time" class="start-time field px-3 py-2.5 text-sm">
-            <input type="time" class="end-time field px-3 py-2.5 text-sm">
-          </div>
-          <p class="time-error mt-2 hidden text-xs text-red-400">End time must be later than start time.</p>
-        </div>
-      `;
+    function parseLocalDate(value) {
+      if (value instanceof Date) return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+      const [year, month, day] = String(value).split("-").map(Number);
+      return new Date(year, month - 1, day);
     }
 
-    function bindDates() {
-      [...document.querySelectorAll(".date-card")].forEach((card,index) => {
-        card.querySelector(".date-index").textContent = `Date ${String(index + 1).padStart(2,"0")}`;
-        card.querySelector(".remove-date").onclick = () => {
-          if ($("dateList").children.length > 1) {
-            card.remove();
-            bindDates();
-            updatePreview();
-          }
-        };
-        const validate = () => {
-          const start = card.querySelector(".start-time").value;
-          const end = card.querySelector(".end-time").value;
-          card.querySelector(".time-error").classList.toggle("hidden", !(start && end && end <= start));
-        };
-        card.querySelector(".start-time").onchange = validate;
-        card.querySelector(".end-time").onchange = validate;
-        card.querySelector(".event-date").onchange = updatePreview;
+    function toISODate(date) {
+      const local = parseLocalDate(date);
+      const year = local.getFullYear();
+      const month = String(local.getMonth() + 1).padStart(2, "0");
+      const day = String(local.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function addCalendarDays(value, amount) {
+      const date = parseLocalDate(value);
+      date.setDate(date.getDate() + amount);
+      return date;
+    }
+
+    function getStartOfWeek(value = new Date()) {
+      const date = parseLocalDate(value);
+      const weekday = date.getDay();
+      const offset = weekday === 0 ? -6 : 1 - weekday;
+      date.setDate(date.getDate() + offset);
+      return toISODate(date);
+    }
+
+    function getWeekDates() {
+      const start = parseLocalDate(state.scheduleWeekStart || getStartOfWeek());
+      return Array.from({ length: 7 }, (_, index) => toISODate(addCalendarDays(start, index)));
+    }
+
+    function formatWeekRange() {
+      const dates = getWeekDates();
+      const start = parseLocalDate(dates[0]);
+      const end = parseLocalDate(dates[6]);
+      const sameMonth = start.getMonth() === end.getMonth();
+      const sameYear = start.getFullYear() === end.getFullYear();
+      const startLabel = new Intl.DateTimeFormat("en", {
+        day: "numeric",
+        month: sameMonth ? undefined : "short",
+        year: sameYear ? undefined : "numeric"
+      }).format(start);
+      const endLabel = new Intl.DateTimeFormat("en", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      }).format(end);
+      return `${startLabel} - ${endLabel}`;
+    }
+
+    function normaliseScheduleDates() {
+      state.dates = state.dates
+        .filter(dateBlock => dateBlock.date && dateBlock.intervals?.length)
+        .map(dateBlock => ({
+          ...dateBlock,
+          intervals: dateBlock.intervals
+            .filter(interval => interval.start && interval.end)
+            .sort((a, b) => a.start.localeCompare(b.start))
+        }))
+        .filter(dateBlock => dateBlock.intervals.length)
+        .sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function getSelectedInterval(date, interval) {
+      const dateBlock = state.dates.find(item => item.date === date);
+      return dateBlock?.intervals.find(item => item.start === interval.start && item.end === interval.end);
+    }
+
+    function toggleSession(date, interval) {
+      let dateBlock = state.dates.find(item => item.date === date);
+      const selectedInterval = getSelectedInterval(date, interval);
+
+      if (selectedInterval && dateBlock) {
+        dateBlock.intervals = dateBlock.intervals.filter(item => item.id !== selectedInterval.id);
+      } else if (dateBlock) {
+        dateBlock.intervals.push({ id: makeId("interval"), start: interval.start, end: interval.end });
+      } else {
+        state.dates.push({
+          id: makeId("date"),
+          date,
+          intervals: [{ id: makeId("interval"), start: interval.start, end: interval.end }]
+        });
+      }
+
+      normaliseScheduleDates();
+      renderSchedule();
+      updatePreview();
+      markSaving();
+    }
+
+    function durationLabel(start, end) {
+      if (!start || !end) return "";
+      const [startHour, startMinute] = start.split(":").map(Number);
+      const [endHour, endMinute] = end.split(":").map(Number);
+      const minutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+      if (minutes <= 0) return "Invalid interval";
+      const hours = Math.floor(minutes / 60);
+      const remaining = minutes % 60;
+      if (!hours) return `${remaining} min`;
+      if (!remaining) return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+      return `${hours}h ${remaining}m`;
+    }
+
+    function renderSchedule() {
+      if (!state.scheduleWeekStart) state.scheduleWeekStart = getStartOfWeek();
+      const weekDates = getWeekDates();
+      const today = toISODate(new Date());
+      const selectedCount = state.dates.reduce((sum, dateBlock) => sum + dateBlock.intervals.length, 0);
+
+      $("scheduleWeekLabel").textContent = formatWeekRange();
+      $("selectedSessionsCount").textContent = `${selectedCount} ${selectedCount === 1 ? "session" : "sessions"}`;
+
+      const dayHeaders = weekDates.map(dateValue => {
+        const date = parseLocalDate(dateValue);
+        const dayName = new Intl.DateTimeFormat("en", { weekday: "short" }).format(date);
+        const dayNumber = new Intl.DateTimeFormat("en", { day: "numeric" }).format(date);
+        const isToday = dateValue === today;
+        return `
+          <div class="flex min-h-[62px] flex-col items-center justify-center rounded-xl ${isToday ? "bg-whiteish text-[#111214]" : "bg-panel text-soft"}">
+            <span class="text-[10px] font-semibold uppercase tracking-[0.12em] ${isToday ? "text-[#5f6168]" : "text-muted"}">${dayName}</span>
+            <span class="mt-1 text-sm font-semibold">${dayNumber}</span>
+          </div>`;
+      }).join("");
+
+      const intervalRows = state.scheduleIntervals.map(interval => {
+        const cells = weekDates.map(dateValue => {
+          const selectedCell = Boolean(getSelectedInterval(dateValue, interval));
+          const isPast = dateValue < today;
+          const disabled = isPast && !selectedCell;
+          const classes = selectedCell
+            ? "border-stone-950 bg-whiteish text-[#111214] shadow-sm"
+            : disabled
+              ? "cursor-not-allowed border-line bg-[#242529] text-[#5f6168]"
+              : "border-line bg-panel text-muted hover:border-[#62646c] hover:bg-[#2b2c30] hover:text-whiteish";
+          return `
+            <button type="button"
+              data-session-date="${dateValue}"
+              data-session-interval="${interval.id}"
+              ${disabled ? "disabled" : ""}
+              class="group flex min-h-[76px] flex-col items-center justify-center rounded-xl border transition ${classes}"
+              aria-pressed="${selectedCell}">
+              <span class="grid h-6 w-6 place-items-center rounded-full ${selectedCell ? "bg-[#1b1c1f]/15" : disabled ? "bg-transparent" : "bg-[#242529] group-hover:bg-[#1b1c1f]"}">
+                <i data-lucide="${selectedCell ? "check" : isPast ? "minus" : "plus"}" class="h-3.5 w-3.5"></i>
+              </span>
+              <span class="mt-1.5 text-[10px] font-semibold">${selectedCell ? "Added" : isPast ? "Past" : "Add"}</span>
+            </button>`;
+        }).join("");
+
+        return `
+          <div class="contents">
+            <div class="flex min-h-[76px] items-center rounded-xl bg-[#242529] px-3">
+              <div>
+                <p class="text-xs font-semibold text-whiteish">${interval.start}-${interval.end}</p>
+                <p class="mt-1 text-[10px] text-muted">${durationLabel(interval.start, interval.end)}</p>
+              </div>
+            </div>
+            ${cells}
+          </div>`;
+      }).join("");
+
+      $("scheduleGrid").innerHTML = `
+        <div class="grid grid-cols-[112px_repeat(7,minmax(82px,1fr))] gap-1.5">
+          <div class="flex items-end px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">Intervals</div>
+          ${dayHeaders}
+          ${intervalRows}
+        </div>`;
+
+      $("intervalChips").innerHTML = state.scheduleIntervals.map(interval => `
+        <span class="inline-flex items-center gap-1 rounded-full border border-line bg-[#17181a] py-1.5 pl-3 pr-1.5 text-xs font-semibold text-soft">
+          ${interval.start}-${interval.end}
+          <button type="button" data-remove-schedule-interval="${interval.id}" class="grid h-5 w-5 place-items-center rounded-full text-muted transition hover:bg-panel hover:text-red-400" aria-label="Remove ${interval.start} to ${interval.end}">
+            <i data-lucide="x" class="h-3 w-3"></i>
+          </button>
+        </span>
+      `).join("");
+
+      document.querySelectorAll("[data-session-date]").forEach(button => {
+        button.addEventListener("click", () => {
+          const interval = state.scheduleIntervals.find(item => item.id === button.dataset.sessionInterval);
+          if (interval) toggleSession(button.dataset.sessionDate, interval);
+        });
       });
+
+      document.querySelectorAll("[data-remove-schedule-interval]").forEach(button => {
+        button.addEventListener("click", () => {
+          if (state.scheduleIntervals.length === 1) {
+            showToast("Keep at least one time interval.");
+            return;
+          }
+
+          const interval = state.scheduleIntervals.find(item => item.id === button.dataset.removeScheduleInterval);
+          if (!interval) return;
+          const selectedUses = state.dates.reduce(
+            (sum, dateBlock) => sum + dateBlock.intervals.filter(item => item.start === interval.start && item.end === interval.end).length,
+            0
+          );
+
+          if (selectedUses && !window.confirm(`Remove this interval and ${selectedUses} selected ${selectedUses === 1 ? "session" : "sessions"}?`)) return;
+
+          state.scheduleIntervals = state.scheduleIntervals.filter(item => item.id !== interval.id);
+          state.dates.forEach(dateBlock => {
+            dateBlock.intervals = dateBlock.intervals.filter(item => !(item.start === interval.start && item.end === interval.end));
+          });
+          normaliseScheduleDates();
+          renderSchedule();
+          updatePreview();
+          markSaving();
+        });
+      });
+
+      lucide.createIcons();
     }
 
-    $("addDate").onclick = () => {
-      $("dateList").insertAdjacentHTML("beforeend", dateTemplate());
-      bindDates();
-      lucide.createIcons();
-    };
-    $("dateList").innerHTML = dateTemplate();
-    bindDates();
+    $("previousWeekButton").addEventListener("click", () => {
+      state.scheduleWeekStart = toISODate(addCalendarDays(state.scheduleWeekStart || getStartOfWeek(), -7));
+      renderSchedule();
+      markSaving();
+    });
+
+    $("nextWeekButton").addEventListener("click", () => {
+      state.scheduleWeekStart = toISODate(addCalendarDays(state.scheduleWeekStart || getStartOfWeek(), 7));
+      renderSchedule();
+      markSaving();
+    });
+
+    $("todayWeekButton").addEventListener("click", () => {
+      state.scheduleWeekStart = getStartOfWeek();
+      renderSchedule();
+      markSaving();
+    });
+
+    $("addIntervalButton").addEventListener("click", () => {
+      $("intervalEditor").classList.remove("hidden");
+      $("intervalError").classList.add("hidden");
+      $("newIntervalStart").focus();
+    });
+
+    $("cancelIntervalButton").addEventListener("click", () => {
+      $("intervalEditor").classList.add("hidden");
+      $("intervalError").classList.add("hidden");
+    });
+
+    $("saveIntervalButton").addEventListener("click", () => {
+      const start = $("newIntervalStart").value;
+      const end = $("newIntervalEnd").value;
+      const error = $("intervalError");
+      const duplicate = state.scheduleIntervals.some(interval => interval.start === start && interval.end === end);
+
+      error.classList.add("hidden");
+      if (!start || !end) {
+        error.textContent = "Choose both a start and end time.";
+        error.classList.remove("hidden");
+        return;
+      }
+      if (start >= end) {
+        error.textContent = "The end time must be later than the start time.";
+        error.classList.remove("hidden");
+        return;
+      }
+      if (duplicate) {
+        error.textContent = "This time interval already exists.";
+        error.classList.remove("hidden");
+        return;
+      }
+
+      state.scheduleIntervals.push({ id: makeId("schedule-interval"), start, end });
+      state.scheduleIntervals.sort((a, b) => a.start.localeCompare(b.start));
+      $("intervalEditor").classList.add("hidden");
+      renderSchedule();
+      updatePreview();
+      markSaving();
+    });
 
     // Venue
     $("venueFormat").addEventListener("change", () => {
@@ -895,6 +1310,32 @@
       return date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
     }
 
+    function selectedSessions() {
+      return state.dates
+        .map(dateBlock => ({
+          ...dateBlock,
+          intervals: [...dateBlock.intervals].sort((a, b) => a.start.localeCompare(b.start))
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function firstSessionBlock() {
+      const firstDate = selectedSessions()[0];
+      const firstInterval = firstDate?.intervals[0];
+      return { firstDate, firstInterval };
+    }
+
+    function previewDateText() {
+      const { firstDate, firstInterval } = firstSessionBlock();
+      if (!firstDate) return "Not set";
+      const time = firstInterval ? ` · ${firstInterval.start}-${firstInterval.end}` : "";
+      return `${formatDate(firstDate.date)}${time}`;
+    }
+
+    function scheduleIsReady() {
+      return state.dates.some(dateBlock => dateBlock.date && dateBlock.intervals.some(interval => interval.start && interval.end && interval.start < interval.end));
+    }
+
     function priceText() {
       const access = selected("access") || "Free";
       if (access !== "Paid") return access;
@@ -909,8 +1350,8 @@
       const level = selected("level") || "Beginner";
       const title = $("title").value.trim() || "Your event title";
       const promise = $("promise").value.trim() || "Add a clear promise so guests understand what they will gain.";
-      const outcome = $("outcome").value.trim() || "Add the experience outcome to preview this section.";
-      const date = formatDate(document.querySelector(".event-date")?.value || "");
+      const outcome = state.outcomes.join(" · ") || "Add the experience outcome to preview this section.";
+      const date = previewDateText();
       const capacity = $("capacity").value ? `${$("capacity").value} guests` : "Not set";
       const price = priceText();
 
@@ -944,8 +1385,8 @@
 
     const reviewItems = [
       { label: "Essential details", target: "idea", test: () => $("title").value.trim() && $("promise").value.trim() && $("category").value },
-      { label: "Experience and FAQs", target: "experience", test: () => $("outcome").value.trim() },
-      { label: "Time and location", target: "time-place", test: () => document.querySelector(".event-date")?.value && ($("venueFormat").value === "Online" || ($("venueName").value.trim() && $("address").value.trim())) },
+      { label: "Experience and FAQs", target: "experience", test: () => state.outcomes.length > 0 },
+      { label: "Time and location", target: "time-place", test: () => scheduleIsReady() && ($("venueFormat").value === "Online" || ($("venueName").value.trim() && $("address").value.trim())) },
       { label: "Capacity and price", target: "access-pricing", test: () => $("capacity").value && (selected("access") !== "Paid" || $("price").value) },
       { label: "Cover image", target: "idea", test: () => state.images.length > 0 },
       { label: "Cancellation policy", target: "access-pricing", test: () => $("cancellation").value && $("refund").value }
@@ -1037,7 +1478,9 @@
       try { account = JSON.parse(localStorage.getItem("tutoria_signup") || "{}"); } catch {}
       try { tutor = JSON.parse(localStorage.getItem("tutoria_tutor_profile_submission") || "{}"); } catch {}
       const host = tutor.displayName?.trim() || account.name?.trim() || "Tutoria member";
+      const creatorId = account.completed && account.email ? String(account.email).trim().toLowerCase() : "";
       return {
+        id: creatorId,
         host,
         role: tutor.role?.trim() || "Tutoria host and educator",
         experience: tutor.skills?.length ? `Teaches ${tutor.skills.join(", ")}` : "Community event host",
@@ -1051,7 +1494,7 @@
       const format = $("format").value === "Online" || $("venueFormat").value === "Online" ? "Online" : "In person";
       const title = $("title").value.trim();
       const promise = $("promise").value.trim();
-      const outcome = $("outcome").value.trim();
+      const outcomes = state.outcomes;
       const category = $("category").value;
       const level = selected("level") || "Beginner";
       const access = selected("access") || "Free";
@@ -1060,25 +1503,27 @@
       const creator = readCreatorProfile();
       const imageUrls = await Promise.all(state.images.map(fileToDataUrl));
       const cover = imageUrls[0] || "";
-      const moments = [...document.querySelectorAll(".moment")].map((card) => {
+      const moments = await Promise.all([...document.querySelectorAll(".moment")].map(async (card) => {
         const inputs = card.querySelectorAll("input");
+        const imageFile = card.querySelector(".moment-photo")?.files?.[0];
         return {
           title: inputs[0]?.value.trim() || "Workshop activity",
           duration: `${Number(inputs[1]?.value || 0)} min`,
           description: card.querySelector("textarea")?.value.trim() || "Details will be shared before the event.",
+          image: imageFile ? await fileToDataUrl(imageFile) : undefined,
+        };
+      }));
+      const totalMinutes = moments.reduce((sum, item) => sum + (Number(item.duration.replace(/[^0-9]/g, "")) || 0), 0);
+      const dates = selectedSessions().map((dateBlock, index) => {
+        return {
+          id: `session-${index + 1}`,
+          date: formatDate(dateBlock.date),
+          times: dateBlock.intervals.map(interval => `${interval.start} - ${interval.end}`),
         };
       });
-      const totalMinutes = moments.reduce((sum, item) => sum + (Number(item.duration.replace(/[^0-9]/g, "")) || 0), 0);
-      const dates = [...document.querySelectorAll(".date-card")].map((card, index) => {
-        const date = card.querySelector(".event-date")?.value || "";
-        const start = card.querySelector(".start-time")?.value || "";
-        const end = card.querySelector(".end-time")?.value || "";
-        return { id: `session-${index + 1}`, date: formatDate(date), times: start && end ? [`${start} - ${end}`] : [] };
-      });
-      const firstDate = document.querySelector(".event-date")?.value || "";
-      const firstStart = document.querySelector(".start-time")?.value || "";
-      const included = splitList(document.querySelector('#experience textarea[placeholder^="Materials"]')?.value || "");
-      const bring = splitList(document.querySelector('#experience textarea[placeholder^="Anything guests"]')?.value || "");
+      const { firstDate, firstInterval } = firstSessionBlock();
+      const included = state.included;
+      const bring = state.bring;
       const arrival = document.querySelector('#time-place textarea')?.value.trim() || "";
       const faqs = [...document.querySelectorAll(".faq")].map((card) => ({
         question: card.querySelector("input")?.value.trim() || "What should I know before attending?",
@@ -1088,21 +1533,23 @@
         title: card.querySelector("input")?.value.trim() || "Preparation",
         items: splitList(card.querySelector("textarea")?.value || ""),
       })).filter(group => group.items.length);
-      const dateLabel = firstDate ? new Intl.DateTimeFormat("en", { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${firstDate}T00:00:00`)) : "Date TBA";
+      const dateLabel = firstDate ? new Intl.DateTimeFormat("en", { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${firstDate.date}T00:00:00`)) : "Date TBA";
       const price = access === "Paid" ? `${new Intl.NumberFormat("vi-VN").format(amount)} đ` : access;
       const location = format === "Online" ? "Online" : ($("address").value.trim() || $("venueName").value.trim());
       const cancellation = $("cancellation").value || "Cancellation deadline not set";
       const refund = $("refund").value || "Refund policy not set";
 
       return {
-        slug: createSlug(title), title, host: creator.host, date: dateLabel, time: firstStart || "Time TBA", location,
+        creatorId: creator.id,
+        creatorName: creator.host,
+        slug: createSlug(title), title, host: creator.host, date: dateLabel, time: firstInterval ? `${firstInterval.start} - ${firstInterval.end}` : "Time TBA", location,
         type: format, price, attending: 0, capacity, image: cover, topic: category, level,
         subtitle: promise, rating: 0, reviewCount: 0, duration: totalMinutes ? `${totalMinutes} minutes` : "Flexible",
         languages: splitList($("languages").value), minimumAge: "All ages",
         accessibility: format === "Online" ? "Join from any device" : "Contact the host for access details",
         studioName: format === "Online" ? "Online session" : ($("venueName").value.trim() || "Venue to be announced"),
         address: format === "Online" ? "Joining details shared after booking" : ($("address").value.trim() || "Address to be announced"),
-        sessions: dates, spotsLeft: capacity, about: [promise, outcome].filter(Boolean),
+        sessions: dates, spotsLeft: capacity, about: [promise, ...outcomes].filter(Boolean),
         note: arrival || `Suitable for ${level.toLowerCase()} participants.`,
         highlights: [
           { title: `${capacity} places`, description: "A focused group experience." },
@@ -1110,7 +1557,7 @@
           { title: format, description: format === "Online" ? "Join from wherever you are." : "Learn together in person." },
           { title: level, description: `Designed for ${level.toLowerCase()} participants.` },
         ],
-        learn: outcome ? [outcome] : [], included, bring: bring.length ? bring : ["Nothing special is required"],
+        learn: outcomes, included, bring: bring.length ? bring : ["Nothing special is required"],
         plan: moments, faqs, galleryImage: imageUrls[1] || cover,
         hostRole: creator.role, hostExperience: creator.experience, hostBio: creator.bio, hostImage: creator.image,
         hostRecommendation: "New host", beforeYouAttend,
@@ -1128,13 +1575,25 @@
       } else {
         try {
           const publishedEvent = await createPublishedEvent();
-          const key = "tutoria-published-events";
-          const existing = JSON.parse(localStorage.getItem(key) || "[]");
-          const events = Array.isArray(existing) ? existing : [];
-          localStorage.setItem(key, JSON.stringify([publishedEvent, ...events.filter(item => item.slug !== publishedEvent.slug)]));
+          const response = await fetch("/api/events", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(publishedEvent),
+          });
+          if (!response.ok) throw new Error("The shared event store rejected this listing.");
+          const payload = await response.json();
+          const savedEvent = payload?.event || publishedEvent;
+          try {
+            const key = "tutoria-published-events";
+            const existing = JSON.parse(localStorage.getItem(key) || "[]");
+            const events = Array.isArray(existing) ? existing : [];
+            localStorage.setItem(key, JSON.stringify([savedEvent, ...events.filter(item => item.slug !== savedEvent.slug)]));
+          } catch (storageError) {
+            console.warn("The browser copy could not be saved; the shared listing was published.", storageError);
+          }
           showToast("Event published. Opening its public page...");
-          window.parent.postMessage({ type: "tutoria-event-published", slug: publishedEvent.slug }, window.location.origin);
-          setTimeout(() => { window.top.location.href = `/events/${publishedEvent.slug}`; }, 450);
+          window.parent.postMessage({ type: "tutoria-event-published", slug: savedEvent.slug }, window.location.origin);
+          setTimeout(() => { window.top.location.href = `/events/${savedEvent.slug}`; }, 450);
         } catch (error) {
           console.error(error);
           showToast("Could not publish this event. Try smaller images.");
@@ -1144,6 +1603,14 @@
 
     ["venueName","address"].forEach(id => $(id).addEventListener("input", updateReview));
 
+    state.scheduleIntervals = [
+      { id: makeId("schedule-interval"), start: "09:00", end: "12:00" },
+      { id: makeId("schedule-interval"), start: "14:00", end: "18:00" },
+      { id: makeId("schedule-interval"), start: "18:00", end: "21:00" }
+    ];
+    state.scheduleWeekStart = getStartOfWeek();
+    normaliseScheduleDates();
+    renderSchedule();
     updatePreview();
     lucide.createIcons();
   </script>

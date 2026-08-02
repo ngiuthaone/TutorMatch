@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import { RequireAuth } from "@/components/auth/require-auth";
 import { EventNewFrame } from "./event-new-frame";
 
 export const metadata: Metadata = {
@@ -9,9 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function NewEventPage() {
-  return (
-    <RequireAuth>
-      <EventNewFrame />
-    </RequireAuth>
-  );
+  return <EventNewFrame />;
 }

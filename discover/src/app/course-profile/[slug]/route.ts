@@ -23,7 +23,7 @@ export async function GET(
     slug,
     course,
     similarCourses,
-  })};</script><script src="/course-profile-data.js"></script>`;
+  })};</script><script>window.addEventListener("scroll",()=>window.parent.postMessage({type:"tutoria-course-profile-scroll",y:window.scrollY},"*"),{passive:true});</script><script src="/course-profile-data.js"></script>`;
   const html = template.replace("<script>", `${runtime}\n  <script>`);
 
   return new Response(html, {
