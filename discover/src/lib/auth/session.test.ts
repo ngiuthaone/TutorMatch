@@ -64,6 +64,11 @@ async function loadSession() {
   return await import("./session");
 }
 
+async function flushPromises() {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
 beforeEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
@@ -173,6 +178,37 @@ describe("ensureSession", () => {
     }
   });
 
+  it("keeps the live identity snapshot stable across equivalent auth notifications", async () => {
+    const { ensureSession } = await loadSession();
+    const { getLiveIdentity, subscribeToIdentity } = await import("./identity");
+    let authCallback: (event: string, session: Session | null) => void = () => {
+      throw new Error("auth state listener was not registered");
+    };
+    const session = makeSession();
+    const listener = vi.fn();
+
+    getSessionMock.mockResolvedValue({ data: { session }, error: null });
+    onAuthStateChangeMock.mockImplementation((callback: (event: string, session: Session | null) => void) => {
+      authCallback = callback;
+      return () => {};
+    });
+    getMeMock.mockResolvedValue(makeProfile());
+    subscribeToIdentity(listener);
+
+    await ensureSession();
+
+    const first = getLiveIdentity();
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(first).not.toBeNull();
+
+    authCallback("SIGNED_IN", makeSession());
+    await flushPromises();
+
+    expect(getMeMock).toHaveBeenCalledTimes(2);
+    expect(getLiveIdentity()).toBe(first);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
   it("refreshes the session once and re-synchronizes when profile verification is unauthorized", async () => {
     const { ensureSession, getSessionSnapshot } = await loadSession();
     const session = makeSession();
@@ -272,5 +308,23 @@ describe("signOutLive", () => {
 
     expect(signOutMock).toHaveBeenCalledTimes(1);
     expect(getSessionSnapshot().status).toBe("anonymous");
+  });
+
+  it("does not emit duplicate live identity notifications for repeated sign-out", async () => {
+    const { signInWithPassword, signOutLive } = await loadSession();
+    const { subscribeToIdentity } = await import("./identity");
+    const listener = vi.fn();
+    signInWithPasswordMock.mockResolvedValue({ data: { session: makeSession() }, error: null });
+    getSessionMock.mockResolvedValue({ data: { session: makeSession() }, error: null });
+    getMeMock.mockResolvedValue(makeProfile());
+    signOutMock.mockResolvedValue({ error: null });
+    subscribeToIdentity(listener);
+
+    await signInWithPassword("learner@example.com", "secret");
+    await signOutLive();
+    await signOutLive();
+
+    expect(listener).toHaveBeenCalledTimes(2);
+    expect(signOutMock).toHaveBeenCalledTimes(2);
   });
 });
