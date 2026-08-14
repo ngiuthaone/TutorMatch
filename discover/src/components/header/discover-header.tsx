@@ -2,9 +2,10 @@
 
 import { useState, useCallback, useMemo, useSyncExternalStore, useEffect, useRef } from "react";
 import Link from "next/link";
-import { IconMenu2, IconX, IconBell } from "@tabler/icons-react";
+import { IconMenu2, IconX } from "@tabler/icons-react";
 import { GlobalNavigation } from "./global-navigation";
 import { UserMenu } from "./user-menu";
+import { NotificationCenter } from "../notifications/notification-center";
 import { MobileNavigation } from "./mobile-navigation";
 import { getLiveIdentity, subscribeToIdentity } from "@/lib/auth/identity";
 import type { HeaderUser } from "./types";
@@ -96,9 +97,7 @@ export function DiscoverHeader({ user: userProp }: DiscoverHeaderProps) {
           )}
 
           {user && (
-            <button className={`${styles.iconButton} ${styles.mobileNotification}`} aria-label="Notifications">
-              <IconBell size={19} stroke={1.7} />
-            </button>
+            <NotificationCenter user={user} mobile />
           )}
 
           {!user && (

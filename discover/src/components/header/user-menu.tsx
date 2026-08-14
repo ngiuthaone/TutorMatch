@@ -11,7 +11,6 @@ import {
   IconHelpCircle,
   IconLogout,
   IconMessage,
-  IconBell,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,6 +18,7 @@ import { isLiveMode } from "@/lib/auth/config";
 import { signOutLive } from "@/lib/auth/session";
 import type { HeaderUser } from "./types";
 import styles from "./tutoria-navigation.module.css";
+import { NotificationCenter } from "../notifications/notification-center";
 
 interface UserMenuProps {
   user: HeaderUser;
@@ -91,15 +91,7 @@ export function UserMenu({ user }: UserMenuProps) {
       </Link>
 
       {/* Notifications */}
-      <button
-        className={styles.iconButton}
-        aria-label="Notifications"
-      >
-        <IconBell size={19} stroke={1.7} />
-        {typeof user.unreadNotifications === "number" && user.unreadNotifications > 0 && (
-          <span className={styles.notificationDot} />
-        )}
-      </button>
+      <NotificationCenter user={user} />
 
       {/* Avatar */}
       <div ref={ref} className={styles.menuAnchor}>
