@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   IconUser,
+  IconLayoutDashboard,
   IconBook2,
   IconCalendarEvent,
   IconHeart,
@@ -63,6 +64,7 @@ export function UserMenu({ user }: UserMenuProps) {
 
   const items = [
     { icon: IconUser, label: "View profile", href: profileHref },
+    { icon: IconLayoutDashboard, label: "Center", href: "/center" },
     { icon: IconBook2, label: "My learning", href: "/learning" },
     { icon: IconCalendarEvent, label: "My bookings", href: "/bookings" },
     { icon: IconHeart, label: "Saved", href: "/saved" },
