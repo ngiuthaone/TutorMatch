@@ -1,0 +1,49 @@
+{
+  "example_only": true,
+  "note": "Illustrative structure only. This file is outside .codex/team-runs and is never included in real performance metrics.",
+  "schema_version": 1,
+  "run_id": "EXAMPLE-tutor-profile-audit",
+  "task": "Audit tutor profile route ownership",
+  "started_at": "2026-08-11T10:00:00Z",
+  "completed_at": "2026-08-11T10:03:00Z",
+  "final_status": "PASS",
+  "summary": "Read-only route ownership audit completed",
+  "contract_path": "docs/agent-team/qa-contracts/EXAMPLE-booking-cancel-reschedule-qa-contract.md",
+  "contract_changes": [
+    {
+      "recorded_at": "2026-08-12T10:01:00Z",
+      "criterion": "Cancelling a cancelled booking must be rejected",
+      "reason": "Repository has no $cancelled terminal-state transition for double-cancel; rejected as part of invalid-transition set",
+      "authorized_by": "orchestrator (per product_planner domain decision)",
+      "revised": "Any cancel/reschedule request against a non-booked state is rejected with 409"
+    }
+  ],
+  "activities": [
+    {
+      "id": "code_explorer-1",
+      "agent": "code_explorer",
+      "reason": "Need a production-vs-prototype map before edits",
+      "assignment": "Map tutor profile routes and ownership boundaries",
+      "started_at": "2026-08-11T10:00:05Z",
+      "completed_at": "2026-08-11T10:01:25Z",
+      "duration_seconds": 80,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": "INPUT_RECOMMENDED",
+      "rework_count": 0,
+      "useful_findings": 4,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "tokens": {"input": null, "output": null, "total": null, "cost_usd": null, "source": null}
+    }
+  ],
+  "tests": ["Repository path verification: PASS"],
+  "qa_verdict": "N/A",
+  "security_verdict": "N/A",
+  "license_verdict": "N/A",
+  "routing_assessment": {
+    "unnecessary_invocations": [],
+    "missing_specialists": [],
+    "recommendation": "Keep read-only audit routed to Code Explorer only."
+  }
+}

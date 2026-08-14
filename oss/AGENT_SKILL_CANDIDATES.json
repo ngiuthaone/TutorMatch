@@ -1,0 +1,127 @@
+{
+  "generated_at": "2026-08-13",
+  "purpose": "Research candidates only. This is NOT the incorporated external-source ledger and conveys no permanent approval.",
+  "rules": [
+    "Before install/adapt, resolve canonical source and exact current commit/tag/version.",
+    "Run existing repo-license-guard and security scan on exact material.",
+    "Record incorporated/adapted material in the real OSS ledger/notices only after approval.",
+    "STUDY_ONLY references do not authorize copying implementation."
+  ],
+  "candidates": [
+    {
+      "id": "agentskills-spec",
+      "repo": "agentskills/agentskills",
+      "recommended_action": "REFERENCE_STANDARD",
+      "why": "Canonical Agent Skills folder/frontmatter/progressive-disclosure format",
+      "license": "VERIFY_EXACT_CURRENT",
+      "priority": "P0"
+    },
+    {
+      "id": "supabase-agent-skills",
+      "repo": "supabase/agent-skills",
+      "recommended_action": "INSTALL_SELECTIVELY",
+      "why": "Official Supabase skills for current platform usage; use official docs verification for changing APIs",
+      "license": "MIT (verified in research; reverify exact ref)",
+      "priority": "P0"
+    },
+    {
+      "id": "sentry-skill-scanner",
+      "repo": "getsentry/skills",
+      "path": "skills/skill-scanner",
+      "recommended_action": "INSTALL_OR_ADAPT_AFTER_GATE",
+      "why": "Skill security scanning: prompt injection, malicious scripts, excessive permissions, secret exposure, supply-chain risks",
+      "license": "Apache-2.0 repo (verified 2026-08-13; reverify exact ref)",
+      "priority": "P0"
+    },
+    {
+      "id": "sentry-skill-writer",
+      "repo": "getsentry/skills",
+      "path": "skills/skill-writer",
+      "recommended_action": "STUDY_OR_INSTALL_AFTER_GATE",
+      "why": "Skill authoring/evaluation workflow",
+      "license": "Apache-2.0 repo (verified 2026-08-13; reverify exact ref)",
+      "priority": "P1"
+    },
+    {
+      "id": "vercel-agent-browser",
+      "repo": "vercel-labs/agent-browser",
+      "recommended_action": "INSTALL_TOOL_AFTER_GATE",
+      "why": "Browser automation execution layer for qa_browser",
+      "license": "Apache-2.0 (verified in research; reverify exact ref)",
+      "priority": "P0"
+    },
+    {
+      "id": "vercel-agent-skills",
+      "repo": "vercel-labs/agent-skills",
+      "path": "skills/react-best-practices",
+      "recommended_action": "INSTALL_SELECTIVELY",
+      "why": "Official React/Next performance guidance for frontend_engineer",
+      "license": "Selected skill declares MIT; repo-level provenance must still be checked for exact material",
+      "priority": "P1"
+    },
+    {
+      "id": "stripe-ai",
+      "repo": "stripe/ai",
+      "recommended_action": "DEFER_UNTIL_PROVIDER_CHOSEN",
+      "why": "Official Stripe agent skills/plugin if Tutoria chooses Stripe",
+      "license": "MIT (verified in research; reverify exact ref)",
+      "priority": "P1"
+    },
+    {
+      "id": "trailofbits-skills",
+      "repo": "trailofbits/skills",
+      "recommended_action": "PLUGIN_OR_STUDY_ONLY",
+      "why": "Security audit methodology such as differential review and static analysis",
+      "license": "CC-BY-SA-4.0 (verified in research; exact reuse requires license review)",
+      "priority": "P1"
+    },
+    {
+      "id": "superpowers",
+      "repo": "obra/superpowers",
+      "recommended_action": "ADAPT_CONCEPTS_NOT_OS",
+      "why": "TDD, systematic debugging, verification-before-completion; do not replace Tutoria orchestration",
+      "license": "MIT (verified in research; reverify exact ref)",
+      "priority": "P1"
+    },
+    {
+      "id": "qa-skills",
+      "repo": "petrkindlmann/qa-skills",
+      "recommended_action": "STUDY_SELECTIVE",
+      "why": "Targeted backend/database/payment/reliability QA workflows; community source",
+      "license": "MIT (verified 2026-08-13; reverify exact ref)",
+      "priority": "P2"
+    },
+    {
+      "id": "addy-agent-skills",
+      "repo": "addyosmani/agent-skills",
+      "recommended_action": "STUDY_SELECTIVE",
+      "why": "Engineering lifecycle/checkpoint ideas",
+      "license": "MIT (verified 2026-08-13; reverify exact ref)",
+      "priority": "P2"
+    },
+    {
+      "id": "openspec",
+      "repo": "Fission-AI/OpenSpec",
+      "recommended_action": "STUDY_ONLY",
+      "why": "Requirements-design-tasks-verification traceability concepts",
+      "license": "MIT (verified 2026-08-13; reverify exact ref)",
+      "priority": "P2"
+    },
+    {
+      "id": "context-engineering-skills",
+      "repo": "muratcankoylan/Agent-Skills-for-Context-Engineering",
+      "recommended_action": "STUDY_ONLY_WITH_SECURITY_CAUTION",
+      "why": "Context compression/evaluation/multi-agent patterns; do not execute examples blindly",
+      "license": "MIT (verified 2026-08-13; reverify exact ref)",
+      "priority": "P2"
+    },
+    {
+      "id": "awesome-agent-skills",
+      "repo": "VoltAgent/awesome-agent-skills",
+      "recommended_action": "DISCOVERY_ONLY",
+      "why": "Candidate discovery catalog, not a trust signal",
+      "license": "MIT for catalog repo; each listed skill requires its own license review",
+      "priority": "P3"
+    }
+  ]
+}

@@ -1,0 +1,421 @@
+{
+  "name": "tutoria-agent-os-v2-skills-pack",
+  "generated_at": "2026-08-13",
+  "purpose": "Non-destructive Agent OS expansion with production specialists, Tutoria-native skills, responsibility/authority contracts, and external-skill ingestion controls.",
+  "new_or_expansion_agents": [
+    "context_scout",
+    "database_engineer",
+    "independent_verifier",
+    "integration_engineer",
+    "payments_engineer",
+    "qa_engineer",
+    "reliability_engineer"
+  ],
+  "tutoria_native_skills": [
+    "tutoria-application-services",
+    "tutoria-backend-qa",
+    "tutoria-browser-qa",
+    "tutoria-capacity-concurrency",
+    "tutoria-context-scout",
+    "tutoria-domain-modeling",
+    "tutoria-evidence-map",
+    "tutoria-external-reference",
+    "tutoria-handoff-contract",
+    "tutoria-idempotency-outbox",
+    "tutoria-independent-verification",
+    "tutoria-payment-integration",
+    "tutoria-payment-webhooks",
+    "tutoria-postgres-concurrency",
+    "tutoria-product-policy",
+    "tutoria-production-reliability",
+    "tutoria-requirement-traceability",
+    "tutoria-rls-review",
+    "tutoria-server-authoritative-ui",
+    "tutoria-skill-ingestion",
+    "tutoria-supabase-persistence",
+    "tutoria-task-routing"
+  ],
+  "skill_count": 22,
+  "skill_spec_count": 22,
+  "preserve_live_paths": [
+    "AGENTS.md",
+    ".codex/config.toml",
+    ".agents/skills/tutoria-orchestrator",
+    ".agents/skills/tutoria-security-guard",
+    ".agents/skills/repo-license-guard",
+    "oss/EXTERNAL_SOURCES.json",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "files": [
+    {
+      "path": ".agents/skills/tutoria-application-services/SKILL.md",
+      "sha256": "2774ece0982e830b4acdcdfefa1b6cf96f5227b75d545bc1f60e344053dffe7b",
+      "bytes": 1073
+    },
+    {
+      "path": ".agents/skills/tutoria-application-services/SPEC.md",
+      "sha256": "96bab0af58c77e0a1cfe718bcc0ff4453127761d814b5093675a1e2fbcc42070",
+      "bytes": 934
+    },
+    {
+      "path": ".agents/skills/tutoria-backend-qa/SKILL.md",
+      "sha256": "166d4ca90db2a266fe416e705a5bf63644bbcd477b1e5f8da827b22d178401f2",
+      "bytes": 1110
+    },
+    {
+      "path": ".agents/skills/tutoria-backend-qa/SPEC.md",
+      "sha256": "39aa6da584c18d11c85de63b8646a7381aa5189f4b8eccda2baf83292cc5adac",
+      "bytes": 927
+    },
+    {
+      "path": ".agents/skills/tutoria-browser-qa/SKILL.md",
+      "sha256": "b2ea3b360c280425c11c1d5c09244aad1846ae87ad6238affb37d56649386895",
+      "bytes": 1135
+    },
+    {
+      "path": ".agents/skills/tutoria-browser-qa/SPEC.md",
+      "sha256": "6688b716413b3c013aba5a1e549d0ee4acff5cb9519d5807badeaaf6b052af14",
+      "bytes": 903
+    },
+    {
+      "path": ".agents/skills/tutoria-capacity-concurrency/SKILL.md",
+      "sha256": "4141c88a82b51c5059793dce3dc3f29152215cc5dea24afc671a887bc0a30906",
+      "bytes": 1662
+    },
+    {
+      "path": ".agents/skills/tutoria-capacity-concurrency/SPEC.md",
+      "sha256": "72b33b6f329bf0d9aae49da90609528a7aca5feedac43a1d0e89cf05a9046619",
+      "bytes": 997
+    },
+    {
+      "path": ".agents/skills/tutoria-context-scout/SKILL.md",
+      "sha256": "5b5bd609a01fb4c916313f0077457b355f2fd6ad308b98f6330f798ca71b2b50",
+      "bytes": 1370
+    },
+    {
+      "path": ".agents/skills/tutoria-context-scout/SPEC.md",
+      "sha256": "43e3da902f5f78851e6f07af991c2026ff102c38315e43afa5aa7d6fb48497c5",
+      "bytes": 962
+    },
+    {
+      "path": ".agents/skills/tutoria-domain-modeling/SKILL.md",
+      "sha256": "c0fc6e78b5d1266df16370438dc24c862a3fa2ee053338f0c198e03262c88237",
+      "bytes": 1282
+    },
+    {
+      "path": ".agents/skills/tutoria-domain-modeling/SPEC.md",
+      "sha256": "bcb2737ce3dc97e7a063903f182c0e4f6ec6623e54e89616961e7f90db7e28e6",
+      "bytes": 946
+    },
+    {
+      "path": ".agents/skills/tutoria-evidence-map/SKILL.md",
+      "sha256": "2312dff7490e831b56adceb6b856bfa85484f35489256ef80bc83d394ef6800e",
+      "bytes": 919
+    },
+    {
+      "path": ".agents/skills/tutoria-evidence-map/SPEC.md",
+      "sha256": "90f9e63c1e8f3ae8264545582e87efebd6fa08e507b718511884c57b3d1ba2d3",
+      "bytes": 948
+    },
+    {
+      "path": ".agents/skills/tutoria-external-reference/SKILL.md",
+      "sha256": "d2daff13f6062a0a3e7bb16da83fadb719b5f134c126faeee2f56bdb27c5861d",
+      "bytes": 900
+    },
+    {
+      "path": ".agents/skills/tutoria-external-reference/SPEC.md",
+      "sha256": "106cbd9e1f56c9d7da43488718cf080b72dcb16ef6467d8c44867dd22a457a1c",
+      "bytes": 983
+    },
+    {
+      "path": ".agents/skills/tutoria-handoff-contract/SKILL.md",
+      "sha256": "dd0cf6892b7c831e2dbab9fb57160ea49e5244f20f8ab1bf49369700626b317f",
+      "bytes": 1055
+    },
+    {
+      "path": ".agents/skills/tutoria-handoff-contract/SPEC.md",
+      "sha256": "80bc8efd4fd33a4ef681fa93da0575431ebefa6a02c09ad12e1889e6814bf884",
+      "bytes": 953
+    },
+    {
+      "path": ".agents/skills/tutoria-idempotency-outbox/SKILL.md",
+      "sha256": "28dd2c54ec80970fefb2b0a0f73163339e8938d7728701a01020949240b09498",
+      "bytes": 1113
+    },
+    {
+      "path": ".agents/skills/tutoria-idempotency-outbox/SPEC.md",
+      "sha256": "a73851206f6b38d05d232c2b79506b9d98a8ae4215634d532b0297f1bff71248",
+      "bytes": 969
+    },
+    {
+      "path": ".agents/skills/tutoria-independent-verification/SKILL.md",
+      "sha256": "3f2a77bd73d3df87fea39f6ec925a6254a272b16ab57c2c978dd4fcbec25c7db",
+      "bytes": 1015
+    },
+    {
+      "path": ".agents/skills/tutoria-independent-verification/SPEC.md",
+      "sha256": "7a042a65ad55e35568937a004eb7907915f7da235db50d99286a7e4d484a5369",
+      "bytes": 943
+    },
+    {
+      "path": ".agents/skills/tutoria-payment-integration/SKILL.md",
+      "sha256": "5824274bb854b3e238ab9b2c76604caa5dd2a9a732ba0a6bf28a848858c117d8",
+      "bytes": 1304
+    },
+    {
+      "path": ".agents/skills/tutoria-payment-integration/SPEC.md",
+      "sha256": "8e7dbbb4e66f440dcdf5e6eafb939bc03bb1984687eb6a48fe534a8443913635",
+      "bytes": 987
+    },
+    {
+      "path": ".agents/skills/tutoria-payment-webhooks/SKILL.md",
+      "sha256": "4f0cfc2cf2dacb1aef1e1488eb732377931b04068f909e00b68e73ad3ad92ff7",
+      "bytes": 1070
+    },
+    {
+      "path": ".agents/skills/tutoria-payment-webhooks/SPEC.md",
+      "sha256": "34aa06226f5400ae7758fd39de1e9d9b97231a107eace4772c3c47475fb7e27f",
+      "bytes": 927
+    },
+    {
+      "path": ".agents/skills/tutoria-postgres-concurrency/SKILL.md",
+      "sha256": "1fe46997b60136f7457b84de915de22dbefc5d9a6b7cd21fdb0407c8b1c6f197",
+      "bytes": 1501
+    },
+    {
+      "path": ".agents/skills/tutoria-postgres-concurrency/SPEC.md",
+      "sha256": "93830388d74187c50a34f4fa8ba9c416477c619b2883b9916a2990443acfb258",
+      "bytes": 978
+    },
+    {
+      "path": ".agents/skills/tutoria-product-policy/SKILL.md",
+      "sha256": "d1ae1bff225664cdbd08bb329bd752070d8f43f6a445a943aea7a01073da656e",
+      "bytes": 961
+    },
+    {
+      "path": ".agents/skills/tutoria-product-policy/SPEC.md",
+      "sha256": "4719bbe3919fb3b61bd2542dc978be386f485462bd95a23e8afcc8cdc403f7e4",
+      "bytes": 935
+    },
+    {
+      "path": ".agents/skills/tutoria-production-reliability/SKILL.md",
+      "sha256": "29d6b6d146a13991f0b46e1ed3694675c343b90cf93c0aa6ae74e6b13e1c9283",
+      "bytes": 1064
+    },
+    {
+      "path": ".agents/skills/tutoria-production-reliability/SPEC.md",
+      "sha256": "e1ae24e4684b41f4c89aa5874dd0d20272f3dc65f9002332bcb203198564fe8b",
+      "bytes": 938
+    },
+    {
+      "path": ".agents/skills/tutoria-requirement-traceability/SKILL.md",
+      "sha256": "0b0915513acc15906341c53334cfc7ca149e575ace3245e122279c721657a568",
+      "bytes": 918
+    },
+    {
+      "path": ".agents/skills/tutoria-requirement-traceability/SPEC.md",
+      "sha256": "271e10c3fc7d0e94f13df3fa8071d858fd8e9d2701e61c32cf517f85fa0e4c71",
+      "bytes": 942
+    },
+    {
+      "path": ".agents/skills/tutoria-rls-review/SKILL.md",
+      "sha256": "0ea29e7d7d3857a1a93d5d8996c3eadefac3d2b87b079c2ed3fff2c87e081a38",
+      "bytes": 1078
+    },
+    {
+      "path": ".agents/skills/tutoria-rls-review/SPEC.md",
+      "sha256": "17617a6d4d12e481287a504251b4b7be053819d68ae06a0b6be915774ab3d304",
+      "bytes": 922
+    },
+    {
+      "path": ".agents/skills/tutoria-server-authoritative-ui/SKILL.md",
+      "sha256": "20b22d688432dd476f000353140354a38f314c8b6b2c1c40a67bb1641aea10a3",
+      "bytes": 1049
+    },
+    {
+      "path": ".agents/skills/tutoria-server-authoritative-ui/SPEC.md",
+      "sha256": "cabee701188e9536f70129e4d42a07ced10b702e8b30ab0f37f58cf7c42a74e4",
+      "bytes": 938
+    },
+    {
+      "path": ".agents/skills/tutoria-skill-ingestion/SKILL.md",
+      "sha256": "340dc3217df1a2090d740054ab212de91615e509e378c1c927f22be91e7dca7d",
+      "bytes": 1853
+    },
+    {
+      "path": ".agents/skills/tutoria-skill-ingestion/SPEC.md",
+      "sha256": "8c08760ded9f8b89ab27659af17e6f7b62d5c86c8e3b388a464678345b1798ae",
+      "bytes": 996
+    },
+    {
+      "path": ".agents/skills/tutoria-supabase-persistence/SKILL.md",
+      "sha256": "d1a99df39f617d6c4c952bea5f50e72fc8ed465bac8ad39ab0052c145f72e576",
+      "bytes": 1368
+    },
+    {
+      "path": ".agents/skills/tutoria-supabase-persistence/SPEC.md",
+      "sha256": "957310d76159e1027bece482713e9bab9c0ab6f6bfab8201fa844fc8b4854012",
+      "bytes": 943
+    },
+    {
+      "path": ".agents/skills/tutoria-task-routing/SKILL.md",
+      "sha256": "690ca09525542bd62a0f0823f7e87e87ed31f83b03e45483c7bd6ca32b50ef13",
+      "bytes": 2231
+    },
+    {
+      "path": ".agents/skills/tutoria-task-routing/SPEC.md",
+      "sha256": "cb63db2db8380af974efc77d243acfbd8f96573da5d5bd7c2d1b8495b9e4e10a",
+      "bytes": 988
+    },
+    {
+      "path": ".codex/agents/context-scout.toml",
+      "sha256": "541ccc16aae04b83a7b9b5960d166961ff34550ee71995ce60b6e337c50acf44",
+      "bytes": 2136
+    },
+    {
+      "path": ".codex/agents/database-engineer.toml",
+      "sha256": "6c3df19de551e03f99e06df1a74a5d9c0a687d9ab925f84acd74a2de48d8766e",
+      "bytes": 3319
+    },
+    {
+      "path": ".codex/agents/independent-verifier.toml",
+      "sha256": "24b3b1f72d9645f9e62a2f617515c1a29c9942d5443a147f9738ab5280ef46a7",
+      "bytes": 2235
+    },
+    {
+      "path": ".codex/agents/integration-engineer.toml",
+      "sha256": "65b9a1acede705226c7da57c0096a5c156d967eb7218ecc74114715ab694c1ff",
+      "bytes": 2735
+    },
+    {
+      "path": ".codex/agents/payments-engineer.toml",
+      "sha256": "0e3f26f550c812835ee632492e8ceeb7bcbba3b3aafd8722a720824a1edc3af8",
+      "bytes": 2638
+    },
+    {
+      "path": ".codex/agents/qa-engineer.toml",
+      "sha256": "186c097db0a410f70feadc7f1081221dd0da68edc02d77cb3303e4f83315eb40",
+      "bytes": 2207
+    },
+    {
+      "path": ".codex/agents/reliability-engineer.toml",
+      "sha256": "9e86e87245dbf272faf2f67e5e9883b7fa3930733497aa7f18756a613cd69070",
+      "bytes": 2159
+    },
+    {
+      "path": "BUILD_REPORT.md",
+      "sha256": "4595f57149d95a7d77aecea0aba1238dc8c02e6de6807b52e60752f5ee29d0dc",
+      "bytes": 2490
+    },
+    {
+      "path": "CODEX_PROMPT.md",
+      "sha256": "78abc14ed8dd8c0402172728dbb19e3b85d2c4fa3715f0eb807a0af940640f25",
+      "bytes": 18360
+    },
+    {
+      "path": "README.md",
+      "sha256": "29225d46524edafbd05569064119f6b716790afd87f355e52786d326f03af220",
+      "bytes": 1270
+    },
+    {
+      "path": "START_HERE.md",
+      "sha256": "cbb47a0341c7bbb666b73c8199502300cf1d17992ded92e99c43e190fad2acfd",
+      "bytes": 934
+    },
+    {
+      "path": "docs/agent-team/AGENTS_MD_PATCH.md",
+      "sha256": "8bf9c31cc812fc0e5be843da50d641df98643d367eba4767ee11e4f124d3ac28",
+      "bytes": 4046
+    },
+    {
+      "path": "docs/agent-team/AGENT_AUTHORITY_MATRIX_V2.md",
+      "sha256": "42dff7274cc58701624500881d8b144b5b47984908c1f80e8b3b696aab51bc44",
+      "bytes": 1527
+    },
+    {
+      "path": "docs/agent-team/AGENT_HANDOFF_CONTRACTS_V2.md",
+      "sha256": "980475af0ee2fa19b7f36de2d93cdd069d8117ea64196e8a190b6baa1bfa9d70",
+      "bytes": 2073
+    },
+    {
+      "path": "docs/agent-team/AGENT_RESPONSIBILITY_SKILL_MATRIX_V2.md",
+      "sha256": "333fb611c4256dac002a9bb457e95d72cbaf32d8f52e0a0dc28521e37e24a875",
+      "bytes": 2807
+    },
+    {
+      "path": "docs/agent-team/AGENT_ROUTING_MATRIX_V2.md",
+      "sha256": "24132b347cbae5d09d5b8647fae9790e6a5b88afac832f5bdcf16bb25504d3cf",
+      "bytes": 2899
+    },
+    {
+      "path": "docs/agent-team/AGENT_SKILL_BINDINGS_PATCH.md",
+      "sha256": "b3e23c81e27f17b81c177180fdee598e65414c5bd66bcd2b46438279cd3c1a70",
+      "bytes": 1945
+    },
+    {
+      "path": "docs/agent-team/AGENT_SKILL_PHASE_ACTIVATION_V2.md",
+      "sha256": "75bd44a1942f64327b774084c7ce352e0a044a6545175e29ff8057c48602a735",
+      "bytes": 1589
+    },
+    {
+      "path": "docs/agent-team/AGENT_TEAM_V2_EXPANSION.md",
+      "sha256": "0fcf228cae9c7421e8e86fcea8106c7462b2b438e6088555d008179f232fbbbb",
+      "bytes": 3574
+    },
+    {
+      "path": "docs/agent-team/CODEX_INTEGRATION_PROMPT.md",
+      "sha256": "78abc14ed8dd8c0402172728dbb19e3b85d2c4fa3715f0eb807a0af940640f25",
+      "bytes": 18360
+    },
+    {
+      "path": "docs/agent-team/EXTERNAL_AGENT_SKILL_ADOPTION_PLAN.md",
+      "sha256": "df28187004816ee3a70a925bcf91f2ed8451e2d56113aa8688e7515f7c7cebf0",
+      "bytes": 1420
+    },
+    {
+      "path": "docs/agent-team/EXTERNAL_SKILL_RESEARCH_SNAPSHOT_2026-08-13.md",
+      "sha256": "1b79acabd3916757a3f3f4b3306c18ff0e08f250b27a768f90c4ee2e1fe4fe99",
+      "bytes": 4553
+    },
+    {
+      "path": "docs/agent-team/MODEL_AND_COST_POLICY_V2.md",
+      "sha256": "39bda6a249a0412e0fbefa677a33299379c2d005bcb2637b0f259e36dc30ce66",
+      "bytes": 1340
+    },
+    {
+      "path": "docs/agent-team/PRODUCTION_PHASE_GATES.md",
+      "sha256": "f318f2bffe4e172b71d63e22d9791c14b62f86e57c6c1c3dacce680d1ad1e83c",
+      "bytes": 2829
+    },
+    {
+      "path": "docs/agent-team/TEAM_TO_END_PRODUCT_MAP.md",
+      "sha256": "4555bb273107f7fd166015cfdd3b89cd48d6cddf784431741caeeaf5c84a5f0e",
+      "bytes": 1263
+    },
+    {
+      "path": "docs/agent-team/TUTORIA_ORCHESTRATOR_PATCH.md",
+      "sha256": "1ed24eed401d616d0b601504feec7e28a9ea4a0ad073e4f6dec1e9e06f167fdc",
+      "bytes": 2547
+    },
+    {
+      "path": "install-agent-os-v2-skills.sh",
+      "sha256": "8d0037f81fdd0abd60b6eff3d2ebb005fee834e71a4b35f1892baca02e33a404",
+      "bytes": 2118
+    },
+    {
+      "path": "oss/AGENT_SKILL_CANDIDATES.json",
+      "sha256": "d5d495abc556091af0725883c7a99a91e8d004f178b4bc839fbd9a525c1202fd",
+      "bytes": 5163
+    },
+    {
+      "path": "scripts/validate-agent-os-v2-pack.py",
+      "sha256": "189d3b5c96fd6639719ecbce19c5884e53615ab7ccdf36ac5ea67958962e6c81",
+      "bytes": 5744
+    },
+    {
+      "path": "tests/test_agent_os_v2_pack.py",
+      "sha256": "df4d0d4fc8b8b0632fb60c9555c06c8e21c38a8c7c961c8567129903cdd0a1e5",
+      "bytes": 798
+    }
+  ]
+}
