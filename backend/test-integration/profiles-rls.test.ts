@@ -27,7 +27,7 @@ describe.sequential("local profiles RLS", () => {
     const migration = await readFile(fileURLToPath(new URL("../supabase/migrations/0001_create_profiles.sql", import.meta.url)), "utf8");
     await sql.unsafe(migration); await sql.unsafe(migration);
   });
-  it("blocks anonymous reads", async () => { const { data } = await anon.from("profiles").select("id"); expect(data).toEqual([]); });
+  it("blocks anonymous reads", async () => { const { data, error } = await anon.from("profiles").select("id"); expect(error).toBeTruthy(); expect(data).toBeNull(); });
   it.each([["student", "student"], ["tutor", "tutor"], ["admin", "student"], ["unknown", "student"], [undefined, "student"]] as const)("maps signup role %s to %s", async (input, expected) => { const { user, client } = await signup(input); const { data } = await client.from("profiles").select("id,role").eq("id", user.id).single(); expect(data).toEqual({ id: user.id, role: expected }); });
   it("uses a capped fallback name", async () => { const { user, client } = await signup("student", " "); const { data } = await client.from("profiles").select("name").eq("id", user.id).single(); expect(data?.name).toBeTruthy(); expect(data!.name.length).toBeLessThanOrEqual(120); });
   it("allows only the owner row and denies all mutations", async () => {
