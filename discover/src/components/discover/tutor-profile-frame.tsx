@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TutorProfileSkeleton } from "./tutor-profile-skeleton";
 import { isLiveMode } from "@/lib/auth/config";
 import { getTutor, isPublicTutorUuid, listTutors, type PublicTutorDetail } from "@/lib/tutor-cv-api";
+import { BookingApiError, createBooking, listBookableSessions } from "@/lib/booking-api";
 
 interface TutorProfileFrameProps {
   name: string;
@@ -97,6 +98,7 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
           if (label && !learnerLevels.includes(label)) learnerLevels.push(label);
         });
         const frameProfile = {
+          id: detail.id,
           name: displayName,
           role: "Independent tutor",
           tagline: detail.headline || "A tutor on Tutoria.",
@@ -142,6 +144,31 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
   }, [live, decodedName]);
 
   const readyName = state.status === "ready" ? state.frameName : null;
+
+  useEffect(() => {
+    if (!live) return;
+    const onBookingMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.source !== frameRef.current?.contentWindow) return;
+      const data = event.data as { type?: unknown; requestId?: unknown; tutorProfileId?: unknown; sessionId?: unknown; participantCount?: unknown } | null;
+      if (!data || typeof data.requestId !== "string") return;
+      const respond = (payload: Record<string, unknown>) => {
+        frameRef.current?.contentWindow?.postMessage({ ...payload, requestId: data.requestId }, window.location.origin);
+      };
+      if (data.type === "tutoria-booking-load-sessions" && typeof data.tutorProfileId === "string") {
+        void listBookableSessions(data.tutorProfileId)
+          .then((sessions) => respond({ type: "tutoria-booking-sessions", sessions }))
+          .catch((error: unknown) => respond({ type: "tutoria-booking-error", code: error instanceof BookingApiError ? error.code : "BOOKING_SERVICE_UNAVAILABLE" }));
+      }
+      if (data.type === "tutoria-booking-create" && typeof data.sessionId === "string") {
+        void createBooking(data.sessionId, typeof data.participantCount === "number" ? data.participantCount : 1)
+          .then((booking) => respond({ type: "tutoria-booking-created", booking }))
+          .catch((error: unknown) => respond({ type: "tutoria-booking-error", code: error instanceof BookingApiError ? error.code : "BOOKING_SERVICE_UNAVAILABLE" }));
+      }
+    };
+    window.addEventListener("message", onBookingMessage);
+    return () => window.removeEventListener("message", onBookingMessage);
+  }, [live]);
 
   useEffect(() => {
     const onReady = (event: MessageEvent) => {

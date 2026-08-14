@@ -78,7 +78,7 @@ const revealTutorProfile = () => {
       return null;
     }
   })();
-  const serverProfile = await fetch("/api/tutors")
+  const serverProfile = liveProfile ? null : await fetch("/api/tutors")
     .then((response) => response.ok ? response.json() : { tutors: [] })
     .then((payload) => {
       const submission = Array.isArray(payload.tutors)
