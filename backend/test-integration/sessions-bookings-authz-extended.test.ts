@@ -30,7 +30,7 @@ async function createSession(tutor: { client: SupabaseClient }, o: Record<string
 
 describe.sequential("sessions + bookings extended authorization", () => {
   beforeAll(async () => {
-    for (const n of ["0001_create_profiles.sql", "0004_create_sessions_and_bookings.sql", "0005_create_booking_session_rpcs.sql"]) {
+    for (const n of ["0001_create_profiles.sql", "0004_create_sessions_and_bookings.sql", "0005_create_booking_session_rpcs.sql", "0006_create_event_outbox.sql", "0007_emit_domain_events_from_booking_session_rpcs.sql"]) {
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
       await sql.unsafe(m);
     }
