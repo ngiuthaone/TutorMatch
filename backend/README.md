@@ -14,7 +14,7 @@ pnpm dev
 
 Create a separate development project at Supabase. In **Project Settings → API**, copy the project URL and publishable key (the legacy anon key is also a low-privilege project key when publishable keys are unavailable) into `.env`. No service-role or secret key is used or required. Never place privileged keys in frontend code, commit `.env`, print keys, or reuse a development project for production.
 
-Apply both [`supabase/migrations/0001_create_profiles.sql`](supabase/migrations/0001_create_profiles.sql) and [`supabase/migrations/0002_create_tutor_cvs.sql`](supabase/migrations/0002_create_tutor_cvs.sql) in order, or use a linked/local Supabase CLI project:
+Apply all migrations in [`supabase/migrations`](supabase/migrations) in order, including [`0003_create_marketplace_listings.sql`](supabase/migrations/0003_create_marketplace_listings.sql), or use a linked/local Supabase CLI project:
 
 ```bash
 supabase db push
