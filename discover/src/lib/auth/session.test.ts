@@ -197,7 +197,7 @@ describe("ensureSession", () => {
 });
 
 describe("signUpWithPassword", () => {
-  it("writes only display_name as sign-up metadata and reports email confirmation", async () => {
+  it("writes compatible name + display_name sign-up metadata (no role) and reports email confirmation", async () => {
     const { signUpWithPassword, getSessionSnapshot } = await loadSession();
     signUpMock.mockResolvedValue({ data: { session: null }, error: null });
 
@@ -207,11 +207,30 @@ describe("signUpWithPassword", () => {
       expect.objectContaining({
         email: "new@example.com",
         password: "password-123",
-        options: expect.objectContaining({ data: { display_name: "New User" } }),
+        options: expect.objectContaining({
+          data: { name: "New User", display_name: "New User" },
+        }),
       }),
     );
+    // Neither metadata field may carry role/authorization authority.
+    const metadata = signUpMock.mock.calls[0][0].options.data;
+    expect(metadata.name).toBe("New User");
+    expect(metadata.display_name).toBe("New User");
+    expect(metadata).not.toHaveProperty("role");
     expect(result.needsConfirmation).toBe(true);
     expect(getSessionSnapshot().status).toBe("initializing");
+  });
+
+  it("trims whitespace into both name keys; empty input stays empty (frozen trigger falls back to email local-part)", async () => {
+    const { signUpWithPassword } = await loadSession();
+    signUpMock.mockResolvedValue({ data: { session: null }, error: null });
+
+    await signUpWithPassword("new@example.com", "password-123", "  Ada Nguyen  ");
+    expect(signUpMock.mock.calls[0][0].options.data).toEqual({ name: "Ada Nguyen", display_name: "Ada Nguyen" });
+
+    signUpMock.mockClear();
+    await signUpWithPassword("new@example.com", "password-123", "   ");
+    expect(signUpMock.mock.calls[0][0].options.data).toEqual({ name: "", display_name: "" });
   });
 
   it("synchronizes immediately when sign-up returns a session", async () => {

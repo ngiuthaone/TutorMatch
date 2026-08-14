@@ -146,7 +146,12 @@ export async function signUpWithPassword(email: string, password: string, name: 
   const { data, error } = await client.auth.signUp({
     email,
     password,
-    options: { data: { display_name: name.trim() }, emailRedirectTo: getAuthCallbackUrl() || undefined },
+    options: {
+      // `name` satisfies the frozen profiles trigger (0001 reads raw_user_meta_data->>'name');
+      // `display_name` is retained for Discover vocabulary. Neither is authorization authority.
+      data: { name: name.trim(), display_name: name.trim() },
+      emailRedirectTo: getAuthCallbackUrl() || undefined,
+    },
   });
   if (error) throw mapAuthError(error);
   const needsConfirmation = !data.session;
