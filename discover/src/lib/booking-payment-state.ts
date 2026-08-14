@@ -10,6 +10,21 @@ export function canStartPayment(booking: BookingRecord): boolean {
   return booking.status === "requested" && booking.paymentReady === true && booking.paymentRetryAllowed !== false && bookingAmount(booking) !== null;
 }
 
+export function bookingApprovalLabel(booking: BookingRecord): string {
+  return booking.paymentReady || booking.status === "confirmed" ? "Tutor accepted" : "Waiting for tutor approval";
+}
+
+export function bookingPaymentLabel(booking: BookingRecord): string {
+  if (booking.status === "confirmed" && booking.payment?.status === "succeeded") return "Paid";
+  return booking.paymentReady ? "Required" : "Not available yet";
+}
+
+export function bookingTitle(booking: BookingRecord): string {
+  const accepted = booking.paymentReady || booking.status === "confirmed";
+  const confirmed = booking.status === "confirmed" && booking.payment?.status === "succeeded";
+  return confirmed ? "Payment complete" : accepted ? `${booking.tutor.displayName} accepted your request` : `Lesson with ${booking.tutor.displayName}`;
+}
+
 export function paymentReturnState(booking: BookingRecord): PaymentReturnState {
   if (booking.status === "confirmed" && booking.payment?.status === "succeeded") return "success";
   if (booking.payment?.status === "succeeded" && booking.status !== "confirmed") return "compensation";

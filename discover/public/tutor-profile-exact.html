@@ -1852,14 +1852,14 @@
 
   <!-- Booking flow -->
   <div id="bookingModal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/70 p-3 sm:p-6">
-    <div class="booking-drawer flex h-[min(94vh,900px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[26px] border border-line bg-[#151517] shadow-soft sm:rounded-[28px]">
-      <header class="flex shrink-0 items-center justify-between gap-4 border-b border-line px-5 py-4 sm:px-7">
+    <div class="booking-drawer flex h-[min(820px,calc(100vh-28px))] w-full max-w-[1135px] flex-col overflow-hidden rounded-[28px] border border-white/[0.13] bg-[#171717] shadow-[0_28px_100px_rgba(0,0,0,.62)]">
+      <header class="flex h-[78px] shrink-0 items-center justify-between gap-5 border-b border-white/[0.12] px-5 sm:px-7">
         <div class="flex min-w-0 items-center gap-3">
           <button id="closeModal" class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line transition hover:border-ink" aria-label="Close booking">
             <i data-lucide="x" class="h-4 w-4"></i>
           </button>
           <div class="min-w-0">
-            <p id="bookingKindLabel" class="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Book a lesson</p>
+            <p id="bookingKindLabel" class="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50">Book a lesson</p>
             <h3 class="truncate text-lg font-semibold">Thu Ha</h3>
           </div>
         </div>
@@ -1872,12 +1872,12 @@
           <span class="h-px w-6 bg-line"></span>
           <button class="booking-progress flex items-center gap-2 text-xs font-semibold" data-step="2">
             <span class="booking-progress-number grid h-7 w-7 place-items-center rounded-full border border-line">2</span>
-            Review
+            Review request
           </button>
         </div>
       </header>
 
-      <div class="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div class="grid min-h-0 flex-1 lg:grid-cols-[72%_28%]">
         <main class="min-h-0 overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
           <!-- Step 1 -->
           <section id="bookingStep1" class="booking-panel active">
@@ -1892,13 +1892,13 @@
                 <span class="block text-sm font-semibold">One lesson</span>
                 <span class="mt-1 block text-xs text-muted">One time</span>
               </button>
-              <button class="booking-mode-option rounded-xl border border-transparent px-4 py-3 text-left" data-mode="weekly">
+              <button disabled aria-disabled="true" class="booking-mode-option cursor-not-allowed rounded-xl border border-transparent px-4 py-3 text-left opacity-50" data-mode="weekly">
                 <span class="block text-sm font-semibold">Weekly schedule</span>
-                <span class="mt-1 block text-xs text-muted">Repeats each week</span>
+                <span class="mt-1 block text-xs text-muted">Coming soon</span>
               </button>
-              <button class="booking-mode-option rounded-xl border border-transparent px-4 py-3 text-left" data-mode="dates">
+              <button disabled aria-disabled="true" class="booking-mode-option cursor-not-allowed rounded-xl border border-transparent px-4 py-3 text-left opacity-50" data-mode="dates">
                 <span class="block text-sm font-semibold">Pick dates</span>
-                <span class="mt-1 block text-xs text-muted">No repetition</span>
+                <span class="mt-1 block text-xs text-muted">Coming soon</span>
               </button>
             </div>
 
@@ -1917,10 +1917,10 @@
                     <div>
                       <p class="text-xs font-semibold text-muted">Duration</p>
                       <div class="mt-2 grid grid-cols-4 gap-2">
-                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-center text-xs font-semibold" data-duration="30 minutes">30 min</button>
-                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-center text-xs font-semibold" data-duration="50 minutes">50 min</button>
-                        <button class="starting-duration selected rounded-xl border border-line px-2 py-2.5 text-center text-xs font-semibold" data-duration="60 minutes">60 min</button>
-                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-center text-xs font-semibold" data-duration="90 minutes">90 min</button>
+                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="30 minutes"><span class="block">30 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
+                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="50 minutes"><span class="block">50 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
+                        <button class="starting-duration selected rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="60 minutes"><span class="block">60 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
+                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="90 minutes"><span class="block">90 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
                       </div>
                     </div>
 
@@ -2043,7 +2043,7 @@
               <div id="mobileSessionList" class="mt-2 divide-y divide-line"><p class="py-3 text-sm text-muted">No sessions selected yet.</p></div>
             </div>
 
-            <section id="sessionCustomization" class="mt-10 border-t border-line pt-8">
+            <section id="sessionCustomization" class="hidden mt-10 border-t border-line pt-8">
               <div class="max-w-2xl">
                 <div class="flex items-start gap-3">
                   <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white"><i data-lucide="sliders-horizontal" class="h-4 w-4"></i></span>
@@ -2096,8 +2096,8 @@
           <section id="bookingStep2" class="booking-panel">
             <div class="max-w-2xl">
               <p class="text-xs font-semibold uppercase tracking-[0.15em] text-muted">Step 2 of 2</p>
-              <h4 class="mt-2 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">Review booking request</h4>
-              <p class="mt-2 text-sm leading-6 text-muted">Review your selected Session before sending the request.</p>
+              <h4 class="mt-2 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">Review your request</h4>
+              <p class="mt-2 text-sm leading-6 text-muted">Check your session details before sending your request.</p>
             </div>
 
             <div class="mt-8 overflow-hidden rounded-[22px] border border-line bg-white">
@@ -2113,11 +2113,12 @@
 
               <section class="review-section p-5 sm:p-6">
                 <p class="text-xs font-semibold uppercase tracking-[0.13em] text-muted">Price</p>
-                <div class="mt-4 space-y-3 text-sm">
-                  <div class="flex items-center justify-between gap-4"><span class="text-muted">Selected lessons</span><span id="reviewLessonQuantity">1</span></div>
-                  <div class="flex items-center justify-between gap-4 border-t border-line pt-4"><span class="font-semibold">Price</span><span id="reviewTotal" class="text-lg font-semibold">300.000 đ</span></div>
+                  <div class="mt-4 space-y-3 text-sm">
+                    <div class="flex items-center justify-between gap-4"><span class="text-muted">Selected lessons</span><span id="reviewLessonQuantity">1</span></div>
+                  <div class="flex items-center justify-between gap-4"><span class="text-muted">Tutoria fee</span><span>Included</span></div>
+                  <div class="flex items-center justify-between gap-4 border-t border-line pt-4"><span class="font-semibold">Estimated total</span><span id="reviewTotal" class="text-lg font-semibold">300.000 đ</span></div>
                 </div>
-                <p id="reviewChargeNote" class="mt-4 text-xs leading-5 text-muted">You’ll pay after the tutor accepts your request.</p>
+                <p id="reviewChargeNote" class="mt-4 rounded-xl border border-line bg-canvas p-4 text-xs leading-5 text-muted">You won't be charged yet. Payment becomes available after the tutor accepts your request.</p>
               </section>
             </div>
 
@@ -2128,17 +2129,17 @@
             <div class="mx-auto max-w-xl py-8 text-center sm:py-16">
               <span class="mx-auto grid h-16 w-16 place-items-center rounded-full border border-line bg-white"><i data-lucide="check" class="h-7 w-7"></i></span>
               <p class="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-muted">Request sent</p>
-              <h4 class="mt-2 text-3xl font-semibold tracking-[-0.03em]">Your request is waiting for tutor approval.</h4>
+              <h4 id="bookingRequestSentTitle" class="mt-2 text-3xl font-semibold tracking-[-0.03em]">Your booking request has been sent to Thu Ha.</h4>
               <p id="successDateTime" class="mt-4 text-sm text-neutral-700"></p>
               <div class="mx-auto mt-8 max-w-md divide-y divide-line rounded-[22px] border border-line bg-white px-5 text-left">
                 <div class="flex items-center justify-between gap-5 py-4"><span class="text-sm text-muted">Plan</span><span id="successLesson" class="text-right text-sm font-semibold"></span></div>
                 <div class="flex items-center justify-between gap-5 py-4"><span class="text-sm text-muted">Price</span><span id="successPrice" class="text-sm font-semibold"></span></div>
               </div>
               <div class="mt-7 grid gap-3 sm:grid-cols-2">
-                <button class="rounded-xl border border-line px-5 py-3 text-sm font-semibold transition hover:border-ink"><span class="inline-flex items-center gap-2"><i data-lucide="calendar-plus" class="h-4 w-4"></i>Add to calendar</span></button>
+                <a href="/bookings" target="_top" class="rounded-xl border border-line px-5 py-3 text-center text-sm font-semibold transition hover:border-ink">View booking</a>
                 <button class="rounded-xl border border-line px-5 py-3 text-sm font-semibold transition hover:border-ink"><span class="inline-flex items-center gap-2"><i data-lucide="message-circle" class="h-4 w-4"></i>Message Thu</span></button>
               </div>
-              <button id="doneBooking" class="primary-action mt-3 w-full rounded-xl px-5 py-3.5 text-sm font-semibold">Done</button>
+              <button id="doneBooking" class="mt-3 w-full rounded-xl border border-line px-5 py-3.5 text-sm font-semibold transition hover:border-ink">Back to profile</button>
             </div>
           </section>
         </main>
@@ -2146,11 +2147,11 @@
         <aside id="bookingSummary" class="hidden min-h-0 overflow-y-auto border-l border-line bg-canvas p-6 lg:block">
           <div class="flex items-center gap-3 border-b border-line pb-5">
             <img class="h-12 w-12 rounded-xl object-cover" src="https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=160&q=80" alt="Thu Ha" />
-            <div><p class="font-semibold">Thu Ha</p><p class="mt-1 text-xs text-muted">Cooking instructor · 4.9</p></div>
+            <div><p id="bookingSummaryTutorName" class="font-semibold">Thu Ha</p><p id="bookingSummaryTutorMeta" class="mt-1 text-xs text-muted">Cooking instructor · 4.9</p></div>
           </div>
 
           <div class="py-6">
-            <div class="flex items-center justify-between gap-3"><p class="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Your sessions</p><span id="summarySessionCount" class="text-xs text-muted">0 sessions</span></div>
+            <div class="flex items-center justify-between gap-3"><p class="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Your session</p><span id="summarySessionCount" class="text-xs text-muted">0 sessions</span></div>
             <div id="summarySessionList" class="mt-3 divide-y divide-line"><p class="py-4 text-sm text-muted">Select a date and time.</p></div>
           </div>
 
@@ -2162,8 +2163,8 @@
           <div class="border-t border-line pt-5">
             <div class="flex items-center justify-between gap-4 text-sm"><span class="text-muted">Selected sessions</span><span id="summarySubtotal">0 đ</span></div>
             <div class="mt-3 flex items-center justify-between gap-4 text-sm"><span class="text-muted">Number of lessons</span><span id="summaryLessonQuantity">0</span></div>
-            <div class="mt-5 flex items-center justify-between gap-4 border-t border-line pt-5"><span class="font-semibold">Total</span><span id="summaryTotal" class="text-lg font-semibold">0 đ</span></div>
-            <p id="summaryChargeNote" class="mt-2 text-xs leading-5 text-muted">You’ll review the total before payment.</p>
+            <div class="mt-5 flex items-center justify-between gap-4 border-t border-line pt-5"><span class="font-semibold">Estimated total</span><span id="summaryTotal" class="text-lg font-semibold">0 đ</span></div>
+            <p id="summaryChargeNote" class="mt-2 text-xs leading-5 text-muted">No payment is due yet.</p>
           </div>
         </aside>
       </div>
@@ -2790,6 +2791,15 @@
       document.getElementById("summaryStartingSetup").textContent = setupLabel;
       document.getElementById("startingSetup").classList.toggle("hidden", flowKind === "Consultation");
       updateTimeRanges();
+      updateAuthoritativeDurationPrices();
+    }
+
+    function updateAuthoritativeDurationPrices() {
+      const prices = new Map(authoritativeSessions.map(session => [session.duration, session.price]));
+      document.querySelectorAll(".starting-duration").forEach(button => {
+        const price = button.querySelector(".duration-price");
+        if (price) price.textContent = prices.get(button.dataset.duration) || "Not available";
+      });
     }
 
     function updateTimeRanges() {
@@ -2971,7 +2981,8 @@
 
       document.getElementById("reviewLessonQuantity").textContent = lessonQuantity();
       document.getElementById("reviewTotal").textContent = formatVnd(totalBookingValue());
-      document.getElementById("reviewChargeNote").textContent = "You’ll pay after the tutor accepts your request.";
+      const tutorName = activeTutorProfile?.name || "the tutor";
+      document.getElementById("reviewChargeNote").textContent = `You won't be charged yet. Payment becomes available after ${tutorName} accepts your request.`;
     }
 
     function renderAll() {
@@ -2979,7 +2990,7 @@
       updateModeUI();
       updateDateAndTimeUI();
 
-      document.getElementById("sessionCustomization").classList.toggle("hidden", selectedSessions.length === 0);
+      document.getElementById("sessionCustomization").classList.add("hidden");
       renderCompactSessionList(document.getElementById("summarySessionList"), true);
       renderCompactSessionList(document.getElementById("mobileSessionList"), false);
       document.getElementById("summarySessionCount").textContent = `${selectedSessions.length} ${selectedSessions.length === 1 ? "session" : "sessions"}`;
@@ -2988,7 +2999,7 @@
       document.getElementById("summarySubtotal").textContent = formatVnd(weeklySubtotal());
       document.getElementById("summaryLessonQuantity").textContent = lessonQuantity();
       document.getElementById("summaryTotal").textContent = formatVnd(totalBookingValue());
-      document.getElementById("summaryChargeNote").textContent = "The server confirms the final price when you send your request.";
+      document.getElementById("summaryChargeNote").textContent = "No payment is due yet.";
       document.getElementById("mobileCustomizeTotal").textContent = formatVnd(totalBookingValue());
       document.getElementById("mobileCustomizePlan").textContent = planLabel();
 
@@ -3006,7 +3017,7 @@
       backButton.classList.toggle("invisible", currentBookingStep === 1);
 
       if (currentBookingStep === 1) {
-        nextButton.textContent = "Review booking";
+        nextButton.textContent = "Review request";
         nextButton.disabled = !(isStepOneComplete() && isStepTwoComplete());
         if (!selectedSessions.length) footerSelection.textContent = "Select a time to continue";
         else if (flowMode === "weekly" && selectedSessions.length < sessionsPerWeek) footerSelection.textContent = `${selectedSessions.length} of ${sessionsPerWeek} weekly sessions selected`;
@@ -3217,8 +3228,7 @@
       flowPrice = price;
       flowFormat = selectedFormat;
       flowMode = "single";
-      document.querySelectorAll(".booking-mode-option").forEach(button => { if (button.dataset.mode !== "single") button.remove(); });
-      document.getElementById("bookingModeSection")?.classList.add("sm:grid-cols-1");
+      document.getElementById("bookingModeSection")?.classList.remove("sm:grid-cols-1");
       flowFormat = "Online";
       const formatSelect = document.getElementById("startingFormat");
       if (formatSelect) { formatSelect.value = "Online"; formatSelect.disabled = true; }
