@@ -196,3 +196,33 @@ body.tutoria-cosmos .auth-page .auth-heading h1 {
   .auth-page .auth-heading { margin-block: 1.75rem; }
   body.tutoria-cosmos .auth-page .auth-heading h1 { font-size: 1.75rem; }
 }
+
+.auth-page .auth-inline-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #d4d4d4;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.auth-page .auth-social-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  color: #777777;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.auth-page .auth-success-inline {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: #4ade80;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8125rem;
+}

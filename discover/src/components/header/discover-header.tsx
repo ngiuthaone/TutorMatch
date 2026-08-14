@@ -6,6 +6,7 @@ import { IconMenu2, IconX, IconBell } from "@tabler/icons-react";
 import { GlobalNavigation } from "./global-navigation";
 import { UserMenu } from "./user-menu";
 import { MobileNavigation } from "./mobile-navigation";
+import { getLiveIdentity, subscribeToIdentity } from "@/lib/auth/identity";
 import type { HeaderUser } from "./types";
 import styles from "./tutoria-navigation.module.css";
 
@@ -44,8 +45,16 @@ export function DiscoverHeader({ user: userProp }: DiscoverHeaderProps) {
     getSignupSnapshot,
     getServerSignupSnapshot,
   );
+  const liveIdentity = useSyncExternalStore(
+    subscribeToIdentity,
+    getLiveIdentity,
+    () => null,
+  );
   const storedUser = useMemo(() => parseStoredUser(storedSignup), [storedSignup]);
-  const user = userProp !== undefined ? userProp : storedUser;
+  const liveUser: HeaderUser | null = liveIdentity
+    ? { id: liveIdentity.id, name: liveIdentity.name, avatarUrl: liveIdentity.avatarUrl, isCreator: liveIdentity.role === "tutor" }
+    : null;
+  const user = userProp !== undefined ? userProp : (liveUser ?? storedUser);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
   const lastScrollY = useRef(0);

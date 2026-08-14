@@ -6,7 +6,7 @@ This milestone adds browser identity and session handling only. Marketplace prof
 
 `config.js` is public runtime configuration. Copy `config.example.js` and set exact values for each deployment. The Supabase publishable key is designed for browser use and cannot bypass RLS; it is not authorization. Never add a service-role/secret key, database password, JWT secret, or SMTP credential to browser configuration.
 
-Production and staging must use HTTPS and set `demoMode: false`. Explicit local demo mode may set `demoMode: true`; only that mode may load `/api/state`, seeded users, or legacy local state. A production configuration or provider failure fails closed and never activates demo mode.
+Production and staging must use HTTPS and set `demoMode: false`. Explicit local demo mode may set `demoMode: true`; only that mode may load seeded users or browser-local sample state. The retired `/api/state` endpoint is unavailable in every mode. A production configuration or provider failure fails closed and never activates demo mode.
 
 ```js
 window.TUTORIA_CONFIG = Object.freeze({
