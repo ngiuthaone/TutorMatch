@@ -24,6 +24,8 @@ describe.sequential("core 1:1 API read-model RPCs", () => {
   beforeAll(async () => {
     const migration = await readFile(fileURLToPath(new URL("../supabase/migrations/20260814073312_core_1to1_api_read_models.sql", import.meta.url)), "utf8");
     await sql.unsafe(migration);
+    const tutorIdentityMigration = await readFile(fileURLToPath(new URL("../supabase/migrations/20260814153000_booking_read_model_tutor_identity.sql", import.meta.url)), "utf8");
+    await sql.unsafe(tutorIdentityMigration);
   });
 
   it("exposes bookable availability and product-level booking/payment capabilities", async () => {
@@ -40,15 +42,16 @@ describe.sequential("core 1:1 API read-model RPCs", () => {
     expect(booking.error).toBeNull();
     const learnerRead = await learner.client.rpc("get_booking", { bid: booking.data.id });
     expect(learnerRead.error).toBeNull();
-    expect(learnerRead.data).toMatchObject({ status: "requested", paymentRequired: true, paymentReady: false, canLearnerCancel: true });
+    expect(learnerRead.data).toMatchObject({ status: "requested", paymentRequired: true, paymentReady: false, canLearnerCancel: true, tutor: { id: profile[0].id, displayName: "Read Model Tutor" } });
     expect(learnerRead.data).not.toHaveProperty("learnerId");
+    expect(JSON.stringify(learnerRead.data)).not.toMatch(/email|phone|auth|user_id|private/i);
     const tutorList = await tutor.client.rpc("get_my_tutor_bookings");
     expect(tutorList.error).toBeNull();
     expect(tutorList.data[0].id).toBe(booking.data.id);
     const approved = await tutor.client.rpc("approve_booking_for_payment", { p_booking_id: booking.data.id });
     expect(approved.error).toBeNull();
     const ready = await learner.client.rpc("get_booking", { bid: booking.data.id });
-    expect(ready.data).toMatchObject({ paymentReady: true, payment: null, canTutorAccept: false });
+    expect(ready.data).toMatchObject({ paymentReady: true, payment: null, canTutorAccept: false, tutor: { id: profile[0].id, displayName: "Read Model Tutor" } });
     expect((await publicAnon.rpc("get_my_tutor_bookings")).error).toBeTruthy();
   });
 });

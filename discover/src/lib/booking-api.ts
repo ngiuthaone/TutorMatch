@@ -47,6 +47,10 @@ export interface BookingRecord {
   updatedAt: string;
   pricing: BookingPricing | null;
   session: BookableSession;
+  tutor: {
+    id: string;
+    displayName: string;
+  };
   paymentRequired?: boolean;
   paymentReady?: boolean;
   paymentRetryAllowed?: boolean;
@@ -92,7 +96,7 @@ function sessionFrom(value: unknown): BookableSession {
 
 function bookingFrom(value: unknown): BookingRecord {
   const booking = value as Partial<BookingRecord> | null;
-  if (!booking || typeof booking.id !== "string" || typeof booking.sessionId !== "string" || typeof booking.status !== "string" || !booking.session) {
+  if (!booking || typeof booking.id !== "string" || typeof booking.sessionId !== "string" || typeof booking.status !== "string" || !booking.session || !booking.tutor || typeof booking.tutor.id !== "string" || typeof booking.tutor.displayName !== "string") {
     throw new BookingApiError("INVALID_RESPONSE", 500);
   }
   return booking as BookingRecord;

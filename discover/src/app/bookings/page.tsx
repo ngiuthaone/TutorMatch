@@ -5,7 +5,7 @@ import { isLiveMode } from "@/lib/auth/config";
 import { ensureSession, useSession } from "@/lib/auth/session";
 import { getLearnerBooking, listLearnerBookings, type BookingRecord } from "@/lib/booking-api";
 import { PaymentApiError, startPayment } from "@/lib/payment-api";
-import { bookingAmount, canStartPayment } from "@/lib/booking-payment-state";
+import { bookingAmount, bookingApprovalLabel, bookingPaymentLabel, bookingTitle, canStartPayment } from "@/lib/booking-payment-state";
 
 function formatMoney(amount: number): string {
   return `${new Intl.NumberFormat("vi-VN").format(amount)}₫`;
@@ -19,14 +19,6 @@ function formatSchedule(booking: BookingRecord): string {
     + "–"
     + new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(end);
   return `${date} · ${time}`;
-}
-
-function statusCopy(booking: BookingRecord): string {
-  if (booking.status === "confirmed") return "Confirmed";
-  if (booking.status === "rejected") return "Request declined";
-  if (booking.payment?.status === "succeeded" && booking.refund?.status === "processing") return "Payment received · confirmation needs attention";
-  if (booking.paymentReady) return "Payment required";
-  return "Waiting for tutor response";
 }
 
 function BookingCard({ booking, onRefresh }: { booking: BookingRecord; onRefresh: (bookingId: string) => Promise<void> }) {
@@ -54,45 +46,61 @@ function BookingCard({ booking, onRefresh }: { booking: BookingRecord; onRefresh
     }
   };
 
+  const duration = booking.pricing?.durationMinutes ?? Math.round((new Date(booking.session.endsAt).getTime() - new Date(booking.session.startsAt).getTime()) / 60000);
+  const accepted = booking.paymentReady || booking.status === "confirmed";
+  const paid = booking.payment?.status === "succeeded";
+  const confirmed = booking.status === "confirmed" && paid;
+  const title = bookingTitle(booking);
+  const subtitle = confirmed ? "Your session is confirmed." : accepted ? "Complete payment to confirm your lesson." : "Your booking request is waiting for tutor approval.";
+
   return (
-    <article className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/10 sm:p-7">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">Tutor session</p>
-          <h2 className="mt-2 text-xl font-semibold text-[#e8e6df]">Your one-to-one lesson</h2>
-          <p className="mt-2 text-sm text-white/60">{formatSchedule(booking)}</p>
+    <article className="overflow-hidden rounded-[28px] border border-white/[0.13] bg-[#171717] shadow-[0_28px_100px_rgba(0,0,0,.42)]">
+      <div className="border-b border-white/[0.12] px-5 py-6 sm:px-8">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">Booking</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <h2 className="text-[30px] font-semibold tracking-[-.035em] text-white">{title}</h2>
+          {(confirmed || booking.status === "rejected") && <span className="rounded-full border border-white/[0.16] px-3 py-1 text-[10px] tracking-[.14em]">{confirmed ? "CONFIRMED" : "REJECTED"}</span>}
         </div>
-        <span className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-white/70">{statusCopy(booking)}</span>
+        <p className="mt-3 text-sm text-white/45">{subtitle}</p>
       </div>
 
-      <div className="mt-7 grid gap-3 text-sm text-white/65 sm:grid-cols-3">
-        <div><p className="text-xs uppercase tracking-[0.14em] text-white/35">Format</p><p className="mt-1 text-white/80">Online</p></div>
-        <div><p className="text-xs uppercase tracking-[0.14em] text-white/35">Duration</p><p className="mt-1 text-white/80">{booking.pricing?.durationMinutes ?? Math.round((new Date(booking.session.endsAt).getTime() - new Date(booking.session.startsAt).getTime()) / 60000)} minutes</p></div>
-        <div><p className="text-xs uppercase tracking-[0.14em] text-white/35">Amount</p><p className="mt-1 text-white/80">{amount === null ? "—" : formatMoney(amount)}</p></div>
-      </div>
+      <div className="grid gap-5 p-5 sm:p-8 md:grid-cols-[1.2fr_.8fr]">
+        <section className="rounded-2xl border border-white/[0.12] bg-white/[0.025] p-5">
+          <p className="text-[11px] font-semibold tracking-[.18em] text-white/38">SESSION DETAILS</p>
+          <p className="mt-4 text-lg font-semibold text-white">{formatSchedule(booking)}</p>
+          <p className="mt-2 text-sm text-white/60">Online · {duration} minutes</p>
+          <div className="mt-7 grid grid-cols-2 gap-5 border-t border-white/[0.12] pt-5">
+            <div><p className="text-[11px] text-white/36">Tutor</p><p className="mt-1 text-sm text-white/80">{booking.tutor.displayName}</p></div>
+            <div><p className="text-[11px] text-white/36">Price</p><p className="mt-1 text-sm text-white/80">{amount === null ? "—" : formatMoney(amount)}</p></div>
+          </div>
+          <div className="mt-5 border-t border-white/[0.12] pt-5">
+            <p className="text-[11px] text-white/36">Payment</p>
+            <p className="mt-1 text-sm text-white/80">{bookingPaymentLabel(booking)}</p>
+          </div>
+        </section>
 
-      <div className="mt-7 border-t border-white/10 pt-5">
-        <div className="grid gap-3 text-sm sm:grid-cols-4">
-          <span className="text-white/75">✓ Request submitted</span>
-          <span className={booking.paymentReady || booking.status === "confirmed" ? "text-white/75" : "text-white/35"}>{booking.paymentReady || booking.status === "confirmed" ? "✓" : "○"} Tutor accepted</span>
-          <span className={booking.payment?.status === "succeeded" || booking.paymentReady ? "text-white/75" : "text-white/35"}>{booking.payment?.status === "succeeded" ? "✓" : booking.paymentReady ? "●" : "○"} {booking.payment?.status === "succeeded" ? "Payment complete" : "Payment required"}</span>
-          <span className={booking.status === "confirmed" ? "text-white/75" : "text-white/35"}>{booking.status === "confirmed" ? "✓" : "○"} Booking confirmed</span>
-        </div>
+        <section className="rounded-2xl border border-white/[0.12] bg-[#111111] p-5">
+          <p className="text-[11px] font-semibold tracking-[.18em] text-white/38">TIMELINE</p>
+          <div className="mt-6 space-y-4 text-sm">
+            <p className="text-white">✓ Request submitted</p>
+            <p className={accepted ? "text-white" : "text-white/35"}>{accepted ? "✓" : "●"} {bookingApprovalLabel(booking)}</p>
+            <p className={paid || accepted ? "text-white" : "text-white/35"}>{paid ? "✓ Payment complete" : accepted ? "● Payment required" : "○ Payment"}</p>
+            <p className={confirmed ? "text-white" : "text-white/35"}>{confirmed ? "✓" : "○"} Booking confirmed</p>
+          </div>
+        </section>
       </div>
 
       {canPay && amount !== null && (
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/[0.05] p-4">
-          <div><p className="text-xs uppercase tracking-[0.14em] text-white/40">Amount due</p><p className="mt-1 text-lg font-semibold text-[#e8e6df]">{formatMoney(amount)}</p></div>
-          <button type="button" onClick={() => void pay()} disabled={starting} className="rounded-xl bg-[#e8e6df] px-5 py-3 text-sm font-semibold text-[#101011] disabled:cursor-wait disabled:opacity-50">
+        <div className="mx-5 mb-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.10] bg-white/[0.025] p-5 sm:mx-8 sm:mb-8">
+          <div><p className="text-[10px] tracking-[.18em] text-white/36">AMOUNT DUE</p><p className="mt-2 text-2xl font-semibold text-white">{formatMoney(amount)}</p><p className="mt-2 text-xs text-white/40">Your booking will be confirmed after payment is verified.</p></div>
+          <button type="button" onClick={() => void pay()} disabled={starting} className="rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-black disabled:cursor-wait disabled:opacity-50">
             {starting ? "Starting payment…" : booking.payment?.status === "pending" ? `Continue payment · ${formatMoney(amount)}` : `Pay ${formatMoney(amount)}`}
           </button>
         </div>
       )}
 
-      {booking.payment?.status === "succeeded" && booking.status !== "confirmed" && (
-        <p className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4 text-sm leading-6 text-amber-100">Payment received, but this session could not be confirmed. {booking.refund?.status === "processing" ? "A refund is being processed." : "Tutoria is checking the booking state."}</p>
-      )}
-      {error && <p role="alert" className="mt-4 text-sm text-red-300">{error}</p>}
+      {booking.payment?.status === "succeeded" && booking.status !== "confirmed" && <p className="mx-5 mb-5 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4 text-sm leading-6 text-amber-100 sm:mx-8 sm:mb-8">Payment received, but this session could not be confirmed. {booking.refund?.status === "processing" ? "A refund is being processed." : "Tutoria is checking the booking state."}</p>}
+      {error && <p role="alert" className="mx-5 mb-5 text-sm text-red-300 sm:mx-8 sm:mb-8">{error}</p>}
     </article>
   );
 }

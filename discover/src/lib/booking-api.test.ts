@@ -64,6 +64,7 @@ describe("booking-api", () => {
       updatedAt: "2026-08-14T00:00:00.000Z",
       pricing: null,
       session: { id: SESSION_ID, startsAt: "2026-08-20T02:00:00.000Z", endsAt: "2026-08-20T03:00:00.000Z" },
+      tutor: { id: TUTOR_PROFILE_ID, displayName: "Read Model Tutor" },
     };
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(jsonResponse({ ok: true, booking }));
@@ -96,7 +97,7 @@ describe("booking-api", () => {
   });
 
   it("reads the learner booking projection with payment capabilities", async () => {
-    const booking = { id: "99999999-8888-4777-8666-555555555555", sessionId: SESSION_ID, status: "requested", participantCount: 1, version: 2, pricing: { amountVnd: 300000 }, paymentReady: true, paymentRetryAllowed: true, session: { id: SESSION_ID, startsAt: "2026-08-20T02:00:00.000Z", endsAt: "2026-08-20T03:00:00.000Z" } };
+    const booking = { id: "99999999-8888-4777-8666-555555555555", sessionId: SESSION_ID, status: "requested", participantCount: 1, version: 2, pricing: { amountVnd: 300000 }, paymentReady: true, paymentRetryAllowed: true, session: { id: SESSION_ID, startsAt: "2026-08-20T02:00:00.000Z", endsAt: "2026-08-20T03:00:00.000Z" }, tutor: { id: TUTOR_PROFILE_ID, displayName: "Read Model Tutor" } };
     vi.mocked(fetch).mockResolvedValue(jsonResponse({ ok: true, bookings: [booking] }));
     await expect(listLearnerBookings()).resolves.toEqual([booking]);
     expect(fetch).toHaveBeenCalledWith("http://api.example.com/api/v1/bookings", expect.objectContaining({ headers: expect.objectContaining({ Authorization: "Bearer learner-token" }) }));
