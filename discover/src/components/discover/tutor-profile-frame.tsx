@@ -5,6 +5,7 @@ import { TutorProfileSkeleton } from "./tutor-profile-skeleton";
 import { isLiveMode } from "@/lib/auth/config";
 import { getTutor, isPublicTutorUuid, listTutors, type PublicTutorDetail } from "@/lib/tutor-cv-api";
 import { BookingApiError, createBooking, listBookableSessions } from "@/lib/booking-api";
+import { ensureSession } from "@/lib/auth/session";
 
 interface TutorProfileFrameProps {
   name: string;
@@ -161,7 +162,9 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
           .catch((error: unknown) => respond({ type: "tutoria-booking-error", code: error instanceof BookingApiError ? error.code : "BOOKING_SERVICE_UNAVAILABLE" }));
       }
       if (data.type === "tutoria-booking-create" && typeof data.sessionId === "string") {
-        void createBooking(data.sessionId, typeof data.participantCount === "number" ? data.participantCount : 1)
+        const sessionId = data.sessionId;
+        void ensureSession()
+          .then(() => createBooking(sessionId, typeof data.participantCount === "number" ? data.participantCount : 1))
           .then((booking) => respond({ type: "tutoria-booking-created", booking }))
           .catch((error: unknown) => respond({ type: "tutoria-booking-error", code: error instanceof BookingApiError ? error.code : "BOOKING_SERVICE_UNAVAILABLE" }));
       }
