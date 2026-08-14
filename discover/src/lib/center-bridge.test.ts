@@ -11,4 +11,16 @@ describe("Center tutor decision bridge contract", () => {
     expect(centerHtml).not.toContain('data-booking-decision="decline"');
     expect(centerPage).toContain('message.action === "accept" || message.action === "reject"');
   });
+
+  it("retries the existing parent-ready handshake after the parent listener is installed", () => {
+    expect(centerPage).toContain("const frameRef = useRef<HTMLIFrameElement>(null)");
+    expect(centerPage).toContain("notifyFrameReady();");
+    expect(centerPage).toContain("onLoad={notifyFrameReady}");
+  });
+
+  it("keeps non-Tutor fixtures while projecting confirmed live Tutor bookings as upcoming", () => {
+    expect(centerHtml).toContain("initialFixtures.filter(x=>x.type!=='tutor')");
+    expect(centerHtml).toContain("status==='confirmed'?'upcoming'");
+    expect(centerHtml).toContain("tutoria-center-tutor-bookings");
+  });
 });

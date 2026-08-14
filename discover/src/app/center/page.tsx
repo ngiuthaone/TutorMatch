@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ensureSession, getSessionAccessToken } from "@/lib/auth/session";
 import { isLiveMode } from "@/lib/auth/config";
 import { decideTutorBooking, listTutorBookings, TutorBookingApiError } from "@/lib/tutor-booking-api";
 
 export default function CenterPage() {
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const notifyFrameReady = () => frameRef.current?.contentWindow?.postMessage({ type: "tutoria-center-parent-ready" }, window.location.origin);
+
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
       const frame = document.querySelector<HTMLIFrameElement>('iframe[title="Tutoria Center"]');
@@ -25,7 +28,9 @@ export default function CenterPage() {
         catch (error) { const apiError = error instanceof TutorBookingApiError ? error : new TutorBookingApiError("TUTOR_BOOKING_UNAVAILABLE", 503, "This booking could not be updated. Reload and try again."); frame.contentWindow?.postMessage({ type: "tutoria-center-tutor-booking-decision-error", requestId, code: apiError.code, message: apiError.message }, window.location.origin); }
       }
     };
-    window.addEventListener("message", handleMessage); return () => window.removeEventListener("message", handleMessage);
+    window.addEventListener("message", handleMessage);
+    notifyFrameReady();
+    return () => window.removeEventListener("message", handleMessage);
   }, []);
-  return <iframe src="/center.html" title="Tutoria Center" onLoad={(event) => event.currentTarget.contentWindow?.postMessage({ type: "tutoria-center-parent-ready" }, window.location.origin)} style={{ width: "100%", height: "100dvh", border: 0, display: "block" }} />;
+  return <iframe ref={frameRef} src="/center.html" title="Tutoria Center" onLoad={notifyFrameReady} style={{ width: "100%", height: "100dvh", border: 0, display: "block" }} />;
 }
