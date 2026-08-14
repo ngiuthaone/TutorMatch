@@ -21,7 +21,7 @@ pnpm exec tsx scripts/seed-local-core-fixtures.ts
 The script is idempotent. It creates or refreshes:
 
 - `student@example.com` as a `student` profile;
-- `tutor@example.com` as a `tutor` profile with a published IELTS CV;
-- two future, scheduled, capacity-available Sessions owned by the tutor.
+- `tutor@example.com` as the published `Thu Ha` cooking-instructor tutor profile;
+- five future, scheduled, capacity-available Sessions owned by the tutor, across multiple dates.
 
 The service-role key and database URL are used only by the local setup command. They must never be passed to Discover or exposed through `NEXT_PUBLIC_*` configuration. Browser verification still signs in normally through Supabase Auth and uses the publishable key/RLS boundary.

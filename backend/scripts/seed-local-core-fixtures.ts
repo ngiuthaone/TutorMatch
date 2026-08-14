@@ -17,7 +17,7 @@ import postgres from "postgres";
 
 const localOnlyPassword = "Local-test-only-Password1!";
 const learner = { email: "student@example.com", name: "Local Learner", role: "student" as const };
-const tutor = { email: "tutor@example.com", name: "Local Tutor", role: "tutor" as const };
+const tutor = { email: "tutor@example.com", name: "Thu Ha", role: "tutor" as const };
 
 type FixtureUser = typeof learner | typeof tutor;
 type AuthUser = { id: string; email?: string | null };
@@ -97,12 +97,14 @@ async function authenticatedClient(email: string): Promise<SupabaseClient> {
 
 const tutorProfile = {
   displayName: tutor.name,
-  headline: "Patient IELTS conversation tutor",
-  bio: "I help adult learners build confidence through structured speaking practice, clear feedback, and practical weekly goals for real conversations.",
+  headline: "Cooking Instructor",
+  bio: "I teach home cooking techniques through practical, structured lessons that help learners build confidence in the kitchen.",
   hourlyRateVnd: 300000,
   currency: "VND",
   teachingFormat: "online",
-  subjects: ["ielts"],
+  // The local schema's accepted seed catalog has no cooking subject; English
+  // keeps the published CV valid while the fixture identity remains Thu Ha.
+  subjects: ["english"],
   levels: ["adult"],
   regions: ["district-1"],
   languages: [
@@ -149,7 +151,9 @@ async function ensureSessions(tutorClient: SupabaseClient, tutorUserId: string):
   }
 
   const newIds: string[] = [];
-  for (const offsetHours of [48, 72]) {
+  const requiredSessions = 5;
+  for (const offsetHours of [24, 25.5, 48, 53, 72]) {
+    if (available.length + newIds.length >= requiredSessions) break;
     const startsAt = new Date(Date.now() + offsetHours * 60 * 60 * 1000);
     const endsAt = new Date(startsAt.getTime() + 60 * 60 * 1000);
     const result = await tutorClient.rpc("create_session", {
@@ -158,7 +162,7 @@ async function ensureSessions(tutorClient: SupabaseClient, tutorUserId: string):
     if (result.error || !result.data?.id) throw result.error ?? new Error("Could not create tutor fixture session");
     newIds.push(result.data.id);
   }
-  return [...available, ...newIds].slice(0, 2);
+  return [...available, ...newIds].slice(0, requiredSessions);
 }
 
 const learnerUser = await ensureUser(learner);
@@ -171,6 +175,5 @@ console.log(JSON.stringify({
   learner: { email: learner.email, role: learner.role },
   tutor: { email: tutor.email, role: tutor.role, profileId: profile.id },
   sessions,
-  password: localOnlyPassword,
 }, null, 2));
 await sql.end();
