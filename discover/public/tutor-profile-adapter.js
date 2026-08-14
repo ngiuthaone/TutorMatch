@@ -1,3 +1,13 @@
+const revealTutorProfile = () => {
+  delete document.documentElement.dataset.profilePending;
+  try {
+    const activeProfile = JSON.parse(document.documentElement.dataset.activeTutorProfile || "null");
+    window.parent?.postMessage({ type: "tutoria-tutor-profile-ready", name: activeProfile?.name || "" }, window.location.origin);
+  } catch {
+    window.parent?.postMessage({ type: "tutoria-tutor-profile-ready", name: "" }, window.location.origin);
+  }
+};
+
 (async function () {
   const params = new URLSearchParams(window.location.search);
   const profiles = (() => {
@@ -8,10 +18,22 @@
     }
   })();
   const profileName = decodeURIComponent(String(params.get("name") || "").replace(/\+/g, " ")).trim();
+  const liveProfile = (() => {
+    try {
+      const encoded = params.get("profile");
+      if (!encoded) return null;
+      const json = decodeURIComponent(escape(atob(String(encoded).replace(/-/g, "+").replace(/_/g, "/"))));
+      const parsed = JSON.parse(json);
+      if (!parsed || typeof parsed !== "object" || !parsed.name) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  })();
   const submittedProfile = (() => {
     try {
       const submission = JSON.parse(window.localStorage.getItem("tutoria_tutor_profile_submission") || "null");
-      if (!submission || submission.status !== "pending_review" || !submission.displayName?.trim() || submission.displayName.trim() !== profileName) return null;
+      if (!submission || !["pending_review", "published"].includes(String(submission.status)) || !submission.displayName?.trim() || submission.displayName.trim() !== profileName) return null;
       const sessionLength = submission.displayDuration || submission.sessionLengths?.[0] || 60;
       const price = Number(submission.rates?.[String(sessionLength)] || 0);
       return {
@@ -60,7 +82,7 @@
     .then((response) => response.ok ? response.json() : { tutors: [] })
     .then((payload) => {
       const submission = Array.isArray(payload.tutors)
-        ? payload.tutors.find((item) => item?.status === "pending_review" && item?.displayName?.trim() === profileName)
+        ? payload.tutors.find((item) => ["pending_review", "published"].includes(String(item?.status)) && item?.displayName?.trim() === profileName)
         : null;
       if (!submission) return null;
       const sessionLength = submission.displayDuration || submission.sessionLengths?.[0] || 60;
@@ -104,9 +126,12 @@
       };
     })
     .catch(() => null);
-  const profile = submittedProfile || serverProfile || profiles.find((item) => item.name === profileName) || window.TUTORIA_GET_TUTOR_PROFILE?.(params.get("name")) || profiles[0];
-  if (!profile) return;
-  const isCreatorProfile = Boolean(submittedProfile || serverProfile);
+  const profile = liveProfile || submittedProfile || serverProfile || profiles.find((item) => item.name === profileName) || window.TUTORIA_GET_TUTOR_PROFILE?.(params.get("name")) || profiles[0];
+  if (!profile) {
+    revealTutorProfile();
+    return;
+  }
+  const isCreatorProfile = Boolean(liveProfile || submittedProfile || serverProfile);
   const safeEvidenceUrl = (value) => {
     try {
       const url = new URL(String(value || ""));
@@ -297,8 +322,15 @@
       if (node.nodeValue.includes(from)) node.nodeValue = node.nodeValue.replaceAll(from, to);
     });
   };
+  const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    '"': "&quot;",
+  }[character]));
   const chips = (items) =>
-    items.map((item) => `<span class="rounded-full bg-canvas px-3 py-2 text-sm">${item}</span>`).join("");
+    items.map((item) => `<span class="rounded-full bg-canvas px-3 py-2 text-sm">${escapeHtml(item)}</span>`).join("");
   const setChipGroup = (headingText, items) => {
     const heading = findText("h3", headingText);
     const row = heading?.closest(".grid")?.querySelector(".flex.flex-wrap.gap-2");
@@ -351,7 +383,7 @@
   setText(document.querySelector(".mt-6.max-w-3xl.text-base"), profile.tagline);
 
   const aboutCopy = document.querySelector("#panel-about .space-y-4");
-  if (aboutCopy) aboutCopy.innerHTML = profile.about.map((paragraph) => `<p>${paragraph}</p>`).join("");
+  if (aboutCopy) aboutCopy.innerHTML = profile.about.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("");
   if (aboutCopy && (credentialItems.length || profile.portfolioUrl)) {
     const creatorDetails = document.createElement("section");
     creatorDetails.className = "border-t border-line pt-10";
@@ -408,8 +440,8 @@
       .map((language) => {
         const match = language.match(/^(.*?)\s*\((.*?)\)$/);
         return match
-          ? `<span class="rounded-full border border-line bg-white px-3 py-2 text-sm">${match[1]} <span class="text-muted">(${match[2]})</span></span>`
-          : `<span class="rounded-full border border-line bg-white px-3 py-2 text-sm">${language}</span>`;
+          ? `<span class="rounded-full border border-line bg-white px-3 py-2 text-sm">${escapeHtml(match[1])} <span class="text-muted">(${escapeHtml(match[2])})</span></span>`
+          : `<span class="rounded-full border border-line bg-white px-3 py-2 text-sm">${escapeHtml(language)}</span>`;
       })
       .join("");
   }
@@ -432,13 +464,20 @@
           <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-canvas">
             <i data-lucide="check" class="h-4 w-4"></i>
           </span>
-          <p class="font-medium">${outcome}</p>
+          <p class="font-medium">${escapeHtml(outcome)}</p>
         </li>
       `)
       .join("");
   }
   const typicalLessonHeading = findText("h2", "Typical lesson");
-  setText(typicalLessonHeading?.parentElement?.querySelector("p"), profile.typicalLesson);
+  if (typicalLessonHeading) {
+    const container = typicalLessonHeading.parentElement;
+    if (container && !String(profile.typicalLesson || "").trim()) {
+      container.remove();
+    } else {
+      setText(container.querySelector("p"), profile.typicalLesson);
+    }
+  }
 
   document.querySelectorAll(".rate-card").forEach((card) => {
     const duration = card.dataset.duration;
@@ -474,8 +513,13 @@
   });
 
   if (isCreatorProfile) {
-    replaceExact("Verified", "New tutor");
-    replaceExact("ID verified", "Profile submitted");
+    if (liveProfile) {
+      replaceExact("Verified", "Not verified");
+      replaceExact("ID verified", profile.disclosure || "Identity not verified");
+    } else {
+      replaceExact("Verified", "New tutor");
+      replaceExact("ID verified", "Profile submitted");
+    }
     replaceExact("Available this week", availabilityLabel);
     if (submittedAvailability[0]) replaceExact("Next: Mon, 09:00", `Next: ${submittedAvailability[0].day}, ${submittedAvailability[0].start}`);
 
@@ -525,7 +569,7 @@
       if (formatNote) formatNote.textContent = `${selectedFormats[0]} only`;
     }
     const formatSelect = document.getElementById("sidebarFormat");
-    if (formatSelect) formatSelect.innerHTML = activeTutorProfile.formatOptions.map((format) => `<option>${format.value}</option>`).join("");
+    if (formatSelect) formatSelect.innerHTML = activeTutorProfile.formatOptions.map((format) => `<option>${escapeHtml(format.value)}</option>`).join("");
 
     if (!profile.introVideoName) {
       const videoButton = document.querySelector('button[aria-label="Play introduction video"], button:has(i[data-lucide="play"])');
@@ -549,18 +593,45 @@
     const availabilityPanel = document.getElementById("panel-availability");
     if (availabilityPanel) {
       setText(findText("p", "Ha Noi time, GMT+7"), timeZoneLabel);
-      const selectedSlots = new Set((profile.availability || []).map(String));
-      const availabilityRows = [...availabilityPanel.querySelectorAll(".availability-cell")];
-      ["09:00-12:00", "14:00-18:00", "18:00-21:00"].forEach((slot, rowIndex) => {
-        for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
-          const cell = availabilityRows[rowIndex * 8 + dayIndex + 1];
-          if (!cell) continue;
-          const isOpen = selectedSlots.has(`${slot}-${dayIndex}`);
-          cell.outerHTML = isOpen
-            ? '<button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>'
-            : '<div class="availability-cell flex items-center justify-center text-muted">—</div>';
+      if (liveProfile) {
+        const slots = (profile.availability || []).map(String).map((slot) => {
+          const [start, end, dayIndex] = slot.split("-");
+          return { start, end: end || "", day: dayNames[Number(dayIndex)] };
+        }).filter((slot) => slot.start && slot.day);
+        const ranges = [...new Set(slots.map((slot) => `${slot.start}-${slot.end}`))];
+        const wrapper = availabilityPanel.querySelector(".min-w-\\[780px\\]");
+        if (wrapper && ranges.length) {
+          wrapper.innerHTML = `
+            <div class="grid grid-cols-[120px_repeat(7,1fr)] border-b border-line bg-canvas text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+              <div class="p-4 text-left">Time</div>
+              ${dayNames.map((day) => `<div class="p-4">${day}</div>`).join("")}
+            </div>
+            ${ranges.map((range) => {
+              const [start, end] = range.split("-");
+              const openDays = new Set(slots.filter((slot) => slot.start === start && slot.end === end).map((slot) => slot.day));
+              return `
+                <div class="grid grid-cols-[120px_repeat(7,1fr)] border-b border-line text-center text-sm">
+                  <div class="flex items-center p-4 text-left font-medium">${escapeHtml(start)}–${escapeHtml(end)}</div>
+                  ${dayNames.map((day) => openDays.has(day)
+                    ? `<button class="m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>`
+                    : `<div class="flex items-center justify-center text-muted">—</div>`).join("")}
+                </div>`;
+            }).join("")}`;
         }
-      });
+      } else {
+        const selectedSlots = new Set((profile.availability || []).map(String));
+        const availabilityRows = [...availabilityPanel.querySelectorAll(".availability-cell")];
+        ["09:00-12:00", "14:00-18:00", "18:00-21:00"].forEach((slot, rowIndex) => {
+          for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
+            const cell = availabilityRows[rowIndex * 8 + dayIndex + 1];
+            if (!cell) continue;
+            const isOpen = selectedSlots.has(`${slot}-${dayIndex}`);
+            cell.outerHTML = isOpen
+              ? '<button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>'
+              : '<div class="availability-cell flex items-center justify-center text-muted">—</div>';
+          }
+        });
+      }
     }
 
     const policySection = findText("h3", "Booking rules & cancellation policy")?.parentElement;
@@ -614,4 +685,5 @@
 
   const summaryMeta = [...document.querySelectorAll("#bookingSummary p")].find((element) => element.textContent.includes("·"));
   setText(summaryMeta, `${profile.role} · ${profile.rating}`);
-})();
+  revealTutorProfile();
+})().catch(revealTutorProfile);
