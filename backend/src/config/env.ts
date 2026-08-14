@@ -24,6 +24,8 @@ const schema = z.object({
   VNPAY_PAYMENT_URL: z.string().url().default("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"),
   VNPAY_RETURN_URL: z.string().url().optional(),
   VNPAY_IPN_URL: z.string().url().optional(),
+  VNPAY_API_URL: z.string().url().default("https://sandbox.vnpayment.vn/merchant_webapi/api/transaction"),
+  PAYMENT_RECONCILIATION_TOKEN: z.string().min(16).optional(),
   TRUST_PROXY: booleanString,
   RATE_LIMIT_MAX: positiveInteger("RATE_LIMIT_MAX").default(100),
   RATE_LIMIT_WINDOW_MS: positiveInteger("RATE_LIMIT_WINDOW_MS").default(60_000),

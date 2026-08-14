@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildVnpayPaymentUrl, buildVnpayTransactionRequest, normalizeVnpayOutcome, verifyVnpayFields } from "../src/services/vnpay-adapter.js";
+import { buildVnpayPaymentUrl, buildVnpayTransactionRequest, executeVnpayTransaction, normalizeVnpayOutcome, verifyVnpayFields } from "../src/services/vnpay-adapter.js";
 
 const config = { tmnCode: "TUTORIA01", hashSecret: "local-secret", paymentUrl: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html", returnUrl: "https://app.test/payments/return", ipnUrl: "https://api.test/payments/ipn" };
 
@@ -20,5 +20,11 @@ describe("VNPay provider boundary", () => {
     expect(refund.body.vnp_Amount).toBe("12500000"); expect(refund.body.vnp_TransactionType).toBe("02"); expect(refund.body.vnp_SecureHash).toMatch(/^[a-f0-9]{128}$/);
     const query = buildVnpayTransactionRequest(config, { requestId: "query-request-0001", command: "querydr", merchantReference: "TUTORIA-abc", amountVnd: 125000, orderInfo: "reconciliation", createdAt: new Date("2026-08-14T10:11:12Z") });
     expect(query.body.vnp_Command).toBe("querydr"); expect(query.body.vnp_SecureHash).toMatch(/^[a-f0-9]{128}$/);
+  });
+  it("normalizes a provider HTTP response boundary and preserves transport failures for reconciliation", async () => {
+    const request = buildVnpayTransactionRequest(config, { requestId: "query-request-0002", command: "querydr", merchantReference: "TUTORIA-abc", amountVnd: 125000, orderInfo: "reconciliation", createdAt: new Date("2026-08-14T10:11:12Z") });
+    const body = await executeVnpayTransaction("https://sandbox.test/transaction", request, async () => new Response(JSON.stringify({ vnp_ResponseCode: "00", vnp_TxnRef: "TUTORIA-abc", vnp_TransactionNo: "123", vnp_Amount: "12500000" }), { status: 200 }));
+    expect(normalizeVnpayOutcome(body).outcome).toBe("succeeded");
+    await expect(executeVnpayTransaction("https://sandbox.test/transaction", request, async () => new Response("timeout", { status: 504 }))).rejects.toThrow("HTTP 504");
   });
 });

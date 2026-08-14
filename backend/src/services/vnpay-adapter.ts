@@ -48,3 +48,9 @@ export function buildVnpayTransactionRequest(config: VnpayConfig, input: { reque
   const query = sortedQuery(fields);
   return { fields, body: { ...fields, vnp_SecureHash: digest(query, config.hashSecret) } as VnpayFields };
 }
+
+export async function executeVnpayTransaction(apiUrl: string, request: ReturnType<typeof buildVnpayTransactionRequest>, fetchImpl: typeof fetch = fetch) {
+  const response = await fetchImpl(apiUrl, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(request.body) });
+  if (!response.ok) throw new Error(`VNPay transaction HTTP ${response.status}`);
+  return await response.json() as Record<string, unknown>;
+}
