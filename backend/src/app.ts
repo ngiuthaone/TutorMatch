@@ -9,6 +9,8 @@ import { tutorCvRoutes } from "./routes/tutor-cv.js";
 import { publicTutorRoutes } from "./routes/public-tutors.js";
 import { marketplaceRoutes } from "./routes/marketplace.js";
 import { createSupabaseMarketplaceService } from "./services/marketplace-service.js";
+import { createSupabasePaymentService } from "./services/payment-service.js";
+import { paymentRoutes } from "./routes/payments.js";
 import type { AuthService } from "./services/auth-service.js";
 import type { TutorCvService } from "./types/tutor-cv.js";
 
@@ -28,6 +30,9 @@ export function createApp(options: { config: AppConfig; authService: AuthService
     app.register(publicTutorRoutes, { tutorCvService: options.tutorCvService, listMax: options.config.PUBLIC_TUTORS_LIST_RATE_LIMIT_MAX, detailMax: options.config.PUBLIC_TUTOR_DETAIL_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   }
   app.register(marketplaceRoutes, { authService: options.authService, marketplaceService: options.marketplaceService ?? createSupabaseMarketplaceService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY), max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  if (options.config.VNPAY_TMN_CODE && options.config.VNPAY_HASH_SECRET && options.config.VNPAY_RETURN_URL && options.config.VNPAY_IPN_URL) {
+    app.register(paymentRoutes, { service: createSupabasePaymentService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.config.SUPABASE_SERVICE_ROLE_KEY, { tmnCode: options.config.VNPAY_TMN_CODE, hashSecret: options.config.VNPAY_HASH_SECRET, paymentUrl: options.config.VNPAY_PAYMENT_URL, returnUrl: options.config.VNPAY_RETURN_URL, ipnUrl: options.config.VNPAY_IPN_URL }), vnpay: { tmnCode: options.config.VNPAY_TMN_CODE, hashSecret: options.config.VNPAY_HASH_SECRET, paymentUrl: options.config.VNPAY_PAYMENT_URL, returnUrl: options.config.VNPAY_RETURN_URL, ipnUrl: options.config.VNPAY_IPN_URL } });
+  }
   app.setNotFoundHandler((request, reply) => reply.code(404).send({ ok: false, error: { code: "NOT_FOUND", message: "Route not found." }, requestId: request.id }));
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof ApiError) {

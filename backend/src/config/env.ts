@@ -18,6 +18,12 @@ const schema = z.object({
   }),
   SUPABASE_URL: z.string().url("must be a valid URL"),
   SUPABASE_PUBLISHABLE_KEY: z.string().min(1, "is required"),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  VNPAY_TMN_CODE: z.string().trim().min(1).optional(),
+  VNPAY_HASH_SECRET: z.string().min(1).optional(),
+  VNPAY_PAYMENT_URL: z.string().url().default("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"),
+  VNPAY_RETURN_URL: z.string().url().optional(),
+  VNPAY_IPN_URL: z.string().url().optional(),
   TRUST_PROXY: booleanString,
   RATE_LIMIT_MAX: positiveInteger("RATE_LIMIT_MAX").default(100),
   RATE_LIMIT_WINDOW_MS: positiveInteger("RATE_LIMIT_WINDOW_MS").default(60_000),
@@ -37,6 +43,8 @@ const schema = z.object({
       if (new URL(url).protocol !== "https:") context.addIssue({ code: "custom", path: [field], message: "must use HTTPS outside development" });
     }
   }
+  const vnpayFields = [value.VNPAY_TMN_CODE, value.VNPAY_HASH_SECRET, value.VNPAY_RETURN_URL, value.VNPAY_IPN_URL];
+  if (vnpayFields.some(Boolean) && vnpayFields.some((field) => !field)) context.addIssue({ code: "custom", path: ["VNPAY_TMN_CODE"], message: "VNPay configuration must be complete when enabled" });
 });
 
 export type AppConfig = z.infer<typeof schema>;
