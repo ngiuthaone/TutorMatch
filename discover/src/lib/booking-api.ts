@@ -49,6 +49,20 @@ export interface BookingRecord {
   session: BookableSession;
   paymentRequired?: boolean;
   paymentReady?: boolean;
+  paymentRetryAllowed?: boolean;
+  payment?: {
+    id: string;
+    status: "pending" | "succeeded" | "failed" | "refunded";
+    amountVnd: number;
+    currency: "VND";
+    refundedAmountVnd: number;
+    paidAt: string | null;
+  } | null;
+  refund?: {
+    status: "processing" | "succeeded" | null;
+    refundedAmountVnd: number;
+    obligationCount: number;
+  } | null;
 }
 
 async function jsonResponse(response: Response): Promise<unknown> {
@@ -116,6 +130,18 @@ export async function createBooking(sessionId: string, participantCount = 1): Pr
     body: { sessionId, participantCount },
     authenticated: true,
   }) as { ok?: unknown; booking?: unknown };
+  if (payload.ok !== true) throw new BookingApiError("INVALID_RESPONSE", 500);
+  return bookingFrom(payload.booking);
+}
+
+export async function listLearnerBookings(): Promise<BookingRecord[]> {
+  const payload = await request("/api/v1/bookings", { authenticated: true }) as { ok?: unknown; bookings?: unknown };
+  if (payload.ok !== true || !Array.isArray(payload.bookings)) throw new BookingApiError("INVALID_RESPONSE", 500);
+  return payload.bookings.map(bookingFrom);
+}
+
+export async function getLearnerBooking(bookingId: string): Promise<BookingRecord> {
+  const payload = await request(`/api/v1/bookings/${encodeURIComponent(bookingId)}`, { authenticated: true }) as { ok?: unknown; booking?: unknown };
   if (payload.ok !== true) throw new BookingApiError("INVALID_RESPONSE", 500);
   return bookingFrom(payload.booking);
 }

@@ -1,6 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import { buildVnpayPaymentUrl, buildVnpayTransactionRequest, executeVnpayTransaction, normalizeVnpayOutcome, type VnpayConfig } from "./vnpay-adapter.js";
 
+function returnUrlForBooking(returnUrl: string, bookingId: string): string {
+  const url = new URL(returnUrl);
+  url.searchParams.set("bookingId", bookingId);
+  return url.toString();
+}
+
 const options = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } } as const;
 export type PaymentService = {
   start(token: string, bookingId: string, idempotencyKey: string): Promise<{ data?: any; error?: any }>;
@@ -16,7 +22,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
     async start(token: string, bookingId: string, idempotencyKey: string) {
       const { data, error } = await caller(token).rpc("start_payment_attempt", { p_booking_id: bookingId, p_idempotency_key: idempotencyKey });
       if (error) return { error };
-      return { data: { ...data, redirectUrl: buildVnpayPaymentUrl(vnpay, { merchantReference: data.merchantReference, amountVnd: data.amountVnd, orderInfo: `Tutoria booking ${bookingId}`, createdAt: new Date() }) } };
+      return { data: { ...data, redirectUrl: buildVnpayPaymentUrl(vnpay, { merchantReference: data.merchantReference, amountVnd: data.amountVnd, orderInfo: `Tutoria booking ${bookingId}`, returnUrl: returnUrlForBooking(vnpay.returnUrl, bookingId), createdAt: new Date() }) } };
     },
     async read(token: string, bookingId: string) { return await caller(token).rpc("get_booking_payment", { p_booking_id: bookingId }); },
     async observe(fields: { eventKey: string; merchantReference: string; outcome: string; providerTransactionNo: string | null; amountVnd: number; payload: Record<string, unknown> }) {

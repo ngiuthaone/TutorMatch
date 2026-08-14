@@ -8,13 +8,13 @@ function sortedQuery(fields: VnpayFields) {
 }
 function digest(value: string, secret: string) { return createHmac("sha512", secret).update(value, "utf8").digest("hex"); }
 
-export function buildVnpayPaymentUrl(config: VnpayConfig, input: { merchantReference: string; amountVnd: number; orderInfo: string; createdAt: Date }) {
+export function buildVnpayPaymentUrl(config: VnpayConfig, input: { merchantReference: string; amountVnd: number; orderInfo: string; createdAt: Date; returnUrl?: string }) {
   const d = input.createdAt;
   const pad = (n: number) => String(n).padStart(2, "0");
   const fields: VnpayFields = {
     vnp_Version: "2.1.0", vnp_Command: "pay", vnp_TmnCode: config.tmnCode,
     vnp_Amount: String(Math.round(input.amountVnd) * 100), vnp_CurrCode: "VND", vnp_TxnRef: input.merchantReference,
-    vnp_OrderInfo: input.orderInfo, vnp_OrderType: "other", vnp_Locale: "vn", vnp_ReturnUrl: config.returnUrl, vnp_IpnUrl: config.ipnUrl,
+    vnp_OrderInfo: input.orderInfo, vnp_OrderType: "other", vnp_Locale: "vn", vnp_ReturnUrl: input.returnUrl ?? config.returnUrl, vnp_IpnUrl: config.ipnUrl,
     vnp_IpAddr: "127.0.0.1", vnp_CreateDate: `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
   };
   return `${config.paymentUrl}?${sortedQuery(fields)}&vnp_SecureHash=${digest(sortedQuery(fields), config.hashSecret)}`;

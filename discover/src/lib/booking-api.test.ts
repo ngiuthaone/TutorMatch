@@ -6,7 +6,7 @@ const getApiBaseUrlMock = vi.hoisted(() => vi.fn(() => "http://api.example.com")
 vi.mock("@/lib/auth/session", () => ({ getSessionAccessToken: getSessionAccessTokenMock }));
 vi.mock("@/lib/auth/config", () => ({ getApiBaseUrl: getApiBaseUrlMock }));
 
-import { createBooking, listBookableSessions } from "@/lib/booking-api";
+import { createBooking, getLearnerBooking, listBookableSessions, listLearnerBookings } from "@/lib/booking-api";
 
 const SESSION_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 const TUTOR_PROFILE_ID = "11111111-2222-4333-8444-555555555555";
@@ -93,5 +93,14 @@ describe("booking-api", () => {
     vi.mocked(fetch).mockResolvedValue(jsonResponse({ ok: false, error: { code: "SESSION_CAPACITY_EXHAUSTED" } }, 409));
 
     await expect(createBooking(SESSION_ID)).rejects.toMatchObject({ code: "SESSION_CAPACITY_EXHAUSTED", status: 409 });
+  });
+
+  it("reads the learner booking projection with payment capabilities", async () => {
+    const booking = { id: "99999999-8888-4777-8666-555555555555", sessionId: SESSION_ID, status: "requested", participantCount: 1, version: 2, pricing: { amountVnd: 300000 }, paymentReady: true, paymentRetryAllowed: true, session: { id: SESSION_ID, startsAt: "2026-08-20T02:00:00.000Z", endsAt: "2026-08-20T03:00:00.000Z" } };
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({ ok: true, bookings: [booking] }));
+    await expect(listLearnerBookings()).resolves.toEqual([booking]);
+    expect(fetch).toHaveBeenCalledWith("http://api.example.com/api/v1/bookings", expect.objectContaining({ headers: expect.objectContaining({ Authorization: "Bearer learner-token" }) }));
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({ ok: true, booking }));
+    await expect(getLearnerBooking(booking.id)).resolves.toEqual(booking);
   });
 });

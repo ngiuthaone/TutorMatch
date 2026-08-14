@@ -12,6 +12,12 @@ describe("VNPay provider boundary", () => {
     expect(verifyVnpayFields(fields, config.hashSecret)).toBe(true);
     expect(verifyVnpayFields({ ...fields, vnp_Amount: "1" }, config.hashSecret)).toBe(false);
   });
+  it("signs a booking-correlated return URL supplied by the payment service", () => {
+    const url = buildVnpayPaymentUrl(config, { merchantReference: "TUTORIA-abc", amountVnd: 125000, orderInfo: "Tutoria booking", returnUrl: "https://app.test/payments/return?bookingId=booking-1", createdAt: new Date("2026-08-14T10:11:12Z") });
+    const fields = Object.fromEntries(new URL(url).searchParams.entries());
+    expect(fields.vnp_ReturnUrl).toBe("https://app.test/payments/return?bookingId=booking-1");
+    expect(verifyVnpayFields(fields, config.hashSecret)).toBe(true);
+  });
   it("normalizes provider success without treating a browser return as authority", () => {
     expect(normalizeVnpayOutcome({ vnp_TxnRef: "TUTORIA-abc", vnp_ResponseCode: "00", vnp_TransactionNo: "123", vnp_Amount: "12500000" })).toEqual({ outcome: "succeeded", eventKey: "return:TUTORIA-abc:123", merchantReference: "TUTORIA-abc", providerTransactionNo: "123", amountVnd: 125000 });
   });
