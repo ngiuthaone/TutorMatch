@@ -663,7 +663,7 @@ $$('.campaign-join').forEach(b=>b.addEventListener('click',()=>{b.textContent='J
   const typeMeta={
     tutor:{label:'Tutor',badge:'1:1'}, workshop:{label:'Workshop',badge:'WS'}, class:{label:'Class',badge:'CLASS'}, event:{label:'Event',badge:'EVENT'}, course:{label:'Course',badge:'COURSE'}
   };
-  let activeStage='requests', activeType='all', selectedId=null, bookingMode='workspace', demoMode='ready', decision=null;
+  let activeStage='requests', activeType='all', selectedId=null, bookingMode='workspace', demoMode='ready', decision=null, liveTutorMode=false;
   const initialFixtures=[
     {id:'T28484',type:'tutor',stage:'requests',backendStatus:'requested',hostAccepted:false,paymentState:'not_ready',learner:'Đăng Nguyễn',offering:'Interview Practice',date:'Mon, 17 Aug',time:'14:00–15:00',format:'Online',duration:60,participants:1,price:300000,received:'8 minutes ago',note:'I want to practise concise interview answers and get direct feedback.',new:true,approval:'host'},
     {id:'T28485',type:'workshop',stage:'requests',backendStatus:'requested',hostAccepted:false,paymentState:'not_ready',learner:'Linh Trần',offering:'Pizza-Making Workshop · private group',date:'Tue, 18 Aug',time:'17:00–19:30',format:'Hoàn Kiếm',duration:150,participants:4,price:2600000,received:'18 minutes ago',note:'Private booking for four friends. We are all beginners.',new:true,approval:'host'},
@@ -701,7 +701,7 @@ $$('.campaign-join').forEach(b=>b.addEventListener('click',()=>{b.textContent='J
   }
   function typePill(b){const t=typeMeta[b.type]||typeMeta.tutor;return `<span class="pill pill-neutral">${t.label}</span>`}
   function statusPill(b){
-    if(b.stage==='requests')return '<span class="pill pill-warn">Approval needed</span>';
+    if(b.stage==='requests')return b.canAccept||b.canReject?'<span class="pill pill-warn">Approval needed</span>':'<span class="pill pill-neutral">Request received</span>';
     if(b.stage==='awaiting')return '<span class="pill pill-warn">Awaiting payment</span>';
     if(b.stage==='upcoming')return b.type==='course'?'<span class="pill pill-ok">Access active</span>':'<span class="pill pill-ok">Confirmed</span>';
     if(b.stage==='past')return '<span class="pill pill-neutral">Completed</span>';
@@ -742,7 +742,7 @@ $$('.campaign-join').forEach(b=>b.addEventListener('click',()=>{b.textContent='J
     else if(b.stage==='past')intro='<p class="text-[10px] text-[#777] mt-2 leading-5">This booking is complete.</p>';
     else intro='<p class="text-[10px] text-[#777] mt-2 leading-5">This booking is closed and no longer actionable.</p>';
     let actions='';
-    if(b.stage==='requests')actions=`<div class="booking-detail-section ${mobile?'sticky bottom-0 bg-white':''}"><div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2"><button data-booking-decision="decline" data-id="${b.id}" data-qa-bound="1" class="btn btn-danger sm:min-w-[110px]">Decline</button><button data-booking-decision="accept" data-id="${b.id}" data-qa-bound="1" class="btn btn-dark sm:min-w-[150px]">Accept request</button></div></div>`;
+    if(b.stage==='requests'&&(b.canAccept||b.canReject))actions=`<div class="booking-detail-section ${mobile?'sticky bottom-0 bg-white':''}"><div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">${b.canReject?`<button data-booking-decision="decline" data-id="${b.id}" data-qa-bound="1" class="btn btn-danger sm:min-w-[110px]">Decline</button>`:''}${b.canAccept?`<button data-booking-decision="accept" data-id="${b.id}" data-qa-bound="1" class="btn btn-dark sm:min-w-[150px]">Accept request</button>`:''}</div></div>`;
     const capacity=b.capacity?`<div class="booking-detail-section"><div class="booking-detail-label">Session capacity</div><div class="text-[11px] font-semibold mt-2">${b.capacity}</div></div>`:'';
     return `<div class="h-full flex flex-col"><div class="px-5 sm:px-6 py-5"><div class="flex items-start justify-between gap-4"><div><div class="flex items-center gap-2">${typePill(b)}<span class="eyebrow">${b.stage==='requests'?'Booking request':'Booking'}</span></div><div class="text-[18px] font-semibold mt-2 break-words">${b.offering}</div><div class="text-[11px] text-[#555] mt-1">${b.learner}</div>${intro}</div>${statusPill(b)}</div></div>
       <div class="booking-detail-section">${summaryRows(b)}</div>
@@ -790,7 +790,9 @@ $$('.campaign-join').forEach(b=>b.addEventListener('click',()=>{b.textContent='J
   }
   async function commitDecision(){
     if(!decision)return;const b=fixtures.find(x=>x.id===decision.id);if(!b)return;const confirm=q('#bookingDecisionConfirm');const type=decision.type;
-    confirm.disabled=true;confirm.textContent=type==='accept'?'Accepting…':'Declining…';await new Promise(r=>setTimeout(r,450));
+    confirm.disabled=true;confirm.textContent=type==='accept'?'Accepting…':'Declining…';
+    if(liveTutorMode&&window.tutoriaCenterRequestDecision){try{await window.tutoriaCenterRequestDecision(b.id,type,b.version);q('#bookingDecisionDialog').close();decision=null;await window.tutoriaCenterReloadTutorBookings();toast(type==='accept'?'Request accepted · waiting for learner payment':'Request declined');}catch(error){toast(error?.message||'This booking changed. Reload and try again.');await window.tutoriaCenterReloadTutorBookings();}confirm.disabled=false;confirm.textContent=type==='accept'?'Accept request':'Decline request';return;}
+    await new Promise(r=>setTimeout(r,450));
     if(type==='accept'){b.hostAccepted=true;b.paymentState='required';b.stage='awaiting';b.backendStatus='requested';q('#bookingDecisionDialog').close();updateCounts();switchStage('awaiting');selectedId=b.id;renderList();selectBooking(b.id,false);toast('Request accepted · waiting for learner payment')}
     else{b.hostAccepted=false;b.paymentState='not_ready';b.stage='cancelled';b.backendStatus='rejected';q('#bookingDecisionDialog').close();updateCounts();switchStage('requests');toast('Request declined')}
     confirm.disabled=false;decision=null;
@@ -799,17 +801,33 @@ $$('.campaign-join').forEach(b=>b.addEventListener('click',()=>{b.textContent='J
   window.tutoriaBookingDemo=(mode='ready')=>{demoMode=mode;renderDemoMode();if(mode==='ready')renderList()};
   window.resetTutorBookingFixtures=()=>{fixtures=initialFixtures.map(x=>({...x}));window.__tutorBookingFixtures=fixtures;window.__bookingFixtures=fixtures;activeStage='requests';activeType='all';selectedId=null;updateCounts();switchType('all');switchStage('requests');toast('Mock booking state reset')};
   window.openMergedBooking=id=>{showPage('bookings');switchMode('workspace');const b=fixtures.find(x=>x.id===id);if(b){activeType='all';switchType('all');switchStage(b.stage);selectedId=id;renderList();selectBooking(id,true)}else{switchMode('operations');const row=qa('#bookingRows tr').find(r=>r.innerText.includes(id));row?.scrollIntoView({block:'center'});toast('Opened in all bookings')}};
+  const liveDate=(value,options)=>{try{return new Intl.DateTimeFormat('en-GB',options).format(new Date(value))}catch{return 'Date unavailable'}};
+  const liveTime=value=>liveDate(value,{hour:'2-digit',minute:'2-digit',hour12:false});
+  function mapLiveTutorBooking(raw){const session=raw?.session||{},pricing=raw?.pricing||null,status=raw?.status,stage=status==='rejected'||status==='cancelled'?'cancelled':status==='completed'?'past':status==='confirmed'?'upcoming':raw?.paymentReady?'awaiting':'requests',label=session.offeringId?`Tutor session · ${String(session.offeringId).slice(0,8)}`:'1:1 tutor session';return{id:String(raw.id),type:'tutor',stage,backendStatus:String(status||'unknown'),hostAccepted:Boolean(raw?.paymentReady),paymentState:raw?.paymentReady?'required':'not_ready',learner:`Learner · ${String(raw.id).slice(0,8)}`,offering:label,date:liveDate(session.startsAt,{weekday:'short',day:'numeric',month:'short'}),time:`${liveTime(session.startsAt)}–${liveTime(session.endsAt)}`,format:'Session details',duration:Number(pricing?.durationMinutes)||null,participants:Number(raw?.participantCount)||1,price:Number(pricing?.amountVnd)||0,received:raw.createdAt?liveDate(raw.createdAt,{day:'numeric',month:'short'}):'',note:'',new:false,version:Number(raw.version)||1,canAccept:raw?.canTutorAccept===true,canReject:raw?.canTutorReject===true,paymentReady:raw?.paymentReady===true};}
+  window.setTutorBookingLiveData=rows=>{liveTutorMode=true;fixtures=initialFixtures.filter(x=>x.type!=='tutor').concat((Array.isArray(rows)?rows:[]).map(mapLiveTutorBooking));window.__tutorBookingFixtures=fixtures;window.__bookingFixtures=fixtures;updateCounts();switchType(activeType);switchStage(activeStage)};
 
   qa('.tutor-booking-tab').forEach(btn=>btn.addEventListener('click',()=>switchStage(btn.dataset.tutorBookingTab)));
   qa('.booking-type-filter').forEach(btn=>btn.addEventListener('click',()=>switchType(btn.dataset.bookingType)));
   qa('[data-booking-stage]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(()=>switchStage(btn.dataset.bookingStage),0)));
   qa('[data-booking-mode]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(()=>switchMode(btn.dataset.bookingMode),0)));
   q('#tutorBookingSearch')?.addEventListener('input',renderList);
-  q('#retryTutorBookings')?.addEventListener('click',()=>{demoMode='loading';renderDemoMode();setTimeout(()=>{demoMode='ready';renderDemoMode();renderList()},500)});
+  q('#retryTutorBookings')?.addEventListener('click',()=>{if(liveTutorMode&&window.tutoriaCenterReloadTutorBookings){window.tutoriaCenterReloadTutorBookings();}else{demoMode='loading';renderDemoMode();setTimeout(()=>{demoMode='ready';renderDemoMode();renderList()},500)}});
   q('#bookingDecisionConfirm')?.addEventListener('click',e=>{e.preventDefault();commitDecision()});
   q('#bookingDecisionDialog')?.addEventListener('close',()=>{if(decision)decision=null});
   window.addEventListener('resize',()=>{if(innerWidth>=1024&&q('#bookingDrawer')?.classList.contains('open'))closeDrawer('bookingDrawer')});
   switchType('all');updateCounts();switchStage('requests');renderDemoMode();
+})();
+</script>
+
+<script id="tutoria-center-live-tutor-adapter">
+(()=>{
+  if(window.parent===window||!window.postMessage)return;
+  const origin=window.location.origin,pending=new Map(),requestId=()=>`center-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  function load(){window.tutoriaBookingDemo?.('loading');const id=requestId();window.parent.postMessage({type:'tutoria-center-load-tutor-bookings',requestId:id},origin)}
+  window.tutoriaCenterReloadTutorBookings=load;
+  window.tutoriaCenterRequestDecision=(bookingId,action,expectedVersion)=>new Promise((resolve,reject)=>{const id=requestId();pending.set(id,{resolve,reject});window.parent.postMessage({type:'tutoria-center-decide-tutor-booking',requestId:id,bookingId,action,expectedVersion},origin)});
+  window.addEventListener('message',event=>{if(event.origin!==origin||event.source!==window.parent)return;const message=event.data||{};if(message.type==='tutoria-center-parent-ready'){load();return}if(message.type==='tutoria-center-demo'){window.tutoriaBookingDemo?.('ready');return}if(message.type==='tutoria-center-tutor-bookings'&&Array.isArray(message.bookings)){window.tutoriaBookingDemo?.('ready');window.setTutorBookingLiveData?.(message.bookings);return}if(message.type==='tutoria-center-tutor-bookings-error'){window.tutoriaBookingDemo?.('error');return}if(message.type==='tutoria-center-tutor-booking-decision'||message.type==='tutoria-center-tutor-booking-decision-error'){const entry=pending.get(message.requestId);if(!entry)return;pending.delete(message.requestId);if(message.type.endsWith('-error'))entry.reject(new Error(typeof message.message==='string'?message.message:'This booking changed. Reload and try again.'));else entry.resolve(message.booking)}});
+  window.addEventListener('load',load,{once:true});
 })();
 </script>
 
