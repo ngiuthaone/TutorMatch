@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TutorProfileSkeleton } from "./tutor-profile-skeleton";
 import { isLiveMode } from "@/lib/auth/config";
 import { getTutor, isPublicTutorUuid, listTutors, type PublicTutorDetail } from "@/lib/tutor-cv-api";
-import { BookingApiError, createBooking, listBookableSessions } from "@/lib/booking-api";
+import { BookingApiError, createBooking, listBookableSessions, type BookableSession } from "@/lib/booking-api";
+import { sortFutureBookableSessions } from "@/lib/bookable-session-projection";
 import { ensureSession } from "@/lib/auth/session";
 
 interface TutorProfileFrameProps {
@@ -98,6 +99,12 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
           const label = LEVEL_LABELS[code];
           if (label && !learnerLevels.includes(label)) learnerLevels.push(label);
         });
+        let bookableSessions: BookableSession[] = [];
+        try {
+          bookableSessions = sortFutureBookableSessions(await listBookableSessions(detail.id));
+        } catch {
+          // The profile remains viewable, but availability must not be inferred from tutor rules when Sessions cannot be read.
+        }
         const frameProfile = {
           id: detail.id,
           name: displayName,
@@ -132,6 +139,7 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
           faqs: [],
           isVerified: false,
           disclosure: detail.disclosure,
+          bookableSessions,
         };
         if (cancelled) return;
         const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(frameProfile))));

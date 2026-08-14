@@ -261,7 +261,9 @@ const revealTutorProfile = () => {
     const [start, , dayIndex] = slot.split("-");
     return { start, day: dayNames[Number(dayIndex)] };
   }).filter((slot) => slot.start && slot.day);
-  const availabilityLabel = submittedAvailability.length
+  const availabilityLabel = liveProfile
+    ? (Array.isArray(profile.bookableSessions) && profile.bookableSessions.length ? "Available Sessions" : "No bookable Sessions")
+    : submittedAvailability.length
     ? `Available ${[...new Set(submittedAvailability.map((slot) => slot.day))].join(" & ")}`
     : "Availability not set";
   const timeZoneLabel = (() => {
@@ -370,6 +372,7 @@ const revealTutorProfile = () => {
   replacePhrase("Thu usually replies", `${firstName} usually replies`);
   replacePhrase("sessions with Thu are booked", `sessions with ${firstName} are booked`);
   replacePhrase("Note for Thu", `Note for ${firstName}`);
+  replacePhrase("Your booking request has been sent to Thu Ha.", `Your booking request has been sent to ${profile.name}.`);
 
   const images = [...document.images].filter((image) => image.alt.includes("Thu Ha") || image.alt === "Thu Ha");
   images.forEach((image) => {
@@ -380,6 +383,9 @@ const revealTutorProfile = () => {
   setText(document.querySelector("h1"), profile.name);
   setText(findText("span", profile.name), profile.name);
   setText(findText("span", profile.role), profile.role);
+  setText(document.getElementById("bookingSummaryTutorName"), profile.name);
+  setText(document.getElementById("bookingSummaryTutorMeta"), `${profile.role}${profile.rating ? ` · ${profile.rating}` : ""}`);
+  setText(document.getElementById("bookingRequestSentTitle"), `Your booking request has been sent to ${profile.name}.`);
   setText(document.querySelector(".mt-6.max-w-3xl.text-base"), profile.tagline);
 
   const aboutCopy = document.querySelector("#panel-about .space-y-4");
@@ -514,14 +520,14 @@ const revealTutorProfile = () => {
 
   if (isCreatorProfile) {
     if (liveProfile) {
-      replaceExact("Verified", "Not verified");
+    replaceExact("Verified", "Not verified");
       replaceExact("ID verified", profile.disclosure || "Identity not verified");
     } else {
       replaceExact("Verified", "New tutor");
       replaceExact("ID verified", "Profile submitted");
     }
     replaceExact("Available this week", availabilityLabel);
-    if (submittedAvailability[0]) replaceExact("Next: Mon, 09:00", `Next: ${submittedAvailability[0].day}, ${submittedAvailability[0].start}`);
+    if (!liveProfile && submittedAvailability[0]) replaceExact("Next: Mon, 09:00", `Next: ${submittedAvailability[0].day}, ${submittedAvailability[0].start}`);
 
     replaceExact("Ha Noi and online", formatLocationSummary);
     const formatSection = findText("h2", "Choose where learning happens")?.closest("section");
@@ -594,29 +600,21 @@ const revealTutorProfile = () => {
     if (availabilityPanel) {
       setText(findText("p", "Ha Noi time, GMT+7"), timeZoneLabel);
       if (liveProfile) {
-        const slots = (profile.availability || []).map(String).map((slot) => {
-          const [start, end, dayIndex] = slot.split("-");
-          return { start, end: end || "", day: dayNames[Number(dayIndex)] };
-        }).filter((slot) => slot.start && slot.day);
-        const ranges = [...new Set(slots.map((slot) => `${slot.start}-${slot.end}`))];
+        const sessions = Array.isArray(profile.bookableSessions) ? profile.bookableSessions.filter((session) => session?.startsAt && session?.endsAt) : [];
         const wrapper = availabilityPanel.querySelector(".min-w-\\[780px\\]");
-        if (wrapper && ranges.length) {
+        if (wrapper && sessions.length) {
+          const sessionRows = sessions.map((session) => {
+            const start = new Date(session.startsAt);
+            const end = new Date(session.endsAt);
+            const date = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Ho_Chi_Minh" }).format(start);
+            const time = `${new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(start)}–${new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(end)}`;
+            return `<div class="flex items-center justify-between gap-4 border-b border-line p-4"><div><div class="font-medium">${escapeHtml(date)}</div><div class="mt-1 text-xs text-muted">${escapeHtml(time)} · ${escapeHtml(profile.teachingFormat === "online" ? "Online" : formatLocationSummary)}</div></div><span class="rounded-xl bg-accent/55 px-3 py-2 text-xs font-semibold">Open</span></div>`;
+          }).join("");
           wrapper.innerHTML = `
-            <div class="grid grid-cols-[120px_repeat(7,1fr)] border-b border-line bg-canvas text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-              <div class="p-4 text-left">Time</div>
-              ${dayNames.map((day) => `<div class="p-4">${day}</div>`).join("")}
-            </div>
-            ${ranges.map((range) => {
-              const [start, end] = range.split("-");
-              const openDays = new Set(slots.filter((slot) => slot.start === start && slot.end === end).map((slot) => slot.day));
-              return `
-                <div class="grid grid-cols-[120px_repeat(7,1fr)] border-b border-line text-center text-sm">
-                  <div class="flex items-center p-4 text-left font-medium">${escapeHtml(start)}–${escapeHtml(end)}</div>
-                  ${dayNames.map((day) => openDays.has(day)
-                    ? `<button class="m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>`
-                    : `<div class="flex items-center justify-center text-muted">—</div>`).join("")}
-                </div>`;
-            }).join("")}`;
+            <div class="border-b border-line bg-canvas p-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted">Bookable Sessions</div>
+            ${sessionRows}`;
+        } else if (wrapper) {
+          wrapper.innerHTML = '<div class="p-6 text-sm text-muted">No bookable Sessions are available for this tutor right now.</div>';
         }
       } else {
         const selectedSlots = new Set((profile.availability || []).map(String));
@@ -644,9 +642,30 @@ const revealTutorProfile = () => {
 
     const firstLessonLabel = findText("span", "First lesson price");
     firstLessonLabel?.closest("section")?.remove();
-    const [firstStart, , firstDayIndex] = String(profile.availability?.[0] || "").split("-");
-    const nextDay = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][Number(firstDayIndex)];
-    if (nextDay && firstStart) replaceExact("Mon, Jul 27 · 09:00", `${nextDay} · ${firstStart}`);
+    const futureSessions = Array.isArray(profile.bookableSessions)
+      ? profile.bookableSessions
+        .filter((session) => session?.status === undefined || session.status === "scheduled")
+        .filter((session) => Number.isFinite(Date.parse(session.startsAt)) && Number.isFinite(Date.parse(session.endsAt)) && Date.parse(session.startsAt) > Date.now() && Date.parse(session.endsAt) > Date.parse(session.startsAt))
+        .sort((left, right) => Date.parse(left.startsAt) - Date.parse(right.startsAt))
+      : [];
+    const firstSession = futureSessions[0] || null;
+    if (firstSession?.startsAt) {
+      const firstStart = new Date(firstSession.startsAt);
+      const nextAvailable = `${new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Ho_Chi_Minh" }).format(firstStart)} · ${new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(firstStart)}`;
+      if (liveProfile) {
+        const availabilitySignal = document.querySelector(".availability-signal");
+        const nextSignal = availabilitySignal?.parentElement?.querySelector(".mt-1.text-xs.text-muted");
+        setText(nextSignal, `Next: ${new Intl.DateTimeFormat("en-GB", { weekday: "short", timeZone: "Asia/Ho_Chi_Minh" }).format(firstStart)}, ${new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(firstStart)}`);
+      }
+      replaceExact("Mon, Jul 27 · 09:00", nextAvailable);
+    } else {
+      if (liveProfile) {
+        const availabilitySignal = document.querySelector(".availability-signal");
+        const nextSignal = availabilitySignal?.parentElement?.querySelector(".mt-1.text-xs.text-muted");
+        setText(nextSignal, "No bookable Sessions");
+      }
+      replaceExact("Mon, Jul 27 · 09:00", "No bookable Sessions");
+    }
     replaceExact("Shown in Ha Noi time (GMT+7)", `Shown in ${timeZoneLabel}`);
     replaceExact(`${firstName} usually replies within an hour`, "Response time will appear after the first conversations.");
 
