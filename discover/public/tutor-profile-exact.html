@@ -2119,6 +2119,7 @@
                   <div class="flex items-center justify-between gap-4 border-t border-line pt-4"><span class="font-semibold">Estimated total</span><span id="reviewTotal" class="text-lg font-semibold">300.000 đ</span></div>
                 </div>
                 <p id="reviewChargeNote" class="mt-4 rounded-xl border border-line bg-canvas p-4 text-xs leading-5 text-muted">You won't be charged yet. Payment becomes available after the tutor accepts your request.</p>
+                <p id="bookingAuthNote" class="mt-3 text-xs leading-5 text-muted">Sign in to send your booking request.</p>
               </section>
             </div>
 
@@ -2448,6 +2449,7 @@
     let sessionsLoading = false;
     let sessionsError = "";
     let bookingSubmitting = false;
+    let bookingAuthenticated = false;
     let requestSequence = 0;
     let activeRequestId = "";
 
@@ -2643,6 +2645,10 @@
 
     function submitBookingRequest() {
       if (bookingSubmitting || selectedSessions.length !== 1) return;
+      if (!bookingAuthenticated) {
+        window.parent?.postMessage({ type: "tutoria-booking-auth-required" }, window.location.origin);
+        return;
+      }
       bookingSubmitting = true;
       nextButton.disabled = true;
       footerSelection.textContent = "Sending booking request…";
@@ -2654,6 +2660,20 @@
     window.addEventListener("message", event => {
       if (event.origin !== window.location.origin || event.source !== window.parent) return;
       const data = event.data || {};
+      if (data.type === "tutoria-booking-auth-state") {
+        bookingAuthenticated = data.authenticated === true;
+        const authNote = document.getElementById("bookingAuthNote");
+        if (authNote) authNote.classList.toggle("hidden", bookingAuthenticated);
+        updateFooter();
+        return;
+      }
+      if (data.type === "tutoria-booking-auth-required") {
+        bookingSubmitting = false;
+        bookingAuthenticated = false;
+        updateFooter();
+        window.parent?.postMessage({ type: "tutoria-booking-auth-required" }, window.location.origin);
+        return;
+      }
       if (typeof data.requestId !== "string" || data.requestId !== activeRequestId) return;
       if (data.type === "tutoria-booking-sessions" && Array.isArray(data.sessions)) {
         sessionsLoading = false;
@@ -3027,7 +3047,7 @@
       }
 
       if (currentBookingStep === 2) {
-        nextButton.textContent = "Send booking request";
+        nextButton.textContent = bookingAuthenticated ? "Send booking request" : "Sign in to send request";
         nextButton.disabled = bookingSubmitting || selectedSessions.length !== 1;
         footerSelection.textContent = `${lessonQuantity()} ${lessonQuantity() === 1 ? "lesson" : "lessons"}`;
       }

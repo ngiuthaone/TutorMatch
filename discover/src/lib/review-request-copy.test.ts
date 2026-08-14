@@ -10,6 +10,9 @@ describe("review request payment copy", () => {
     expect(html).not.toContain("You’ll pay after the tutor accepts your request.");
     expect(html).toContain('id="bookingNext"');
     expect(html).toContain("Send booking request");
+    expect(html).toContain("Sign in to send your booking request.");
+    expect(html).toContain("Sign in to send request");
+    expect(html).toContain("tutoria-booking-auth-required");
     expect(html).not.toContain("Confirm and pay");
     expect(html).not.toContain("Payment method");
   });

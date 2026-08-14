@@ -6,7 +6,7 @@ import { isLiveMode } from "@/lib/auth/config";
 import { getTutor, isPublicTutorUuid, listTutors, type PublicTutorDetail } from "@/lib/tutor-cv-api";
 import { BookingApiError, createBooking, listBookableSessions, type BookableSession } from "@/lib/booking-api";
 import { sortFutureBookableSessions } from "@/lib/bookable-session-projection";
-import { ensureSession } from "@/lib/auth/session";
+import { ensureSession, useSession } from "@/lib/auth/session";
 
 interface TutorProfileFrameProps {
   name: string;
@@ -69,6 +69,7 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
   const fallbackTimerRef = useRef<number | null>(null);
   const [ready, setReady] = useState(false);
   const live = isLiveMode();
+  const session = useSession();
   const decodedName = useMemo(() => decodeURIComponent(name).trim(), [name]);
   const [state, setState] = useState<{ status: "loading" } | { status: "not-found" } | { status: "ready"; frameName: string; src: string }>({ status: "loading" });
 
@@ -160,7 +161,13 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
       if (event.origin !== window.location.origin) return;
       if (event.source !== frameRef.current?.contentWindow) return;
       const data = event.data as { type?: unknown; requestId?: unknown; tutorProfileId?: unknown; sessionId?: unknown; participantCount?: unknown } | null;
-      if (!data || typeof data.requestId !== "string") return;
+      if (!data) return;
+      if (data.type === "tutoria-booking-auth-required") {
+        const returnPath = `${window.location.pathname}${window.location.search}`;
+        window.location.assign(`/auth/sign-in?next=${encodeURIComponent(returnPath)}`);
+        return;
+      }
+      if (typeof data.requestId !== "string") return;
       const respond = (payload: Record<string, unknown>) => {
         frameRef.current?.contentWindow?.postMessage({ ...payload, requestId: data.requestId }, window.location.origin);
       };
@@ -174,12 +181,23 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
         void ensureSession()
           .then(() => createBooking(sessionId, typeof data.participantCount === "number" ? data.participantCount : 1))
           .then((booking) => respond({ type: "tutoria-booking-created", booking }))
-          .catch((error: unknown) => respond({ type: "tutoria-booking-error", code: error instanceof BookingApiError ? error.code : "BOOKING_SERVICE_UNAVAILABLE" }));
+          .catch((error: unknown) => {
+            const code = error instanceof BookingApiError ? error.code : "BOOKING_SERVICE_UNAVAILABLE";
+            respond({ type: code === "UNAUTHORIZED" ? "tutoria-booking-auth-required" : "tutoria-booking-error", code });
+          });
       }
     };
     window.addEventListener("message", onBookingMessage);
     return () => window.removeEventListener("message", onBookingMessage);
   }, [live]);
+
+  useEffect(() => {
+    if (!live || !ready) return;
+    frameRef.current?.contentWindow?.postMessage({
+      type: "tutoria-booking-auth-state",
+      authenticated: session.status === "authenticated",
+    }, window.location.origin);
+  }, [live, ready, session.status]);
 
   useEffect(() => {
     const onReady = (event: MessageEvent) => {
