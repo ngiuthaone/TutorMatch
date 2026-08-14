@@ -3,12 +3,14 @@ import { createApp } from "./app.js";
 import { parseEnvironment } from "./config/env.js";
 import { createSupabaseAuthService } from "./lib/supabase.js";
 import { createSupabaseTutorCvService } from "./services/tutor-cv-service.js";
+import { createSupabaseBookingService } from "./services/booking-service.js";
 
 async function main() {
   const config = parseEnvironment(process.env);
   const authService = createSupabaseAuthService(config.SUPABASE_URL, config.SUPABASE_PUBLISHABLE_KEY);
   const tutorCvService = createSupabaseTutorCvService(config.SUPABASE_URL, config.SUPABASE_PUBLISHABLE_KEY);
-  const app = createApp({ config, authService, tutorCvService, logger: {
+  const bookingService = createSupabaseBookingService(config.SUPABASE_URL, config.SUPABASE_PUBLISHABLE_KEY);
+  const app = createApp({ config, authService, tutorCvService, bookingService, logger: {
     level: config.NODE_ENV === "production" ? "info" : "debug",
     redact: { paths: ["req.headers.authorization", "req.headers.cookie", "res.headers.set-cookie", "*.accessToken", "*.refreshToken", "*.password", "*.secretKey"], censor: "[REDACTED]" }
   } });

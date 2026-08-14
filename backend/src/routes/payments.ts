@@ -5,16 +5,26 @@ import { verifyVnpayFields, normalizeVnpayOutcome, type VnpayConfig } from "../s
 import type { PaymentService } from "../services/payment-service.js";
 
 const startSchema = z.object({ bookingId: z.string().uuid(), idempotencyKey: z.string().trim().min(16).max(128) });
+function paymentError(error: { code?: string; message?: string } | null, fallbackCode: string, fallbackStatus = 503): ApiError {
+  const message = error?.message ?? "";
+  if (error?.code === "42501") return new ApiError(403, "FORBIDDEN", "You are not allowed to access this payment.");
+  if (message.includes("BOOKING_NOT_APPROVED_FOR_PAYMENT")) return new ApiError(409, "PAYMENT_NOT_READY", "The tutor has not approved this booking for payment.");
+  if (message.includes("BOOKING_PRICE_NOT_SNAPSHOTTED")) return new ApiError(409, "BOOKING_PRICE_MISSING", "This booking has no authoritative price.");
+  if (message.includes("PAYMENT_NOT_RETRYABLE")) return new ApiError(409, "PAYMENT_NOT_RETRYABLE", "This payment cannot be retried.");
+  if (message.includes("INVALID_IDEMPOTENCY_KEY")) return new ApiError(400, "INVALID_IDEMPOTENCY_KEY", "The idempotency key is invalid.");
+  if (message.includes("INVALID_TRANSITION")) return new ApiError(409, "INVALID_LIFECYCLE_TRANSITION", "Payment is not available in the current booking state.");
+  return new ApiError(fallbackStatus, fallbackCode, fallbackStatus === 503 ? "Payment service is temporarily unavailable." : "Payment request was rejected.");
+}
 export const paymentRoutes: FastifyPluginAsync<{ service: PaymentService; vnpay: VnpayConfig; reconciliationToken: string | undefined }> = async (app, options) => {
   app.post("/api/v1/payments/start", { preHandler: app.authenticate }, async (request) => {
     const body = startSchema.safeParse(request.body); if (!body.success) throw new ApiError(400, "PAYMENT_INVALID", "Payment details are invalid.");
     const result = await options.service.start(request.auth.accessToken, body.data.bookingId, body.data.idempotencyKey);
-    if (result.error) throw new ApiError(result.error.code === "42501" ? 403 : 400, "PAYMENT_START_REJECTED", result.error.message);
+    if (result.error) throw paymentError(result.error, "PAYMENT_START_REJECTED", 409);
     return { ok: true, payment: result.data };
   });
   app.get("/api/v1/payments/:bookingId", { preHandler: app.authenticate }, async (request) => {
     const bookingId = z.string().uuid().safeParse((request.params as { bookingId?: unknown }).bookingId); if (!bookingId.success) throw new ApiError(404, "NOT_FOUND", "Payment not found.");
-    const result = await options.service.read(request.auth.accessToken, bookingId.data); if (result.error) throw new ApiError(503, "PAYMENT_UNAVAILABLE", "Payment is temporarily unavailable.");
+    const result = await options.service.read(request.auth.accessToken, bookingId.data); if (result.error) throw paymentError(result.error, "PAYMENT_UNAVAILABLE");
     if (!result.data) throw new ApiError(404, "PAYMENT_NOT_FOUND", "Payment not found."); return { ok: true, payment: result.data };
   });
   app.get("/api/v1/payments/vnpay/ipn", async (request, reply) => {
