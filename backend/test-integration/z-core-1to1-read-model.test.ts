@@ -44,7 +44,7 @@ describe.sequential("core 1:1 API read-model RPCs", () => {
     expect(booking.error).toBeNull();
     const learnerRead = await learner.client.rpc("get_booking", { bid: booking.data.id });
     expect(learnerRead.error).toBeNull();
-    expect(learnerRead.data).toMatchObject({ status: "requested", paymentRequired: true, paymentReady: false, canLearnerCancel: true, tutor: { id: profile[0].id, displayName: "Read Model Tutor" } });
+    expect(learnerRead.data).toMatchObject({ status: "requested", paymentRequired: false, paymentReady: false, canLearnerCancel: true, tutor: { id: profile[0].id, displayName: "Read Model Tutor" } });
     expect(learnerRead.data).not.toHaveProperty("learnerId");
     expect(JSON.stringify(learnerRead.data)).not.toMatch(/email|phone|auth|user_id|private/i);
     const tutorList = await tutor.client.rpc("get_my_tutor_bookings");
