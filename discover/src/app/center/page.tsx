@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ensureSession, getSessionAccessToken } from "@/lib/auth/session";
+import { ensureSession, getSessionAccessToken, getSessionSnapshot } from "@/lib/auth/session";
 import { isLiveMode } from "@/lib/auth/config";
 import { decideTutorBooking, listTutorBookings, TutorBookingApiError } from "@/lib/tutor-booking-api";
 
@@ -18,7 +18,7 @@ export default function CenterPage() {
       if (message.type === "tutoria-center-load-tutor-bookings") {
         const requestId = typeof message.requestId === "string" ? message.requestId : "";
         if (!isLiveMode()) { frame.contentWindow?.postMessage({ type: "tutoria-center-demo", requestId }, window.location.origin); return; }
-        try { await ensureSession(); if (!getSessionAccessToken()) throw new TutorBookingApiError("UNAUTHORIZED", 401, "Sign in to manage tutor bookings."); const bookings = await listTutorBookings(); frame.contentWindow?.postMessage({ type: "tutoria-center-tutor-bookings", requestId, bookings }, window.location.origin); }
+        try { await ensureSession(); if (!getSessionAccessToken()) throw new TutorBookingApiError("UNAUTHORIZED", 401, "Sign in to manage tutor bookings."); const bookings = await listTutorBookings(); const sessionState = getSessionSnapshot(); const tutor = sessionState.status === "authenticated" ? { name: sessionState.user.name, role: sessionState.user.role } : null; frame.contentWindow?.postMessage({ type: "tutoria-center-tutor-bookings", requestId, bookings, tutor }, window.location.origin); }
         catch (error) { const apiError = error instanceof TutorBookingApiError ? error : new TutorBookingApiError("TUTOR_BOOKING_UNAVAILABLE", 503, "Tutor bookings are temporarily unavailable."); frame.contentWindow?.postMessage({ type: "tutoria-center-tutor-bookings-error", requestId, code: apiError.code, message: apiError.message }, window.location.origin); }
         return;
       }

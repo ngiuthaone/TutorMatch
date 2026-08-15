@@ -23,4 +23,12 @@ describe("Center tutor decision bridge contract", () => {
     expect(centerHtml).toContain("status==='confirmed'?'upcoming'");
     expect(centerHtml).toContain("tutoria-center-tutor-bookings");
   });
+
+  it("projects the authenticated Tutor identity and persisted learner identity into live bookings", () => {
+    expect(centerPage).toContain("getSessionSnapshot");
+    expect(centerPage).toContain("tutor");
+    expect(centerHtml).toContain("data-center-account-name");
+    expect(centerHtml).toContain("raw?.learner?.displayName");
+    expect(centerHtml).not.toContain("learner:`Learner · ${String(raw.id).slice(0,8)}`");
+  });
 });

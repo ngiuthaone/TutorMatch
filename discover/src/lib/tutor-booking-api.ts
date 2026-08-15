@@ -41,6 +41,7 @@ export interface TutorBookingRecord {
     spotsLeft: number | null;
     version: number;
   };
+  learner?: { displayName?: string | null } | null;
   payment?: { status?: string; amountVnd?: number | string; currency?: string } | null;
   paymentRequired?: boolean;
   paymentReady?: boolean;
