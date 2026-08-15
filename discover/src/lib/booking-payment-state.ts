@@ -11,7 +11,15 @@ export function canStartPayment(booking: BookingRecord): boolean {
 }
 
 export function bookingApprovalLabel(booking: BookingRecord): string {
+  if (booking.status === "rejected") return "Tutor declined";
   return booking.paymentReady || booking.status === "confirmed" ? "Tutor accepted" : "Waiting for tutor approval";
+}
+
+export function bookingSubtitle(booking: BookingRecord): string {
+  if (booking.status === "rejected") return "The tutor declined your booking request.";
+  if (booking.status === "confirmed") return "Your session is confirmed.";
+  if (booking.paymentReady) return "Complete payment to confirm your lesson.";
+  return "Your booking request is waiting for tutor approval.";
 }
 
 export function bookingPaymentLabel(booking: BookingRecord): string {

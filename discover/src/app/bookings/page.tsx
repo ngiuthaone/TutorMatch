@@ -5,7 +5,7 @@ import { isLiveMode } from "@/lib/auth/config";
 import { ensureSession, useSession } from "@/lib/auth/session";
 import { getLearnerBooking, listLearnerBookings, type BookingRecord } from "@/lib/booking-api";
 import { PaymentApiError, startPayment } from "@/lib/payment-api";
-import { bookingAmount, bookingApprovalLabel, bookingPaymentLabel, bookingTitle, canStartPayment } from "@/lib/booking-payment-state";
+import { bookingAmount, bookingApprovalLabel, bookingPaymentLabel, bookingSubtitle, bookingTitle, canStartPayment } from "@/lib/booking-payment-state";
 
 function formatMoney(amount: number): string {
   return `${new Intl.NumberFormat("vi-VN").format(amount)}₫`;
@@ -51,7 +51,7 @@ function BookingCard({ booking, onRefresh }: { booking: BookingRecord; onRefresh
   const paid = booking.payment?.status === "succeeded";
   const confirmed = booking.status === "confirmed" && paid;
   const title = bookingTitle(booking);
-  const subtitle = confirmed ? "Your session is confirmed." : accepted ? "Complete payment to confirm your lesson." : "Your booking request is waiting for tutor approval.";
+  const subtitle = bookingSubtitle(booking);
 
   return (
     <article className="overflow-hidden rounded-[28px] border border-white/[0.13] bg-[#171717] shadow-[0_28px_100px_rgba(0,0,0,.42)]">

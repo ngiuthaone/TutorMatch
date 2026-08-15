@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookingApprovalLabel, bookingPaymentLabel, bookingTitle, canStartPayment, paymentReturnState } from "@/lib/booking-payment-state";
+import { bookingApprovalLabel, bookingPaymentLabel, bookingSubtitle, bookingTitle, canStartPayment, paymentReturnState } from "@/lib/booking-payment-state";
 import type { BookingRecord } from "@/lib/booking-api";
 
 const base = { id: "b", sessionId: "s", status: "requested", participantCount: 1, version: 1, createdAt: "", updatedAt: "", pricing: { amountVnd: 300000, currency: "VND", hourlyRateVnd: 300000, durationMinutes: 60, model: "hourly_v1", snapshottedAt: "" }, session: { id: "s", status: "scheduled", startsAt: "2026-08-20T02:00:00Z", endsAt: "2026-08-20T03:00:00Z", minParticipants: null, maxParticipants: 1, hardReservedCapacity: 0, spotsLeft: 1, version: 1, tutorProfileId: "t" , hourlyRateVnd: 300000, currency: "VND" as const }, tutor: { id: "t", displayName: "Read Model Tutor" } } satisfies BookingRecord;
@@ -15,15 +15,28 @@ describe("booking payment state", () => {
     expect(bookingPaymentLabel({ ...base, paymentReady: false })).toBe("Not available yet");
     expect(bookingApprovalLabel({ ...base, paymentReady: false })).not.toBe("Tutor accepted");
     expect(bookingPaymentLabel({ ...base, paymentReady: false })).not.toBe("Required");
+    expect(bookingSubtitle({ ...base, paymentReady: false })).toBe("Your booking request is waiting for tutor approval.");
   });
   it("keeps payment-required presentation after tutor acceptance", () => {
     expect(bookingTitle({ ...base, paymentReady: true })).toBe("Read Model Tutor accepted your request");
     expect(bookingApprovalLabel({ ...base, paymentReady: true })).toBe("Tutor accepted");
     expect(bookingPaymentLabel({ ...base, paymentReady: true })).toBe("Required");
+    expect(bookingSubtitle({ ...base, paymentReady: true })).toBe("Complete payment to confirm your lesson.");
+  });
+
+  it("presents rejected requests as declined and keeps them non-payable", () => {
+    const rejected = { ...base, status: "rejected" as const, paymentReady: false };
+    expect(bookingApprovalLabel(rejected)).toBe("Tutor declined");
+    expect(bookingSubtitle(rejected)).toBe("The tutor declined your booking request.");
+    expect(bookingSubtitle(rejected)).not.toContain("waiting for tutor approval");
+    expect(canStartPayment(rejected)).toBe(false);
+    expect(rejected.tutor.displayName).toBe("Read Model Tutor");
+    expect(rejected.pricing?.amountVnd).toBe(300000);
   });
   it("keeps Tutor identity in confirmed presentation", () => {
     const payment = { id: "p", status: "succeeded" as const, amountVnd: 300000, currency: "VND" as const, refundedAmountVnd: 0, paidAt: "2026-08-20T02:00:00Z" };
     expect(bookingTitle({ ...base, status: "confirmed", payment })).toBe("Payment complete");
+    expect(bookingSubtitle({ ...base, status: "confirmed", payment })).toBe("Your session is confirmed.");
     expect({ tutor: { ...base.tutor } }).toMatchObject({ tutor: { displayName: "Read Model Tutor" } });
   });
   it("does not expose Pay for rejected or confirmed bookings", () => {
