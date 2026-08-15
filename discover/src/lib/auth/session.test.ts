@@ -6,6 +6,7 @@ const signUpMock = vi.hoisted(() => vi.fn());
 const getSessionMock = vi.hoisted(() => vi.fn());
 const refreshSessionMock = vi.hoisted(() => vi.fn());
 const signOutMock = vi.hoisted(() => vi.fn());
+const resendMock = vi.hoisted(() => vi.fn());
 const onAuthStateChangeMock = vi.hoisted(() => vi.fn());
 const getMeMock = vi.hoisted(() => vi.fn());
 
@@ -17,6 +18,7 @@ vi.mock("@/lib/auth/supabase-client", () => ({
       getSession: getSessionMock,
       refreshSession: refreshSessionMock,
       signOut: signOutMock,
+      resend: resendMock,
       onAuthStateChange: onAuthStateChangeMock,
     },
   }),
@@ -76,6 +78,7 @@ beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "pk_test_123");
   vi.stubEnv("NEXT_PUBLIC_TUTORIA_API_BASE_URL", "https://api.tutoria.example.com");
   vi.stubEnv("NEXT_PUBLIC_TUTORIA_DEMO_MODE", "false");
+  vi.stubEnv("NEXT_PUBLIC_TUTORIA_AUTH_CALLBACK_URL", "http://127.0.0.1:3456/auth/callback");
 });
 
 afterEach(() => {
@@ -89,7 +92,7 @@ describe("session error mapping", () => {
       code: "INVALID_CREDENTIALS",
       message: "Incorrect email or password.",
     });
-    expect(mapAuthError({ message: "Email not confirmed", status: "400" })).toMatchObject({ code: "EMAIL_NOT_CONFIRMED" });
+    expect(mapAuthError({ code: "email_not_confirmed", message: "provider wording changed", status: 400 })).toMatchObject({ code: "EMAIL_NOT_CONFIRMED" });
     expect(mapAuthError({ message: "User already registered", status: "400" })).toMatchObject({ code: "EMAIL_TAKEN" });
     expect(mapAuthError({ message: "Password should be at least 6 characters", status: "400" })).toMatchObject({
       code: "WEAK_PASSWORD",
@@ -148,6 +151,30 @@ describe("signInWithPassword", () => {
 
     await expect(signInWithPassword("learner@example.com", "wrong")).rejects.toBeDefined();
     expect(getSessionSnapshot().status).toBe("initializing");
+  });
+
+  it("maps Supabase's stable unconfirmed-email code without creating a session", async () => {
+    const { signInWithPassword, getSessionSnapshot } = await loadSession();
+    signInWithPasswordMock.mockResolvedValue({ data: { session: null }, error: { name: "AuthApiError", status: 400, code: "email_not_confirmed", message: "Email not confirmed" } });
+    await expect(signInWithPassword("unverified@example.com", "secret")).rejects.toMatchObject({ code: "EMAIL_NOT_CONFIRMED" });
+    expect(getSessionSnapshot().status).toBe("initializing");
+  });
+});
+
+describe("email verification", () => {
+  it("resends confirmation through Supabase with a safe booking return path", async () => {
+    const { resendSignupConfirmation, ensureSession } = await loadSession();
+    getSessionMock.mockResolvedValue({ data: { session: makeSession() }, error: null });
+    onAuthStateChangeMock.mockImplementation(() => () => {});
+    getMeMock.mockResolvedValue(makeProfile());
+    resendMock.mockResolvedValue({ data: {}, error: null });
+    await ensureSession();
+    await resendSignupConfirmation("/tutor/Thu%20Ha?bookingSessionId=11111111-1111-4111-8111-111111111111&bookingStep=review");
+    expect(resendMock).toHaveBeenCalledWith(expect.objectContaining({
+      type: "signup",
+      email: "learner@example.com",
+      options: { emailRedirectTo: expect.stringContaining("next=%2Ftutor%2FThu%2520Ha") },
+    }));
   });
 });
 

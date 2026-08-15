@@ -32,6 +32,11 @@ export function AuthCallbackPage() {
         if (code) {
           const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
+        } else if (searchParams.get("token_hash")) {
+          const requestedType = searchParams.get("type");
+          const type = requestedType === "recovery" ? "recovery" : requestedType === "invite" ? "invite" : "signup";
+          const { error: verifyError } = await client.auth.verifyOtp({ token_hash: searchParams.get("token_hash")!, type });
+          if (verifyError) throw verifyError;
         } else {
           await ensureSession();
         }

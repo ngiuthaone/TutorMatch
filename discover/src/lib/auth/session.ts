@@ -6,6 +6,7 @@ import { ApiClientError, getApiClient } from "./api-client";
 import { getAuthCallbackUrl, isLiveMode } from "./config";
 import { setLiveIdentity, type LiveIdentity } from "./identity";
 import { getSupabaseClient } from "./supabase-client";
+import { safeRedirectPath } from "./redirect";
 
 export type LiveUser = LiveIdentity;
 
@@ -132,6 +133,29 @@ export function getSessionAccessToken(): string | null {
   return snapshot.status === "authenticated" ? snapshot.session.access_token : null;
 }
 
+export function getAuthenticatedEmail(): string | null {
+  const snapshot = getSessionSnapshot();
+  return snapshot.status === "authenticated" ? snapshot.session.user.email ?? null : null;
+}
+
+function confirmationRedirectUrl(nextPath: string): string {
+  const callback = new URL(getAuthCallbackUrl());
+  callback.searchParams.set("next", safeRedirectPath(nextPath));
+  return callback.toString();
+}
+
+export async function resendSignupConfirmation(nextPath: string, emailHint?: string): Promise<void> {
+  const client = getSupabaseClient();
+  const email = emailHint?.trim() || getAuthenticatedEmail() || null;
+  if (!client || !email) throw new Error("EMAIL_VERIFICATION_SESSION_REQUIRED");
+  const { error } = await client.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: confirmationRedirectUrl(nextPath) },
+  });
+  if (error) throw mapAuthError(error);
+}
+
 export async function signInWithPassword(email: string, password: string): Promise<void> {
   const client = getSupabaseClient();
   if (!client) throw new Error("CONFIGURATION_ERROR");
@@ -194,10 +218,11 @@ export async function signOutLive(): Promise<void> {
   emit({ status: "anonymous" });
 }
 
-function mapAuthError(error: { message?: string; status?: string | number }): { code: string; message: string } {
+function mapAuthError(error: { code?: string; message?: string; status?: string | number }): { code: string; message: string } {
   const raw = error?.message || "";
   const code = String(error?.status || "AUTH_ERROR");
   const lowered = raw.toLowerCase();
+  if (String(error?.code || "").toLowerCase() === "email_not_confirmed") return { code: "EMAIL_NOT_CONFIRMED", message: "Confirm your email address using the link we sent before signing in." };
   if (lowered.includes("invalid login credentials")) return { code: "INVALID_CREDENTIALS", message: "Incorrect email or password." };
   if (lowered.includes("email not confirmed")) return { code: "EMAIL_NOT_CONFIRMED", message: "Confirm your email address using the link we sent before signing in." };
   if (lowered.includes("already registered")) return { code: "EMAIL_TAKEN", message: "An account already exists for this email. Sign in instead." };

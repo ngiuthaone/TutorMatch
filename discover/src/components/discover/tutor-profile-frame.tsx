@@ -6,7 +6,7 @@ import { isLiveMode } from "@/lib/auth/config";
 import { getTutor, isPublicTutorUuid, listTutors, type PublicTutorDetail } from "@/lib/tutor-cv-api";
 import { BookingApiError, createBooking, listBookableSessions, type BookableSession } from "@/lib/booking-api";
 import { sortFutureBookableSessions } from "@/lib/bookable-session-projection";
-import { ensureSession, useSession } from "@/lib/auth/session";
+import { ensureSession, signOutLive, useSession } from "@/lib/auth/session";
 
 interface TutorProfileFrameProps {
   name: string;
@@ -23,6 +23,7 @@ const LEVEL_LABELS: Record<string, string> = {
   advanced: "Advanced learners",
   exam_preparation: "Exam preparation",
 };
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function initialsAvatar(displayName: string): string {
   const initials = displayName
@@ -144,7 +145,9 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
         };
         if (cancelled) return;
         const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(frameProfile))));
-        setState({ status: "ready", frameName: displayName, src: `/tutor-profile-exact.html?name=${encodeURIComponent(displayName)}&profile=${encoded}` });
+        const resumeSessionId = new URLSearchParams(window.location.search).get("bookingSessionId");
+        const resumeQuery = resumeSessionId && UUID.test(resumeSessionId) ? `&bookingSessionId=${encodeURIComponent(resumeSessionId)}&bookingStep=review` : "";
+        setState({ status: "ready", frameName: displayName, src: `/tutor-profile-exact.html?name=${encodeURIComponent(displayName)}&profile=${encoded}${resumeQuery}` });
       } catch {
         if (!cancelled) setState({ status: "not-found" });
       }
@@ -162,9 +165,26 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
       if (event.source !== frameRef.current?.contentWindow) return;
       const data = event.data as { type?: unknown; requestId?: unknown; tutorProfileId?: unknown; sessionId?: unknown; participantCount?: unknown } | null;
       if (!data) return;
+      if (data.type === "tutoria-auth-sign-out") {
+        void signOutLive().finally(() => window.location.assign("/auth/sign-in"));
+        return;
+      }
+      const bookingReturnPath = () => {
+        const url = new URL(window.location.href);
+        if (typeof data.sessionId === "string" && UUID.test(data.sessionId)) {
+          url.searchParams.set("bookingSessionId", data.sessionId);
+          url.searchParams.set("bookingStep", "review");
+        }
+        return `${url.pathname}${url.search}`;
+      };
       if (data.type === "tutoria-booking-auth-required") {
-        const returnPath = `${window.location.pathname}${window.location.search}`;
+        const returnPath = bookingReturnPath();
         window.location.assign(`/auth/sign-in?next=${encodeURIComponent(returnPath)}`);
+        return;
+      }
+      if (data.type === "tutoria-booking-verification-required") {
+        const returnPath = bookingReturnPath();
+        window.location.assign(`/auth/verify-email?next=${encodeURIComponent(returnPath)}`);
         return;
       }
       if (typeof data.requestId !== "string") return;
@@ -183,7 +203,9 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
           .then((booking) => respond({ type: "tutoria-booking-created", booking }))
           .catch((error: unknown) => {
             const code = error instanceof BookingApiError ? error.code : "BOOKING_SERVICE_UNAVAILABLE";
-            respond({ type: code === "UNAUTHORIZED" ? "tutoria-booking-auth-required" : "tutoria-booking-error", code });
+            if (code === "UNAUTHORIZED") respond({ type: "tutoria-booking-auth-required", sessionId });
+            else if (code === "EMAIL_VERIFICATION_REQUIRED") respond({ type: "tutoria-booking-verification-required", sessionId });
+            else respond({ type: "tutoria-booking-error", code, sessionId });
           });
       }
     };

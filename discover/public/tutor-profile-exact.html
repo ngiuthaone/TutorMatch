@@ -1021,7 +1021,7 @@
               <a href="/bookings" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="calendar-days" class="h-4 w-4"></i>My bookings</a>
               <a href="/saved" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="heart" class="h-4 w-4"></i>Saved</a>
               <a href="/settings" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="settings" class="h-4 w-4"></i>Settings</a>
-              <a href="/auth/sign-in" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="log-out" class="h-4 w-4"></i>Sign out</a>
+              <a href="/auth/sign-in" target="_top" data-auth-sign-out class="discover-user-item" role="menuitem"><i data-lucide="log-out" class="h-4 w-4"></i>Sign out</a>
             </div>
           </div>
           <button id="discoverMobileMenuButton" class="discover-mobile-menu-button" type="button" aria-label="Open navigation menu" aria-expanded="false">
@@ -2120,6 +2120,7 @@
                 </div>
                 <p id="reviewChargeNote" class="mt-4 rounded-xl border border-line bg-canvas p-4 text-xs leading-5 text-muted">You won't be charged yet. Payment becomes available after the tutor accepts your request.</p>
                 <p id="bookingAuthNote" class="mt-3 text-xs leading-5 text-muted">Sign in to send your booking request.</p>
+                <p id="bookingVerificationNote" class="mt-3 hidden rounded-xl border border-line bg-canvas p-4 text-xs leading-5 text-muted">Email verification is required before you can send this request.</p>
               </section>
             </div>
 
@@ -2210,6 +2211,12 @@
       userMenu?.classList.remove("is-open");
       userMenu?.querySelector("button")?.setAttribute("aria-expanded", "false");
     }
+
+    document.querySelector("[data-auth-sign-out]")?.addEventListener("click", event => {
+      if (window.parent === window) return;
+      event.preventDefault();
+      window.parent.postMessage({ type: "tutoria-auth-sign-out" }, window.location.origin);
+    });
 
     function setDiscoverMenuOpen(group, open) {
       closeDiscoverMenus();
@@ -2452,6 +2459,8 @@
     let bookingAuthenticated = false;
     let requestSequence = 0;
     let activeRequestId = "";
+    const resumeSessionId = new URLSearchParams(location.search).get("bookingSessionId");
+    let resumeAttempted = false;
 
     const modal = document.getElementById("bookingModal");
     const nextButton = document.getElementById("bookingNext");
@@ -2646,7 +2655,7 @@
     function submitBookingRequest() {
       if (bookingSubmitting || selectedSessions.length !== 1) return;
       if (!bookingAuthenticated) {
-        window.parent?.postMessage({ type: "tutoria-booking-auth-required" }, window.location.origin);
+        window.parent?.postMessage({ type: "tutoria-booking-auth-required", sessionId: selectedSessions[0].id }, window.location.origin);
         return;
       }
       bookingSubmitting = true;
@@ -2679,18 +2688,38 @@
         sessionsLoading = false;
         sessionsError = "";
         authoritativeSessions = normalizeAuthoritativeSessions(data.sessions);
+        if (!resumeAttempted && resumeSessionId) {
+          resumeAttempted = true;
+          const resumeSession = authoritativeSessions.find(session => session.id === resumeSessionId);
+          if (resumeSession) {
+            flowMode = "single";
+            flowDuration = resumeSession.duration;
+            flowPrice = resumeSession.price;
+            activeDate = { date: resumeSession.date, short: resumeSession.short, weekday: resumeSession.weekday };
+            selectedSessions = [resumeSession];
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            document.body.style.overflow = "hidden";
+            currentBookingStep = 2;
+          }
+        }
         renderAuthoritativeAvailability();
         renderAll();
+        if (resumeSessionId && selectedSessions.length === 1 && currentBookingStep === 2) goToBookingStep(2);
       } else if (data.type === "tutoria-booking-error") {
         bookingSubmitting = false;
         sessionsLoading = false;
-        const messages = { UNAUTHORIZED: "Sign in to send a booking request.", FORBIDDEN: "You are not allowed to send this booking request.", SESSION_CAPACITY_EXHAUSTED: "That Session is no longer available. Refresh availability and try another time.", SESSION_UNAVAILABLE: "That Session is no longer available. Refresh availability and try another time.", SESSION_NOT_FOUND: "That Session could not be found. Refresh availability and try another time.", BOOKING_CONFLICT: "You already have an active request for that Session.", BOOKING_PRICE_MISSING: "This Session is not ready for booking.", STALE_VERSION: "Availability changed. Refresh and choose a current Session.", BOOKING_SERVICE_UNAVAILABLE: "Booking is temporarily unavailable. Please try again." };
+        const messages = { UNAUTHORIZED: "Sign in to send a booking request.", EMAIL_VERIFICATION_REQUIRED: "Verify your email before sending this booking request.", RATE_LIMITED: "You have sent several booking requests recently. Please wait a little before trying again.", FORBIDDEN: "You are not allowed to send this booking request.", SESSION_CAPACITY_EXHAUSTED: "That Session is no longer available. Refresh availability and try another time.", SESSION_UNAVAILABLE: "That Session is no longer available. Refresh availability and try another time.", SESSION_NOT_FOUND: "That Session could not be found. Refresh availability and try another time.", BOOKING_CONFLICT: "You already have an active request for that Session.", BOOKING_PRICE_MISSING: "This Session is not ready for booking.", STALE_VERSION: "Availability changed. Refresh and choose a current Session.", BOOKING_SERVICE_UNAVAILABLE: "Booking is temporarily unavailable. Please try again." };
         const message = messages[data.code] || "We could not complete the booking request. Please try again.";
         if (String(data.requestId || "").startsWith("sessions-")) sessionsError = message;
         nextButton.disabled = false;
         renderAuthoritativeAvailability();
         renderAll();
         footerSelection.textContent = message;
+        if (data.code === "EMAIL_VERIFICATION_REQUIRED") {
+          document.getElementById("bookingVerificationNote")?.classList.remove("hidden");
+          window.parent?.postMessage({ type: "tutoria-booking-verification-required", sessionId: data.sessionId }, window.location.origin);
+        }
       } else if (data.type === "tutoria-booking-created" && data.booking) {
         bookingSubmitting = false;
         showBookingSuccess(data.booking);
@@ -3388,6 +3417,8 @@
 
     document.querySelectorAll(".edit-booking-step").forEach(button => button.addEventListener("click", () => goToBookingStep(Number(button.dataset.editStep))));
     document.querySelectorAll(".availability-cell button, button.availability-cell").forEach(button => button.addEventListener("click", () => openBookingFlow()));
+
+    if (resumeSessionId) requestAuthoritativeSessions();
 
   </script>
 </body>

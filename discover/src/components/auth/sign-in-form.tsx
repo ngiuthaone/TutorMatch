@@ -77,7 +77,12 @@ export function SignInForm({ nextPath = "/discover", resetComplete: resetComplet
       await new Promise((resolve) => setTimeout(resolve, 450));
       router.replace(nextPath);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Sign-in failed. Try again.");
+      const authError = submitError as { code?: unknown; message?: unknown };
+      if (authError?.code === "EMAIL_NOT_CONFIRMED") {
+        router.replace(`/auth/verify-email?next=${encodeURIComponent(nextPath)}&email=${encodeURIComponent(email.trim())}`);
+        return;
+      }
+      setError(typeof authError?.message === "string" ? authError.message : "Sign-in failed. Try again.");
       setLoading(false);
     }
   };
