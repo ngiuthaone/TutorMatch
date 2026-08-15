@@ -11,7 +11,7 @@ const service = () => ({
 describe("financial worker runtime", () => {
   it("runs each bounded sweep once and continues after one failure", async () => {
     const calls = service();
-    calls.sweepRefundReconciliations.mockResolvedValueOnce({ error: new Error("database unavailable") });
+    calls.sweepRefundReconciliations.mockResolvedValueOnce({ error: { message: "database unavailable" } });
     const logs: string[] = [];
     const result = await runFinancialWorkerIteration(calls, "worker-test", (level, event) => logs.push(`${level}:${event}`));
     expect(result.ok).toBe(false);
@@ -38,5 +38,15 @@ describe("financial worker runtime", () => {
     await running;
     expect(calls.sweepRefundExecutions).toHaveBeenCalledOnce();
     expect(runtime.health().status).toBe("stopped");
+  });
+
+  it("keeps a healthy worker alive for the next scheduled iteration", async () => {
+    const calls = service();
+    const runtime = createFinancialWorkerRuntime({ service: calls, workerId: "worker-test", intervalMs: 2, logger: vi.fn() });
+    const running = runtime.start();
+    await new Promise((resolve) => setTimeout(resolve, 8));
+    expect(runtime.health().iterationCount).toBeGreaterThan(1);
+    await runtime.stop("test");
+    await running;
   });
 });

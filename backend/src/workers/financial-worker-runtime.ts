@@ -11,7 +11,14 @@ export type FinancialWorkerHealth = {
   lastError: string | null;
 };
 
-const errorMessage = (error: unknown) => (error instanceof Error ? error.message : "unknown worker error").slice(0, 500);
+const errorMessage = (error: unknown) => {
+  const message = error instanceof Error
+    ? error.message
+    : typeof error === "object" && error !== null && "message" in error && typeof error.message === "string"
+      ? error.message
+      : "unknown worker error";
+  return message.slice(0, 500);
+};
 
 export async function runFinancialWorkerIteration(service: Pick<PaymentService, "sweepRefundExecutions" | "sweepRefundReconciliations" | "sweepPendingFinalizations">, workerId: string, logger: FinancialWorkerLogger): Promise<{ ok: boolean; errors: string[] }> {
   const errors: string[] = [];
@@ -54,7 +61,10 @@ export function createFinancialWorkerRuntime(input: {
   const health: FinancialWorkerHealth = { status: "starting", startedAt: null, lastIterationAt: null, lastSuccessfulIterationAt: null, iterationCount: 0, lastError: null };
   const waitForNextIteration = () => new Promise<void>((resolve) => {
     wake = resolve;
-    setTimeout(resolve, input.intervalMs).unref?.();
+    // Keep the timer referenced: this is the worker's liveness handle. An
+    // unref'ed timer would let Node exit after the first sweep when no other
+    // socket/timer happens to be active.
+    setTimeout(resolve, input.intervalMs);
   });
   const iteration = async () => {
     health.status = "running";
