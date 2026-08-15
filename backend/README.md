@@ -48,6 +48,8 @@ See [`../docs/financial-worker-runbook.md`](../docs/financial-worker-runbook.md)
 for configuration, supervision, shutdown, and alerting. The deployment
 platform is not selected in this repository; production release therefore
 requires an explicit `DEPLOYMENT_DECISION_REQUIRED` decision before hosting.
+See [`../docs/tutor-v1-deployment-topology.md`](../docs/tutor-v1-deployment-topology.md)
+for the vendor-neutral frontend/API/worker/Supabase/callback contract.
 
 Compiled output runs with Node, not `tsx`. Source maps aid diagnostics but must not be served publicly.
 
