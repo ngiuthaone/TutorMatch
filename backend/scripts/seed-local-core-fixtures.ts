@@ -84,7 +84,7 @@ async function ensureUser(fixture: FixtureUser): Promise<AuthUser> {
     const result = await admin.auth.admin.updateUserById(existing.id, {
       password: localOnlyPassword,
       email_confirm: fixture.emailConfirmed ?? true,
-      user_metadata: { name: fixture.name, role },
+      user_metadata: { name: fixture.name },
     });
     if (result.error || !result.data.user) throw result.error ?? new Error(`Could not update ${fixture.email}`);
     user = { id: result.data.user.id, email: result.data.user.email };
@@ -93,7 +93,7 @@ async function ensureUser(fixture: FixtureUser): Promise<AuthUser> {
       email: fixture.email,
       password: localOnlyPassword,
       email_confirm: fixture.emailConfirmed ?? true,
-      user_metadata: { name: fixture.name, role },
+      user_metadata: { name: fixture.name },
     });
     if (result.error || !result.data.user) throw result.error ?? new Error(`Could not create ${fixture.email}`);
     user = { id: result.data.user.id, email: result.data.user.email };
@@ -101,9 +101,13 @@ async function ensureUser(fixture: FixtureUser): Promise<AuthUser> {
 
   await sql`
     insert into public.profiles (id, role, name)
-    values (${user.id}, ${role}, ${fixture.name})
+    values (${user.id}, 'student', ${fixture.name})
     on conflict (id) do update set role = excluded.role, name = excluded.name
   `;
+  if (role === "tutor") {
+    const enabled = await admin.rpc("enable_tutor", { target_user_id: user.id });
+    if (enabled.error || enabled.data !== true) throw enabled.error ?? new Error(`Could not enable Tutor fixture ${fixture.email}`);
+  }
   return user;
 }
 
