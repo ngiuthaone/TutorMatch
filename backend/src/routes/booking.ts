@@ -20,6 +20,8 @@ function routeId(value: unknown, name: string): string {
 function fail(result: BookingServiceResult): never {
   const code = result.error?.code ?? "";
   const message = result.error?.message ?? "";
+  if (message.includes("EMAIL_VERIFICATION_REQUIRED")) throw new ApiError(403, "EMAIL_VERIFICATION_REQUIRED", "Verify your email before sending a booking request.");
+  if (message.includes("RATE_LIMITED")) throw new ApiError(429, "RATE_LIMITED", "You have sent several booking requests recently. Please wait a little before trying again.");
   if (code === "42501") throw new ApiError(403, "FORBIDDEN", "You are not allowed to perform this action.");
   if (code === "40001" || message.includes("STALE_VERSION")) throw new ApiError(409, "STALE_VERSION", "This booking or session changed. Reload before trying again.");
   if (message.includes("INSUFFICIENT_CAPACITY")) throw new ApiError(409, "SESSION_CAPACITY_EXHAUSTED", "That session no longer has enough capacity.");

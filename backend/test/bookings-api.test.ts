@@ -53,6 +53,18 @@ describe("1:1 booking API boundary", () => {
     expect((await app.inject({ method: "GET", url: "/api/v1/bookings", headers: auth })).statusCode).toBe(200);
   });
 
+  it("keeps verification-required and rate-limited outcomes distinct", async () => {
+    const verification = setup({ createBooking: async () => ({ data: null, error: { code: "P0001", message: "EMAIL_VERIFICATION_REQUIRED" } }) }, true);
+    const verifiedResponse = await verification.app.inject({ method: "POST", url: "/api/v1/bookings", headers: { authorization: "Bearer test-token" }, payload: { sessionId: "11111111-1111-4111-8111-111111111111" } });
+    expect(verifiedResponse.statusCode).toBe(403);
+    expect(verifiedResponse.json().error.code).toBe("EMAIL_VERIFICATION_REQUIRED");
+
+    const limited = setup({ createBooking: async () => ({ data: null, error: { code: "P0001", message: "RATE_LIMITED" } }) }, true);
+    const limitedResponse = await limited.app.inject({ method: "POST", url: "/api/v1/bookings", headers: { authorization: "Bearer test-token" }, payload: { sessionId: "11111111-1111-4111-8111-111111111111" } });
+    expect(limitedResponse.statusCode).toBe(429);
+    expect(limitedResponse.json().error.code).toBe("RATE_LIMITED");
+  });
+
   it("maps stale lifecycle errors to stable API semantics", async () => {
     const { app } = setup({ tutorReject: async () => ({ data: null, error: { code: "40001", message: "STALE_VERSION" } }) }, true);
     const response = await app.inject({ method: "POST", url: "/api/v1/bookings/11111111-1111-4111-8111-111111111111/reject", headers: { authorization: "Bearer test-token" }, payload: { expectedVersion: 1 } });
