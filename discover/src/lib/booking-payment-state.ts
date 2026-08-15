@@ -10,12 +10,33 @@ export function canStartPayment(booking: BookingRecord): boolean {
   return booking.status === "requested" && booking.paymentReady === true && booking.paymentRetryAllowed !== false && bookingAmount(booking) !== null;
 }
 
+export function canCancelBooking(booking: BookingRecord): boolean {
+  return booking.canLearnerCancel === true;
+}
+
+export function refundStatusLabel(booking: BookingRecord): string | null {
+  switch (booking.refund?.status) {
+    case "processing": return "Refund processing";
+    case "refunded": case "succeeded": return "Refunded";
+    case "needs_attention": return "Refund needs attention";
+    default: return null;
+  }
+}
+
+export function refundAmount(booking: BookingRecord): number | null {
+  const value = booking.refund?.status === "processing" || booking.refund?.status === "needs_attention"
+    ? booking.refund?.amountVnd ?? booking.refund?.refundedAmountVnd
+    : booking.refund?.refundedAmountVnd ?? booking.refund?.amountVnd;
+  return typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : null;
+}
+
 export function bookingApprovalLabel(booking: BookingRecord): string {
   if (booking.status === "rejected") return "Tutor declined";
   return booking.paymentReady || booking.status === "confirmed" ? "Tutor accepted" : "Waiting for tutor approval";
 }
 
 export function bookingSubtitle(booking: BookingRecord): string {
+  if (booking.status === "cancelled") return refundStatusLabel(booking) ?? "This booking was cancelled.";
   if (booking.status === "rejected") return "The tutor declined your booking request.";
   if (booking.status === "confirmed") return "Your session is confirmed.";
   if (booking.paymentReady) return "Complete payment to confirm your lesson.";
@@ -23,6 +44,7 @@ export function bookingSubtitle(booking: BookingRecord): string {
 }
 
 export function bookingPaymentLabel(booking: BookingRecord): string {
+  if (booking.status === "cancelled") return refundStatusLabel(booking) ?? "Not available";
   if (booking.status === "confirmed" && booking.payment?.status === "succeeded") return "Paid";
   return booking.paymentReady ? "Required" : "Not available yet";
 }

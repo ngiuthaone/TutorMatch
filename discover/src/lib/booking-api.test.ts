@@ -6,7 +6,7 @@ const getApiBaseUrlMock = vi.hoisted(() => vi.fn(() => "http://api.example.com")
 vi.mock("@/lib/auth/session", () => ({ getSessionAccessToken: getSessionAccessTokenMock }));
 vi.mock("@/lib/auth/config", () => ({ getApiBaseUrl: getApiBaseUrlMock }));
 
-import { createBooking, getLearnerBooking, listBookableSessions, listLearnerBookings } from "@/lib/booking-api";
+import { cancelLearnerBooking, createBooking, getCancellationPreview, getLearnerBooking, listBookableSessions, listLearnerBookings } from "@/lib/booking-api";
 
 const SESSION_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 const TUTOR_PROFILE_ID = "11111111-2222-4333-8444-555555555555";
@@ -103,5 +103,13 @@ describe("booking-api", () => {
     expect(fetch).toHaveBeenCalledWith("http://api.example.com/api/v1/bookings", expect.objectContaining({ headers: expect.objectContaining({ Authorization: "Bearer learner-token" }) }));
     vi.mocked(fetch).mockResolvedValue(jsonResponse({ ok: true, booking }));
     await expect(getLearnerBooking(booking.id)).resolves.toEqual(booking);
+  });
+
+  it("reads an advisory cancellation preview and submits only server version", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ ok: true, preview: { allowed: true, refundMode: "FULL", refundAmountVnd: 300000, policyCode: "SERVER_POLICY", expectedVersion: 4, paymentInFlight: false } }));
+    await expect(getCancellationPreview("booking-1")).resolves.toMatchObject({ refundMode: "FULL", expectedVersion: 4 });
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ ok: true, booking: { id: "booking-1", sessionId: SESSION_ID, status: "cancelled", session: { id: SESSION_ID, startsAt: "2026-08-20T02:00:00Z", endsAt: "2026-08-20T03:00:00Z" }, tutor: { id: TUTOR_PROFILE_ID, displayName: "Read Model Tutor" } } }));
+    await expect(cancelLearnerBooking("booking-1", 4)).resolves.toMatchObject({ status: "cancelled" });
+    expect(fetch).toHaveBeenLastCalledWith("http://api.example.com/api/v1/bookings/booking-1/cancel", expect.objectContaining({ method: "POST", body: JSON.stringify({ expectedVersion: 4 }) }));
   });
 });

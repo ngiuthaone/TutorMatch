@@ -54,6 +54,15 @@ export interface BookingRecord {
   paymentRequired?: boolean;
   paymentReady?: boolean;
   paymentRetryAllowed?: boolean;
+  paymentInFlight?: boolean;
+  canLearnerCancel?: boolean;
+  canTutorCancel?: boolean;
+  cancellation?: {
+    status: "cancelled";
+    cancelledAt: string | null;
+    actor: "attendee" | "host" | "system" | null;
+    reason: string | null;
+  } | null;
   payment?: {
     id: string;
     status: "pending" | "succeeded" | "failed" | "refunded";
@@ -63,10 +72,20 @@ export interface BookingRecord {
     paidAt: string | null;
   } | null;
   refund?: {
-    status: "processing" | "succeeded" | null;
+    status: "none" | "processing" | "refunded" | "needs_attention" | "succeeded" | null;
+    amountVnd?: number | string;
     refundedAmountVnd: number;
     obligationCount: number;
   } | null;
+}
+
+export interface CancellationPreview {
+  allowed: boolean;
+  refundMode: "NONE" | "FULL";
+  refundAmountVnd: number;
+  policyCode: string;
+  expectedVersion: number;
+  paymentInFlight: boolean;
 }
 
 async function jsonResponse(response: Response): Promise<unknown> {
@@ -146,6 +165,32 @@ export async function listLearnerBookings(): Promise<BookingRecord[]> {
 
 export async function getLearnerBooking(bookingId: string): Promise<BookingRecord> {
   const payload = await request(`/api/v1/bookings/${encodeURIComponent(bookingId)}`, { authenticated: true }) as { ok?: unknown; booking?: unknown };
+  if (payload.ok !== true) throw new BookingApiError("INVALID_RESPONSE", 500);
+  return bookingFrom(payload.booking);
+}
+
+export async function getCancellationPreview(bookingId: string): Promise<CancellationPreview> {
+  const payload = await request(`/api/v1/bookings/${encodeURIComponent(bookingId)}/cancellation-preview`, { authenticated: true }) as { ok?: unknown; preview?: unknown };
+  const preview = payload.preview as Partial<CancellationPreview> | null;
+  if (payload.ok !== true || !preview || typeof preview.allowed !== "boolean" || (preview.refundMode !== "NONE" && preview.refundMode !== "FULL") || typeof preview.expectedVersion !== "number") {
+    throw new BookingApiError("INVALID_RESPONSE", 500);
+  }
+  return {
+    allowed: preview.allowed,
+    refundMode: preview.refundMode,
+    refundAmountVnd: typeof preview.refundAmountVnd === "number" ? preview.refundAmountVnd : 0,
+    policyCode: typeof preview.policyCode === "string" ? preview.policyCode : "UNKNOWN",
+    expectedVersion: preview.expectedVersion,
+    paymentInFlight: preview.paymentInFlight === true,
+  };
+}
+
+export async function cancelLearnerBooking(bookingId: string, expectedVersion: number, reason?: string): Promise<BookingRecord> {
+  const payload = await request(`/api/v1/bookings/${encodeURIComponent(bookingId)}/cancel`, {
+    method: "POST",
+    body: { expectedVersion, ...(reason ? { reason } : {}) },
+    authenticated: true,
+  }) as { ok?: unknown; booking?: unknown };
   if (payload.ok !== true) throw new BookingApiError("INVALID_RESPONSE", 500);
   return bookingFrom(payload.booking);
 }
