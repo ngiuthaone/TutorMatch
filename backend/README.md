@@ -46,6 +46,7 @@ Local RLS verification requires Supabase CLI (`supabase start`) and explicit loc
 SUPABASE_TEST_URL=http://127.0.0.1:54321 \
 SUPABASE_TEST_PUBLISHABLE_KEY='<local-anon-key>' \
 SUPABASE_TEST_DB_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres' \
+SUPABASE_TEST_SERVICE_ROLE_KEY='<local-service-role-key>' \
 pnpm test:integration
 ```
 
@@ -64,7 +65,7 @@ Success uses `{ "ok": true, ... }`. Expected failures use `{ "ok": false, "error
 
 Origins are an exact allowlist; credentials are disabled. Helmet supplies API security headers, HSTS only runs in production, bodies/headers/timeouts are bounded, logs redact credentials, and IP rate limiting trusts forwarding headers only when `TRUST_PROXY=true`. Tune limits after measuring traffic. Use a distributed rate-limit store before running multiple instances. CSRF middleware is unnecessary for this bearer-only, non-cookie API and must be reconsidered if cookie auth is introduced. Tokens are never accepted in URLs.
 
-Production requires HTTPS enforced at the hosting layer, a separate production Supabase project, provider secret management, known proxy topology before enabling trust, redacted hosting/error-monitoring logs, database backups, dependency-audit review, and typecheck/unit/RLS-integration/build checks before release. Rotate exposed keys. Review privacy, consent, retention, and deletion before launch. Never use demo passwords or real personal data in demo seeds.
+Production requires HTTPS enforced at the hosting layer, a separate production Supabase project, email confirmations enabled with configured SMTP/provider delivery, an exact `/auth/callback` redirect allowlist, provider secret management, known proxy topology before enabling trust, redacted hosting/error-monitoring logs, database backups, dependency-audit review, and typecheck/unit/RLS-integration/build checks before release. Rotate exposed keys. Review privacy, consent, retention, and deletion before launch. Never use demo passwords or real personal data in demo seeds.
 
 The root `server.js` and `/api/state` are **local demo compatibility only**. Never deploy or connect them to real accounts/data. Production deploys this API separately; this milestone alone does not make the full Tutoria product production-ready.
 

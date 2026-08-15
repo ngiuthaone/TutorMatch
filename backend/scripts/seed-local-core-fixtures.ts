@@ -17,6 +17,7 @@ import postgres from "postgres";
 
 const localOnlyPassword = "Local-test-only-Password1!";
 const learner = { email: "student@example.com", name: "Local Learner", role: "student" as const };
+const unverifiedLearner = { email: "unverified-student@example.com", name: "Unverified Local Learner", role: "student" as const, emailConfirmed: false };
 const tutorFixtures = [
   { email: "tutor@example.com", name: "Thu Ha", headline: "Cooking Instructor", bio: "I teach home cooking techniques through practical, structured lessons that help learners build confidence in the kitchen.", hourlyRateVnd: 300000, regions: ["district-1"], requiredSessions: 5 },
   { email: "minh-anh@example.com", name: "Minh Anh", headline: "Public Speaking Coach", bio: "Helped 200+ learners speak with confidence through practical speaking practice.", hourlyRateVnd: 250000, regions: ["district-1"], requiredSessions: 1 },
@@ -38,7 +39,7 @@ const tutorFixtures = [
 
 type TutorFixture = (typeof tutorFixtures)[number];
 
-type FixtureUser = typeof learner | TutorFixture;
+type FixtureUser = typeof learner | typeof unverifiedLearner | TutorFixture;
 type AuthUser = { id: string; email?: string | null };
 
 function required(name: string): string {
@@ -82,7 +83,7 @@ async function ensureUser(fixture: FixtureUser): Promise<AuthUser> {
   if (existing) {
     const result = await admin.auth.admin.updateUserById(existing.id, {
       password: localOnlyPassword,
-      email_confirm: true,
+      email_confirm: fixture.emailConfirmed ?? true,
       user_metadata: { name: fixture.name, role },
     });
     if (result.error || !result.data.user) throw result.error ?? new Error(`Could not update ${fixture.email}`);
@@ -91,7 +92,7 @@ async function ensureUser(fixture: FixtureUser): Promise<AuthUser> {
     const result = await admin.auth.admin.createUser({
       email: fixture.email,
       password: localOnlyPassword,
-      email_confirm: true,
+      email_confirm: fixture.emailConfirmed ?? true,
       user_metadata: { name: fixture.name, role },
     });
     if (result.error || !result.data.user) throw result.error ?? new Error(`Could not create ${fixture.email}`);
@@ -187,6 +188,7 @@ async function ensureSessions(tutorClient: SupabaseClient, tutorUserId: string, 
 }
 
 const learnerUser = await ensureUser(learner);
+const unverifiedLearnerUser = await ensureUser(unverifiedLearner);
 const seededTutors = [];
 for (const tutor of tutorFixtures) {
   const tutorUser = await ensureUser(tutor);
@@ -197,7 +199,8 @@ for (const tutor of tutorFixtures) {
 }
 
 console.log(JSON.stringify({
-  learner: { email: learner.email, role: learner.role },
+  learner: { email: learner.email, role: learner.role, userId: learnerUser.id },
+  unverifiedLearner: { email: unverifiedLearner.email, role: unverifiedLearner.role, userId: unverifiedLearnerUser.id },
   tutors: seededTutors.map(({ tutor, profile, sessions }) => ({ email: tutor.email, name: tutor.name, role: "tutor", profileId: profile.id, sessions })),
 }, null, 2));
 await sql.end();

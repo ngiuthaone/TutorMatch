@@ -118,10 +118,12 @@ alter table public.event_outbox add constraint event_outbox_aggregate_type_check
 -- existing capacity/uniqueness rules remain unchanged.
 create or replace function public.create_booking(session_id uuid, participant_count int default 1) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare uid uuid := public.assert_attendee_caller(); s public.sessions%rowtype; bid uuid := gen_random_uuid(); reserved bigint;
+declare uid uuid; s public.sessions%rowtype; bid uuid := gen_random_uuid(); reserved bigint;
   rate bigint; duration_minutes integer; amount bigint;
 begin
   if participant_count is null or participant_count < 1 then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
+  uid := public.assert_verified_booking_caller();
+  perform public.consume_booking_create_attempt(uid);
   select * into s from public.sessions where id = session_id for update;
   if s.id is null then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if s.status <> 'scheduled' then raise exception 'SESSION_NOT_OPEN' using errcode='22023'; end if;

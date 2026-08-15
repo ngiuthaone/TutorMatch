@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
+import { signUpConfirmed } from "./auth-helpers.js";
 
 const url = process.env.SUPABASE_TEST_URL, key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY, dbUrl = process.env.SUPABASE_TEST_DB_URL, serviceKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY;
 if (!url || !key || !dbUrl || !serviceKey) throw new Error("Payment integration tests require local Supabase URL, publishable key, DB URL, and service role key.");
@@ -15,9 +16,7 @@ const password = "Local-test-only-Password1!";
 
 async function signup(role: "student" | "tutor") {
   const email = `payment-${randomUUID()}@example.test`;
-  const { data, error } = await anon.auth.signUp({ email, password, options: { data: { name: "Payment QA", role } } });
-  if (error || !data.session || !data.user) throw new Error(error?.message || "local signup failed");
-  return { user: data.user, client: createClient(url!, key!, { global: { headers: { Authorization: `Bearer ${data.session.access_token}` } }, auth: { persistSession: false } }) };
+  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Payment QA", role } });
 }
 
 describe.sequential("Payment Provider V1 local proof", () => {

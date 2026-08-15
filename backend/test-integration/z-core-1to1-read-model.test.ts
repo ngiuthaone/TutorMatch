@@ -4,9 +4,10 @@ import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
+import { signUpConfirmed } from "./auth-helpers.js";
 
-const url = process.env.SUPABASE_TEST_URL, key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY, dbUrl = process.env.SUPABASE_TEST_DB_URL;
-if (!url || !key || !dbUrl) throw new Error("Core 1:1 integration tests require local Supabase environment.");
+const url = process.env.SUPABASE_TEST_URL, key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY, dbUrl = process.env.SUPABASE_TEST_DB_URL, serviceKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY;
+if (!url || !key || !dbUrl || !serviceKey) throw new Error("Core 1:1 integration tests require local Supabase environment and service role key.");
 if (!["localhost", "127.0.0.1"].includes(new URL(url).hostname)) throw new Error("Refusing non-local integration target.");
 const anon = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
 const publicAnon = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
@@ -15,9 +16,8 @@ const password = "Local-test-only-Password1!";
 
 async function signup(role: "student" | "tutor") {
   const email = `read-model-${randomUUID()}@example.test`;
-  const { data, error } = await anon.auth.signUp({ email, password, options: { data: { name: "Read Model QA", role } } });
-  if (error || !data.session || !data.user) throw new Error(error?.message ?? "local signup failed");
-  return { user: data.user, client: createClient(url!, key!, { global: { headers: { Authorization: `Bearer ${data.session.access_token}` } }, auth: { persistSession: false } }) };
+  const { user, session } = await signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Read Model QA", role } });
+  return { user, client: createClient(url!, key!, { global: { headers: { Authorization: `Bearer ${session.access_token}` } }, auth: { persistSession: false } }) };
 }
 
 describe.sequential("core 1:1 API read-model RPCs", () => {
@@ -26,6 +26,8 @@ describe.sequential("core 1:1 API read-model RPCs", () => {
     await sql.unsafe(migration);
     const tutorIdentityMigration = await readFile(fileURLToPath(new URL("../supabase/migrations/20260814153000_booking_read_model_tutor_identity.sql", import.meta.url)), "utf8");
     await sql.unsafe(tutorIdentityMigration);
+    const learnerIdentityMigration = await readFile(fileURLToPath(new URL("../supabase/migrations/20260815090002_tutor_booking_learner_identity.sql", import.meta.url)), "utf8");
+    await sql.unsafe(learnerIdentityMigration);
   });
 
   it("exposes bookable availability and product-level booking/payment capabilities", async () => {
@@ -48,6 +50,7 @@ describe.sequential("core 1:1 API read-model RPCs", () => {
     const tutorList = await tutor.client.rpc("get_my_tutor_bookings");
     expect(tutorList.error).toBeNull();
     expect(tutorList.data[0].id).toBe(booking.data.id);
+    expect(tutorList.data[0].learner).toEqual({ displayName: "Read Model QA" });
     const approved = await tutor.client.rpc("approve_booking_for_payment", { p_booking_id: booking.data.id });
     expect(approved.error).toBeNull();
     const ready = await learner.client.rpc("get_booking", { bid: booking.data.id });
