@@ -19,11 +19,17 @@ export type PaymentService = {
   sweepRefundReconciliations(workerId: string): Promise<{ data?: any; error?: any }>;
   sweepPendingFinalizations(workerId: string): Promise<{ data?: any; error?: any }>;
 };
-export function createSupabasePaymentService(url: string, publishableKey: string, serviceRoleKey: string | undefined, vnpay: VnpayConfig, vnpayApiUrl: string, fetchImpl: typeof fetch = fetch): PaymentService {
+export type PaymentWorkerOptions = {
+  batchSize?: number;
+  leaseSeconds?: number;
+  releaseBackoffSeconds?: number;
+};
+export function createSupabasePaymentService(url: string, publishableKey: string, serviceRoleKey: string | undefined, vnpay: VnpayConfig, vnpayApiUrl: string, fetchImpl: typeof fetch = fetch, workerOptions: PaymentWorkerOptions = {}): PaymentService {
   const caller = (token: string) => createClient(url, publishableKey, { ...options, global: { headers: { Authorization: `Bearer ${token}` } } });
   const trusted = serviceRoleKey ? createClient(url, serviceRoleKey, options) : null;
-  const workerLeaseSeconds = 300;
-  const sweepBatch = 50;
+  const workerLeaseSeconds = workerOptions.leaseSeconds ?? 300;
+  const sweepBatch = workerOptions.batchSize ?? 50;
+  const releaseBackoffSeconds = workerOptions.releaseBackoffSeconds ?? 60;
 
   async function recordRefundResult(refundId: string, outcome: "pending" | "succeeded" | "failed" | "ambiguous", providerRequestId: string, body: Record<string, unknown>) {
     if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
@@ -36,7 +42,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
 
   async function releaseRefundClaim(workerId: string, refundId: string, message: string) {
     if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
-    return await trusted.rpc("release_refund_claim", { p_worker_id: workerId, p_refund_id: refundId, p_error: message, p_backoff_seconds: 60 });
+    return await trusted.rpc("release_refund_claim", { p_worker_id: workerId, p_refund_id: refundId, p_error: message, p_backoff_seconds: releaseBackoffSeconds });
   }
 
   return {
