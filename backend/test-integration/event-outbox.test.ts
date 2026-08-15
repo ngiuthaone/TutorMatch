@@ -23,7 +23,7 @@ const password = "Local-test-only-Password1!";
 
 async function signup(role: "student" | "tutor") {
   const email = `sb-${randomUUID()}@example.test`;
-  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Outbox Tester", role } });
+  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Outbox Tester", role }, trustedTutor: role === "tutor" });
 }
 
 const FUTURE = {

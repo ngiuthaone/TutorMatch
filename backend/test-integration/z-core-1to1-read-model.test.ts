@@ -17,7 +17,7 @@ const password = "Local-test-only-Password1!";
 
 async function signup(role: "student" | "tutor") {
   const email = `read-model-${randomUUID()}@example.test`;
-  const { user, session } = await signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Read Model QA", role } });
+  const { user, session } = await signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Read Model QA", role }, trustedTutor: role === "tutor" });
   return { user, client: createClient(url!, key!, { global: { headers: { Authorization: `Bearer ${session.access_token}` } }, auth: { persistSession: false } }) };
 }
 

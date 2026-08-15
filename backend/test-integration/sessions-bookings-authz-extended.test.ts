@@ -20,7 +20,7 @@ const sql = postgres(dbUrl, { max: 4 });
 const password = "Local-test-only-Password1!";
 async function signup(role: "student" | "tutor") {
   const email = `az-${randomUUID()}@example.test`;
-  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Authz", role } });
+  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Authz", role }, trustedTutor: role === "tutor" });
 }
 const FUTURE = { startsAt: new Date(Date.now() + 2 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 3 * 3600e3).toISOString() };
 const PAST = { startsAt: new Date(Date.now() - 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() - 2 * 3600e3).toISOString() };

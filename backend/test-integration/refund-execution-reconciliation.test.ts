@@ -26,7 +26,7 @@ const mockFetch: typeof fetch = async () => {
 
 async function signup(role: "student" | "tutor") {
   const email = `refund-${randomUUID()}@example.test`;
-  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Refund QA", role } });
+  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Refund QA", role }, trustedTutor: role === "tutor" });
 }
 
 // Paid confirmed booking, then host cancels the whole session (P6) so a FULL

@@ -19,7 +19,7 @@ const sql = postgres(dbUrl, { max: 4 });
 const password = "Local-test-only-Password1!";
 async function signup(role: "student" | "tutor") {
   const email = `cx-${randomUUID()}@example.test`;
-  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "ConcurrencyX", role } });
+  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "ConcurrencyX", role }, trustedTutor: role === "tutor" });
 }
 const FUTURE = { startsAt: new Date(Date.now() + 2 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 3 * 3600e3).toISOString() };
 async function createSession(tutor: { client: SupabaseClient }, o: Record<string, unknown> = {}) {

@@ -32,7 +32,7 @@ const MIGRATIONS = [
 
 async function signup(role: "student" | "tutor") {
   const email = `cancel-${randomUUID()}@example.test`;
-  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Cancel QA", role } });
+  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Cancel QA", role }, trustedTutor: role === "tutor" });
 }
 
 async function createSession(tutor: { client: SupabaseClient }, startsAt: Date, endsAt: Date, maxParticipants = 4) {

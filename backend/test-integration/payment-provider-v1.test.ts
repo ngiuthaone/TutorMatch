@@ -30,7 +30,7 @@ const MIGRATIONS = [
 
 async function signup(role: "student" | "tutor") {
   const email = `payment-${randomUUID()}@example.test`;
-  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Payment QA", role } });
+  return signUpConfirmed({ anon, url: url!, publishableKey: key!, serviceRoleKey: serviceKey!, email, password, metadata: { name: "Payment QA", role }, trustedTutor: role === "tutor" });
 }
 
 async function paidConfirmedBooking(rate = 300000) {

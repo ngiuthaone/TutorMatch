@@ -3,7 +3,7 @@ const url=process.env.SUPABASE_TEST_URL,key=process.env.SUPABASE_TEST_PUBLISHABL
 if(!url||!key||!dbUrl||!serviceKey)throw new Error("Integration tests require local Supabase URL, publishable key, DB URL, and service role key.");
 if(!["localhost","127.0.0.1","host.docker.internal"].includes(new URL(url).hostname))throw new Error("Refusing to run integration tests against a non-local Supabase target.");
 const anon=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}}),sql=postgres(dbUrl,{max:4}),password="Local-test-only-Password1!";
-async function signup(role:"student"|"tutor"){const email=`cc-${randomUUID()}@example.test`;return signUpConfirmed({anon,url:url!,publishableKey:key!,serviceRoleKey:serviceKey!,email,password,metadata:{name:"Concurrency",role}})}
+async function signup(role:"student"|"tutor"){const email=`cc-${randomUUID()}@example.test`;return signUpConfirmed({anon,url:url!,publishableKey:key!,serviceRoleKey:serviceKey!,email,password,metadata:{name:"Concurrency",role},trustedTutor:role==="tutor"})}
 const FUTURE={startsAt:new Date(Date.now()+2*3600e3).toISOString(),endsAt:new Date(Date.now()+3*3600e3).toISOString()};
 async function createSession(tutor:any,o:any={}){return tutor.client.rpc("create_session",{payload:{...FUTURE,...o}})}
 async function reserved(sid:string){const rows=await sql`select coalesce(sum(participant_count),0)::int as n from public.bookings where session_id=${sid} and status in ('requested','confirmed')`;return rows[0].n}

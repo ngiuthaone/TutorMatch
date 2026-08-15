@@ -24,6 +24,7 @@ async function account(role: "student" | "tutor") {
     email: `abuse-${role}-${randomUUID()}@example.test`,
     password,
     metadata: { name: "Booking Abuse QA", role },
+    trustedTutor: role === "tutor",
   });
 }
 

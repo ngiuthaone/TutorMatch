@@ -20,7 +20,7 @@ Apply all migrations in [`supabase/migrations`](supabase/migrations) in order, i
 supabase db push
 ```
 
-The migration creates the role enum, constrained profiles table, safe signup and `updated_at` triggers, owner-only SELECT policy, and grants authenticated users only SELECT. Signup metadata accepts `student` and `tutor`; `admin`, missing, or unknown roles become `student`. Example metadata:
+The migration creates the role enum, constrained profiles table, safe signup and `updated_at` triggers, owner-only SELECT policy, and grants authenticated users only SELECT. Public signup metadata is never authorization authority: every new profile starts as `student`. Local/test Tutors are enabled through the trusted service-role-only `enable_tutor(uuid)` operation; `admin`, missing, or unknown signup roles remain non-Tutor. Example metadata:
 
 ```json
 { "name": "Nguyen Van A", "role": "student" }
