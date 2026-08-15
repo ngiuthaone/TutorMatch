@@ -19,7 +19,9 @@ function setup(overrides: Partial<BookingService> = {}, authenticated = false) {
     getBooking: async (...args) => { calls.push({ name: "getBooking", args }); return ok({ id: "booking-1", paymentReady: true }); },
     tutorAccept: async (...args) => { calls.push({ name: "tutorAccept", args }); return ok({ bookingId: "booking-1" }); },
     tutorReject: async (...args) => { calls.push({ name: "tutorReject", args }); return ok({ id: "booking-1" }); },
+    tutorCancel: async (...args) => { calls.push({ name: "tutorCancel", args }); return ok({ id: "booking-1" }); },
     learnerCancel: async (...args) => { calls.push({ name: "learnerCancel", args }); return ok({ id: "booking-1" }); },
+    getCancellationPreview: async (...args) => { calls.push({ name: "getCancellationPreview", args }); return ok({ allowed: true, refundMode: "FULL", refundAmountVnd: 300000 }); },
     createRescheduleRequest: async (...args) => { calls.push({ name: "createRescheduleRequest", args }); return ok({ id: "request-1" }); },
     acceptReschedule: async (...args) => { calls.push({ name: "acceptReschedule", args }); return ok({ status: "accepted" }); },
     rejectReschedule: async (...args) => { calls.push({ name: "rejectReschedule", args }); return ok({ status: "rejected" }); },
@@ -70,5 +72,24 @@ describe("1:1 booking API boundary", () => {
     const response = await app.inject({ method: "POST", url: "/api/v1/bookings/11111111-1111-4111-8111-111111111111/reject", headers: { authorization: "Bearer test-token" }, payload: { expectedVersion: 1 } });
     expect(response.statusCode).toBe(409);
     expect(response.json().error.code).toBe("STALE_VERSION");
+  });
+
+  it("exposes authoritative cancellation preview and tutor cancellation without client financial authority", async () => {
+    const { app, calls } = setup({}, true);
+    const auth = { authorization: "Bearer test-token" };
+    const preview = await app.inject({ method: "GET", url: "/api/v1/bookings/11111111-1111-4111-8111-111111111111/cancellation-preview", headers: auth });
+    expect(preview.statusCode).toBe(200);
+    expect(preview.json().preview.refundMode).toBe("FULL");
+    const cancelled = await app.inject({ method: "POST", url: "/api/v1/tutor/bookings/11111111-1111-4111-8111-111111111111/cancel", headers: auth, payload: { expectedVersion: 2, reason: "Tutor unavailable", refundAmountVnd: 1 } });
+    expect(cancelled.statusCode).toBe(200);
+    expect(calls.find((call) => call.name === "tutorCancel")?.args).toEqual(["test-token", "11111111-1111-4111-8111-111111111111", 2, "Tutor unavailable"]);
+    expect(calls.find((call) => call.name === "tutorCancel")?.args).not.toContain(1);
+  });
+
+  it("maps cancellation conflicts to stable errors", async () => {
+    const { app } = setup({ tutorCancel: async () => ({ data: null, error: { code: "22023", message: "INVALID_TRANSITION" } }) }, true);
+    const response = await app.inject({ method: "POST", url: "/api/v1/tutor/bookings/11111111-1111-4111-8111-111111111111/cancel", headers: { authorization: "Bearer test-token" }, payload: { expectedVersion: 1 } });
+    expect(response.statusCode).toBe(409);
+    expect(response.json().error.code).toBe("INVALID_LIFECYCLE_TRANSITION");
   });
 });

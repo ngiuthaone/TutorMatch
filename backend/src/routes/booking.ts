@@ -20,6 +20,7 @@ function routeId(value: unknown, name: string): string {
 function fail(result: BookingServiceResult): never {
   const code = result.error?.code ?? "";
   const message = result.error?.message ?? "";
+  if (message.includes("BOOKING_NOT_FOUND")) throw new ApiError(404, "BOOKING_NOT_FOUND", "Booking was not found.");
   if (message.includes("EMAIL_VERIFICATION_REQUIRED")) throw new ApiError(403, "EMAIL_VERIFICATION_REQUIRED", "Verify your email before sending a booking request.");
   if (message.includes("RATE_LIMITED")) throw new ApiError(429, "RATE_LIMITED", "You have sent several booking requests recently. Please wait a little before trying again.");
   if (code === "42501") throw new ApiError(403, "FORBIDDEN", "You are not allowed to perform this action.");
@@ -85,6 +86,14 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = as
     return { ok: true, booking: result.data };
   });
 
+  app.get("/api/v1/bookings/:bookingId/cancellation-preview", { preHandler: app.authenticate }, async (request) => {
+    const bookingId = routeId((request.params as { bookingId?: unknown }).bookingId, "bookingId");
+    const result = await options.service.getCancellationPreview(request.auth.accessToken, bookingId);
+    if (result.error) fail(result);
+    if (result.data === null) throw new ApiError(404, "BOOKING_NOT_FOUND", "Booking was not found.");
+    return { ok: true, preview: result.data };
+  });
+
   app.post("/api/v1/bookings/:bookingId/accept", { preHandler: app.authenticate }, async (request) => {
     const bookingId = routeId((request.params as { bookingId?: unknown }).bookingId, "bookingId");
     const result = await options.service.tutorAccept(request.auth.accessToken, bookingId);
@@ -97,6 +106,15 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = as
     const body = versionBody.safeParse(request.body);
     if (!body.success) throw new ApiError(400, "BOOKING_INVALID", "Expected booking version is required.");
     const result = await options.service.tutorReject(request.auth.accessToken, bookingId, body.data.expectedVersion);
+    if (result.error) fail(result);
+    return { ok: true, booking: await readAfterMutation(options.service, request.auth.accessToken, bookingId, result.data) };
+  });
+
+  app.post("/api/v1/tutor/bookings/:bookingId/cancel", { preHandler: app.authenticate }, async (request) => {
+    const bookingId = routeId((request.params as { bookingId?: unknown }).bookingId, "bookingId");
+    const body = cancelBody.safeParse(request.body);
+    if (!body.success) throw new ApiError(400, "BOOKING_INVALID", "Cancellation details are invalid.");
+    const result = await options.service.tutorCancel(request.auth.accessToken, bookingId, body.data.expectedVersion, body.data.reason);
     if (result.error) fail(result);
     return { ok: true, booking: await readAfterMutation(options.service, request.auth.accessToken, bookingId, result.data) };
   });

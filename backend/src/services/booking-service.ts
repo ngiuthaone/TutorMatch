@@ -13,7 +13,9 @@ export type BookingService = {
   getBooking(token: string, bookingId: string): Promise<BookingServiceResult>;
   tutorAccept(token: string, bookingId: string): Promise<BookingServiceResult>;
   tutorReject(token: string, bookingId: string, expectedVersion: number): Promise<BookingServiceResult>;
+  tutorCancel(token: string, bookingId: string, expectedVersion: number, reason?: string): Promise<BookingServiceResult>;
   learnerCancel(token: string, bookingId: string, expectedVersion: number, reason?: string): Promise<BookingServiceResult>;
+  getCancellationPreview(token: string, bookingId: string): Promise<BookingServiceResult>;
   createRescheduleRequest(token: string, bookingId: string, targetSessionId: string, expectedVersion: number, reason?: string): Promise<BookingServiceResult>;
   acceptReschedule(token: string, requestId: string): Promise<BookingServiceResult>;
   rejectReschedule(token: string, requestId: string): Promise<BookingServiceResult>;
@@ -44,7 +46,9 @@ export function createSupabaseBookingService(url: string, publishableKey: string
     getBooking: (token, bookingId) => rpc("get_booking", { bid: bookingId }, token),
     tutorAccept: (token, bookingId) => rpc("approve_booking_for_payment", { p_booking_id: bookingId }, token),
     tutorReject: (token, bookingId, expectedVersion) => rpc("reject_booking", { booking_id: bookingId, expected_version: expectedVersion }, token),
+    tutorCancel: (token, bookingId, expectedVersion, reason) => rpc("cancel_booking", { booking_id: bookingId, expected_version: expectedVersion, cause: "host", reason: reason ?? null }, token),
     learnerCancel: (token, bookingId, expectedVersion, reason) => rpc("cancel_booking", { booking_id: bookingId, expected_version: expectedVersion, cause: "attendee", reason: reason ?? null }, token),
+    getCancellationPreview: (token, bookingId) => rpc("get_booking_cancellation_preview", { bid: bookingId }, token),
     createRescheduleRequest: (token, bookingId, targetSessionId, expectedVersion, reason) => rpc("create_reschedule_request", { booking_id: bookingId, target_session_id: targetSessionId, expected_version: expectedVersion, reason: reason ?? null }, token),
     acceptReschedule: (token, requestId) => rpc("accept_reschedule_request", { request_id: requestId }, token),
     rejectReschedule: (token, requestId) => rpc("reject_reschedule_request", { request_id: requestId }, token),
