@@ -33,13 +33,44 @@ export function normalizeVnpayOutcome(fields: Record<string, unknown>) {
   return { outcome: response === "00" ? "succeeded" as const : response ? "failed" as const : "pending" as const, eventKey: `return:${String(fields.vnp_TxnRef ?? "unknown")}:${String(fields.vnp_TransactionNo ?? response)}`, merchantReference: String(fields.vnp_TxnRef ?? ""), providerTransactionNo: typeof fields.vnp_TransactionNo === "string" ? fields.vnp_TransactionNo : null, amountVnd: Number(fields.vnp_Amount ?? 0) / 100 };
 }
 
+/**
+ * VNPay transaction-result classification for refund execution and querydr
+ * reconciliation. VNPay semantics (official sandbox API docs): vnp_ResponseCode
+ * is the API REQUEST result; the transaction result is vnp_TransactionStatus
+ * (00=success, 01=not complete, 02=error, 04=reversed, 05/06=refund in
+ * progress, 09=refund rejected). 'succeeded' therefore requires BOTH
+ * vnp_ResponseCode=00 AND vnp_TransactionStatus=00 (authoritative settlement
+ * proof). A bare ResponseCode=00 with a processing status is 'pending'
+ * (awaiting settlement, reconciliation will resolve it). Any terminal provider
+ * error code is 'failed'. Transport/unknown states are handled by callers
+ * ('ambiguous') and never reported as settlement here.
+ */
+export function classifyVnpayRefundOutcome(fields: Record<string, unknown>): "succeeded" | "pending" | "failed" {
+  const responseCode = String(fields.vnp_ResponseCode ?? "");
+  const status = String(fields.vnp_TransactionStatus ?? "");
+  if (responseCode === "00") {
+    if (status === "00") return "succeeded";
+    if (status === "" || status === "01" || status === "05" || status === "06") return "pending";
+    return "failed";
+  }
+  return "failed";
+}
+
+/** VNPay GMT+7 datetime string yyyyMMddHHmmss from a UTC instant. */
+export function formatVnpayDateTime(value: Date): string {
+  const d = new Date(value.getTime() + 7 * 3600e3);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}`;
+}
+
 export function buildVnpayTransactionRequest(config: VnpayConfig, input: { requestId: string; command: "querydr" | "refund"; merchantReference: string; amountVnd: number; transactionNo?: string; transactionDate?: string; transactionType?: "02" | "03"; orderInfo: string; createdAt: Date }) {
   const d = input.createdAt;
   const pad = (n: number) => String(n).padStart(2, "0");
   const createDate = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
   const fields: VnpayFields = input.command === "querydr" ? {
     vnp_RequestId: input.requestId, vnp_Version: "2.1.0", vnp_Command: "querydr", vnp_TmnCode: config.tmnCode, vnp_TxnRef: input.merchantReference,
-    vnp_TransactionDate: input.transactionDate ?? createDate, vnp_CreateDate: createDate, vnp_IpAddr: "127.0.0.1", vnp_OrderInfo: input.orderInfo
+    vnp_TransactionDate: input.transactionDate ?? createDate, vnp_CreateDate: createDate, vnp_IpAddr: "127.0.0.1", vnp_OrderInfo: input.orderInfo,
+    ...(input.transactionNo ? { vnp_TransactionNo: input.transactionNo } : {})
   } : {
     vnp_RequestId: input.requestId, vnp_Version: "2.1.0", vnp_Command: "refund", vnp_TmnCode: config.tmnCode, vnp_TransactionType: input.transactionType ?? "03",
     vnp_TxnRef: input.merchantReference, vnp_Amount: String(Math.round(input.amountVnd) * 100), vnp_TransactionNo: input.transactionNo ?? "0", vnp_TransactionDate: input.transactionDate ?? createDate,

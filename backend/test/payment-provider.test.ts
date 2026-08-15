@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildVnpayPaymentUrl, buildVnpayTransactionRequest, executeVnpayTransaction, normalizeVnpayOutcome, verifyVnpayFields } from "../src/services/vnpay-adapter.js";
+import { buildVnpayPaymentUrl, buildVnpayTransactionRequest, classifyVnpayRefundOutcome, executeVnpayTransaction, formatVnpayDateTime, normalizeVnpayOutcome, verifyVnpayFields } from "../src/services/vnpay-adapter.js";
 
 const config = { tmnCode: "TUTORIA01", hashSecret: "local-secret", paymentUrl: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html", returnUrl: "https://app.test/payments/return", ipnUrl: "https://api.test/payments/ipn" };
 
@@ -26,6 +26,20 @@ describe("VNPay provider boundary", () => {
     expect(refund.body.vnp_Amount).toBe("12500000"); expect(refund.body.vnp_TransactionType).toBe("02"); expect(refund.body.vnp_SecureHash).toMatch(/^[a-f0-9]{128}$/);
     const query = buildVnpayTransactionRequest(config, { requestId: "query-request-0001", command: "querydr", merchantReference: "TUTORIA-abc", amountVnd: 125000, orderInfo: "reconciliation", createdAt: new Date("2026-08-14T10:11:12Z") });
     expect(query.body.vnp_Command).toBe("querydr"); expect(query.body.vnp_SecureHash).toMatch(/^[a-f0-9]{128}$/);
+    const queryWithTxn = buildVnpayTransactionRequest(config, { requestId: "query-request-0003", command: "querydr", merchantReference: "TUTORIA-abc", amountVnd: 125000, transactionNo: "123", orderInfo: "reconciliation", createdAt: new Date("2026-08-14T10:11:12Z") });
+    expect(queryWithTxn.body.vnp_TransactionNo).toBe("123");
+  });
+  it("classifies refund settlement only from vnp_TransactionStatus=00, not a bare request code", () => {
+    expect(classifyVnpayRefundOutcome({ vnp_ResponseCode: "00", vnp_TransactionStatus: "00" })).toBe("succeeded");
+    expect(classifyVnpayRefundOutcome({ vnp_ResponseCode: "00", vnp_TransactionStatus: "01" })).toBe("pending");
+    expect(classifyVnpayRefundOutcome({ vnp_ResponseCode: "00" })).toBe("pending");
+    expect(classifyVnpayRefundOutcome({ vnp_ResponseCode: "00", vnp_TransactionStatus: "02" })).toBe("failed");
+    expect(classifyVnpayRefundOutcome({ vnp_ResponseCode: "00", vnp_TransactionStatus: "09" })).toBe("failed");
+    expect(classifyVnpayRefundOutcome({ vnp_ResponseCode: "99", vnp_TransactionStatus: "00" })).toBe("failed");
+  });
+  it("formats VNPay GMT+7 timestamps for querydr vnp_TransactionDate", () => {
+    expect(formatVnpayDateTime(new Date("2026-08-14T10:11:12Z"))).toBe("20260814171112");
+    expect(formatVnpayDateTime(new Date("2026-01-05T23:59:59Z"))).toBe("20260106065959");
   });
   it("normalizes a provider HTTP response boundary and preserves transport failures for reconciliation", async () => {
     const request = buildVnpayTransactionRequest(config, { requestId: "query-request-0002", command: "querydr", merchantReference: "TUTORIA-abc", amountVnd: 125000, orderInfo: "reconciliation", createdAt: new Date("2026-08-14T10:11:12Z") });
