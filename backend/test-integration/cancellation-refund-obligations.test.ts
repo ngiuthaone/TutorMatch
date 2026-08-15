@@ -25,6 +25,7 @@ const MIGRATIONS = [
   "0008_payment_provider_v1.sql",
   "0009_vnpay_execution_reconciliation.sql",
   "0010_create_cancellation_refund_obligations.sql",
+  "0013_serialize_cancellation_races.sql",
   "20260815090000_booking_request_abuse_protection.sql",
   "20260815090001_enforce_booking_request_security.sql",
 ];
@@ -450,6 +451,29 @@ describe.sequential("Cancellation refund obligations (Phase 2)", () => {
     expect(["cancelled", "confirmed"]).toContain(bookingStatus);
     expect(["cancelled", "scheduled"]).toContain(sessionStatus);
     if (bookingStatus === "cancelled" && sessionStatus === "scheduled") expect(refunds[0].idempotency_key).toBe(`cancel:attendee:${booking.id}`);
+  });
+
+  it("ordering: learner cancellation wins before host session cancellation", async () => {
+    const { tutor, learner, session, booking } = await confirmedPaidBooking(311000);
+    await setSessionTime(session.id, new Date(Date.now() + 25 * 3600e3), new Date(Date.now() + 26 * 3600e3));
+    const learnerResult = await learner.client.rpc("cancel_booking", { booking_id: booking.id, expected_version: await bookingVersion(booking.id), cause: "attendee" });
+    expect(learnerResult.error).toBeNull();
+    const hostResult = await tutor.client.rpc("cancel_session", { sid: session.id, expected_version: await sessionVersion(session.id) });
+    expect(hostResult.error?.message ?? "").toContain("INVALID_TRANSITION");
+    expect((await bookingRow(booking.id)).status).toBe("cancelled");
+    expect((await sql`select status from public.sessions where id=${session.id}`)[0].status).toBe("scheduled");
+    expect(await obligations(booking.id)).toHaveLength(1);
+  });
+
+  it("ordering: host session cancellation wins before learner cancellation", async () => {
+    const { tutor, learner, session, booking } = await confirmedPaidBooking(312000);
+    const hostResult = await tutor.client.rpc("cancel_session", { sid: session.id, expected_version: await sessionVersion(session.id) });
+    expect(hostResult.error).toBeNull();
+    const learnerResult = await learner.client.rpc("cancel_booking", { booking_id: booking.id, expected_version: await bookingVersion(booking.id), cause: "attendee" });
+    expect(learnerResult.error?.message ?? "").toContain("INVALID_TRANSITION");
+    expect((await bookingRow(booking.id)).status).toBe("cancelled");
+    expect((await sql`select status from public.sessions where id=${session.id}`)[0].status).toBe("cancelled");
+    expect(await obligations(booking.id)).toHaveLength(1);
   });
 
   it("concurrency: duplicate finalize settles to a single confirmation and zero obligations", async () => {
