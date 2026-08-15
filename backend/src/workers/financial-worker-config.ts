@@ -19,10 +19,13 @@ export function requireFinancialWorkerConfig(config: AppConfig, workerId = confi
     ["VNPAY_IPN_URL", config.VNPAY_IPN_URL]
   ].filter(([, value]) => !value).map(([name]) => name);
   if (missing.length) throw new Error(`Financial worker critical configuration is missing: ${missing.join(", ")}`);
-  if (config.NODE_ENV === "production" && config.VNPAY_ENVIRONMENT !== "production") {
+  if (config.NODE_ENV === "production" && !["staging", "production"].includes(config.TUTORIA_ENVIRONMENT)) {
+    throw new Error("Financial worker NODE_ENV=production requires TUTORIA_ENVIRONMENT=staging or production");
+  }
+  if (config.TUTORIA_ENVIRONMENT === "production" && config.VNPAY_ENVIRONMENT !== "production") {
     throw new Error("Financial worker production requires VNPAY_ENVIRONMENT=production");
   }
-  if (config.NODE_ENV !== "production" && config.VNPAY_ENVIRONMENT === "production") {
+  if (config.TUTORIA_ENVIRONMENT !== "production" && config.VNPAY_ENVIRONMENT === "production") {
     throw new Error("Financial worker non-production environments must not use VNPAY_ENVIRONMENT=production");
   }
   return {

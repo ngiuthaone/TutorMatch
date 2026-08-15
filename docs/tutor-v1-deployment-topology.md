@@ -1,7 +1,8 @@
 # Tutor V1 deployment topology contract
 
-Status: topology contract only. No provider account, deployment, or production
-environment has been selected by this repository.
+Status: Render is the accepted V1 hosting platform for the API and worker.
+`render.yaml` defines the staging API and worker services without secret
+values. No Render service has been deployed by this repository.
 
 ## Repository evidence
 
@@ -21,8 +22,8 @@ environment has been selected by this repository.
 - Provider return/IPN routes are API origins, not frontend origins. Their
   final public hostnames remain undecided.
 
-The root README's Render/Vercel examples are legacy root-SPA documentation and
-are not treated as an accepted production decision for this integrated backend.
+The root README's Render/Vercel examples are legacy root-SPA documentation; the
+integrated backend now uses the explicit root `render.yaml` contract below.
 
 ## Required production topology
 
@@ -48,8 +49,8 @@ any `NEXT_PUBLIC_*` variable.
 | Surface | Current evidence | Assessment |
 |---|---|---|
 | Discover frontend | Vercel-compatible legacy SPA config; Next/Discover has browser-safe environment contracts | SUPPORTED for static/public HTTPS hosting, subject to exact production env and auth callback setup |
-| API/backend | Fastify Node process and built `pnpm start`; no accepted hosting config | UNCERTAIN until a long-running Node 22 platform is selected |
-| Financial worker | Built entrypoint and runbook; no supervisor/service manifest | UNCERTAIN until a platform with restart, secrets, logs, and SIGTERM grace is selected |
+| API/backend | Fastify Node process, built `pnpm start`, Render web service in `render.yaml` | SUPPORTED by the selected Render topology; deployment remains pending staging prerequisites |
+| Financial worker | Built entrypoint, runbook, Render background worker in `render.yaml` | SUPPORTED by the selected Render topology; deployment remains pending staging prerequisites |
 | Supabase | Repository migrations and local CLI project config | SUPPORTED as the database/auth boundary; production project, backups, and operations remain release work |
 | VNPay callbacks | API adapter and return/IPN configuration fields exist | UNCERTAIN until a public HTTPS API origin and provider allowlists are selected |
 
@@ -75,18 +76,20 @@ visibility. The API must pass its exact frontend origin to CORS. The worker
 must receive only server-side secrets and must not be reachable from the
 browser.
 
-`DEPLOYMENT_DECISION_REQUIRED` remains YES until the founder accepts a
-platform and its service/secret/alert configuration. No vendor-specific files
-should be added before that decision.
+The founder has accepted Render for V1. The remaining gate is staging
+provisioning: a non-production Supabase project, Render service creation,
+secret injection, staging frontend origin, and alert configuration. No
+production service or production Supabase data may be used as a substitute.
 
 ## Environment contract
 
-Values are placeholders only; production must use HTTPS and real secret-store
+Values are placeholders only; staging/production must use HTTPS and real secret-store
 values. No production variable may contain `localhost`.
 
 ### Discover frontend
 
-- `NEXT_PUBLIC_TUTORIA_ENVIRONMENT=production`
+- `NEXT_PUBLIC_TUTORIA_ENVIRONMENT=staging` for staging; production uses
+  `production`
 - `NEXT_PUBLIC_TUTORIA_API_BASE_URL=https://<api-host>`
 - `NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<public-key>`
@@ -97,10 +100,11 @@ Only public Supabase URL/key and public API/origin values are allowed here.
 
 ### API/backend
 
-- `NODE_ENV=production`, `HOST`, `PORT`
+- `NODE_ENV=production`, `TUTORIA_ENVIRONMENT=staging`, `HOST`, `PORT`
 - `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`
 - `FRONTEND_ORIGINS=https://<frontend-host>` (comma-separated exact origins)
-- `VNPAY_ENVIRONMENT=production`, `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET`
+- `VNPAY_ENVIRONMENT=sandbox` for staging; production uses `production`
+  together with `TUTORIA_ENVIRONMENT=production`; `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET`
 - `VNPAY_PAYMENT_URL`, `VNPAY_API_URL`, `VNPAY_RETURN_URL`, `VNPAY_IPN_URL`
 - `PAYMENT_RECONCILIATION_TOKEN` where the existing internal API contract uses it
 - bounded request/rate-limit settings and the accepted proxy setting
@@ -117,6 +121,20 @@ Use the required worker contract in
 key, complete production VNPay configuration, matching environment marker,
 batch/lease/backoff settings, worker ID, and log level. The worker does not
 receive frontend-origin or browser session secrets.
+
+## Render service contract
+
+The repository-native `render.yaml` creates two separate staging services:
+
+- `tutoria-api-staging`: web service, `pnpm start`, `/api/v1/health` HTTP health
+  check, public HTTPS URL.
+- `tutoria-financial-worker-staging`: background worker, `pnpm worker:start`,
+  no inbound HTTP route, 60-second graceful-shutdown allowance.
+
+Both use `backend/`, the same build command, and the same release SHA, while
+retaining independent process lifecycles. Render `sync: false` entries require
+secret injection during initial Blueprint creation/dashboard setup; no secret
+values belong in this file.
 
 ## URL and callback contract
 
@@ -138,7 +156,7 @@ part of this contract.
 
 Supabase Auth confirmation and password-reset delivery require a configured
 production SMTP/email provider and exact callback allowlists. SMTP/provider
-validation is `NEXT RELEASE_QA / PRODUCTION_ENV_GATE`, not part of this worker
+validation is `PRODUCTION_EMAIL_RELEASE_QA_REQUIRED`, not part of this worker
 gate. Do not configure or claim production email delivery without an accepted
 provider and safe test account.
 

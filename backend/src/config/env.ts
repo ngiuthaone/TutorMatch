@@ -7,6 +7,7 @@ const logLevel = z.enum(["debug", "info", "warn", "error"]).default("info");
 
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  TUTORIA_ENVIRONMENT: z.enum(["development", "test", "staging", "production"]).default("development"),
   HOST: z.string().trim().min(1).default("127.0.0.1"),
   PORT: positiveInteger("PORT", 65535).default(4000),
   FRONTEND_ORIGINS: z.string().transform((value, context) => {
