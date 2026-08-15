@@ -38,6 +38,17 @@ pnpm start
 pnpm check
 ```
 
+The built financial recovery worker is a separate long-running process:
+
+```sh
+pnpm build && pnpm worker:start
+```
+
+See [`../docs/financial-worker-runbook.md`](../docs/financial-worker-runbook.md)
+for configuration, supervision, shutdown, and alerting. The deployment
+platform is not selected in this repository; production release therefore
+requires an explicit `DEPLOYMENT_DECISION_REQUIRED` decision before hosting.
+
 Compiled output runs with Node, not `tsx`. Source maps aid diagnostics but must not be served publicly.
 
 Local RLS verification requires Supabase CLI (`supabase start`) and explicit local-only variables. The suite refuses non-local hosts:
