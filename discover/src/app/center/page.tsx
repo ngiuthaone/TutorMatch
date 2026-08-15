@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ensureSession, getSessionAccessToken, getSessionSnapshot } from "@/lib/auth/session";
 import { isLiveMode } from "@/lib/auth/config";
-import { decideTutorBooking, listTutorBookings, TutorBookingApiError } from "@/lib/tutor-booking-api";
+import { cancelTutorBooking, decideTutorBooking, listTutorBookings, TutorBookingApiError } from "@/lib/tutor-booking-api";
 
 export default function CenterPage() {
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -13,7 +13,7 @@ export default function CenterPage() {
     const handleMessage = async (event: MessageEvent) => {
       const frame = document.querySelector<HTMLIFrameElement>('iframe[title="Tutoria Center"]');
       if (!frame || event.origin !== window.location.origin || event.source !== frame.contentWindow) return;
-      const message = event.data as { type?: unknown; requestId?: unknown; bookingId?: unknown; action?: unknown; expectedVersion?: unknown } | null;
+      const message = event.data as { type?: unknown; requestId?: unknown; bookingId?: unknown; action?: unknown; expectedVersion?: unknown; reason?: unknown } | null;
       if (!message || typeof message.type !== "string") return;
       if (message.type === "tutoria-center-load-tutor-bookings") {
         const requestId = typeof message.requestId === "string" ? message.requestId : "";
@@ -26,6 +26,11 @@ export default function CenterPage() {
         const requestId = typeof message.requestId === "string" ? message.requestId : "";
         try { await ensureSession(); if (!getSessionAccessToken()) throw new TutorBookingApiError("UNAUTHORIZED", 401, "Sign in to manage tutor bookings."); const booking = await decideTutorBooking(message.bookingId, message.action, typeof message.expectedVersion === "number" ? message.expectedVersion : undefined); frame.contentWindow?.postMessage({ type: "tutoria-center-tutor-booking-decision", requestId, booking }, window.location.origin); }
         catch (error) { const apiError = error instanceof TutorBookingApiError ? error : new TutorBookingApiError("TUTOR_BOOKING_UNAVAILABLE", 503, "This booking could not be updated. Reload and try again."); frame.contentWindow?.postMessage({ type: "tutoria-center-tutor-booking-decision-error", requestId, code: apiError.code, message: apiError.message }, window.location.origin); }
+      }
+      if (message.type === "tutoria-center-cancel-tutor-booking" && typeof message.bookingId === "string" && typeof message.expectedVersion === "number") {
+        const requestId = typeof message.requestId === "string" ? message.requestId : "";
+        try { await ensureSession(); if (!getSessionAccessToken()) throw new TutorBookingApiError("UNAUTHORIZED", 401, "Sign in to manage tutor bookings."); const booking = await cancelTutorBooking(message.bookingId, message.expectedVersion, typeof message.reason === "string" ? message.reason : undefined); frame.contentWindow?.postMessage({ type: "tutoria-center-tutor-booking-cancellation", requestId, booking }, window.location.origin); }
+        catch (error) { const apiError = error instanceof TutorBookingApiError ? error : new TutorBookingApiError("TUTOR_BOOKING_UNAVAILABLE", 503, "This booking could not be cancelled. Reload and try again."); frame.contentWindow?.postMessage({ type: "tutoria-center-tutor-booking-cancellation-error", requestId, code: apiError.code, message: apiError.message }, window.location.origin); }
       }
     };
     window.addEventListener("message", handleMessage);

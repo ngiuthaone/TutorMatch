@@ -18,10 +18,16 @@ describe("Center tutor decision bridge contract", () => {
     expect(centerPage).toContain("onLoad={notifyFrameReady}");
   });
 
-  it("keeps non-Tutor fixtures while projecting confirmed live Tutor bookings as upcoming", () => {
-    expect(centerHtml).toContain("initialFixtures.filter(x=>x.type!=='tutor')");
+  it("projects only persisted Tutor bookings in live mode", () => {
+    expect(centerHtml).toContain("fixtures=(Array.isArray(rows)?rows:[]).map(mapLiveTutorBooking)");
+    expect(centerHtml).not.toContain("initialFixtures.filter(x=>x.type!=='tutor')");
     expect(centerHtml).toContain("status==='confirmed'?'upcoming'");
     expect(centerHtml).toContain("tutoria-center-tutor-bookings");
+  });
+
+  it("escapes persisted learner identity before inserting Center HTML", () => {
+    expect(centerHtml).toContain("function escapeHtml(value)");
+    expect(centerHtml).toContain("${escapeHtml(b.learner)}");
   });
 
   it("projects the authenticated Tutor identity and persisted learner identity into live bookings", () => {
@@ -30,5 +36,11 @@ describe("Center tutor decision bridge contract", () => {
     expect(centerHtml).toContain("data-center-account-name");
     expect(centerHtml).toContain("raw?.learner?.displayName");
     expect(centerHtml).not.toContain("learner:`Learner · ${String(raw.id).slice(0,8)}`");
+  });
+
+  it("keeps Tutor cancellation in the authenticated parent bridge", () => {
+    expect(centerPage).toContain("cancelTutorBooking");
+    expect(centerPage).toContain("tutoria-center-cancel-tutor-booking");
+    expect(centerHtml).toContain("tutoriaCenterRequestCancellation");
   });
 });

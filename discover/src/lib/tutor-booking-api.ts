@@ -45,6 +45,10 @@ export interface TutorBookingRecord {
   payment?: { status?: string; amountVnd?: number | string; currency?: string } | null;
   paymentRequired?: boolean;
   paymentReady?: boolean;
+  paymentInFlight?: boolean;
+  canTutorCancel?: boolean;
+  cancellation?: { status: "cancelled"; cancelledAt: string | null; actor: string | null; reason: string | null } | null;
+  refund?: { status: "none" | "processing" | "refunded" | "needs_attention"; amountVnd?: number | string; refundedAmountVnd?: number | string } | null;
   canTutorAccept?: boolean;
   canTutorReject?: boolean;
 }
@@ -98,6 +102,15 @@ export async function decideTutorBooking(bookingId: string, action: "accept" | "
   const payload = await request(`/api/v1/bookings/${encodeURIComponent(bookingId)}/${action === "accept" ? "accept" : "reject"}`, {
     method: "POST",
     ...(action === "reject" ? { body: { expectedVersion } } : {}),
+  }) as { ok?: unknown; booking?: unknown };
+  if (payload.ok !== true || !payload.booking || typeof payload.booking !== "object") throw new TutorBookingApiError("INVALID_RESPONSE", 500);
+  return payload.booking as TutorBookingRecord;
+}
+
+export async function cancelTutorBooking(bookingId: string, expectedVersion: number, reason?: string): Promise<TutorBookingRecord> {
+  const payload = await request(`/api/v1/tutor/bookings/${encodeURIComponent(bookingId)}/cancel`, {
+    method: "POST",
+    body: { expectedVersion, ...(reason ? { reason } : {}) },
   }) as { ok?: unknown; booking?: unknown };
   if (payload.ok !== true || !payload.booking || typeof payload.booking !== "object") throw new TutorBookingApiError("INVALID_RESPONSE", 500);
   return payload.booking as TutorBookingRecord;
