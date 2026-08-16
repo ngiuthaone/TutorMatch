@@ -51,6 +51,7 @@ export function createFinancialWorkerRuntime(input: {
   workerId: string;
   intervalMs: number;
   logger: FinancialWorkerLogger;
+  onStop?: () => void;
   now?: () => Date;
 }) {
   const now = input.now ?? (() => new Date());
@@ -58,13 +59,20 @@ export function createFinancialWorkerRuntime(input: {
   let started = false;
   let inFlight: Promise<void> | null = null;
   let wake: (() => void) | null = null;
+  let sleepTimer: ReturnType<typeof setTimeout> | null = null;
   const health: FinancialWorkerHealth = { status: "starting", startedAt: null, lastIterationAt: null, lastSuccessfulIterationAt: null, iterationCount: 0, lastError: null };
   const waitForNextIteration = () => new Promise<void>((resolve) => {
-    wake = resolve;
+    const finish = () => {
+      if (sleepTimer !== null) clearTimeout(sleepTimer);
+      sleepTimer = null;
+      wake = null;
+      resolve();
+    };
+    wake = finish;
     // Keep the timer referenced: this is the worker's liveness handle. An
     // unref'ed timer would let Node exit after the first sweep when no other
     // socket/timer happens to be active.
-    setTimeout(resolve, input.intervalMs);
+    sleepTimer = setTimeout(finish, input.intervalMs);
   });
   const iteration = async () => {
     health.status = "running";
@@ -98,6 +106,7 @@ export function createFinancialWorkerRuntime(input: {
     if (stopping) return;
     stopping = true;
     health.status = "stopping";
+    input.onStop?.();
     wake?.();
     input.logger("info", "financial_worker_stopping", { signal });
     if (inFlight) await inFlight;

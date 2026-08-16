@@ -49,4 +49,26 @@ describe("financial worker runtime", () => {
     await runtime.stop("test");
     await running;
   });
+
+  it.each(["SIGTERM", "SIGINT"] as const)("interrupts idle sleep on %s", async (signal) => {
+    const calls = service();
+    const runtime = createFinancialWorkerRuntime({ service: calls, workerId: "worker-test", intervalMs: 60_000, logger: vi.fn() });
+    const running = runtime.start();
+    await vi.waitFor(() => expect(calls.sweepRefundExecutions).toHaveBeenCalledOnce());
+    const startedAt = Date.now();
+    await runtime.stop(signal);
+    await running;
+    expect(Date.now() - startedAt).toBeLessThan(250);
+    expect(runtime.health().status).toBe("stopped");
+  });
+
+  it("does not start another iteration after shutdown begins", async () => {
+    const calls = service();
+    const runtime = createFinancialWorkerRuntime({ service: calls, workerId: "worker-test", intervalMs: 1, logger: vi.fn() });
+    const running = runtime.start();
+    await vi.waitFor(() => expect(calls.sweepRefundExecutions).toHaveBeenCalledOnce());
+    await runtime.stop("SIGTERM");
+    await running;
+    expect(calls.sweepRefundExecutions).toHaveBeenCalledOnce();
+  });
 });

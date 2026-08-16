@@ -19,7 +19,9 @@ const vnpay = { tmnCode: "TUTORIA01", hashSecret: "local-secret", paymentUrl: "h
 
 let providerResponse: Record<string, unknown> = { vnp_ResponseCode: "00", vnp_TransactionStatus: "00" };
 let providerFailure: Error | null = null;
-const mockFetch: typeof fetch = async () => {
+let providerHangs = false;
+const mockFetch: typeof fetch = async (_url, init) => {
+  if (providerHangs) return await new Promise<Response>((_, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("provider request aborted")), { once: true }));
   if (providerFailure) throw providerFailure;
   return new Response(JSON.stringify(providerResponse), { status: 200 });
 };
@@ -39,6 +41,7 @@ async function paidSessionCancelled(rate = 300000) {
   if (session.error) throw session.error;
   const booking = await learner.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 });
   if (booking.error) throw booking.error;
+  await sql`update public.bookings b set pricing_amount_vnd = ${rate}, pricing_currency = 'VND', pricing_hourly_rate_vnd = ${rate}, pricing_duration_minutes = 60, pricing_model = 'hourly_v1', pricing_snapshotted_at = now() where b.id = ${booking.data.id} and b.pricing_amount_vnd is null`;
   const approved = await tutor.client.rpc("approve_booking_for_payment", { p_booking_id: booking.data.id });
   if (approved.error) throw approved.error;
   const attempt = await learner.client.rpc("start_payment_attempt", { p_booking_id: booking.data.id, p_idempotency_key: `rf-${randomUUID().replace(/-/g, "").slice(0, 24)}` });
@@ -61,7 +64,23 @@ const makeService = () => createSupabasePaymentService(url, key, serviceKey, vnp
 
 describe.sequential("Refund execution + reconciliation (Phase 3 DB semantics)", () => {
   beforeAll(async () => {
-    for (const n of ["0011_refund_execution_reconciliation.sql", "0012_refund_recovery_worker.sql"]) {
+    const MIGRATIONS = [
+      "0001_create_profiles.sql",
+      "0002_create_tutor_cvs.sql",
+      "0004_create_sessions_and_bookings.sql",
+      "0005_create_booking_session_rpcs.sql",
+      "0006_create_event_outbox.sql",
+      "0007_emit_domain_events_from_booking_session_rpcs.sql",
+      "0008_payment_provider_v1.sql",
+      "0009_vnpay_execution_reconciliation.sql",
+      "0010_create_cancellation_refund_obligations.sql",
+      "0011_refund_execution_reconciliation.sql",
+      "0012_refund_recovery_worker.sql",
+      "0013_serialize_cancellation_races.sql",
+      "20260815090000_booking_request_abuse_protection.sql",
+      "20260815090001_enforce_booking_request_security.sql",
+    ];
+    for (const n of MIGRATIONS) {
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
       await sql.unsafe(m);
     }
@@ -127,6 +146,20 @@ describe.sequential("Refund execution + reconciliation (Phase 3 DB semantics)", 
     expect((await sql`select count(*)::int as c from public.event_outbox where event_type = 'REFUND_AMBIGUOUS' and aggregate_id = ${ctx.paymentId}`)[0].c).toBe(1);
   });
 
+  it("E: provider timeout -> ambiguous, op ambiguous, never succeeded", async () => {
+    const ctx = await paidSessionCancelled();
+    providerFailure = null;
+    providerHangs = true;
+    const service = createSupabasePaymentService(url, key, serviceKey, vnpay, "https://sandbox.test/transaction", mockFetch, { providerRequestTimeoutMs: 5 });
+    const executed = await service.executeRefund(ctx.refundId);
+    providerHangs = false;
+    expect(executed.error).toBeTruthy();
+    const row = await sql`select r.status, o.status as op_status from public.refunds r join public.payment_provider_operations o on o.refund_id = r.id where r.id = ${ctx.refundId}`;
+    expect(row[0].status).toBe("ambiguous");
+    expect(row[0].op_status).toBe("ambiguous");
+    expect((await sql`select count(*)::int as c from public.event_outbox where event_type = 'REFUND_AMBIGUOUS' and aggregate_id = ${ctx.paymentId}`)[0].c).toBe(1);
+  });
+
   it("J: duplicate authoritative result -> duplicate:true, no double credit", async () => {
     const ctx = await paidSessionCancelled();
     providerResponse = { vnp_ResponseCode: "00", vnp_TransactionStatus: "00" };
@@ -148,8 +181,9 @@ describe.sequential("Refund execution + reconciliation (Phase 3 DB semantics)", 
     providerFailure = null;
     await makeService().executeRefund(ctx.refundId);
     const secondRefund = await sql`insert into public.refunds(payment_id, kind, status, amount_vnd, idempotency_key, reason) values (${ctx.paymentId}, 'support', 'obligation', ${ctx.paymentAmount}, 'support:'||${ctx.paymentId}::text, 'test over-refund') returning id`;
-    await sql`insert into public.payment_provider_operations(operation_type, operation_key, payment_id, refund_id, merchant_reference, provider_request_id, status, request_payload, response_payload) values ('refund', ${`refund:${secondRefund[0].id}`}, ${ctx.paymentId}, ${secondRefund[0].id}, ${ctx.merchantReference}, 'over-refund-op', 'pending', '{}'::jsonb, '{}'::jsonb)`;
-    const over = await trusted.rpc("record_vnpay_refund_result", { p_refund_id: secondRefund[0].id, p_outcome: "succeeded", p_provider_request_id: "over-refund-op", p_provider_transaction_no: "x", p_settlement_payload: { vnp_ResponseCode: "00", vnp_TransactionStatus: "00" } });
+    const overRefundOpId = `over-refund-op-${randomUUID()}`;
+    await sql`insert into public.payment_provider_operations(operation_type, operation_key, payment_id, refund_id, merchant_reference, provider_request_id, status, request_payload, response_payload) values ('refund', ${`refund:${secondRefund[0].id}`}, ${ctx.paymentId}, ${secondRefund[0].id}, ${ctx.merchantReference}, ${overRefundOpId}, 'pending', '{}'::jsonb, '{}'::jsonb)`;
+    const over = await trusted.rpc("record_vnpay_refund_result", { p_refund_id: secondRefund[0].id, p_outcome: "succeeded", p_provider_request_id: overRefundOpId, p_provider_transaction_no: "x", p_settlement_payload: { vnp_ResponseCode: "00", vnp_TransactionStatus: "00" } });
     expect(over.error?.message).toContain("REFUND_EXCEEDS_REMAINING");
     const row = await sql`select p.refunded_amount_vnd, p.status from public.payments p where p.id = ${ctx.paymentId}`;
     expect(Number(row[0].refunded_amount_vnd)).toBe(ctx.paymentAmount);
@@ -271,6 +305,7 @@ describe.sequential("Refund execution + reconciliation (Phase 3 DB semantics)", 
     await sql`insert into public.tutor_profiles(user_id,display_name,hourly_rate_vnd,currency) values(${tutor.user.id},'Retry Tutor',300000,'VND')`;
     const session = await tutor.client.rpc("create_session", { payload: { startsAt: new Date(Date.now() + 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 4 * 3600e3).toISOString(), maxParticipants: 1 } });
     const booking = await learner.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 });
+    await sql`update public.bookings b set pricing_amount_vnd = 300000, pricing_currency = 'VND', pricing_hourly_rate_vnd = 300000, pricing_duration_minutes = 60, pricing_model = 'hourly_v1', pricing_snapshotted_at = now() where b.id = ${booking.data.id} and b.pricing_amount_vnd is null`;
     await tutor.client.rpc("approve_booking_for_payment", { p_booking_id: booking.data.id });
     const attempt = await learner.client.rpc("start_payment_attempt", { p_booking_id: booking.data.id, p_idempotency_key: `fr-${randomUUID().replace(/-/g, "").slice(0, 24)}` });
     await trusted.rpc("record_vnpay_observation", { p_provider_event_key: `ev-${randomUUID().replace(/-/g, "").slice(0, 16)}`, p_merchant_reference: attempt.data.merchantReference, p_outcome: "succeeded", p_provider_transaction_no: `txn-${randomUUID()}`, p_amount_vnd: 300000, p_payload: { fixture: true } });

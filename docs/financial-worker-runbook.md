@@ -25,9 +25,10 @@ VNPAY_ENVIRONMENT=production
 VNPAY_TMN_CODE=<merchant-code>
 VNPAY_HASH_SECRET=<merchant-secret>
 VNPAY_PAYMENT_URL=<production-payment-url>
-VNPAY_RETURN_URL=https://<api-host>/api/v1/payments/vnpay/return
+VNPAY_RETURN_URL=https://<frontend-host>/payments/return
 VNPAY_IPN_URL=https://<api-host>/api/v1/payments/vnpay/ipn
 VNPAY_API_URL=<production-merchant-api-url>
+VNPAY_REQUEST_TIMEOUT_MS=15000
 FINANCIAL_WORKER_INTERVAL_MS=60000
 FINANCIAL_WORKER_BATCH_SIZE=50
 FINANCIAL_WORKER_LEASE_SECONDS=300
@@ -40,7 +41,11 @@ The worker fails closed if service-role authority, complete VNPay configuration,
 
 ## Supervision contract
 
-The deployment platform is intentionally not selected in this repository. This is `DEPLOYMENT_DECISION_REQUIRED`: the operator must select a platform that can run separate long-lived services with automatic restart and repeated-crash alerts, secret injection, retained stdout/stderr, SIGTERM grace for one bounded sweep, and independent scaling from the API/frontend. A serverless request timeout is not a worker lifecycle.
+Render is the accepted deployment platform for this topology. The API and
+worker are separate long-lived services with independent process lifecycles;
+the worker uses a 60-second platform termination window and a shorter
+15-second provider request timeout. A serverless request timeout is not a
+worker lifecycle.
 
 The worker has no public HTTP health endpoint. Readiness evidence is `financial_worker_started` followed by completed sweep events and a successful iteration. `financial_worker_stopping` and `financial_worker_stopped` prove graceful termination. Alert on repeated crashes/failure to become ready, `financial_worker_attention_required`, repeated `financial_worker_sweep_failed`, refund work stuck beyond an operator-selected operational threshold, and successful payment observations unresolved in the database beyond an operator-selected threshold.
 
@@ -49,9 +54,18 @@ Thresholds and notification ownership are operational release decisions, not boo
 ## Recovery rehearsal and incidents
 
 1. Start the built worker with deterministic local/staging configuration.
-2. Send SIGTERM and confirm stopping/stopped after the current bounded operation settles.
+2. Send SIGTERM or SIGINT and confirm stopping/stopped promptly. Idle sleep is
+   interruptible; an in-flight provider request is aborted and recorded as an
+   ambiguous/recoverable outcome rather than a definitive failure.
 3. Restart it and confirm DB leases allow eligible work to be reclaimed after lease expiry; two workers must not duplicate a provider operation.
 4. In staging, make the provider or database unavailable and confirm failed iterations remain observable, the process remains alive, and persisted lease/backoff/idempotency behavior controls retry.
+
+The provider request timeout must remain comfortably below Render's 60-second
+termination budget. On shutdown, the worker aborts the active provider request,
+claims no additional batch rows, and leaves any uncertain provider outcome for
+durable reconciliation after restart. The expected graceful shutdown is one
+provider timeout plus database cleanup margin (approximately 20 seconds under
+the staging defaults), not the full platform budget.
 
 For attention events, preserve worker ID, timestamp, sweep name, and the non-secret error message. Inspect persisted financial operation and provider status using existing operator controls. Do not clear claims or mark payment/refund state from the browser.
 

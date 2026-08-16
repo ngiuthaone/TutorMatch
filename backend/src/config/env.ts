@@ -28,6 +28,7 @@ const schema = z.object({
   VNPAY_RETURN_URL: z.string().url().optional(),
   VNPAY_IPN_URL: z.string().url().optional(),
   VNPAY_API_URL: z.string().url().default("https://sandbox.vnpayment.vn/merchant_webapi/api/transaction"),
+  VNPAY_REQUEST_TIMEOUT_MS: positiveInteger("VNPAY_REQUEST_TIMEOUT_MS", 55_000).default(15_000),
   PAYMENT_RECONCILIATION_TOKEN: z.string().min(16).optional(),
   TRUST_PROXY: booleanString,
   RATE_LIMIT_MAX: positiveInteger("RATE_LIMIT_MAX").default(100),

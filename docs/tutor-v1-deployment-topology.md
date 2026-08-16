@@ -106,6 +106,8 @@ Only public Supabase URL/key and public API/origin values are allowed here.
 - `VNPAY_ENVIRONMENT=sandbox` for staging; production uses `production`
   together with `TUTORIA_ENVIRONMENT=production`; `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET`
 - `VNPAY_PAYMENT_URL`, `VNPAY_API_URL`, `VNPAY_RETURN_URL`, `VNPAY_IPN_URL`
+- `VNPAY_REQUEST_TIMEOUT_MS=15000` in staging; keep it below the platform's
+  60-second worker termination budget
 - `PAYMENT_RECONCILIATION_TOKEN` where the existing internal API contract uses it
 - bounded request/rate-limit settings and the accepted proxy setting
 
@@ -129,7 +131,8 @@ The repository-native `render.yaml` creates two separate staging services:
 - `tutoria-api-staging`: web service, `pnpm start`, `/api/v1/health` HTTP health
   check, public HTTPS URL.
 - `tutoria-financial-worker-staging`: background worker, `pnpm worker:start`,
-  no inbound HTTP route, 60-second graceful-shutdown allowance.
+  no inbound HTTP route, 60-second graceful-shutdown allowance, and an
+  interruptible idle wait with a 15-second provider request timeout.
 
 Both use `backend/`, the same build command, and the same release SHA, while
 retaining independent process lifecycles. Render `sync: false` entries require
@@ -142,15 +145,18 @@ Final domains are intentionally undecided. The accepted shape is:
 
 - frontend origin: `https://<frontend-host>`
 - API origin: `https://<api-host>`
-- VNPay return: `https://<api-host>/<accepted-return-path>`
-- VNPay IPN: `https://<api-host>/<accepted-ipn-path>`
+- VNPay return: `https://<frontend-host>/payments/return` (browser navigation;
+  the page checks authoritative backend state)
+- VNPay IPN: `https://<api-host>/api/v1/payments/vnpay/ipn` (server/provider
+  financial authority; signature-verified)
 - Auth confirmation: `https://<frontend-host>/auth/callback`
 - Password reset: `https://<frontend-host>/auth/callback`
 
 The exact frontend origin must be present in API CORS and Supabase Auth
-allowlists. Provider callback endpoints must be public HTTPS API routes and
-must not require a browser session. Wildcard CORS/redirect allowlists are not
-part of this contract.
+allowlists. The IPN endpoint must be a public HTTPS API route and must not
+require a browser session. The return URL is a public frontend route and is
+never financial authority. Wildcard CORS/redirect allowlists are not part of
+this contract.
 
 ## Auth email and SMTP boundary
 

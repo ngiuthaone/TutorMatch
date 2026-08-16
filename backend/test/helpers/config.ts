@@ -1,7 +1,7 @@
 import type { AppConfig } from "../../src/config/env.js";
 export const testConfig: AppConfig = {
   NODE_ENV: "test", TUTORIA_ENVIRONMENT: "test", HOST: "127.0.0.1", PORT: 4000, FRONTEND_ORIGINS: ["https://frontend.test"],
-  SUPABASE_URL: "https://project.supabase.co", SUPABASE_PUBLISHABLE_KEY: "test-publishable-key", VNPAY_PAYMENT_URL: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html", VNPAY_ENVIRONMENT: "sandbox", VNPAY_API_URL: "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction", TRUST_PROXY: false,
+  SUPABASE_URL: "https://project.supabase.co", SUPABASE_PUBLISHABLE_KEY: "test-publishable-key", VNPAY_PAYMENT_URL: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html", VNPAY_ENVIRONMENT: "sandbox", VNPAY_API_URL: "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction", VNPAY_REQUEST_TIMEOUT_MS: 15_000, TRUST_PROXY: false,
   RATE_LIMIT_MAX: 100, RATE_LIMIT_WINDOW_MS: 60_000, ME_RATE_LIMIT_MAX: 30,
   TUTOR_CV_GET_RATE_LIMIT_MAX: 60, TUTOR_CV_SAVE_RATE_LIMIT_MAX: 20, TUTOR_CV_PUBLISH_RATE_LIMIT_MAX: 10,
   PUBLIC_TUTORS_LIST_RATE_LIMIT_MAX: 60, PUBLIC_TUTOR_DETAIL_RATE_LIMIT_MAX: 120,

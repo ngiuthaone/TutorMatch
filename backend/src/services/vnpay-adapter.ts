@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 export type VnpayConfig = { tmnCode: string; hashSecret: string; paymentUrl: string; returnUrl: string; ipnUrl: string };
 export type VnpayFields = Record<string, string>;
+export const DEFAULT_VNPAY_REQUEST_TIMEOUT_MS = 15_000;
 
 function sortedQuery(fields: VnpayFields) {
   return Object.keys(fields).filter((key) => fields[key] !== "" && fields[key] !== undefined).sort().map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(fields[key] ?? "")}`).join("&");
@@ -11,10 +12,15 @@ function digest(value: string, secret: string) { return createHmac("sha512", sec
 export function buildVnpayPaymentUrl(config: VnpayConfig, input: { merchantReference: string; amountVnd: number; orderInfo: string; createdAt: Date; returnUrl?: string }) {
   const d = input.createdAt;
   const pad = (n: number) => String(n).padStart(2, "0");
+  const returnUrl = new URL(config.returnUrl);
+  if (input.returnUrl) {
+    const override = new URL(input.returnUrl);
+    for (const [key, value] of override.searchParams) returnUrl.searchParams.set(key, value);
+  }
   const fields: VnpayFields = {
     vnp_Version: "2.1.0", vnp_Command: "pay", vnp_TmnCode: config.tmnCode,
     vnp_Amount: String(Math.round(input.amountVnd) * 100), vnp_CurrCode: "VND", vnp_TxnRef: input.merchantReference,
-    vnp_OrderInfo: input.orderInfo, vnp_OrderType: "other", vnp_Locale: "vn", vnp_ReturnUrl: input.returnUrl ?? config.returnUrl, vnp_IpnUrl: config.ipnUrl,
+    vnp_OrderInfo: input.orderInfo, vnp_OrderType: "other", vnp_Locale: "vn", vnp_ReturnUrl: returnUrl.toString(), vnp_IpnUrl: config.ipnUrl,
     vnp_IpAddr: "127.0.0.1", vnp_CreateDate: `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
   };
   return `${config.paymentUrl}?${sortedQuery(fields)}&vnp_SecureHash=${digest(sortedQuery(fields), config.hashSecret)}`;
@@ -80,8 +86,29 @@ export function buildVnpayTransactionRequest(config: VnpayConfig, input: { reque
   return { fields, body: { ...fields, vnp_SecureHash: digest(query, config.hashSecret) } as VnpayFields };
 }
 
-export async function executeVnpayTransaction(apiUrl: string, request: ReturnType<typeof buildVnpayTransactionRequest>, fetchImpl: typeof fetch = fetch) {
-  const response = await fetchImpl(apiUrl, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(request.body) });
-  if (!response.ok) throw new Error(`VNPay transaction HTTP ${response.status}`);
-  return await response.json() as Record<string, unknown>;
+export async function executeVnpayTransaction(
+  apiUrl: string,
+  request: ReturnType<typeof buildVnpayTransactionRequest>,
+  fetchImpl: typeof fetch = fetch,
+  timeoutMs = DEFAULT_VNPAY_REQUEST_TIMEOUT_MS,
+  shutdownSignal?: AbortSignal,
+) {
+  const controller = new AbortController();
+  let timedOut = false;
+  const abortFromShutdown = () => controller.abort();
+  if (shutdownSignal?.aborted) controller.abort();
+  else shutdownSignal?.addEventListener("abort", abortFromShutdown, { once: true });
+  const timer = setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
+  try {
+    const response = await fetchImpl(apiUrl, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(request.body), signal: controller.signal });
+    if (!response.ok) throw new Error(`VNPay transaction HTTP ${response.status}`);
+    return await response.json() as Record<string, unknown>;
+  } catch (error) {
+    if (timedOut) throw new Error(`VNPay transaction timed out after ${timeoutMs}ms`);
+    if (shutdownSignal?.aborted) throw new Error("VNPay transaction aborted during worker shutdown");
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    shutdownSignal?.removeEventListener("abort", abortFromShutdown);
+  }
 }

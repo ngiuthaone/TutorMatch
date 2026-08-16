@@ -23,6 +23,8 @@ export type PaymentWorkerOptions = {
   batchSize?: number;
   leaseSeconds?: number;
   releaseBackoffSeconds?: number;
+  providerRequestTimeoutMs?: number;
+  signal?: AbortSignal;
 };
 export function createSupabasePaymentService(url: string, publishableKey: string, serviceRoleKey: string | undefined, vnpay: VnpayConfig, vnpayApiUrl: string, fetchImpl: typeof fetch = fetch, workerOptions: PaymentWorkerOptions = {}): PaymentService {
   const caller = (token: string) => createClient(url, publishableKey, { ...options, global: { headers: { Authorization: `Bearer ${token}` } } });
@@ -30,6 +32,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
   const workerLeaseSeconds = workerOptions.leaseSeconds ?? 300;
   const sweepBatch = workerOptions.batchSize ?? 50;
   const releaseBackoffSeconds = workerOptions.releaseBackoffSeconds ?? 60;
+  const executeProvider = (request: ReturnType<typeof buildVnpayTransactionRequest>) => executeVnpayTransaction(vnpayApiUrl, request, fetchImpl, workerOptions.providerRequestTimeoutMs, workerOptions.signal);
 
   async function recordRefundResult(refundId: string, outcome: "pending" | "succeeded" | "failed" | "ambiguous", providerRequestId: string, body: Record<string, unknown>) {
     if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
@@ -70,7 +73,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       const operation = await trusted.from("payment_provider_operations").upsert({ operation_type: "query", operation_key: operationKey, payment_id: attempt.data.payment_id, attempt_id: attempt.data.id, merchant_reference: merchantReference, provider_request_id: requestId, status: "pending", request_payload: query.body }, { onConflict: "operation_key", ignoreDuplicates: true });
       if (operation.error) return { data: null, error: operation.error };
       try {
-        const body = await executeVnpayTransaction(vnpayApiUrl, query, fetchImpl);
+        const body = await executeProvider(query);
         await trusted.from("payment_provider_operations").update({ status: String(body.vnp_ResponseCode) === "00" ? "succeeded" : "failed", response_payload: body, updated_at: new Date().toISOString() }).eq("operation_key", operationKey);
         const normalized = normalizeVnpayOutcome(body);
         return await this.observe({ eventKey: `query:${merchantReference}:${String(body.vnp_TransactionNo ?? body.vnp_ResponseCode ?? "unknown")}`, merchantReference, outcome: normalized.outcome, providerTransactionNo: normalized.providerTransactionNo, amountVnd: normalized.amountVnd, payload: body });
@@ -99,7 +102,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       const inserted = await trusted.from("payment_provider_operations").insert({ operation_type: "refund", operation_key: operationKey, payment_id: refund.data.payment_id, refund_id: refundId, merchant_reference: attempt.data.merchant_reference, provider_request_id: requestId, status: "pending", request_payload: request.body });
       if (inserted.error) return { data: null, error: new Error("Refund operation already in flight") };
       try {
-        const body = await executeVnpayTransaction(vnpayApiUrl, request, fetchImpl);
+        const body = await executeProvider(request);
         const outcome = classifyVnpayRefundOutcome(body);
         await trusted.from("payment_provider_operations").update({ status: outcome, response_payload: body, updated_at: new Date().toISOString() }).eq("operation_key", operationKey);
         return await recordRefundResult(refundId, outcome, requestId, body);
@@ -130,7 +133,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       const inserted = await trusted.from("payment_provider_operations").upsert({ operation_type: "query", operation_key: queryKey, payment_id: refund.data.payment_id, attempt_id: attempt.data.id, refund_id: refundId, merchant_reference: attempt.data.merchant_reference, provider_request_id: requestId, status: "pending", request_payload: query.body }, { onConflict: "operation_key", ignoreDuplicates: true });
       if (inserted.error) return { data: null, error: inserted.error };
       try {
-        const body = await executeVnpayTransaction(vnpayApiUrl, query, fetchImpl);
+        const body = await executeProvider(query);
         const outcome = classifyVnpayRefundOutcome(body);
         await trusted.from("payment_provider_operations").update({ status: outcome, response_payload: body, updated_at: new Date().toISOString() }).eq("operation_key", queryKey);
         return await recordRefundResult(refundId, outcome, requestId, body);
@@ -146,6 +149,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       if (error) return { data: null, error };
       let executed = 0;
       for (const row of (data ?? []) as { refundId: string }[]) {
+        if (workerOptions.signal?.aborted) break;
         const result = await this.executeRefund(row.refundId);
         if (result.error) {
           await releaseRefundClaim(workerId, row.refundId, String((result.error as Error | undefined)?.message ?? "refund_execution_error"));
@@ -161,6 +165,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       if (error) return { data: null, error };
       let reconciled = 0;
       for (const row of (data ?? []) as { refundId: string }[]) {
+        if (workerOptions.signal?.aborted) break;
         const result = await this.reconcileRefund(row.refundId);
         if (result.error) {
           await releaseRefundClaim(workerId, row.refundId, String((result.error as Error | undefined)?.message ?? "refund_reconciliation_error"));
@@ -176,6 +181,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       if (error) return { data: null, error };
       let finalized = 0;
       for (const event of (data ?? []) as { id: string; payload: { bookingId?: string } }[]) {
+        if (workerOptions.signal?.aborted) break;
         const bookingId = event.payload?.bookingId;
         if (!bookingId) {
           await trusted.rpc("complete_event", { p_worker_id: workerId, p_event_id: event.id });

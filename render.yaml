@@ -24,6 +24,8 @@ services:
         value: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
       - key: VNPAY_API_URL
         value: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
+      - key: VNPAY_REQUEST_TIMEOUT_MS
+        value: 15000
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_PUBLISHABLE_KEY
@@ -67,6 +69,8 @@ services:
         value: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
       - key: VNPAY_API_URL
         value: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
+      - key: VNPAY_REQUEST_TIMEOUT_MS
+        value: 15000
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_PUBLISHABLE_KEY

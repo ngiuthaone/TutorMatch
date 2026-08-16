@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildVnpayPaymentUrl, buildVnpayTransactionRequest, classifyVnpayRefundOutcome, executeVnpayTransaction, formatVnpayDateTime, normalizeVnpayOutcome, verifyVnpayFields } from "../src/services/vnpay-adapter.js";
 
-const config = { tmnCode: "TUTORIA01", hashSecret: "local-secret", paymentUrl: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html", returnUrl: "https://app.test/payments/return", ipnUrl: "https://api.test/payments/ipn" };
+const config = { tmnCode: "TUTORIA01", hashSecret: "local-secret", paymentUrl: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html", returnUrl: "https://frontend.test/payments/return", ipnUrl: "https://api.test/api/v1/payments/vnpay/ipn" };
 
 describe("VNPay provider boundary", () => {
   it("builds a signed server-owned VND payment URL", () => {
@@ -15,7 +15,8 @@ describe("VNPay provider boundary", () => {
   it("signs a booking-correlated return URL supplied by the payment service", () => {
     const url = buildVnpayPaymentUrl(config, { merchantReference: "TUTORIA-abc", amountVnd: 125000, orderInfo: "Tutoria booking", returnUrl: "https://app.test/payments/return?bookingId=booking-1", createdAt: new Date("2026-08-14T10:11:12Z") });
     const fields = Object.fromEntries(new URL(url).searchParams.entries());
-    expect(fields.vnp_ReturnUrl).toBe("https://app.test/payments/return?bookingId=booking-1");
+    expect(fields.vnp_ReturnUrl).toBe("https://frontend.test/payments/return?bookingId=booking-1");
+    expect(fields.vnp_IpnUrl).toBe("https://api.test/api/v1/payments/vnpay/ipn");
     expect(verifyVnpayFields(fields, config.hashSecret)).toBe(true);
   });
   it("normalizes provider success without treating a browser return as authority", () => {
@@ -46,5 +47,17 @@ describe("VNPay provider boundary", () => {
     const body = await executeVnpayTransaction("https://sandbox.test/transaction", request, async () => new Response(JSON.stringify({ vnp_ResponseCode: "00", vnp_TxnRef: "TUTORIA-abc", vnp_TransactionNo: "123", vnp_Amount: "12500000" }), { status: 200 }));
     expect(normalizeVnpayOutcome(body).outcome).toBe("succeeded");
     await expect(executeVnpayTransaction("https://sandbox.test/transaction", request, async () => new Response("timeout", { status: 504 }))).rejects.toThrow("HTTP 504");
+  });
+
+  it("bounds a provider request and preserves shutdown abort as an unknown outcome", async () => {
+    const request = buildVnpayTransactionRequest(config, { requestId: "query-request-timeout", command: "querydr", merchantReference: "TUTORIA-abc", amountVnd: 125000, orderInfo: "reconciliation", createdAt: new Date("2026-08-14T10:11:12Z") });
+    const hangingFetch: typeof fetch = async (_url, init) => await new Promise<Response>((_, reject) => {
+      init?.signal?.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+    });
+    await expect(executeVnpayTransaction("https://sandbox.test/transaction", request, hangingFetch, 5)).rejects.toThrow("timed out after 5ms");
+    const shutdown = new AbortController();
+    const aborted = executeVnpayTransaction("https://sandbox.test/transaction", request, hangingFetch, 1000, shutdown.signal);
+    shutdown.abort();
+    await expect(aborted).rejects.toThrow("aborted during worker shutdown");
   });
 });
