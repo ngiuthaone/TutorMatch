@@ -20,7 +20,7 @@ const errorMessage = (error: unknown) => {
   return message.slice(0, 500);
 };
 
-export async function runFinancialWorkerIteration(service: Pick<PaymentService, "sweepRefundExecutions" | "sweepRefundReconciliations" | "sweepPendingFinalizations">, workerId: string, logger: FinancialWorkerLogger): Promise<{ ok: boolean; errors: string[] }> {
+export async function runFinancialWorkerIteration(service: Pick<PaymentService, "sweepRefundExecutions" | "sweepRefundReconciliations" | "sweepPendingFinalizations">, workerId: string, logger: FinancialWorkerLogger, isStopped?: () => boolean): Promise<{ ok: boolean; errors: string[] }> {
   const errors: string[] = [];
   const sweeps: Array<[SweepName, () => Promise<{ data?: unknown; error?: unknown }>]> = [
     ["refund_execution", () => service.sweepRefundExecutions(workerId)],
@@ -28,6 +28,11 @@ export async function runFinancialWorkerIteration(service: Pick<PaymentService, 
     ["payment_finalization", () => service.sweepPendingFinalizations(workerId)]
   ];
   for (const [name, sweep] of sweeps) {
+    // No sweep may start once shutdown has begun: claiming after stop would
+    // acquire a fresh lease for work the worker can no longer process. A
+    // normal shutdown therefore ends the iteration here without invoking the
+    // remaining sweeps.
+    if (isStopped?.()) break;
     try {
       const result = await sweep();
       if (result.error) {
@@ -79,7 +84,7 @@ export function createFinancialWorkerRuntime(input: {
     health.iterationCount += 1;
     health.lastIterationAt = now().toISOString();
     input.logger("info", "financial_worker_iteration_started", { iteration: health.iterationCount });
-    const result = await runFinancialWorkerIteration(input.service, input.workerId, input.logger);
+    const result = await runFinancialWorkerIteration(input.service, input.workerId, input.logger, () => stopping);
     if (result.ok) {
       health.lastSuccessfulIterationAt = now().toISOString();
       health.lastError = null;

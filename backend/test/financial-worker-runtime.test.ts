@@ -21,6 +21,47 @@ describe("financial worker runtime", () => {
     expect(logs).toContain("error:financial_worker_sweep_failed");
   });
 
+  it("runs every sweep on a normal non-aborted iteration", async () => {
+    const calls = service();
+    const result = await runFinancialWorkerIteration(calls, "worker-test", () => {});
+    expect(result.ok).toBe(true);
+    expect(calls.sweepRefundExecutions).toHaveBeenCalledOnce();
+    expect(calls.sweepRefundReconciliations).toHaveBeenCalledOnce();
+    expect(calls.sweepPendingFinalizations).toHaveBeenCalledOnce();
+  });
+
+  it("stops the iteration when shutdown begins during the first sweep", async () => {
+    const calls = service();
+    let stopped = false;
+    calls.sweepRefundExecutions.mockImplementationOnce(async () => { stopped = true; return { data: { claimed: 1, executed: 1 } }; });
+    const result = await runFinancialWorkerIteration(calls, "worker-test", () => {}, () => stopped);
+    expect(result.ok).toBe(true);
+    expect(calls.sweepRefundExecutions).toHaveBeenCalledOnce();
+    expect(calls.sweepRefundReconciliations).not.toHaveBeenCalled();
+    expect(calls.sweepPendingFinalizations).not.toHaveBeenCalled();
+  });
+
+  it("does not invoke the next sweep when shutdown occurs between sweeps", async () => {
+    const calls = service();
+    let stopped = false;
+    const base = calls.sweepRefundExecutions.getMockImplementation()!;
+    calls.sweepRefundExecutions.mockImplementationOnce(async () => { const first = await base(); stopped = true; return first; });
+    const result = await runFinancialWorkerIteration(calls, "worker-test", () => {}, () => stopped);
+    expect(result.ok).toBe(true);
+    expect(calls.sweepRefundExecutions).toHaveBeenCalledOnce();
+    expect(calls.sweepRefundReconciliations).not.toHaveBeenCalled();
+    expect(calls.sweepPendingFinalizations).not.toHaveBeenCalled();
+  });
+
+  it("does not invoke any sweep when shutdown is already active", async () => {
+    const calls = service();
+    const result = await runFinancialWorkerIteration(calls, "worker-test", () => {}, () => true);
+    expect(result.ok).toBe(true);
+    expect(calls.sweepRefundExecutions).not.toHaveBeenCalled();
+    expect(calls.sweepRefundReconciliations).not.toHaveBeenCalled();
+    expect(calls.sweepPendingFinalizations).not.toHaveBeenCalled();
+  });
+
   it("does not overlap iterations and waits for in-flight work during shutdown", async () => {
     const calls = service();
     let release!: () => void;

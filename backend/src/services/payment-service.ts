@@ -144,6 +144,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       }
     },
     async sweepRefundExecutions(workerId: string) {
+      if (workerOptions.signal?.aborted) return { data: { claimed: 0, executed: 0 }, error: null };
       if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
       const { data, error } = await trusted.rpc("claim_pending_refund_executions", { p_worker_id: workerId, p_max_count: sweepBatch, p_lease_seconds: workerLeaseSeconds });
       if (error) return { data: null, error };
@@ -160,6 +161,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       return { data: { claimed: (data ?? []).length, executed }, error: null };
     },
     async sweepRefundReconciliations(workerId: string) {
+      if (workerOptions.signal?.aborted) return { data: { claimed: 0, reconciled: 0 }, error: null };
       if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
       const { data, error } = await trusted.rpc("claim_pending_refund_reconciliations", { p_worker_id: workerId, p_max_count: sweepBatch, p_lease_seconds: workerLeaseSeconds });
       if (error) return { data: null, error };
@@ -176,6 +178,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       return { data: { claimed: (data ?? []).length, reconciled }, error: null };
     },
     async sweepPendingFinalizations(workerId: string) {
+      if (workerOptions.signal?.aborted) return { data: { claimed: 0, finalized: 0 }, error: null };
       if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
       const { data, error } = await trusted.rpc("claim_pending_payment_finalizations", { p_worker_id: workerId, p_max_count: sweepBatch, p_lease_seconds: workerLeaseSeconds });
       if (error) return { data: null, error };

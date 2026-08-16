@@ -62,10 +62,10 @@ Thresholds and notification ownership are operational release decisions, not boo
 
 The provider request timeout must remain comfortably below Render's 60-second
 termination budget. On shutdown, the worker aborts the active provider request,
-claims no additional batch rows, and leaves any uncertain provider outcome for
-durable reconciliation after restart. The expected graceful shutdown is one
-provider timeout plus database cleanup margin (approximately 20 seconds under
-the staging defaults), not the full platform budget.
+claims no additional batch rows after shutdown begins, and leaves any uncertain
+provider outcome for durable reconciliation after restart. The expected graceful
+shutdown is one provider timeout plus database cleanup margin (approximately 20
+seconds under the staging defaults), not the full platform budget.
 
 For attention events, preserve worker ID, timestamp, sweep name, and the non-secret error message. Inspect persisted financial operation and provider status using existing operator controls. Do not clear claims or mark payment/refund state from the browser.
 
