@@ -12,11 +12,32 @@ import { createSupabaseMarketplaceService } from "./services/marketplace-service
 import { createSupabasePaymentService } from "./services/payment-service.js";
 import { paymentRoutes } from "./routes/payments.js";
 import { bookingRoutes } from "./routes/booking.js";
+import { policyRoutes } from "./routes/policies.js";
+import { complianceRoutes } from "./routes/compliance.js";
+import { payoutRoutes } from "./routes/payouts.js";
+import { adminRoutes } from "./routes/admin.js";
+import { dashboardRoutes } from "./routes/dashboard.js";
 import type { AuthService } from "./services/auth-service.js";
 import type { BookingService } from "./services/booking-service.js";
 import type { TutorCvService } from "./types/tutor-cv.js";
+import type { createPolicyService } from "./services/policy-service.js";
+import type { createComplianceService } from "./services/compliance-service.js";
+import type { createPayoutService } from "./services/payout-service.js";
+import type { createAdminService } from "./services/admin-service.js";
 
-export function createApp(options: { config: AppConfig; authService: AuthService; tutorCvService?: TutorCvService; marketplaceService?: ReturnType<typeof createSupabaseMarketplaceService>; bookingService?: BookingService; logger?: FastifyServerOptions["logger"] }) {
+export function createApp(options: {
+  config: AppConfig;
+  authService: AuthService;
+  tutorCvService?: TutorCvService;
+  marketplaceService?: ReturnType<typeof createSupabaseMarketplaceService>;
+  bookingService?: BookingService;
+  policyService?: ReturnType<typeof createPolicyService>;
+  complianceService?: ReturnType<typeof createComplianceService>;
+  payoutService?: ReturnType<typeof createPayoutService>;
+  adminService?: ReturnType<typeof createAdminService>;
+  requireAdmin?: (request: import("fastify").FastifyRequest, reply: import("fastify").FastifyReply) => Promise<void>;
+  logger?: FastifyServerOptions["logger"];
+}) {
   const app = Fastify({
     logger: options.logger ?? false, trustProxy: options.config.TRUST_PROXY,
     bodyLimit: options.config.BODY_LIMIT_BYTES, requestTimeout: options.config.REQUEST_TIMEOUT_MS,
@@ -35,6 +56,26 @@ export function createApp(options: { config: AppConfig; authService: AuthService
   if (options.bookingService) app.register(bookingRoutes, { service: options.bookingService });
   if (options.config.VNPAY_TMN_CODE && options.config.VNPAY_HASH_SECRET && options.config.VNPAY_RETURN_URL && options.config.VNPAY_IPN_URL) {
     app.register(paymentRoutes, { service: createSupabasePaymentService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.config.SUPABASE_SERVICE_ROLE_KEY, { tmnCode: options.config.VNPAY_TMN_CODE, hashSecret: options.config.VNPAY_HASH_SECRET, paymentUrl: options.config.VNPAY_PAYMENT_URL, returnUrl: options.config.VNPAY_RETURN_URL, ipnUrl: options.config.VNPAY_IPN_URL }, options.config.VNPAY_API_URL, fetch, { providerRequestTimeoutMs: options.config.VNPAY_REQUEST_TIMEOUT_MS }), vnpay: { tmnCode: options.config.VNPAY_TMN_CODE, hashSecret: options.config.VNPAY_HASH_SECRET, paymentUrl: options.config.VNPAY_PAYMENT_URL, returnUrl: options.config.VNPAY_RETURN_URL, ipnUrl: options.config.VNPAY_IPN_URL }, reconciliationToken: options.config.PAYMENT_RECONCILIATION_TOKEN });
+  }
+  if (options.policyService) {
+    app.register(policyRoutes, { authService: options.authService, policyService: options.policyService, max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  }
+  if (options.complianceService) {
+    app.register(complianceRoutes, { authService: options.authService, complianceService: options.complianceService, max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  }
+  if (options.payoutService) {
+    app.register(payoutRoutes, { authService: options.authService, payoutService: options.payoutService, max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  }
+  if (options.adminService && options.requireAdmin) {
+    app.register(adminRoutes, { authService: options.authService, adminService: options.adminService, requireAdmin: options.requireAdmin, max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  }
+  if (options.requireAdmin) {
+    const dashConfig: { SUPABASE_URL: string; SUPABASE_PUBLISHABLE_KEY: string; SUPABASE_SERVICE_ROLE_KEY?: string } = {
+      SUPABASE_URL: options.config.SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY: options.config.SUPABASE_PUBLISHABLE_KEY,
+    };
+    if (options.config.SUPABASE_SERVICE_ROLE_KEY) dashConfig.SUPABASE_SERVICE_ROLE_KEY = options.config.SUPABASE_SERVICE_ROLE_KEY;
+    app.register(dashboardRoutes, { authService: options.authService, config: dashConfig, requireAdmin: options.requireAdmin, max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   }
   app.setNotFoundHandler((request, reply) => reply.code(404).send({ ok: false, error: { code: "NOT_FOUND", message: "Route not found." }, requestId: request.id }));
   app.setErrorHandler((error, request, reply) => {
