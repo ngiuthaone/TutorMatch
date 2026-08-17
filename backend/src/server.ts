@@ -24,7 +24,7 @@ async function main() {
   await app.listen({ host: config.HOST, port: config.PORT });
   app.log.info({ host: config.HOST, port: config.PORT }, "Tutoria API started");
 
-  if (process.env.START_WORKER === "true" && config.VNPAY_TMN_CODE && config.VNPAY_HASH_SECRET) {
+  if (process.env.START_WORKER === "true" && config.VNPAY_TMN_CODE && config.VNPAY_HASH_SECRET && config.VNPAY_RETURN_URL && config.VNPAY_IPN_URL) {
     try {
       const worker = requireFinancialWorkerConfig(config, `financial-recovery-${hostname()}-${process.pid}`);
       const shutdownController = new AbortController();
@@ -33,7 +33,7 @@ async function main() {
         { tmnCode: config.VNPAY_TMN_CODE, hashSecret: config.VNPAY_HASH_SECRET, paymentUrl: config.VNPAY_PAYMENT_URL, returnUrl: config.VNPAY_RETURN_URL, ipnUrl: config.VNPAY_IPN_URL },
         config.VNPAY_API_URL, fetch, { batchSize: worker.batchSize, leaseSeconds: worker.leaseSeconds, releaseBackoffSeconds: worker.releaseBackoffSeconds, providerRequestTimeoutMs: config.VNPAY_REQUEST_TIMEOUT_MS, signal: shutdownController.signal }
       );
-      const runtime = createFinancialWorkerRuntime({ service, workerId: worker.workerId, intervalMs: worker.intervalMs, logger: (level, event, fields) => {
+      const runtime = createFinancialWorkerRuntime({ service, workerId: worker.workerId, intervalMs: worker.intervalMs, logger: (level: "debug" | "info" | "warn" | "error", event: string, fields: Record<string, unknown> = {}) => {
         app.log[level]({ event, workerId: worker.workerId, ...fields }, `worker: ${event}`);
       }, onStop: () => shutdownController.abort() });
       await runtime.start();
