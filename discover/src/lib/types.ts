@@ -1,3 +1,5 @@
+import { getLiveIdentity } from "@/lib/auth/identity";
+
 export type PostType = "insight" | "question" | "tip" | "tutorial" | "experience" | "project" | "discussion";
 
 export type ContentVisibility = "public" | "community";
@@ -144,13 +146,17 @@ export function estimateReadingTime(text: string): number {
 }
 
 export function getUserFromStorage(): { id: string; name: string; avatarUrl?: string; role?: string } | null {
+  const live = getLiveIdentity();
+  if (live) {
+    return { id: live.id, name: live.name, avatarUrl: live.avatarUrl, role: live.role };
+  }
   try {
     const raw = localStorage.getItem("tutoria_signup");
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed.completed) {
         return {
-          id: parsed.email || "local-user",
+          id: parsed.id || "local-user",
           name: parsed.name || "Learner",
           avatarUrl: undefined,
           role: parsed.roles?.[0] || "Learner",

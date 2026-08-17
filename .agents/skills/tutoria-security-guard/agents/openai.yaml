@@ -1,0 +1,6 @@
+interface:
+  display_name: "Tutoria Security Guard"
+  short_description: "Audit and harden Tutoria without risky scans or license conflicts."
+  default_prompt: "Audit the current Tutoria changes for release-blocking security issues, fix safe root causes where appropriate, add regression tests, and report anything that remains unverified."
+policy:
+  allow_implicit_invocation: true

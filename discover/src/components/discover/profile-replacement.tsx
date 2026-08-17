@@ -44,7 +44,7 @@ const profileFaqs = [
   { question: "How do I book a lesson with this tutor?", answer: "Choose a lesson length, then select an available time. Your booking is confirmed once the tutor accepts it." },
   { question: "Can I reschedule a booked lesson?", answer: "Yes. You can reschedule from your bookings area, subject to the cancellation notice shown above." },
   { question: "What should I prepare for my first lesson?", answer: "Bring your goal, any relevant materials, and a few examples of what you would like to learn. Your tutor will tailor the first session from there." },
-  { question: "How are lessons paid for?", answer: "Payments are made securely through Tutoria when you book. The lesson price and any first-session offer are shown before you confirm." },
+  { question: "How are lessons paid for?", answer: "You send a booking request first. Payment becomes available securely through Tutoria after the tutor accepts your request." },
 ];
 
 type SubmittedTutorFaq = { id?: string; question?: string; answer?: string };

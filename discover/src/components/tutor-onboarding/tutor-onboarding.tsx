@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import styles from "./tutor-onboarding.module.css";
+import { isLiveMode } from "@/lib/auth/config";
+import { getMyTutorCv, publishMyTutorCv, saveMyTutorCv, TutorCvApiError } from "@/lib/tutor-cv-api";
+import { backendProfileToDraft, draftToBackendProfile } from "@/lib/tutor-cv-mapper";
 
 /* ═══════════════════════════════════════════
    Icons
@@ -61,7 +64,7 @@ const Icon = {
    Types
    ═══════════════════════════════════════════ */
 
-type TutorDraftStatus = "draft" | "pending_review";
+type TutorDraftStatus = "draft" | "published";
 type TutorVisibility = "public" | "unlisted" | "paused";
 type TutorFaq = { id: string; question: string; answer: string };
 type TutorCredential = { id: string; title: string; evidenceUrl: string };
@@ -112,6 +115,7 @@ type TutorDraft = {
   visibility: TutorVisibility;
   status: TutorDraftStatus;
   submittedAt?: string;
+  publishedAt?: string;
   updatedAt?: string;
 };
 
@@ -162,8 +166,8 @@ function profileCityId(provinceName: string) {
 
 const onboardingFaqs = [
   { question: "What do I need before I apply?", answer: "Prepare a clear profile photo, a short introduction, the subjects you teach, your availability, and your lesson rates." },
-  { question: "Can I save my progress and finish later?", answer: "Use Save draft while you are on this page. Opening the creator studio again starts a blank profile." },
-  { question: "What happens after I submit my profile?", answer: "Tutoria reviews your profile before it is published. You can still preview your information while the review is in progress." },
+  { question: "Can I save my progress and finish later?", answer: "Use Save draft while you are on this page. Your draft is stored on your profile, so returning to the creator studio resumes where you left off." },
+  { question: "What happens after I publish my profile?", answer: "Your profile goes live immediately so anyone can find and contact you through Tutoria. There is no review or approval step. Tutoria does not verify identity, education, experience, or qualifications — your profile is your own account of your practice, and we label it as not verified." },
 ];
 
 const defaultDraft: TutorDraft = {
@@ -221,10 +225,10 @@ function formatVnd(value: number) {
   return `${Math.max(0, value || 0).toLocaleString("vi-VN")} d`;
 }
 
-function validateStep(step: number, draft: TutorDraft): ValidationError[] {
+function validateStep(step: number, draft: TutorDraft, liveMode = false): ValidationError[] {
   if (step === 0) {
     return [
-      !draft.photoUrl && { fieldId: "profile-photo", message: "Add a profile photo." },
+      !liveMode && !draft.photoUrl && { fieldId: "profile-photo", message: "Add a profile photo." },
       !draft.displayName.trim() && { fieldId: "display-name", message: "Enter your display name." },
       !draft.location.trim() && { fieldId: "location", message: "Enter your location." },
       !draft.role.trim() && { fieldId: "role", message: "Add your role." },
@@ -598,20 +602,20 @@ function StatusItem({ children, warning = false }: { children: React.ReactNode; 
   return <li className={warning ? styles.warningItem : ""}><span>{warning ? <Icon.AlertTriangle size={15} /> : <Icon.Check size={15} />}</span>{children}</li>;
 }
 
-function PreviewStep({ draft, onOpenPreview, onMessage, onReset, onVisibilityChange }: { draft: TutorDraft; onOpenPreview: () => void; onMessage: () => void; onReset: () => void; onVisibilityChange: (visibility: TutorVisibility) => void }) {
-  const submitted = draft.status === "pending_review";
+function PreviewStep({ draft, onOpenPreview, onMessage, onReset, onVisibilityChange, liveMode }: { draft: TutorDraft; onOpenPreview: () => void; onMessage: () => void; onReset: () => void; onVisibilityChange: (visibility: TutorVisibility) => void; liveMode: boolean }) {
+  const submitted = draft.status === "published";
   const primaryDuration = draft.displayDuration || draft.sessionLengths[0];
   const primaryRate = primaryDuration ? draft.rates[String(primaryDuration)] || 0 : 0;
   return (
     <>
       <SectionHeading step={5} title="Preview & publish" description="Review your profile before it goes live." />
       <div className={styles.previewTopGrid}>
-        <section className={styles.groupPanel}><FieldLabel>What learners see</FieldLabel><ul className={styles.statusList}><StatusItem>About me</StatusItem><StatusItem>What I teach</StatusItem><StatusItem>Lesson format &amp; availability</StatusItem><StatusItem>Rates &amp; policies</StatusItem><StatusItem warning={!draft.faqs.some((faq) => faq.question.trim() && faq.answer.trim())}>Frequently asked questions</StatusItem><StatusItem warning={!draft.introVideoName}>Introduction video {draft.introVideoName ? "added" : "(optional)"}</StatusItem><li className={styles.pendingStatus}><span><Icon.Clock size={15} /></span>Reviews (coming soon)</li></ul></section>
-        <section className={styles.groupPanel}><FieldLabel>Publication checklist</FieldLabel><ul className={styles.statusList}><StatusItem warning={!draft.photoUrl}>Profile photo</StatusItem><StatusItem warning={draft.headline.length < 20}>Headline</StatusItem><StatusItem warning={draft.about.length < 80}>About you</StatusItem><StatusItem warning={!draft.skills.length}>Skills &amp; specialties</StatusItem><StatusItem warning={!draft.availability.length}>Availability set</StatusItem><StatusItem warning={!primaryRate}>Rates set</StatusItem><StatusItem>Policies set</StatusItem><StatusItem warning>Identity verified</StatusItem><StatusItem>Payout account connected</StatusItem></ul></section>
+        <section className={styles.groupPanel}><FieldLabel>What learners see</FieldLabel><ul className={styles.statusList}><StatusItem>About me</StatusItem><StatusItem>What I teach</StatusItem><StatusItem>Lesson format &amp; availability</StatusItem><StatusItem>Rates &amp; policies</StatusItem><StatusItem warning={!draft.faqs.some((faq) => faq.question.trim() && faq.answer.trim())}>Frequently asked questions</StatusItem><StatusItem warning={!draft.introVideoName}>Introduction video {draft.introVideoName ? "added" : "(optional)"}</StatusItem><li className={styles.pendingStatus}><span><Icon.InfoCircle size={15} /></span>Not verified — Tutoria has not verified this profile</li></ul></section>
+        <section className={styles.groupPanel}><FieldLabel>Publication checklist</FieldLabel><ul className={styles.statusList}><StatusItem warning={!liveMode && !draft.photoUrl}>Profile photo</StatusItem><StatusItem warning={draft.headline.length < 20}>Headline</StatusItem><StatusItem warning={draft.about.length < 80}>About you</StatusItem><StatusItem warning={!draft.skills.length}>Skills &amp; specialties</StatusItem><StatusItem warning={!draft.availability.length}>Availability set</StatusItem><StatusItem warning={!primaryRate}>Rates set</StatusItem><StatusItem>Policies set</StatusItem><li className={styles.pendingStatus}><span><Icon.InfoCircle size={15} /></span>Not verified — Tutoria never claims to verify tutors</li></ul></section>
       </div>
       <div className={styles.previewBottomGrid}>
-        <section className={styles.groupPanel}><FieldLabel>Visibility</FieldLabel><div className={styles.visibilityOptions}>{(["public", "unlisted", "paused"] as TutorVisibility[]).map((value) => <label key={value}><input type="radio" name="visibility" value={value} checked={draft.visibility === value} onChange={() => onVisibilityChange(value)} /><span><strong>{value[0].toUpperCase() + value.slice(1)}</strong><small>{value === "public" ? "Anyone can find and book you." : value === "unlisted" ? "Only people with your link can view your profile." : "Existing learners can contact you, but new learners can't book."}</small></span></label>)}</div><div className={styles.dangerZone}><button className={styles.dangerButton} type="button" onClick={onReset}><Icon.Trash size={16} /> Reset application</button><small>Clear every field and start again.</small></div></section>
-        <section className={styles.submitPanel}><Icon.Rocket size={48} /><h2>{submitted ? "Profile submitted!" : "You're almost there!"}</h2><p>{submitted ? "Your profile is now in review. We'll let you know when it's live." : "Use the review action above to send your profile. We'll let you know once it's live."}</p></section>
+        <section className={styles.groupPanel}><FieldLabel>Visibility</FieldLabel><div className={styles.visibilityOptions}>{(["public", "unlisted", "paused"] as TutorVisibility[]).map((value) => <label key={value}><input type="radio" name="visibility" value={value} checked={draft.visibility === value} onChange={() => onVisibilityChange(value)} disabled={liveMode && value !== "public"} /><span><strong>{value[0].toUpperCase() + value.slice(1)}</strong><small>{value === "public" ? "Anyone can find and contact you." : value === "unlisted" ? "Only people with your link can view your profile." : "Existing learners can contact you, but new learners can't book."}</small></span></label>)}</div>{liveMode && <p className={styles.fieldHint}>When connected to the production profile service, published profiles are public. Unlisted and paused states are demo-only for now.</p>}<div className={styles.dangerZone}><button className={styles.dangerButton} type="button" onClick={onReset}><Icon.Trash size={16} /> Reset application</button><small>Clear every field and start again.</small></div></section>
+        <section className={styles.submitPanel}><Icon.Rocket size={48} /><h2>{submitted ? "Profile is live" : "You're almost there!"}</h2><p>{submitted ? "Your tutor profile is public. There is no review step — your profile is live now. You can edit it here and republish any time." : "Use the publish action above to make your profile public right away. Tutoria does not verify or approve profiles."}</p></section>
       </div>
     </>
   );
@@ -671,29 +675,126 @@ function FullProfilePreview({ draft, onClose }: { draft: TutorDraft; onClose: ()
 
 export function TutorOnboarding() {
   const router = useRouter();
+  const liveMode = isLiveMode();
   const [activeStep, setActiveStep] = useState(0);
-  const [savedAt, setSavedAt] = useState("Blank draft ready");
+  const [savedAt, setSavedAt] = useState(liveMode ? "Loading your saved profile…" : "Blank draft ready");
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [notice, setNotice] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [draft, setDraft] = useState<TutorDraft>(defaultDraft);
+  const [serverVersion, setServerVersion] = useState<number | null>(null);
+  const [loadError, setLoadError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const saveTimerRef = useRef<number | null>(null);
 
-  /* ─── Start fresh whenever the creator studio opens ─── */
-  useEffect(() => {
-    window.localStorage.removeItem(DRAFT_KEY);
-    window.localStorage.removeItem(SUBMISSION_KEY);
-  }, []);
+  /* ─── Remote save (debounced server-side) ─── */
+  const performRemoteSave = async (payload: TutorDraft, explicit: boolean): Promise<void> => {
+    if (saveTimerRef.current) { window.clearTimeout(saveTimerRef.current); saveTimerRef.current = null; }
+    const expectedVersion = serverVersion;
+    try {
+      const profile = draftToBackendProfile(payload);
+      const record = await saveMyTutorCv(profile, expectedVersion);
+      setServerVersion(record.version);
+      setSavedAt(record.publishedAt ? "Published — changes saved" : "Draft saved just now");
+      setNotice(explicit ? "Draft saved to your profile." : "");
+    } catch (error) {
+      if (error instanceof TutorCvApiError && error.code === "PROFILE_VERSION_CONFLICT") {
+        setSavedAt("Changed elsewhere");
+        setNotice("This profile was updated elsewhere. Reloading the latest version.");
+        try {
+          const record = await getMyTutorCv();
+          if (!record) return;
+          setDraft((current) => ({ ...current, ...backendProfileToDraft(record.profile) }));
+          setServerVersion(record.version);
+        } catch {}
+        return;
+      }
+      if (error instanceof TutorCvApiError && error.code === "UNAUTHORIZED") {
+        setSavedAt("Sign-in needed");
+        setNotice("Your session expired. Sign in again to save changes.");
+        return;
+      }
+      if (error instanceof TutorCvApiError && error.code === "TUTOR_CV_INVALID") {
+        setSavedAt("Needs attention");
+        setNotice("Some profile details are invalid for the public profile. Review the highlighted step.");
+        return;
+      }
+      setSavedAt("Save failed");
+      setNotice("Your changes could not be saved. The backend may be unavailable.");
+    }
+  };
 
-  /* ─── Auto-save ─── */
+  /* ─── Load the existing profile whenever the creator studio opens ─── */
   useEffect(() => {
+    let cancelled = false;
+    if (liveMode) {
+      getMyTutorCv()
+        .then((record) => {
+          if (cancelled) return;
+          if (!record) {
+            setServerVersion(null);
+            setSavedAt("Blank draft ready");
+            return;
+          }
+          const mapped = backendProfileToDraft(record.profile);
+          setDraft((current) => ({
+            ...current,
+            ...mapped,
+            status: record.publishedAt ? "published" : "draft",
+            publishedAt: record.publishedAt ?? undefined,
+            updatedAt: record.publishedAt ?? undefined,
+          }));
+          setServerVersion(record.version);
+          setSavedAt(record.publishedAt ? "Your live profile" : "Draft restored");
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setLoadError("Your saved profile could not be loaded right now. You can still start a new draft.");
+          setSavedAt("Blank draft ready");
+        });
+    } else {
+      try {
+        const raw = window.localStorage.getItem(SUBMISSION_KEY) || window.localStorage.getItem(DRAFT_KEY);
+        const stored = raw ? (JSON.parse(raw) as TutorDraft) : null;
+        if (stored) {
+          const wasPendingReview = String(stored.status) === "pending_review";
+          const restored: TutorDraft = {
+            ...defaultDraft,
+            ...stored,
+            status: wasPendingReview ? "published" : "draft",
+            publishedAt: wasPendingReview ? (stored.submittedAt ?? stored.updatedAt) : undefined,
+          };
+          window.queueMicrotask(() => {
+            if (cancelled) return;
+            setDraft(restored);
+            setSavedAt(wasPendingReview ? "Your published profile" : "Draft restored");
+          });
+        }
+      } catch {}
+    }
+    return () => { cancelled = true; };
+  }, [liveMode]);
+
+  /* ─── Auto-save (debounced) ─── */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (loadError) return;
     const timer = window.setTimeout(() => {
       const persisted = { ...draft, updatedAt: new Date().toISOString() };
-      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(persisted));
-      setSavedAt(draft.status === "pending_review" ? "Submitted for review" : "Draft saved just now");
-    }, 700);
+      if (liveMode) {
+        setSavedAt("Saving changes…");
+        void performRemoteSave(persisted, false);
+      } else {
+        window.localStorage.setItem(DRAFT_KEY, JSON.stringify(persisted));
+        setSavedAt(draft.status === "published" ? "Published profile" : "Draft saved just now");
+      }
+    }, liveMode ? 1200 : 700);
     return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft]);
+
+  useEffect(() => () => { if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current); }, []);
 
   /* ─── Auto-dismiss notice ─── */
   useEffect(() => {
@@ -721,7 +822,7 @@ export function TutorOnboarding() {
 
   /* ─── Draft updater ─── */
   const updateDraft: DraftUpdater = (updater) => {
-    setDraft((current) => ({ ...updater(current), status: current.status === "pending_review" ? "draft" : current.status, submittedAt: current.status === "pending_review" ? undefined : current.submittedAt }));
+    setDraft((current) => ({ ...updater(current), status: current.status === "published" ? "draft" : current.status, submittedAt: current.status === "published" ? undefined : current.submittedAt }));
     setSavedAt("Saving changes...");
     setErrors([]);
   };
@@ -735,14 +836,19 @@ export function TutorOnboarding() {
   const saveDraft = () => {
     const persisted = { ...draft, updatedAt: new Date().toISOString() };
     setDraft(persisted);
-    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(persisted));
-    setSavedAt("Draft saved just now");
-    setNotice("Draft saved.");
+    if (liveMode) {
+      setSavedAt("Saving changes…");
+      void performRemoteSave(persisted, true);
+    } else {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(persisted));
+      setSavedAt("Draft saved just now");
+      setNotice("Draft saved.");
+    }
   };
 
   /* ─── Continue to next step ─── */
   const continueToNextStep = () => {
-    const validation = validateStep(activeStep, draft);
+    const validation = validateStep(activeStep, draft, liveMode);
     if (validation.length) {
       setErrors(validation);
       focusFirstError(validation);
@@ -753,42 +859,83 @@ export function TutorOnboarding() {
     setErrors([]);
   };
 
-  /* ─── Submit for review ─── */
-  const submitForReview = async () => {
-    const invalidStep = [0, 1, 2, 3].find((step) => validateStep(step, draft).length > 0);
+  /* ─── Publish profile ─── */
+  const publishProfile = async () => {
+    const invalidStep = [0, 1, 2, 3].find((step) => validateStep(step, draft, liveMode).length > 0);
     if (invalidStep !== undefined) {
-      const validation = validateStep(invalidStep, draft);
+      const validation = validateStep(invalidStep, draft, liveMode);
       setActiveStep(invalidStep);
       setErrors(validation);
-      setNotice("Complete the highlighted step before submitting.");
+      setNotice("Complete the highlighted step before publishing.");
       window.setTimeout(() => focusFirstError(validation), 0);
       return;
     }
-    const submittedDraft: TutorDraft = { ...draft, status: "pending_review", submittedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-    setDraft(submittedDraft);
-    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(submittedDraft));
-    window.localStorage.setItem(SUBMISSION_KEY, JSON.stringify(submittedDraft));
-    window.dispatchEvent(new CustomEvent("tutoria-tutor-published", { detail: submittedDraft }));
+    setLoading(true);
+    const payload: TutorDraft = { ...draft, updatedAt: new Date().toISOString() };
     try {
-      await fetch("/api/tutors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(submittedDraft),
-      });
-    } catch {
-      // The profile remains available in this browser if the local demo API is unavailable.
+      if (liveMode) {
+        const profile = draftToBackendProfile(payload);
+        const saved = await saveMyTutorCv(profile, serverVersion);
+        const record = await publishMyTutorCv(saved.version);
+        setServerVersion(record.version);
+        const publishedDraft: TutorDraft = { ...payload, status: "published", publishedAt: record.publishedAt ?? undefined, submittedAt: undefined };
+        setDraft(publishedDraft);
+        setSavedAt("Your live profile");
+        setNotice("Your tutor profile is now live.");
+      } else {
+        const publishedDraft: TutorDraft = { ...payload, status: "published", publishedAt: new Date().toISOString(), submittedAt: undefined };
+        setDraft(publishedDraft);
+        window.localStorage.setItem(DRAFT_KEY, JSON.stringify(publishedDraft));
+        window.localStorage.setItem(SUBMISSION_KEY, JSON.stringify(publishedDraft));
+        window.dispatchEvent(new CustomEvent("tutoria-tutor-published", { detail: publishedDraft }));
+        try {
+          await fetch("/api/tutors", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...publishedDraft, status: "published" }),
+          });
+        } catch {
+          // The profile remains available in this browser if the local demo API is unavailable.
+        }
+        setSavedAt("Your live profile");
+        setNotice("Your tutor profile is now live.");
+      }
+    } catch (error) {
+      setLoading(false);
+      if (error instanceof TutorCvApiError && error.code === "PROFILE_VERSION_CONFLICT") {
+        setNotice("This profile changed elsewhere. Reloading the latest version before publishing.");
+        try {
+          const record = await getMyTutorCv();
+          if (!record) return;
+          setDraft((current) => ({ ...current, ...backendProfileToDraft(record.profile) }));
+          setServerVersion(record.version);
+        } catch {}
+        return;
+      }
+      if (error instanceof TutorCvApiError && error.code === "TUTOR_CV_INCOMPLETE") {
+        setNotice("Complete the required public profile fields before publishing.");
+        return;
+      }
+      if (error instanceof TutorCvApiError && error.code === "UNAUTHORIZED") {
+        setNotice("Your session expired. Sign in again to publish.");
+        return;
+      }
+      setNotice("Could not publish right now. The backend may be unavailable.");
+      return;
     }
-    setSavedAt("Submitted for review");
-    setNotice("Your tutor profile was submitted for review.");
-    router.push(`/tutor/${encodeURIComponent(submittedDraft.displayName)}`);
+    setLoading(false);
+    router.push(`/tutor/${encodeURIComponent(payload.displayName.trim())}`);
   };
 
   /* ─── Reset draft ─── */
   const resetDraft = () => {
     const freshDraft = { ...defaultDraft, updatedAt: new Date().toISOString() };
     setDraft(freshDraft);
-    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(freshDraft));
-    window.localStorage.removeItem(SUBMISSION_KEY);
+    setServerVersion(null);
+    if (!liveMode) {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(freshDraft));
+      window.localStorage.removeItem(SUBMISSION_KEY);
+    }
     setActiveStep(0);
     setErrors([]);
     setSavedAt("Draft reset just now");
@@ -802,9 +949,9 @@ export function TutorOnboarding() {
   else if (activeStep === 1) mainContent = <TeachingStep draft={draft} update={updateDraft} errors={errors} />;
   else if (activeStep === 2) mainContent = <AvailabilityStep draft={draft} update={updateDraft} errors={errors} />;
   else if (activeStep === 3) mainContent = <PricingStep draft={draft} update={updateDraft} errors={errors} />;
-  else mainContent = <PreviewStep draft={draft} onOpenPreview={() => setShowPreview(true)} onMessage={() => setNotice("Messaging becomes available after your profile is approved.")} onReset={() => setShowResetConfirm(true)} onVisibilityChange={(visibility) => updateDraft((current) => ({ ...current, visibility }))} />;
+  else mainContent = <PreviewStep draft={draft} onOpenPreview={() => setShowPreview(true)} onMessage={() => setNotice("Messaging becomes available after your profile is published with the production backend.")} onReset={() => setShowResetConfirm(true)} onVisibilityChange={(visibility) => updateDraft((current) => ({ ...current, visibility }))} liveMode={liveMode} />;
 
-  const submitted = draft.status === "pending_review";
+  const submitted = draft.status === "published";
 
   return (
     <main className={styles.onboardingShell}>
@@ -813,7 +960,7 @@ export function TutorOnboarding() {
         <div className={styles.headerInner}>
           <Link className={styles.backLink} href="/"><Icon.ArrowLeft size={17} /> Back to Home</Link>
           <div className={styles.headerTitle}><span>Tutoria creator studio</span><strong>Build your tutor profile</strong></div>
-          <div className={styles.topActions}><span className={styles.savedState} aria-live="polite">{savedAt}</span><button className={styles.previewButton} type="button" onClick={saveDraft}>Save draft</button></div>
+          <div className={styles.topActions}><span className={styles.savedState} aria-live="polite">{loadError ? "Offline draft mode" : savedAt}</span><button className={styles.previewButton} type="button" onClick={saveDraft}>Save draft</button></div>
         </div>
       </header>
 
@@ -821,12 +968,13 @@ export function TutorOnboarding() {
         <ProgressRail activeStep={activeStep} onSelect={(step) => { saveDraft(); setActiveStep(step); setErrors([]); }} />
 
         <div className={styles.mainForm}>
+          {loadError && <section className={styles.loadWarning} role="status"><Icon.AlertTriangle size={15} /> {loadError}</section>}
           <section className={styles.builderIntro}></section>
           <section className={styles.stepSurface}><ValidationNotice errors={errors} />{mainContent}</section>
           <div className={styles.stepActions} aria-label="Step actions">
             <button className={styles.secondaryButton} type="button" onClick={() => { saveDraft(); setActiveStep((current) => Math.max(0, current - 1)); setErrors([]); }} disabled={activeStep === 0}><Icon.ArrowLeft size={17} /> Back</button>
             <div className={styles.stepActionCopy}><span>Section {activeStep + 1} of {steps.length}</span>{errors.length > 0 && <p>{errors.length} {errors.length === 1 ? "item needs" : "items need"} attention</p>}</div>
-            {activeStep === 4 ? <div className={styles.finalActions}><button className={styles.previewButton} type="button" onClick={() => setShowPreview(true)}>Preview</button><button className={styles.primaryButton} type="button" onClick={submitForReview} disabled={submitted}>{submitted ? "Submitted" : "Submit for review"}</button></div> : <button className={styles.primaryButton} type="button" onClick={continueToNextStep}>Continue <Icon.ChevronRight size={17} /></button>}
+            {activeStep === 4 ? <div className={styles.finalActions}><button className={styles.previewButton} type="button" onClick={() => setShowPreview(true)}>Preview</button><button className={styles.primaryButton} type="button" onClick={publishProfile} disabled={submitted || loading}>{loading ? "Publishing…" : submitted ? "Published" : "Publish profile"}</button></div> : <button className={styles.primaryButton} type="button" onClick={continueToNextStep}>Continue <Icon.ChevronRight size={17} /></button>}
           </div>
           <section className={styles.onboardingFaq} aria-labelledby="onboarding-faq-title">
             <div><span>Need help?</span><h2 id="onboarding-faq-title">Tutor application FAQ</h2></div>

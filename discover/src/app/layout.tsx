@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, DM_Serif_Display, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { RuntimeConfigBootstrap } from "@/components/auth/runtime-config-bootstrap";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -54,7 +55,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${dmSerifDisplay.variable} ${cormorantGaramond.variable} h-full antialiased`}
     >
-      <body className="tutoria-cosmos min-h-[100dvh] flex flex-col">{children}</body>
+      <body className="tutoria-cosmos min-h-[100dvh] flex flex-col">
+        <RuntimeConfigBootstrap />
+        {children}
+      </body>
     </html>
   );
 }

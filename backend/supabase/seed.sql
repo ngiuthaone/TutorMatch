@@ -1,0 +1,1 @@
+-- Intentionally empty: integration tests create isolated users and profiles.

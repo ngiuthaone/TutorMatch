@@ -1,19 +1,17 @@
+import { Suspense } from "react";
 import { SignInForm } from "@/components/auth/sign-in-form";
+import { safeRedirectPath } from "@/lib/auth/redirect";
 import "./auth-screen-v3.css";
 
-function safeNextPath(next: string | string[] | undefined) {
-  const path = Array.isArray(next) ? next[0] : next;
-  return path?.startsWith("/") && !path.startsWith("//") ? path : "/discover";
-}
-
-export default async function SignInPage({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {
-  const { next } = await searchParams;
-  const nextPath = safeNextPath(next);
+export default async function SignInPage({ searchParams }: { searchParams: Promise<{ next?: string | string[]; resetComplete?: string | string[] }> }) {
+  const params = await searchParams;
+  const nextPath = safeRedirectPath(params.next);
+  const resetComplete = params.resetComplete === "1";
   return (
     <main className="auth-page">
-      <section className="auth-form-panel" aria-label="Sign in to Tutoria">
-        <SignInForm nextPath={nextPath} />
-      </section>
+      <Suspense fallback={null}>
+        <SignInForm nextPath={nextPath} resetComplete={resetComplete} />
+      </Suspense>
     </main>
   );
 }

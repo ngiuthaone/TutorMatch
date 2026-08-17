@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tutoria Center — Seller Center inspired operating system</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','ui-sans-serif','-apple-system','BlinkMacSystemFont','Segoe UI','sans-serif']},boxShadow:{panel:'0 1px 2px rgba(0,0,0,.04)',float:'0 14px 40px rgba(0,0,0,.16)'}}}}
+</script>
+<style>
+:root{--ink:#171717;--muted:#747474;--line:#e7e7e7;--bg:#f5f5f5;--panel:#fff;--dark:#111;--danger:#d82e3f;--warn:#9a650f;--ok:#247356}
+html,body{min-height:100%;background:var(--bg)}body{font-feature-settings:"cv02","cv03","cv04","cv11"}*{box-sizing:border-box}button,input,select,textarea{font:inherit}
+*{scrollbar-width:thin;scrollbar-color:#cfcfcf transparent}*::-webkit-scrollbar{width:8px;height:8px}*::-webkit-scrollbar-thumb{background:#cfcfcf;border-radius:999px}
+.page{display:none}.page.active{display:block}.subtab{border-bottom:2px solid transparent}.subtab.active{border-color:#171717;color:#171717;font-weight:600}.nav-row[data-active="true"]{background:#ededed;color:#111;font-weight:600}.nav-row[data-active="true"] .nav-glyph{color:#111}.nav-sub[data-active="true"]{background:#f1f1f1;color:#111;font-weight:600}.nav-children{display:none}.nav-parent.open+.nav-children{display:block}.drawer{transform:translateX(105%);transition:transform .22s ease}.drawer.open{transform:translateX(0)}.overlay{opacity:0;pointer-events:none;transition:opacity .18s ease}.overlay.open{opacity:1;pointer-events:auto}.modal{opacity:0;pointer-events:none}.modal.open{opacity:1;pointer-events:auto}.modal .modal-card{transform:translateY(8px) scale(.99);transition:.18s}.modal.open .modal-card{transform:none}.toast{transform:translateY(20px);opacity:0;transition:.2s}.toast.show{transform:none;opacity:1}.calendar-cell{min-height:105px}.calendar-cell:hover{background:#fafafa}.progress-track{height:6px;background:#ececec;border-radius:999px;overflow:hidden}.progress-fill{height:100%;background:#242424;border-radius:999px}.chartbar{background:#2c2c2c;border-radius:3px 3px 0 0}.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:600;white-space:nowrap}.pill-ok{background:#edf7f2;color:#247356}.pill-warn{background:#fff5e7;color:#966014}.pill-bad{background:#fff0f1;color:#b72b3a}.pill-neutral{background:#f0f0f0;color:#555}.dense-table th{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#858585;font-weight:600;background:#fafafa}.dense-table td{font-size:11px}.dense-table th,.dense-table td{padding:10px 14px;border-bottom:1px solid #eee}.dense-table tbody tr:hover{background:#fcfcfc}.input{height:34px;border:1px solid #dedede;border-radius:6px;background:#fff;padding:0 10px;font-size:11px;outline:none}.input:focus{border-color:#999}.btn{height:34px;border:1px solid #dedede;background:#fff;border-radius:6px;padding:0 11px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px;justify-content:center}.btn:hover{background:#f7f7f7}.btn-dark{background:#191919;color:#fff;border-color:#191919}.btn-dark:hover{background:#2a2a2a}.btn-danger{background:#fff;color:#b52231;border-color:#efc8cd}.metric-card{background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:14px;min-height:102px}.panel{background:#fff;border:1px solid #e4e4e4;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.03)}.section-title{font-size:13px;font-weight:650}.eyebrow{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.11em;color:#8b8b8b}.muted{color:#7b7b7b}.focus-ring:focus{outline:2px solid #222;outline-offset:2px}
+@media(max-width:1023px){#workspace{margin-left:0!important}.desktop-only{display:none!important}}
+
+/* QA responsive hardening */
+@media(max-width:639px){
+  header .brand-block{width:auto!important;padding-left:12px;padding-right:8px;border-right:0;gap:8px}
+  header .brand-copy>div:first-child{font-size:12px}
+  header .brand-subtitle{display:none}
+  header .header-actions{padding-left:6px;padding-right:6px;gap:6px;min-width:0}
+  header .header-search{min-width:0}
+  header .search-kbd{display:none}
+  #globalSearch{padding-left:28px;padding-right:8px;font-size:10px;min-width:0}
+  #globalSearch::placeholder{color:transparent}
+  #profileButton,#helpButton{display:none}
+  #searchPanel{position:fixed;left:8px;right:8px;top:60px;width:auto}
+  .calendar-filterbar{margin-left:0!important;width:100%;overflow-x:auto;padding-bottom:2px}
+  .calendar-filterbar>*{flex:0 0 auto}
+  .calendar-grid-wrap{min-width:700px}
+  #page-earnings .earnings-view:has(table){overflow-x:auto}
+  #page-earnings .earnings-view table{min-width:620px}
+  .drawer{width:100vw!important;max-width:100vw!important}
+}
+@media(max-width:359px){
+  #notificationButton{display:none}
+  header .brand-copy>div:first-child{font-size:11px}
+}
+
+@media(max-width:639px){
+  .partner-toolbar{align-items:stretch;flex-direction:column}
+  .partner-filters{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto}
+  .partner-filters .input{min-width:0;width:100%}
+}
+
+/* Tutor booking workspace */
+.tutor-booking-item{width:100%;text-align:left;padding:14px 16px;display:block;background:#fff;transition:background .15s ease}
+.tutor-booking-item:hover{background:#fafafa}.tutor-booking-item[aria-current="true"]{background:#f3f3f3;box-shadow:inset 2px 0 0 #171717}.tutor-booking-item:focus-visible{outline:2px solid #222;outline-offset:-2px}
+.booking-avatar{width:34px;height:34px;border-radius:999px;background:#ececec;display:grid;place-items:center;font-size:10px;font-weight:700;flex:0 0 auto}
+.booking-detail-section{padding:18px 22px;border-top:1px solid #eee}.booking-detail-label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.08em;font-weight:650}
+.booking-decision-dialog::backdrop{background:rgba(0,0,0,.4)}.booking-decision-dialog{border:0;padding:0;border-radius:10px;width:min(440px,calc(100vw - 28px));box-shadow:0 18px 60px rgba(0,0,0,.22)}
+.mobile-booking-sheet{padding-bottom:max(16px,env(safe-area-inset-bottom))}
+@media(max-width:1023px){#tutorBookingReady{display:block}.tutor-booking-item{padding:15px 14px}.tutor-booking-item[aria-current="true"]{background:#fff;box-shadow:none}}
+@media(max-width:639px){#page-bookings .booking-mode-label{display:none}.tutor-booking-tab{padding-top:12px;padding-bottom:12px}.booking-detail-section{padding:16px}.tutor-booking-item{padding:14px 12px}}
+
+
+/* Typography readability pass: keep Seller Center density, remove micro-text. */
+body{font-size:13px;line-height:1.45}
+p,td,li,label,input,select,textarea,button{line-height:1.45}
+[class~="text-[8px]"]{font-size:10px!important}
+[class~="text-[9px]"]{font-size:11px!important}
+[class~="text-[10px]"]{font-size:12px!important}
+[class~="text-[11px]"]{font-size:13px!important}
+[class~="text-[12px]"]{font-size:13px!important}
+[class~="text-[13px]"]{font-size:14px!important}
+[class~="text-[14px]"]{font-size:15px!important}
+[class~="text-[15px]"]{font-size:16px!important}
+.pill{font-size:11.5px;line-height:1.25}
+.dense-table th{font-size:10.5px;line-height:1.3}
+.dense-table td{font-size:12.5px;line-height:1.45}
+.input,.btn{font-size:12.5px;min-height:36px}
+.section-title{font-size:15px}
+.eyebrow,.booking-detail-label{font-size:10.5px}
+.booking-avatar{font-size:11.5px}
+.nav-row{font-size:13px!important;min-height:38px}
+.nav-sub{font-size:12px!important;min-height:30px}
+@media(max-width:639px){
+  body{font-size:13px}
+  .nav-row{font-size:13px!important}
+  .nav-sub{font-size:12.5px!important}
+  .input,.btn{font-size:13px;min-height:38px}
+}
+
+</style>
+</head>
+<body class="font-sans text-[#171717] antialiased">
+<div class="min-h-screen">
+  <header class="fixed top-0 inset-x-0 z-50 h-14 bg-[#111] text-white border-b border-black flex items-center">
+    <div class="brand-block w-[232px] h-full px-5 flex items-center gap-2.5 border-r border-white/10 shrink-0">
+      <div class="w-7 h-7 bg-white text-black rounded-[5px] grid place-items-center font-extrabold text-[13px]">T</div>
+      <div class="brand-copy"><div class="text-[14px] font-semibold tracking-tight leading-none">Tutoria Center</div><div class="brand-subtitle text-[9px] text-white/45 mt-1.5">HOST OPERATIONS</div></div>
+    </div>
+    <div class="header-actions flex-1 h-full flex items-center gap-3 px-4 min-w-0">
+      <button id="mobileMenu" class="lg:hidden w-9 h-9 rounded-md border border-white/15 grid place-items-center">☰</button>
+      <div class="header-search relative flex-1 max-w-[560px] min-w-0">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-white/45 text-[14px]">⌕</span>
+        <input id="globalSearch" class="w-full h-9 rounded-md bg-[#2a2a2a] border border-white/10 pl-9 pr-16 text-[12px] text-white placeholder:text-white/45 outline-none focus:border-white/30" placeholder="Search for features, bookings, listings, help content" />
+        <kbd class="search-kbd absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] px-1.5 py-0.5 rounded border border-white/15 text-white/50">Ctrl+K</kbd>
+        <div id="searchPanel" class="hidden absolute top-11 left-0 right-0 bg-white text-[#171717] rounded-lg border border-[#dedede] shadow-float overflow-hidden z-[70]">
+          <div class="px-3 pt-3 pb-1 text-[9px] uppercase tracking-[.1em] text-[#999]">Quick results</div>
+          <button data-page="bookings" class="search-result w-full px-3 py-2.5 text-left hover:bg-[#f6f6f6] flex justify-between text-[11px]"><span>Booking #T28484 · Interview Practice</span><span class="text-[#999]">Bookings</span></button>
+          <button data-page="listings" class="search-result w-full px-3 py-2.5 text-left hover:bg-[#f6f6f6] flex justify-between text-[11px]"><span>Pizza-Making Workshop</span><span class="text-[#999]">Listing</span></button>
+          <button data-page="earnings" class="search-result w-full px-3 py-2.5 text-left hover:bg-[#f6f6f6] flex justify-between text-[11px]"><span>Payout arriving 12 Aug</span><span class="text-[#999]">Finance</span></button>
+          <button data-page="academy" class="search-result w-full px-3 py-2.5 text-left hover:bg-[#f6f6f6] flex justify-between text-[11px]"><span>How minimum-participant confirmation works</span><span class="text-[#999]">Academy</span></button>
+        </div>
+      </div>
+      <div class="ml-auto flex items-center gap-1">
+        <button id="messageButton" class="hidden md:flex h-9 px-3 items-center gap-2 hover:bg-white/10 rounded-md text-[11px] text-white/85">▱ Customer messages <span class="w-4 h-4 bg-white text-black rounded-full text-[9px] grid place-items-center font-bold">7</span></button>
+        <button id="notificationButton" class="w-9 h-9 rounded-md hover:bg-white/10 relative">♢<span class="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#ff4f65]"></span></button>
+        <button id="helpButton" class="w-9 h-9 rounded-md hover:bg-white/10">?</button>
+        <button id="profileButton" class="ml-1 w-8 h-8 rounded-full bg-white text-black font-bold text-[10px]">LN</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="sidebarBackdrop" class="hidden fixed inset-x-0 bottom-0 top-14 z-30 bg-black/25 lg:hidden"></div>
+
+  <aside id="sidebar" class="fixed left-0 top-14 bottom-0 z-40 w-[232px] bg-white border-r border-[#e7e7e7] overflow-y-auto transition-transform -translate-x-full lg:translate-x-0">
+    <div class="p-3">
+      <div class="relative border-b border-[#eee] pb-2 mb-2">
+        <button id="accountSwitcher" class="w-full px-2 py-2 text-left hover:bg-[#f7f7f7] rounded-md flex items-center gap-2">
+          <div data-center-account-initials class="w-8 h-8 rounded-md bg-[#f0f0f0] grid place-items-center text-[10px] font-bold">LN</div>
+          <div class="min-w-0 flex-1"><div data-center-account-name class="text-[11px] font-semibold truncate">Linh Nguyen</div><div class="text-[9px] text-[#8a8a8a] mt-0.5 truncate">All locations · Owner</div></div><span class="text-[#777]">⌄</span>
+        </button>
+        <div id="accountMenu" class="hidden absolute left-0 right-0 top-[52px] bg-white border border-[#dedede] rounded-lg shadow-float p-1.5 z-50">
+          <div class="px-2 py-1.5 text-[9px] text-[#999] uppercase tracking-[.08em]">Workspace</div>
+          <button class="branch-option w-full px-2 py-2 rounded hover:bg-[#f6f6f6] text-left text-[10px] font-semibold" data-branch="All locations">✓ All locations</button>
+          <button class="branch-option w-full px-2 py-2 rounded hover:bg-[#f6f6f6] text-left text-[10px]" data-branch="Hoàn Kiếm">Hoàn Kiếm</button>
+          <button class="branch-option w-full px-2 py-2 rounded hover:bg-[#f6f6f6] text-left text-[10px]" data-branch="Tây Hồ">Tây Hồ</button>
+          <button class="branch-option w-full px-2 py-2 rounded hover:bg-[#f6f6f6] text-left text-[10px]" data-branch="Online">Online</button>
+        </div>
+      </div>
+
+      <nav id="nav" class="space-y-0.5">
+        <button data-page="home" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]" data-active="true"><span class="nav-glyph w-4 text-center">⌂</span>Home</button>
+
+        <button class="nav-parent open nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">▣</span>Bookings <span class="ml-auto text-[#777]">⌄</span></button>
+        <div class="nav-children pl-7 space-y-0.5">
+          <button data-page="bookings" data-booking-stage="requests" data-qa-bound="1" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Requests <span id="navRequestCount" class="float-right">3</span></button>
+          <button data-page="bookings" data-booking-stage="awaiting" data-qa-bound="1" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Awaiting payment <span id="navAwaitingCount" class="float-right">2</span></button>
+          <button data-page="bookings" data-booking-stage="upcoming" data-qa-bound="1" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Upcoming</button>
+          <button data-page="bookings" data-booking-stage="past" data-qa-bound="1" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Past</button>
+          <button data-page="bookings" data-booking-stage="cancelled" data-qa-bound="1" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Closed</button>
+          <button data-page="bookings" data-booking-mode="operations" data-qa-bound="1" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">All business bookings</button>
+        </div>
+
+        <button class="nav-parent open nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">□</span>Listings <span class="ml-auto text-[#777]">⌄</span></button>
+        <div class="nav-children pl-7 space-y-0.5">
+          <button data-page="listings" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Manage listings</button>
+          <button data-action="addListing" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Add listing</button>
+          <button data-page="calendar" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Availability & capacity</button>
+        </div>
+
+        <button data-page="calendar" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">◷</span>Calendar</button>
+        <button data-page="learners" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">☰</span>Learners</button>
+
+        <div class="pt-3 pb-1 px-3 text-[9px] font-bold tracking-[.1em] uppercase text-[#aaa]">Growth</div>
+        <button class="nav-parent open nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">↗</span>Marketing <span class="ml-auto text-[#777]">⌄</span></button>
+        <div class="nav-children pl-7 space-y-0.5">
+          <button data-page="marketing" data-marketingtab="promotions" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Promotions</button>
+          <button data-page="marketing" data-marketingtab="campaigns" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Campaign Center</button>
+          <button data-page="marketing" data-marketingtab="codes" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Promo codes</button>
+        </div>
+        <button data-page="partners" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">♢</span>Partners / Affiliate</button>
+        <button data-page="opportunities" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">✦</span>Opportunities <span class="ml-auto w-1.5 h-1.5 rounded-full bg-[#ff4f65]"></span></button>
+
+        <div class="pt-3 pb-1 px-3 text-[9px] font-bold tracking-[.1em] uppercase text-[#aaa]">Performance</div>
+        <button data-page="analytics" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">▥</span>Analytics</button>
+        <button class="nav-parent open nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">₫</span>Earnings <span class="ml-auto text-[#777]">⌄</span></button>
+        <div class="nav-children pl-7 space-y-0.5">
+          <button data-page="earnings" data-earningstab="overview" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Overview</button>
+          <button data-page="earnings" data-earningstab="transactions" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Transactions</button>
+          <button data-page="earnings" data-earningstab="payouts" class="nav-sub w-full h-7 px-2 rounded text-left text-[10px] text-[#676767] hover:bg-[#f5f5f5]">Payouts</button>
+        </div>
+        <button data-page="quality" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">♡</span>Quality & Trust</button>
+
+        <div class="pt-3 pb-1 px-3 text-[9px] font-bold tracking-[.1em] uppercase text-[#aaa]">Support</div>
+        <button data-page="academy" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">?</span>Host Academy</button>
+        <button data-page="settings" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">⚙</span>Settings</button>
+      </nav>
+    </div>
+  </aside>
+
+  <main id="workspace" class="pt-14 lg:ml-[232px] min-h-screen">
+    <div class="max-w-[1480px] mx-auto px-4 md:px-6 py-5">
+      <!-- HOME -->
+      <section id="page-home" class="page active">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 mb-4">
+          <div><h1 class="text-[20px] font-semibold tracking-tight">Home</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Daily operating view for your Tutoria business.</p></div>
+          <div class="flex items-center gap-2"><span class="text-[10px] text-[#888]">Updated 8 Aug · 14:58</span><select class="input"><option>Last 7 days</option><option>Today</option><option>Last 28 days</option></select></div>
+        </div>
+        <div class="grid grid-cols-2 xl:grid-cols-5 gap-3 mb-4">
+          <div class="metric-card"><div class="text-[10px] text-[#777]">Gross bookings ›</div><div class="text-[22px] font-semibold mt-2">₫8.42m</div><div class="text-[10px] text-[#247356] mt-1">↑ 12.4%</div></div>
+          <div class="metric-card"><div class="text-[10px] text-[#777]">Bookings ›</div><div class="text-[22px] font-semibold mt-2">37</div><div class="text-[10px] text-[#247356] mt-1">↑ 8.8%</div></div>
+          <div class="metric-card"><div class="text-[10px] text-[#777]">Learners ›</div><div class="text-[22px] font-semibold mt-2">31</div><div class="text-[10px] text-[#247356] mt-1">↑ 5.1%</div></div>
+          <div class="metric-card"><div class="text-[10px] text-[#777]">Listing visitors ›</div><div class="text-[22px] font-semibold mt-2">1,482</div><div class="text-[10px] text-[#b64c58] mt-1">↓ 2.1%</div></div>
+          <div class="metric-card col-span-2 xl:col-span-1"><div class="text-[10px] text-[#777]">Booking conversion ›</div><div class="text-[22px] font-semibold mt-2">6.8%</div><div class="text-[10px] text-[#247356] mt-1">↑ 0.7 pt</div></div>
+        </div>
+
+        <div class="panel mb-4 overflow-hidden">
+          <div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">To-do list</div><div class="text-[10px] text-[#999] mt-0.5">These are the key daily tasks for your host business.</div></div>
+          <div class="grid sm:grid-cols-2 xl:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#eee]">
+            <button data-page="bookings" class="jump-page p-4 text-left hover:bg-[#fafafa]"><div class="text-[10px] text-[#777]">Booking requests ›</div><div class="text-[20px] font-semibold mt-1">3</div><div class="text-[10px] text-[#b72b3a] mt-1">● Urgent: 1</div></button>
+            <button data-page="calendar" class="jump-page p-4 text-left hover:bg-[#fafafa]"><div class="text-[10px] text-[#777]">Sessions today ›</div><div class="text-[20px] font-semibold mt-1">5</div><div class="text-[10px] text-[#777] mt-1">Next at 15:30</div></button>
+            <button data-action="messages" class="p-4 text-left hover:bg-[#fafafa]"><div class="text-[10px] text-[#777]">Unread learner messages ›</div><div class="text-[20px] font-semibold mt-1">7</div><div class="text-[10px] text-[#777] mt-1">2 need a reply today</div></button>
+            <button data-page="quality" class="jump-page p-4 text-left hover:bg-[#fafafa]"><div class="text-[10px] text-[#777]">Quality actions ›</div><div class="text-[20px] font-semibold mt-1">1</div><div class="text-[10px] text-[#966014] mt-1">Credential expires soon</div></button>
+          </div>
+        </div>
+
+        <div class="panel mb-4 p-4 md:p-5 bg-[#fff] overflow-hidden relative">
+          <div class="absolute right-0 top-0 bottom-0 w-1/3 bg-[radial-gradient(circle_at_50%_50%,#eee_0,transparent_65%)] opacity-80 pointer-events-none"></div>
+          <div class="relative max-w-[680px]"><div class="eyebrow">Proven strategies to grow your business</div><h2 class="text-[17px] font-semibold mt-2">Fill Saturday capacity while demand is high.</h2><p class="text-[11px] text-[#737373] mt-1.5 leading-5">482 people searched for IELTS tutors with Saturday availability in Hà Nội this week. You currently have only two Saturday slots open.</p><div class="mt-3 flex gap-2"><button data-page="opportunities" class="jump-page btn btn-dark">View opportunity</button><button data-page="calendar" class="jump-page btn">Open availability</button></div></div>
+        </div>
+
+        <div class="grid xl:grid-cols-5 gap-4 mb-4">
+          <div class="xl:col-span-3 panel overflow-hidden">
+            <div class="px-4 py-3 border-b border-[#eee] flex items-center justify-between"><div><div class="section-title">Performance overview</div><div class="text-[10px] text-[#999] mt-0.5">Gross bookings by day</div></div><button data-page="analytics" class="jump-page text-[10px] font-semibold">View analytics →</button></div>
+            <div class="p-4">
+              <div class="h-[170px] border-l border-b border-[#ddd] flex items-end gap-[5%] px-[4%] pt-5">
+                <div class="flex-1 chartbar h-[34%]" title="Mon"></div><div class="flex-1 chartbar h-[52%]"></div><div class="flex-1 chartbar h-[41%]"></div><div class="flex-1 chartbar h-[68%]"></div><div class="flex-1 chartbar h-[58%]"></div><div class="flex-1 chartbar h-[92%]"></div><div class="flex-1 chartbar h-[78%]"></div>
+              </div><div class="grid grid-cols-7 text-center text-[9px] text-[#999] mt-2"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+            </div>
+          </div>
+          <div class="xl:col-span-2 panel overflow-hidden">
+            <div class="px-4 py-3 border-b border-[#eee] flex items-center justify-between"><div><div class="section-title">Upcoming</div><div class="text-[10px] text-[#999] mt-0.5">Today · Hanoi time</div></div><button data-page="calendar" class="jump-page text-[10px] font-semibold">Calendar →</button></div>
+            <div class="divide-y divide-[#eee]">
+              <div class="px-4 py-3 flex items-center gap-3"><div class="w-12 text-[11px] font-semibold">15:30</div><div class="w-7 h-7 rounded bg-[#f0f0f0] grid place-items-center text-[9px] font-bold">1:1</div><div class="flex-1 min-w-0"><div class="text-[11px] font-medium truncate">IELTS Speaking · Mai Anh</div><div class="text-[9px] text-[#888] mt-0.5">Online · 60 min</div></div><button class="text-[10px] font-semibold">Join →</button></div>
+              <div class="px-4 py-3 flex items-center gap-3"><div class="w-12 text-[11px] font-semibold">17:00</div><div class="w-7 h-7 rounded bg-[#f0f0f0] grid place-items-center text-[9px] font-bold">WS</div><div class="flex-1 min-w-0"><div class="text-[11px] font-medium truncate">Pizza-Making Workshop</div><div class="text-[9px] text-[#888] mt-0.5">Hoàn Kiếm · 8 / 15</div></div><button data-listing="pizza" class="open-listing text-[10px] font-semibold">Manage →</button></div>
+              <div class="px-4 py-3 flex items-center gap-3"><div class="w-12 text-[11px] font-semibold">19:30</div><div class="w-7 h-7 rounded bg-[#f0f0f0] grid place-items-center text-[9px] font-bold">1:1</div><div class="flex-1 min-w-0"><div class="text-[11px] font-medium truncate">Interview Practice · Trang</div><div class="text-[9px] text-[#888] mt-0.5">Online · booking request</div></div><button data-booking="T28484" class="open-booking text-[10px] font-semibold">Review →</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel overflow-hidden">
+          <div class="px-4 py-3 border-b border-[#eee] flex items-center justify-between"><div><div class="section-title">Session health</div><div class="text-[10px] text-[#999] mt-0.5">Capacity is Tutoria's inventory.</div></div><button data-page="calendar" class="jump-page text-[10px] font-semibold">Manage sessions →</button></div>
+          <div class="overflow-x-auto"><table class="dense-table w-full min-w-[780px]"><thead><tr><th class="text-left">Session</th><th class="text-left">Date</th><th class="text-left">Booked</th><th class="text-left">Min / max</th><th class="text-left">Gross</th><th class="text-left">Status</th><th></th></tr></thead><tbody>
+            <tr><td class="font-semibold">Pizza-Making Workshop</td><td class="text-[#777]">Sun 9 Aug · 17:00</td><td><div class="flex items-center gap-2"><div class="progress-track w-24"><div class="progress-fill" style="width:53%"></div></div>8 / 15</div></td><td>5 / 15</td><td>₫5.20m</td><td><span class="pill pill-ok">Confirmed</span></td><td><button data-listing="pizza" class="open-listing font-semibold">Manage</button></td></tr>
+            <tr><td class="font-semibold">Pottery for Beginners</td><td class="text-[#777]">Sun 10 Aug · 14:00</td><td><div class="flex items-center gap-2"><div class="progress-track w-24"><div class="progress-fill" style="width:30%"></div></div>3 / 10</div></td><td>5 / 10</td><td>₫1.35m</td><td><span class="pill pill-warn">Needs 2 bookings</span></td><td><button data-page="marketing" class="jump-page font-semibold">Promote</button></td></tr>
+            <tr><td class="font-semibold">IELTS Speaking</td><td class="text-[#777]">Tomorrow · 09:00</td><td><div class="flex items-center gap-2"><div class="progress-track w-24"><div class="progress-fill" style="width:75%"></div></div>3 / 4</div></td><td>— / 4 slots</td><td>₫600k</td><td><span class="pill pill-neutral">1 slot left</span></td><td><button data-page="calendar" class="jump-page font-semibold">Calendar</button></td></tr>
+          </tbody></table></div>
+        </div>
+      </section>
+
+      <!-- BOOKINGS -->
+      <section id="page-bookings" class="page">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
+          <div>
+            <h1 class="text-[20px] font-semibold tracking-tight">Bookings</h1>
+            <p class="text-[11px] text-[#7f7f7f] mt-1">Manage requests, participants, enrollments and upcoming sessions across every listing.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button data-page="calendar" class="btn">Calendar</button>
+            <div class="inline-flex rounded-md border border-[#dedede] bg-white p-0.5" aria-label="Booking view">
+              <button id="tutorWorkspaceToggle" data-booking-mode="workspace" data-qa-bound="1" class="h-8 px-3 rounded-[4px] bg-[#171717] text-white text-[10px] font-semibold">Booking workspace</button>
+              <button id="operationsToggle" data-booking-mode="operations" data-qa-bound="1" class="h-8 px-3 rounded-[4px] text-[10px] font-semibold text-[#666] hover:bg-[#f5f5f5]">All bookings</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="tutorBookingWorkspace">
+          <div class="panel overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-[#eee] bg-[#fcfcfc] flex items-center gap-2 overflow-x-auto" aria-label="Filter bookings by listing type">
+              <span class="text-[9px] text-[#999] uppercase tracking-[.08em] font-semibold mr-1 whitespace-nowrap">Type</span>
+              <button data-booking-type="all" class="booking-type-filter pill pill-neutral bg-[#171717] !text-white !border-[#171717]">All</button>
+              <button data-booking-type="tutor" class="booking-type-filter pill pill-neutral">Tutor</button>
+              <button data-booking-type="workshop" class="booking-type-filter pill pill-neutral">Workshop</button>
+              <button data-booking-type="class" class="booking-type-filter pill pill-neutral">Class</button>
+              <button data-booking-type="event" class="booking-type-filter pill pill-neutral">Event</button>
+              <button data-booking-type="course" class="booking-type-filter pill pill-neutral">Course</button>
+            </div>
+            <div class="px-4 border-b border-[#eee] flex items-center gap-5 overflow-x-auto" role="tablist" aria-label="Booking workflow states">
+              <button role="tab" aria-selected="true" data-tutor-booking-tab="requests" data-qa-bound="1" class="tutor-booking-tab subtab active py-3 text-[10px] whitespace-nowrap">Action needed <span data-count="requests" class="ml-1 text-[#b72b3a]">3</span></button>
+              <button role="tab" aria-selected="false" data-tutor-booking-tab="upcoming" data-qa-bound="1" class="tutor-booking-tab subtab py-3 text-[10px] whitespace-nowrap">Upcoming / active <span data-count="upcoming" class="ml-1 text-[#999]">2</span></button>
+              <button role="tab" aria-selected="false" data-tutor-booking-tab="awaiting" data-qa-bound="1" class="tutor-booking-tab subtab py-3 text-[10px] whitespace-nowrap">Awaiting payment <span data-count="awaiting" class="ml-1 text-[#999]">2</span></button>
+              <button role="tab" aria-selected="false" data-tutor-booking-tab="past" data-qa-bound="1" class="tutor-booking-tab subtab py-3 text-[10px] whitespace-nowrap">Completed <span data-count="past" class="ml-1 text-[#999]">2</span></button>
+              <button role="tab" aria-selected="false" data-tutor-booking-tab="cancelled" data-qa-bound="1" class="tutor-booking-tab subtab py-3 text-[10px] whitespace-nowrap">Closed <span data-count="cancelled" class="ml-1 text-[#999]">1</span></button>
+            </div>
+
+            <div id="tutorBookingReady" class="grid lg:grid-cols-[minmax(320px,42%)_minmax(0,58%)] min-h-[590px]">
+              <div class="border-r border-[#eee] min-w-0 bg-white">
+                <div class="h-11 px-4 border-b border-[#eee] bg-[#fcfcfc] flex items-center gap-2">
+                  <span class="text-[#999]">⌕</span>
+                  <input id="tutorBookingSearch" class="bg-transparent outline-none flex-1 min-w-0 text-[10px] placeholder:text-[#aaa]" placeholder="Search learner, booking or listing" aria-label="Search bookings" />
+                  <span id="tutorBookingListMeta" class="text-[9px] text-[#999] whitespace-nowrap"></span>
+                </div>
+                <div id="tutorBookingList" class="divide-y divide-[#eee] max-h-[650px] overflow-y-auto" aria-live="polite"></div>
+              </div>
+
+              <div class="hidden lg:block min-w-0 bg-white">
+                <div id="tutorBookingDetail" class="h-full"></div>
+              </div>
+            </div>
+
+            <div id="tutorBookingLoading" class="hidden grid lg:grid-cols-[minmax(320px,42%)_minmax(0,58%)] min-h-[590px]" aria-busy="true">
+              <div class="border-r border-[#eee] p-4 space-y-3">
+                <div class="h-8 bg-[#f2f2f2] rounded-md animate-pulse"></div>
+                <div class="h-24 bg-[#f4f4f4] rounded-md animate-pulse"></div>
+                <div class="h-24 bg-[#f4f4f4] rounded-md animate-pulse"></div>
+                <div class="h-24 bg-[#f4f4f4] rounded-md animate-pulse"></div>
+              </div>
+              <div class="hidden lg:block p-6 space-y-4">
+                <div class="h-5 w-40 bg-[#efefef] rounded animate-pulse"></div>
+                <div class="h-10 w-64 bg-[#f4f4f4] rounded animate-pulse"></div>
+                <div class="h-px bg-[#eee]"></div>
+                <div class="h-28 bg-[#f6f6f6] rounded animate-pulse"></div>
+              </div>
+            </div>
+
+            <div id="tutorBookingError" class="hidden min-h-[420px] grid place-items-center px-4 text-center">
+              <div class="max-w-[300px]">
+                <div class="text-[13px] font-semibold">Couldn't load bookings</div>
+                <p class="text-[10px] text-[#888] mt-1.5">Please try again.</p>
+                <button id="retryTutorBookings" data-qa-bound="1" class="btn mt-4">Retry</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="bookingOperationsView" class="hidden">
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <div><div class="section-title">All business bookings</div><div class="text-[10px] text-[#888] mt-0.5">Cross-listing operational table for tutors, workshops, classes, events and courses.</div></div>
+            <div class="flex gap-2"><button data-action="exportBookings" class="btn">Export CSV</button><button data-action="newBooking" class="btn btn-dark">+ Manual booking</button></div>
+          </div>
+        <div class="panel overflow-hidden">
+          <div class="px-4 border-b border-[#eee] flex gap-5 overflow-x-auto">
+            <button data-booking-tab="all" class="booking-tab subtab active py-3 text-[10px] whitespace-nowrap">All <span class="ml-1 text-[#999]">284</span></button>
+            <button data-booking-tab="requests" class="booking-tab subtab py-3 text-[10px] whitespace-nowrap">Requests <span class="ml-1 text-[#b72b3a]">3</span></button>
+            <button data-booking-tab="upcoming" class="booking-tab subtab py-3 text-[10px] whitespace-nowrap">Upcoming <span class="ml-1 text-[#999]">21</span></button>
+            <button data-booking-tab="completed" class="booking-tab subtab py-3 text-[10px] whitespace-nowrap">Completed</button>
+            <button data-booking-tab="refunds" class="booking-tab subtab py-3 text-[10px] whitespace-nowrap">Cancellations & refunds <span class="ml-1 text-[#999]">2</span></button>
+          </div>
+          <div class="p-3 border-b border-[#eee] bg-[#fcfcfc] flex flex-wrap gap-2 items-center"><input id="bookingSearch" class="input w-[220px]" placeholder="Search booking or learner"/><select id="bookingListingFilter" class="input"><option>All listings</option><option>IELTS Speaking</option><option>Pizza Workshop</option><option>Japanese for Beginners</option><option>Founder Meetup Hanoi</option><option>Business English Essentials</option></select><select id="bookingLocationFilter" class="input"><option>All locations</option><option>Online</option><option>Hoàn Kiếm</option></select><input id="bookingDateFilter" type="date" class="input"/><button class="btn">More filters</button><div class="ml-auto flex gap-2"><button class="btn">Columns</button><button class="btn">Bulk actions</button></div></div>
+          <div class="overflow-x-auto"><table class="dense-table w-full min-w-[1060px]"><thead><tr><th><input type="checkbox"/></th><th class="text-left">Booking</th><th class="text-left">Offering</th><th class="text-left">Learner</th><th class="text-left">Session</th><th class="text-left">Amount</th><th class="text-left">Status</th><th class="text-left">Payment</th><th class="text-left">Action</th></tr></thead><tbody id="bookingRows">
+            <tr data-status="requests"><td><input type="checkbox"/></td><td class="font-semibold">#T28484<div class="text-[9px] text-[#999] font-normal mt-0.5">Today 12:10</div></td><td>Interview Practice<div class="text-[9px] text-[#999] mt-0.5">Tutor · Online</div></td><td>Anh Pham</td><td>11 Aug · 19:00<div class="text-[9px] text-[#999] mt-0.5">60 min</div></td><td>₫250,000</td><td><span class="pill pill-warn">Request</span></td><td><span class="pill pill-neutral">Not available yet</span></td><td><button data-booking="T28484" class="open-booking font-semibold">Review</button></td></tr>
+            <tr data-status="upcoming"><td><input type="checkbox"/></td><td class="font-semibold">#T28493</td><td>IELTS Speaking<div class="text-[9px] text-[#999] mt-0.5">Tutor · Online</div></td><td>Mai Anh</td><td>9 Aug · 15:30</td><td>₫200,000</td><td><span class="pill pill-ok">Upcoming</span></td><td><span class="pill pill-ok">Paid</span></td><td><button data-booking="T28493" class="open-booking font-semibold">View</button></td></tr>
+            <tr data-status="upcoming"><td><input type="checkbox"/></td><td class="font-semibold">#T28491</td><td>Pizza-Making Workshop<div class="text-[9px] text-[#999] mt-0.5">Workshop · Hoàn Kiếm</div></td><td>2 guests</td><td>9 Aug · 17:00</td><td>₫1,300,000</td><td><span class="pill pill-ok">Confirmed</span></td><td><span class="pill pill-ok">Paid</span></td><td><button data-booking="T28491" class="open-booking font-semibold">View</button></td></tr>
+            <tr data-status="upcoming"><td><input type="checkbox"/></td><td class="font-semibold">#T28496</td><td>Japanese for Beginners<div class="text-[9px] text-[#999] mt-0.5">Class · Online</div></td><td>Ngọc Hà</td><td>20 Aug · 18:30</td><td>₫1,200,000</td><td><span class="pill pill-ok">Confirmed</span></td><td><span class="pill pill-ok">Paid</span></td><td><button data-booking="T28496" class="open-booking font-semibold">View</button></td></tr>
+            <tr data-status="upcoming"><td><input type="checkbox"/></td><td class="font-semibold">#T28497</td><td>Founder Meetup Hanoi<div class="text-[9px] text-[#999] mt-0.5">Event · Tây Hồ</div></td><td>3 tickets</td><td>23 Aug · 18:00</td><td>₫450,000</td><td><span class="pill pill-ok">Confirmed</span></td><td><span class="pill pill-ok">Paid</span></td><td><button data-booking="T28497" class="open-booking font-semibold">View</button></td></tr>
+            <tr data-status="upcoming"><td><input type="checkbox"/></td><td class="font-semibold">#T28498</td><td>Business English Essentials<div class="text-[9px] text-[#999] mt-0.5">Course · On-demand</div></td><td>Khánh Linh</td><td>Enrolled 13 Aug</td><td>₫499,000</td><td><span class="pill pill-ok">Access active</span></td><td><span class="pill pill-ok">Paid</span></td><td><button data-booking="T28498" class="open-booking font-semibold">View</button></td></tr>
+            <tr data-status="refunds"><td><input type="checkbox"/></td><td class="font-semibold">#T28472</td><td>Pottery for Beginners</td><td>Trang Vu</td><td>10 Aug · 14:00</td><td>₫450,000</td><td><span class="pill pill-warn">Pending minimum</span></td><td><span class="pill pill-neutral">Authorized</span></td><td><button data-booking="T28472" class="open-booking font-semibold">Manage</button></td></tr>
+            <tr data-status="completed"><td><input type="checkbox"/></td><td class="font-semibold">#T28351</td><td>IELTS Speaking</td><td>Minh Nguyen</td><td>6 Aug · 19:00</td><td>₫200,000</td><td><span class="pill pill-neutral">Completed</span></td><td><span class="pill pill-ok">Settled</span></td><td><button data-booking="T28351" class="open-booking font-semibold">View</button></td></tr>
+          </tbody></table></div>
+          <div class="px-4 py-3 flex items-center justify-between text-[10px] text-[#777]"><span>1–5 of 284 bookings</span><div class="flex gap-1"><button class="btn h-7 px-2">‹</button><button class="btn h-7 px-2 bg-[#f1f1f1]">1</button><button class="btn h-7 px-2">2</button><button class="btn h-7 px-2">3</button><button class="btn h-7 px-2">›</button></div></div>
+        </div>
+        </div>
+      </section>
+
+      <!-- LISTINGS -->
+      <section id="page-listings" class="page">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4"><div><h1 class="text-[20px] font-semibold">Listings</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Manage every thing you sell on Tutoria from one catalog.</p></div><button data-action="addListing" class="btn btn-dark">+ Add listing</button></div>
+        <div class="panel overflow-hidden">
+          <div class="px-4 border-b border-[#eee] flex gap-5 overflow-x-auto"><button data-listing-status="all" class="listing-status-tab subtab active py-3 text-[10px]">All <span class="text-[#999] ml-1">12</span></button><button data-listing-status="published" class="listing-status-tab subtab py-3 text-[10px]">Published <span class="text-[#999] ml-1">8</span></button><button data-listing-status="draft" class="listing-status-tab subtab py-3 text-[10px]">Draft <span class="text-[#999] ml-1">3</span></button><button data-listing-status="action" class="listing-status-tab subtab py-3 text-[10px]">Action needed <span class="text-[#b72b3a] ml-1">1</span></button><button data-listing-status="archived" class="listing-status-tab subtab py-3 text-[10px]">Archived</button></div>
+          <div class="p-3 bg-[#fcfcfc] border-b border-[#eee] flex flex-wrap gap-2"><input id="listingSearch" class="input w-[240px]" placeholder="Search listing"/><select class="input"><option>All types</option><option>Tutor</option><option>Workshop</option><option>Class</option><option>Event</option><option>Course</option><option>Photobooth</option></select><select class="input"><option>All statuses</option><option>Published</option><option>Draft</option></select><button class="btn">More filters</button><button class="btn ml-auto">Bulk edit</button></div>
+          <div class="overflow-x-auto"><table class="dense-table w-full min-w-[1050px]"><thead><tr><th><input type="checkbox"/></th><th class="text-left">Listing</th><th class="text-left">Type</th><th class="text-left">Status</th><th class="text-left">Availability / capacity</th><th class="text-left">Rating</th><th class="text-left">Bookings</th><th class="text-left">Gross</th><th></th></tr></thead><tbody>
+            <tr><td><input type="checkbox"/></td><td><div class="flex gap-3"><div class="w-11 h-11 bg-[#e8e8e8] rounded-md grid place-items-center text-[9px] font-bold">WS</div><div><div class="font-semibold">Pizza-Making Workshop</div><div class="text-[9px] text-[#999] mt-1">Hoàn Kiếm · 2.5h</div></div></div></td><td>Workshop</td><td><span class="pill pill-ok">Published</span></td><td>6 upcoming sessions</td><td>4.9 ★</td><td>124</td><td>₫21.8m</td><td><button data-listing="pizza" class="open-listing font-semibold">Manage</button></td></tr>
+            <tr><td><input type="checkbox"/></td><td><div class="flex gap-3"><div class="w-11 h-11 bg-[#e8e8e8] rounded-md grid place-items-center text-[9px] font-bold">1:1</div><div><div class="font-semibold">IELTS Speaking with Linh</div><div class="text-[9px] text-[#999] mt-1">Online + Đống Đa</div></div></div></td><td>Tutor</td><td><span class="pill pill-ok">Published</span></td><td>Good · 9 slots this week</td><td>4.9 ★</td><td>42</td><td>₫4.3m</td><td><button data-listing="ielts" class="open-listing font-semibold">Manage</button></td></tr>
+            <tr><td><input type="checkbox"/></td><td><div class="flex gap-3"><div class="w-11 h-11 bg-[#e8e8e8] rounded-md grid place-items-center text-[9px] font-bold">CRS</div><div><div class="font-semibold">Business English Essentials</div><div class="text-[9px] text-[#999] mt-1">8h · 24 lessons</div></div></div></td><td>Course</td><td><span class="pill pill-warn">Draft · 82%</span></td><td>Curriculum incomplete</td><td>—</td><td>—</td><td>—</td><td><button data-listing="course" class="open-listing font-semibold">Continue</button></td></tr>
+            <tr><td><input type="checkbox"/></td><td><div class="flex gap-3"><div class="w-11 h-11 bg-[#e8e8e8] rounded-md grid place-items-center text-[9px] font-bold">CLS</div><div><div class="font-semibold">Hoi An Market Cooking Class</div><div class="text-[9px] text-[#999] mt-1">In person · Hoi An</div></div></div></td><td>Class</td><td><span class="pill pill-bad">Action needed</span></td><td>2 sessions paused</td><td>4.8 ★</td><td>76</td><td>₫18.1m</td><td><button data-listing="class" class="open-listing font-semibold">Fix</button></td></tr>
+          </tbody></table></div>
+        </div>
+      </section>
+
+      <!-- CALENDAR -->
+      <section id="page-calendar" class="page">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4"><div><h1 class="text-[20px] font-semibold">Calendar</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Availability, sessions, capacity, staff and rooms in one fulfillment view.</p></div><div class="flex gap-2"><button data-action="blockTime" class="btn">Block time</button><button data-action="addSession" class="btn btn-dark">+ Add availability / session</button></div></div>
+        <div class="panel overflow-hidden">
+          <div class="calendar-toolbar p-3 border-b border-[#eee] flex flex-wrap gap-2 items-center"><div class="calendar-nav flex gap-1"><button class="btn h-8">‹</button><button class="btn h-8">Today</button><button class="btn h-8">›</button></div><div class="text-[13px] font-semibold ml-1">August 2026</div><div class="calendar-filterbar ml-auto flex gap-2"><select class="input"><option>All listings</option><option>IELTS Speaking</option><option>Pizza Workshop</option></select><select class="input"><option>All staff</option><option>Linh Nguyen</option><option>Workshop team</option></select><select class="input"><option>All locations</option><option>Online</option><option>Hoàn Kiếm</option></select><button class="btn">Month</button></div></div>
+          <div class="calendar-scroll overflow-x-auto"><div class="calendar-grid-wrap min-w-[700px] sm:min-w-0"><div class="grid grid-cols-7 bg-[#fafafa] border-b border-[#eee] text-[9px] text-[#888] uppercase tracking-[.06em]"><div class="p-2 border-r">Mon</div><div class="p-2 border-r">Tue</div><div class="p-2 border-r">Wed</div><div class="p-2 border-r">Thu</div><div class="p-2 border-r">Fri</div><div class="p-2 border-r">Sat</div><div class="p-2">Sun</div></div>
+          <div class="grid grid-cols-7" id="calendarGrid">
+            <div class="calendar-cell border-r border-b p-2 text-[#bbb] text-[10px]">27</div><div class="calendar-cell border-r border-b p-2 text-[#bbb] text-[10px]">28</div><div class="calendar-cell border-r border-b p-2 text-[#bbb] text-[10px]">29</div><div class="calendar-cell border-r border-b p-2 text-[#bbb] text-[10px]">30</div><div class="calendar-cell border-r border-b p-2 text-[#bbb] text-[10px]">31</div>
+            <div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">1</div><button data-session="ielts-1" class="session-chip w-full text-left bg-[#f0f0f0] rounded p-2 mb-1"><div class="text-[9px] font-semibold">09:00 IELTS</div><div class="text-[8px] text-[#777]">2 / 4 slots</div></button></div>
+            <div class="calendar-cell border-b p-2 text-[10px]"><div class="font-semibold mb-2">2</div><button data-session="pizza-2" class="session-chip w-full text-left bg-[#f0f0f0] rounded p-2"><div class="text-[9px] font-semibold">14:00 Pizza</div><div class="text-[8px] text-[#777]">6 / 15</div></button></div>
+            <div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">3</div></div><div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">4</div><button class="w-full text-left bg-[#f0f0f0] rounded p-2"><div class="text-[9px] font-semibold">19:00 Interview</div><div class="text-[8px] text-[#777]">Booked</div></button></div><div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">5</div></div><div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">6</div><button class="w-full text-left bg-[#f0f0f0] rounded p-2"><div class="text-[9px] font-semibold">18:00 IELTS</div><div class="text-[8px] text-[#777]">1 slot left</div></button></div><div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">7</div></div><div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">8</div><button class="w-full text-left bg-[#fff5e7] rounded p-2"><div class="text-[9px] font-semibold">14:00 Pottery</div><div class="text-[8px] text-[#966014]">3 / 10 · below min</div></button></div><div class="calendar-cell border-b p-2 text-[10px]"><div class="font-semibold mb-2">9</div><button data-session="pizza-9" class="session-chip w-full text-left bg-[#edf7f2] rounded p-2 mb-1"><div class="text-[9px] font-semibold">17:00 Pizza</div><div class="text-[8px] text-[#247356]">8 / 15 · confirmed</div></button></div>
+            <div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">10</div></div><div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">11</div><button class="w-full text-left bg-[#f0f0f0] rounded p-2"><div class="text-[9px] font-semibold">19:00 Interview</div><div class="text-[8px] text-[#777]">Request</div></button></div><div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">12</div></div><div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">13</div><button class="w-full text-left bg-[#f0f0f0] rounded p-2"><div class="text-[9px] font-semibold">09:00 IELTS</div><div class="text-[8px] text-[#777]">Open</div></button></div><div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">14</div></div><div class="calendar-cell border-r border-b p-2 text-[10px]"><div class="font-semibold mb-2">15</div><button class="w-full text-left bg-[#edf7f2] rounded p-2"><div class="text-[9px] font-semibold">09:00 Pizza</div><div class="text-[8px] text-[#247356]">12 / 15</div></button></div><div class="calendar-cell border-b p-2 text-[10px]"><div class="font-semibold mb-2">16</div><button class="w-full text-left bg-[#fff5e7] rounded p-2"><div class="text-[9px] font-semibold">14:00 Pottery</div><div class="text-[8px] text-[#966014]">4 / 10</div></button></div>
+          </div></div></div>
+        </div>
+      </section>
+
+      <!-- LEARNERS -->
+      <section id="page-learners" class="page">
+        <div class="flex items-end justify-between gap-3 mb-4"><div><h1 class="text-[20px] font-semibold">Learners</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Customer-service view for participants, repeat learners and messages.</p></div><button data-action="messages" class="btn">Open messages · 7</button></div>
+        <div class="grid xl:grid-cols-4 gap-3 mb-4"><div class="metric-card"><div class="text-[10px] text-[#777]">Total learners</div><div class="text-[22px] font-semibold mt-2">218</div></div><div class="metric-card"><div class="text-[10px] text-[#777]">Repeat booking rate</div><div class="text-[22px] font-semibold mt-2">34%</div></div><div class="metric-card"><div class="text-[10px] text-[#777]">Unread messages</div><div class="text-[22px] font-semibold mt-2">7</div></div><div class="metric-card"><div class="text-[10px] text-[#777]">Avg. lifetime value</div><div class="text-[22px] font-semibold mt-2">₫1.18m</div></div></div>
+        <div class="panel overflow-hidden"><div class="p-3 bg-[#fcfcfc] border-b border-[#eee] flex flex-wrap gap-2"><input id="learnerSearch" class="input w-[240px]" placeholder="Search learner"/><select class="input"><option>All learner types</option><option>Repeat</option><option>First-time</option></select><select class="input"><option>All listings</option><option>IELTS Speaking</option><option>Pizza Workshop</option></select></div><div class="overflow-x-auto"><table class="dense-table w-full min-w-[850px]"><thead><tr><th class="text-left">Learner</th><th class="text-left">Bookings</th><th class="text-left">Lifetime value</th><th class="text-left">Last booking</th><th class="text-left">Upcoming</th><th class="text-left">Message</th><th></th></tr></thead><tbody>
+          <tr><td><div class="font-semibold">Minh Nguyen</div><div class="text-[9px] text-[#999] mt-1">Learner since Apr 2026</div></td><td>12</td><td>₫2.60m</td><td>IELTS Speaking</td><td>11 Aug · 19:00</td><td><span class="pill pill-ok">All caught up</span></td><td><button data-learner="minh" class="open-learner font-semibold">View</button></td></tr>
+          <tr><td><div class="font-semibold">Mai Anh</div><div class="text-[9px] text-[#999] mt-1">Learner since Jun 2026</div></td><td>5</td><td>₫1.00m</td><td>IELTS Speaking</td><td>Today · 15:30</td><td><span class="pill pill-warn">Unread</span></td><td><button data-learner="mai" class="open-learner font-semibold">View</button></td></tr>
+          <tr><td><div class="font-semibold">Trang Vu</div><div class="text-[9px] text-[#999] mt-1">First booking</div></td><td>1</td><td>₫450k</td><td>Pottery for Beginners</td><td>10 Aug · 14:00</td><td><span class="pill pill-neutral">—</span></td><td><button data-learner="trang" class="open-learner font-semibold">View</button></td></tr>
+        </tbody></table></div></div>
+      </section>
+
+      <!-- MARKETING -->
+      <section id="page-marketing" class="page">
+        <div class="flex items-end justify-between gap-3 mb-4"><div><h1 class="text-[20px] font-semibold">Marketing</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Promotions and platform campaigns designed around bookings and empty capacity.</p></div><button data-action="createPromotion" class="btn btn-dark">+ Create promotion</button></div>
+        <div class="panel overflow-hidden mb-4"><div class="px-4 border-b border-[#eee] flex gap-5 overflow-x-auto"><button data-marketing-view="promotions" class="marketing-tab subtab active py-3 text-[10px]">Promotions</button><button data-marketing-view="campaigns" class="marketing-tab subtab py-3 text-[10px]">Campaign Center</button><button data-marketing-view="codes" class="marketing-tab subtab py-3 text-[10px]">Promo codes</button></div>
+          <div id="marketing-promotions" class="marketing-view p-4"><div class="grid md:grid-cols-3 gap-3 mb-4">
+            <button data-action="promotionType" data-type="First booking discount" class="text-left border border-[#e5e5e5] rounded-lg p-4 hover:border-[#aaa]"><div class="font-semibold text-[12px]">First booking discount</div><div class="text-[10px] text-[#777] mt-1.5 leading-4">Convert new learners with an introductory price.</div></button>
+            <button data-action="promotionType" data-type="Last-minute seats" class="text-left border border-[#e5e5e5] rounded-lg p-4 hover:border-[#aaa]"><div class="font-semibold text-[12px]">Last-minute seats</div><div class="text-[10px] text-[#777] mt-1.5 leading-4">Discount remaining workshop/class seats near start time.</div></button>
+            <button data-action="promotionType" data-type="Bundle sessions" class="text-left border border-[#e5e5e5] rounded-lg p-4 hover:border-[#aaa]"><div class="font-semibold text-[12px]">Bundle sessions</div><div class="text-[10px] text-[#777] mt-1.5 leading-4">Reward learners who book multiple tutor sessions.</div></button>
+          </div><div class="border border-[#e8e8e8] rounded-lg overflow-x-auto"><div class="px-4 py-3 bg-[#fafafa] border-b border-[#eee] font-semibold text-[11px]">Active promotions</div><table class="dense-table w-full min-w-[560px] sm:min-w-0"><thead><tr><th class="text-left">Promotion</th><th class="text-left">Listing</th><th class="text-left">Uses</th><th class="text-left">Bookings</th><th class="text-left">Status</th><th></th></tr></thead><tbody><tr><td class="font-semibold">15% last-minute</td><td>Pottery for Beginners</td><td>12</td><td>5</td><td><span class="pill pill-ok">Active</span></td><td><button class="font-semibold">Edit</button></td></tr><tr><td class="font-semibold">Free intro call</td><td>IELTS Speaking</td><td>34</td><td>11</td><td><span class="pill pill-ok">Active</span></td><td><button class="font-semibold">Edit</button></td></tr></tbody></table></div></div>
+          <div id="marketing-campaigns" class="marketing-view hidden p-4"><div class="grid lg:grid-cols-2 gap-3"><div class="border border-[#e5e5e5] rounded-lg p-4"><div class="eyebrow">Platform campaign</div><div class="text-[15px] font-semibold mt-2">Weekend in Hà Nội</div><p class="text-[10px] text-[#777] leading-5 mt-1">Get additional placement in Discover for activities running 14–16 Aug.</p><div class="text-[10px] mt-3">Eligible listings: <b>3</b></div><button class="btn btn-dark mt-3 campaign-join">Join campaign</button></div><div class="border border-[#e5e5e5] rounded-lg p-4"><div class="eyebrow">Platform campaign</div><div class="text-[15px] font-semibold mt-2">Back to School</div><p class="text-[10px] text-[#777] leading-5 mt-1">IELTS, English, study skills and coding get seasonal merchandising.</p><div class="text-[10px] mt-3">Eligible listings: <b>2</b></div><button class="btn campaign-join mt-3">Review eligibility</button></div></div></div>
+          <div id="marketing-codes" class="marketing-view hidden p-4 overflow-x-auto"><div class="flex justify-between items-center mb-3"><div><div class="section-title">Promo codes</div><div class="text-[10px] text-[#999] mt-0.5">Shareable codes with usage and listing rules.</div></div><button data-action="createCode" class="btn btn-dark">+ Create code</button></div><table class="dense-table w-full min-w-[560px] sm:min-w-0"><thead><tr><th class="text-left">Code</th><th class="text-left">Offer</th><th class="text-left">Uses</th><th class="text-left">Expires</th><th class="text-left">Status</th></tr></thead><tbody><tr><td class="font-semibold">FIRST10</td><td>10% off first booking</td><td>44 / 100</td><td>31 Aug</td><td><span class="pill pill-ok">Active</span></td></tr><tr><td class="font-semibold">PIZZA50</td><td>₫50k off Pizza Workshop</td><td>12 / 50</td><td>16 Aug</td><td><span class="pill pill-ok">Active</span></td></tr></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- PARTNERS -->
+      <section id="page-partners" class="page">
+        <div class="flex items-end justify-between gap-3 mb-4"><div><h1 class="text-[20px] font-semibold">Partners / Affiliate</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Creator discovery, collaboration terms, attributed bookings and commissions.</p></div><button data-action="invitePartner" class="btn btn-dark">Invite partner</button></div>
+        <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4"><div class="metric-card"><div class="text-[10px] text-[#777]">Partner GMV</div><div class="text-[22px] font-semibold mt-2">₫3.18m</div><div class="text-[10px] text-[#247356] mt-1">↑ 19%</div></div><div class="metric-card"><div class="text-[10px] text-[#777]">Attributed bookings</div><div class="text-[22px] font-semibold mt-2">18</div></div><div class="metric-card"><div class="text-[10px] text-[#777]">Commission owed</div><div class="text-[22px] font-semibold mt-2">₫318k</div></div><div class="metric-card"><div class="text-[10px] text-[#777]">Active partners</div><div class="text-[22px] font-semibold mt-2">7</div></div></div>
+        <div class="grid xl:grid-cols-5 gap-4"><div class="xl:col-span-3 panel overflow-hidden"><div class="partner-toolbar px-4 py-3 border-b border-[#eee] flex items-center justify-between gap-3"><div><div class="section-title">Creator discovery</div><div class="text-[10px] text-[#999] mt-0.5">Find partners aligned with your listing audience.</div></div><div class="partner-filters flex gap-2"><input id="partnerSearch" class="input" placeholder="Search creators"/><select class="input"><option>All categories</option><option>Student life</option><option>Food</option><option>Travel</option></select></div></div><div class="overflow-x-auto"><table class="dense-table w-full min-w-[700px]"><thead><tr><th class="text-left">Creator</th><th class="text-left">Audience</th><th class="text-left">Conversion</th><th class="text-left">GMV</th><th></th></tr></thead><tbody><tr><td><div class="font-semibold">Hanoi Student Life</div><div class="text-[9px] text-[#999] mt-1">Student community</div></td><td>84k</td><td>6.2%</td><td>₫18.4m</td><td><button data-action="invitePartner" class="font-semibold">Invite</button></td></tr><tr><td><div class="font-semibold">Eat Hanoi</div><div class="text-[9px] text-[#999] mt-1">Food creator</div></td><td>126k</td><td>4.9%</td><td>₫31.2m</td><td><button data-action="invitePartner" class="font-semibold">Invite</button></td></tr></tbody></table></div></div><div class="xl:col-span-2 panel p-4"><div class="eyebrow">Open collaboration</div><div class="text-[15px] font-semibold mt-2">Pizza-Making Workshop</div><div class="mt-4 space-y-3 text-[10px]"><div class="flex justify-between"><span class="text-[#777]">Booking price</span><b>₫650,000</b></div><div class="flex justify-between"><span class="text-[#777]">Commission rate</span><b>10%</b></div><div class="flex justify-between"><span class="text-[#777]">Partner earns</span><b>₫65,000 / booking</b></div></div><button data-action="editCommission" class="btn w-full mt-4">Edit commission</button><button class="btn btn-dark w-full mt-2 copy-referral">Copy referral link</button></div></div>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section id="page-analytics" class="page">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 mb-4"><div><h1 class="text-[20px] font-semibold">Analytics</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Performance, conversion, traffic, listing health and audience insights.</p></div><div class="flex gap-2"><select class="input"><option>Last 28 days</option><option>Last 7 days</option></select><button data-action="exportAnalytics" class="btn">Export report</button></div></div>
+        <div class="panel overflow-hidden mb-4"><div class="px-4 border-b border-[#eee] flex gap-5 overflow-x-auto"><button data-analytics-view="overview" class="analytics-tab subtab active py-3 text-[10px]">Overview</button><button data-analytics-view="listings" class="analytics-tab subtab py-3 text-[10px]">Listings</button><button data-analytics-view="traffic" class="analytics-tab subtab py-3 text-[10px]">Traffic</button><button data-analytics-view="learners" class="analytics-tab subtab py-3 text-[10px]">Learners</button><button data-analytics-view="partners" class="analytics-tab subtab py-3 text-[10px]">Partners</button></div><div class="p-4"><div class="grid grid-cols-2 xl:grid-cols-5 gap-3"><div class="border border-[#eee] rounded-lg p-3"><div class="text-[9px] text-[#777]">Impressions</div><div class="text-[18px] font-semibold mt-1">42,800</div></div><div class="border border-[#eee] rounded-lg p-3"><div class="text-[9px] text-[#777]">Listing visits</div><div class="text-[18px] font-semibold mt-1">8,988</div></div><div class="border border-[#eee] rounded-lg p-3"><div class="text-[9px] text-[#777]">Availability views</div><div class="text-[18px] font-semibold mt-1">1,258</div></div><div class="border border-[#eee] rounded-lg p-3"><div class="text-[9px] text-[#777]">Checkout starts</div><div class="text-[18px] font-semibold mt-1">390</div></div><div class="border border-[#eee] rounded-lg p-3 col-span-2 xl:col-span-1"><div class="text-[9px] text-[#777]">Bookings</div><div class="text-[18px] font-semibold mt-1">281</div></div></div></div></div>
+        <div class="grid xl:grid-cols-5 gap-4 mb-4"><div class="xl:col-span-3 panel p-4"><div class="section-title">Booking funnel</div><div class="mt-5 space-y-3"><div><div class="flex justify-between text-[10px] mb-1"><span>Impressions</span><b>42,800</b></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div><div class="flex justify-between text-[10px] mb-1"><span>Listing visits</span><b>8,988 · 21%</b></div><div class="progress-track"><div class="progress-fill" style="width:72%"></div></div></div><div><div class="flex justify-between text-[10px] mb-1"><span>Date / availability views</span><b>1,258 · 14%</b></div><div class="progress-track"><div class="progress-fill" style="width:48%"></div></div></div><div><div class="flex justify-between text-[10px] mb-1"><span>Checkout starts</span><b>390 · 31%</b></div><div class="progress-track"><div class="progress-fill" style="width:28%"></div></div></div><div><div class="flex justify-between text-[10px] mb-1"><span>Bookings</span><b>281 · 72%</b></div><div class="progress-track"><div class="progress-fill" style="width:20%"></div></div></div></div></div><div class="xl:col-span-2 panel p-4"><div class="section-title">Traffic source</div><div class="mt-4 space-y-3 text-[10px]"><div><div class="flex justify-between mb-1"><span>Discover</span><b>38%</b></div><div class="progress-track"><div class="progress-fill" style="width:38%"></div></div></div><div><div class="flex justify-between mb-1"><span>Search</span><b>27%</b></div><div class="progress-track"><div class="progress-fill" style="width:27%"></div></div></div><div><div class="flex justify-between mb-1"><span>Map</span><b>14%</b></div><div class="progress-track"><div class="progress-fill" style="width:14%"></div></div></div><div><div class="flex justify-between mb-1"><span>Profile</span><b>8%</b></div><div class="progress-track"><div class="progress-fill" style="width:8%"></div></div></div><div><div class="flex justify-between mb-1"><span>Partner</span><b>5%</b></div><div class="progress-track"><div class="progress-fill" style="width:5%"></div></div></div></div></div></div>
+        <div class="panel overflow-x-auto"><div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">Top listings</div></div><table class="dense-table w-full min-w-[560px] sm:min-w-0"><thead><tr><th class="text-left">Listing</th><th class="text-left">Visitors</th><th class="text-left">Bookings</th><th class="text-left">Conversion</th><th class="text-left">Gross</th><th class="text-left">Trend</th></tr></thead><tbody><tr><td class="font-semibold">Pizza-Making Workshop</td><td>2,841</td><td>124</td><td>8.2%</td><td>₫21.8m</td><td class="text-[#247356]">↑ 14%</td></tr><tr><td class="font-semibold">IELTS Speaking</td><td>2,130</td><td>42</td><td>7.1%</td><td>₫4.3m</td><td class="text-[#247356]">↑ 9%</td></tr><tr><td class="font-semibold">Pottery for Beginners</td><td>1,492</td><td>28</td><td>4.0%</td><td>₫7.8m</td><td class="text-[#b72b3a]">↓ 3%</td></tr></tbody></table></div>
+      </section>
+
+      <!-- EARNINGS -->
+      <section id="page-earnings" class="page">
+        <div class="flex items-end justify-between gap-3 mb-4"><div><h1 class="text-[20px] font-semibold">Earnings</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Settlement, payouts, refunds, invoices, bank details and tax information.</p></div><button data-action="downloadStatement" class="btn">Download statement</button></div>
+        <div class="grid lg:grid-cols-3 gap-3 mb-4"><div class="metric-card"><div class="text-[10px] text-[#777]">Available balance</div><div class="text-[25px] font-semibold mt-2">₫12,480,000</div><button data-action="withdraw" class="btn btn-dark mt-3">Withdraw</button></div><div class="metric-card"><div class="text-[10px] text-[#777]">Next payout</div><div class="text-[25px] font-semibold mt-2">₫4,850,000</div><div class="text-[10px] text-[#777] mt-1">Scheduled · 12 Aug</div></div><div class="metric-card"><div class="text-[10px] text-[#777]">Pending settlement</div><div class="text-[25px] font-semibold mt-2">₫2,145,000</div><div class="text-[10px] text-[#777] mt-1">9 completed bookings</div></div></div>
+        <div class="panel overflow-hidden"><div class="px-4 border-b border-[#eee] flex gap-5 overflow-x-auto"><button data-earnings-view="overview" class="earnings-tab subtab active py-3 text-[10px]">Overview</button><button data-earnings-view="transactions" class="earnings-tab subtab py-3 text-[10px]">Transactions</button><button data-earnings-view="payouts" class="earnings-tab subtab py-3 text-[10px]">Payouts</button><button data-earnings-view="refunds" class="earnings-tab subtab py-3 text-[10px]">Refunds</button><button data-earnings-view="invoices" class="earnings-tab subtab py-3 text-[10px]">Invoices</button><button data-earnings-view="tax" class="earnings-tab subtab py-3 text-[10px]">Tax</button><button data-earnings-view="bank" class="earnings-tab subtab py-3 text-[10px]">Bank account</button></div>
+          <div id="earnings-overview" class="earnings-view p-4"><div class="grid xl:grid-cols-2 gap-4"><div class="border border-[#eee] rounded-lg p-4"><div class="section-title">Last 28 days</div><div class="mt-4 space-y-3 text-[11px]"><div class="flex justify-between"><span>Gross bookings</span><b>₫18,200,000</b></div><div class="flex justify-between"><span class="text-[#777]">Refunds</span><span>-₫650,000</span></div><div class="flex justify-between"><span class="text-[#777]">Tutoria fee</span><span>-₫1,755,000</span></div><div class="flex justify-between"><span class="text-[#777]">Partner commission</span><span>-₫320,000</span></div><div class="border-t pt-3 flex justify-between text-[13px]"><b>Net earnings</b><b>₫15,475,000</b></div></div></div><div class="border border-[#eee] rounded-lg p-4"><div class="section-title">Settlement status</div><div class="mt-4 space-y-3 text-[10px]"><div class="flex justify-between"><span class="text-[#777]">Available</span><b>₫12.48m</b></div><div class="progress-track"><div class="progress-fill" style="width:72%"></div></div><div class="flex justify-between"><span class="text-[#777]">Pending</span><b>₫2.15m</b></div><div class="progress-track"><div class="progress-fill" style="width:22%"></div></div><div class="flex justify-between"><span class="text-[#777]">Held for refund window</span><b>₫845k</b></div><div class="progress-track"><div class="progress-fill" style="width:9%"></div></div></div></div></div></div>
+          <div id="earnings-transactions" class="earnings-view hidden p-0"><table class="dense-table w-full"><thead><tr><th class="text-left">Transaction</th><th class="text-left">Booking</th><th class="text-left">Gross</th><th class="text-left">Fees</th><th class="text-left">Net</th><th class="text-left">Status</th></tr></thead><tbody><tr><td>8 Aug · 12:10</td><td>#T28493</td><td>₫200k</td><td>-₫20k</td><td>₫180k</td><td><span class="pill pill-warn">Pending</span></td></tr><tr><td>8 Aug · 09:41</td><td>#T28491</td><td>₫1.30m</td><td>-₫130k</td><td>₫1.17m</td><td><span class="pill pill-warn">Pending</span></td></tr></tbody></table></div>
+          <div id="earnings-payouts" class="earnings-view hidden p-0"><table class="dense-table w-full"><thead><tr><th class="text-left">Payout</th><th class="text-left">Period</th><th class="text-left">Amount</th><th class="text-left">Bank</th><th class="text-left">Status</th><th></th></tr></thead><tbody><tr><td class="font-semibold">#PO-02841</td><td>1–7 Aug</td><td>₫4.85m</td><td>•••• 1284</td><td><span class="pill pill-ok">Scheduled</span></td><td><button data-payout="PO-02841" class="open-payout font-semibold">View</button></td></tr><tr><td class="font-semibold">#PO-02798</td><td>25–31 Jul</td><td>₫5.12m</td><td>•••• 1284</td><td><span class="pill pill-neutral">Paid</span></td><td><button data-payout="PO-02798" class="open-payout font-semibold">View</button></td></tr></tbody></table></div>
+          <div id="earnings-refunds" class="earnings-view hidden p-4"><div class="section-title">Refund ledger</div><p class="text-[10px] text-[#777] mt-1">Refunds are reconciled against pending or future settlement.</p></div>
+          <div id="earnings-invoices" class="earnings-view hidden p-4"><div class="section-title">Invoices</div><p class="text-[10px] text-[#777] mt-1">Monthly platform-fee and commission invoices.</p></div>
+          <div id="earnings-tax" class="earnings-view hidden p-4"><div class="section-title">Tax information</div><div class="mt-3 grid md:grid-cols-2 gap-3"><label class="text-[10px]">Tax name<input class="input w-full mt-1" value="Linh Nguyen"/></label><label class="text-[10px]">Tax code<input class="input w-full mt-1" value="010••••••"/></label></div><button data-action="saveTax" class="btn btn-dark mt-4">Save tax information</button></div>
+          <div id="earnings-bank" class="earnings-view hidden p-4"><div class="section-title">Bank account</div><div class="mt-3 border border-[#eee] rounded-lg p-4 text-[11px]"><b>Vietcombank</b><div class="text-[#777] mt-1">•••• •••• 1284 · LINH NGUYEN</div></div><button data-action="changeBank" class="btn mt-3">Change bank account</button></div>
+        </div>
+      </section>
+
+      <!-- QUALITY -->
+      <section id="page-quality" class="page">
+        <div class="mb-4"><h1 class="text-[20px] font-semibold">Quality & Trust</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Seller-health style view for service quality, compliance, credentials and incidents.</p></div>
+        <div class="grid xl:grid-cols-5 gap-4 mb-4"><div class="xl:col-span-2 panel p-5"><div class="eyebrow">Host quality score</div><div class="flex items-end gap-3 mt-2"><div class="text-[44px] leading-none font-semibold">92</div><div class="text-[11px] text-[#777] pb-1">/ 100 · Excellent</div></div><div class="progress-track mt-4"><div class="progress-fill" style="width:92%"></div></div><p class="text-[10px] text-[#777] mt-3">Strong service delivery with one credential action required.</p></div><div class="xl:col-span-3 panel overflow-x-auto"><table class="dense-table w-full min-w-[420px] sm:min-w-0"><thead><tr><th class="text-left">Metric</th><th class="text-left">Performance</th><th class="text-left">Target</th><th class="text-left">Status</th></tr></thead><tbody><tr><td>Rating</td><td class="font-semibold">4.9 ★</td><td>≥ 4.5</td><td><span class="pill pill-ok">Good</span></td></tr><tr><td>Response rate</td><td class="font-semibold">96%</td><td>≥ 90%</td><td><span class="pill pill-ok">Good</span></td></tr><tr><td>Cancellation rate</td><td class="font-semibold">1.2%</td><td>&lt; 3%</td><td><span class="pill pill-ok">Good</span></td></tr><tr><td>Session completion</td><td class="font-semibold">99%</td><td>≥ 97%</td><td><span class="pill pill-ok">Good</span></td></tr><tr><td>Refund rate</td><td class="font-semibold">0.8%</td><td>&lt; 2%</td><td><span class="pill pill-ok">Good</span></td></tr></tbody></table></div></div>
+        <div class="grid xl:grid-cols-2 gap-4"><div class="panel overflow-hidden"><div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">Actions required</div></div><div class="p-4"><div class="border border-[#f0d9ad] bg-[#fffaf1] rounded-lg p-4"><div class="flex justify-between gap-3"><div><div class="font-semibold text-[11px]">Professional credential expires in 21 days</div><p class="text-[10px] text-[#777] mt-1.5">Update the proof document to keep your credential badge active.</p></div><span class="pill pill-warn">Action needed</span></div><button data-action="updateCredential" class="btn btn-dark mt-3">Update document</button></div></div></div><div class="panel overflow-x-auto"><div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">Incidents & appeals</div></div><table class="dense-table w-full min-w-[460px] sm:min-w-0"><thead><tr><th class="text-left">Incident</th><th class="text-left">Date</th><th class="text-left">Impact</th><th></th></tr></thead><tbody><tr><td>Late host cancellation</td><td>24 Jul</td><td><span class="pill pill-neutral">No action</span></td><td><button class="font-semibold">Details</button></td></tr><tr><td>Listing image review</td><td>18 Jul</td><td><span class="pill pill-ok">Resolved</span></td><td><button class="font-semibold">View</button></td></tr></tbody></table></div></div>
+      </section>
+
+      <!-- OPPORTUNITIES -->
+      <section id="page-opportunities" class="page">
+        <div class="mb-4"><h1 class="text-[20px] font-semibold">Opportunities</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Personalized actions generated from demand, supply, conversion and capacity signals.</p></div>
+        <div class="grid lg:grid-cols-2 gap-4 mb-4">
+          <div class="panel p-4"><div class="eyebrow">High demand</div><div class="text-[16px] font-semibold mt-2">Saturday IELTS sessions</div><p class="text-[10px] text-[#777] leading-5 mt-1.5">482 people searched for IELTS tutors with Saturday availability in Hà Nội this week. Only 14 tutors have matching availability.</p><div class="grid grid-cols-2 gap-3 mt-4"><div class="bg-[#f8f8f8] rounded p-3"><div class="text-[9px] text-[#777]">Estimated lift</div><div class="font-semibold mt-1">+6–11 bookings/mo</div></div><div class="bg-[#f8f8f8] rounded p-3"><div class="text-[9px] text-[#777]">Supply level</div><div class="font-semibold mt-1">Low</div></div></div><button data-page="calendar" class="jump-page btn btn-dark mt-4">Open Saturday availability</button></div>
+          <div class="panel p-4"><div class="eyebrow">Improve conversion</div><div class="text-[16px] font-semibold mt-2">Pizza-Making Workshop</div><p class="text-[10px] text-[#777] leading-5 mt-1.5">846 listing views → 23 checkout starts → 8 bookings. Drop-off is strongest after gallery views.</p><div class="mt-4 text-[10px]"><div class="flex justify-between mb-1"><span>Listing → checkout</span><b>2.7%</b></div><div class="progress-track"><div class="progress-fill" style="width:27%"></div></div></div><button data-listing="pizza" class="open-listing btn mt-4">Improve listing</button></div>
+          <div class="panel p-4"><div class="eyebrow">Fill capacity</div><div class="text-[16px] font-semibold mt-2">Pottery · Sunday 14:00</div><p class="text-[10px] text-[#777] leading-5 mt-1.5">4 seats remain and 12 people have saved this workshop.</p><button data-action="createPromotion" class="btn btn-dark mt-4">Create targeted offer</button></div>
+          <div class="panel p-4"><div class="eyebrow">New category</div><div class="text-[16px] font-semibold mt-2">Photography workshops in Tây Hồ</div><p class="text-[10px] text-[#777] leading-5 mt-1.5">Search demand is up 38% this month while supply is low.</p><button data-action="addListing" class="btn mt-4">Explore new listing</button></div>
+        </div>
+        <div class="panel overflow-x-auto"><div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">Demand explorer</div></div><table class="dense-table w-full min-w-[560px] sm:min-w-0"><thead><tr><th class="text-left">Search demand</th><th class="text-left">Change</th><th class="text-left">Supply</th><th class="text-left">Your coverage</th><th></th></tr></thead><tbody><tr><td class="font-semibold">IELTS mock interview</td><td class="text-[#247356]">↑ 42%</td><td>Low</td><td>Yes</td><td><button data-page="calendar" class="jump-page font-semibold">Add availability</button></td></tr><tr><td class="font-semibold">Public speaking</td><td class="text-[#247356]">↑ 31%</td><td>Medium</td><td>Yes</td><td><button data-listing="ielts" class="open-listing font-semibold">Optimize listing</button></td></tr><tr><td class="font-semibold">Pottery this weekend</td><td class="text-[#247356]">↑ 24%</td><td>Low</td><td>No</td><td><button data-action="addListing" class="font-semibold">Create listing</button></td></tr></tbody></table></div>
+      </section>
+
+      <!-- ACADEMY -->
+      <section id="page-academy" class="page">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 mb-4"><div><h1 class="text-[20px] font-semibold">Host Academy</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Education center for operations, quality, growth and marketplace policies.</p></div><input class="input w-full md:w-[280px]" placeholder="Search Academy"/></div>
+        <div class="panel p-4 mb-4"><div class="flex items-center justify-between"><div><div class="section-title">Your learning progress</div><div class="text-[10px] text-[#999] mt-0.5">4 of 7 recommended modules completed</div></div><b class="text-[13px]">57%</b></div><div class="progress-track mt-3"><div class="progress-fill" style="width:57%"></div></div></div>
+        <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-3"><article class="panel p-4"><div class="eyebrow">Operations · 6 min</div><h3 class="text-[13px] font-semibold mt-2">Manage minimum-participant workshops</h3><p class="text-[10px] text-[#777] mt-1.5 leading-5">Confirmation deadlines, failed payments and participant messaging.</p><button class="btn mt-3 academy-start">Start lesson</button></article><article class="panel p-4"><div class="eyebrow">Growth · 8 min</div><h3 class="text-[13px] font-semibold mt-2">Improve listing conversion</h3><p class="text-[10px] text-[#777] mt-1.5 leading-5">Use gallery, schedule and pricing data to reduce checkout drop-off.</p><button class="btn mt-3 academy-start">Continue</button></article><article class="panel p-4"><div class="eyebrow">Quality · 4 min</div><h3 class="text-[13px] font-semibold mt-2">Cancellation standards</h3><p class="text-[10px] text-[#777] mt-1.5 leading-5">Understand host cancellation impact and dispute handling.</p><button class="btn mt-3 academy-start">Start lesson</button></article><article class="panel p-4"><div class="eyebrow">Finance · 5 min</div><h3 class="text-[13px] font-semibold mt-2">Understand settlement</h3><p class="text-[10px] text-[#777] mt-1.5 leading-5">Gross bookings, platform fee, partner commission and payout timing.</p><button class="btn mt-3 academy-start">Start lesson</button></article><article class="panel p-4"><div class="eyebrow">Partners · 7 min</div><h3 class="text-[13px] font-semibold mt-2">Launch an open collaboration</h3><p class="text-[10px] text-[#777] mt-1.5 leading-5">Set commission rules and choose which listings creators can promote.</p><button class="btn mt-3 academy-start">Start lesson</button></article><article class="panel p-4"><div class="eyebrow">Policy · 3 min</div><h3 class="text-[13px] font-semibold mt-2">Trust & verification checklist</h3><p class="text-[10px] text-[#777] mt-1.5 leading-5">Keep account, credentials, branch and payout information current.</p><button class="btn mt-3 academy-start">Review</button></article></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="page-settings" class="page">
+        <div class="mb-4"><h1 class="text-[20px] font-semibold">Settings</h1><p class="text-[11px] text-[#7f7f7f] mt-1">Account, branches, team access, communications, security and owner-only settings.</p></div>
+        <div class="grid xl:grid-cols-[220px_1fr] gap-4">
+          <div class="panel p-2 h-fit"><button data-settings="account" class="settings-tab w-full h-9 px-3 rounded text-left text-[10px] bg-[#f1f1f1] font-semibold">Account information</button><button data-settings="branches" class="settings-tab w-full h-9 px-3 rounded text-left text-[10px] hover:bg-[#f7f7f7]">Branches & locations</button><button data-settings="team" class="settings-tab w-full h-9 px-3 rounded text-left text-[10px] hover:bg-[#f7f7f7]">Team & permissions</button><button data-settings="holiday" class="settings-tab w-full h-9 px-3 rounded text-left text-[10px] hover:bg-[#f7f7f7]">Holiday mode</button><button data-settings="communication" class="settings-tab w-full h-9 px-3 rounded text-left text-[10px] hover:bg-[#f7f7f7]">Communication preference</button><button data-settings="security" class="settings-tab w-full h-9 px-3 rounded text-left text-[10px] hover:bg-[#f7f7f7]">Security</button><button data-settings="delegation" class="settings-tab w-full h-9 px-3 rounded text-left text-[10px] hover:bg-[#f7f7f7]">Delegation mode</button></div>
+          <div class="panel overflow-hidden min-h-[520px]">
+            <div id="settings-account" class="settings-view"><div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">Account information</div><div class="text-[10px] text-[#999] mt-0.5">Owner-only identity and business details.</div></div><div class="p-4 grid md:grid-cols-2 gap-4"><label class="text-[10px]">Display / business name<input class="input w-full mt-1" value="Linh Nguyen"/></label><label class="text-[10px]">Account type<select class="input w-full mt-1"><option>Individual host</option><option>Studio / organization</option></select></label><label class="text-[10px]">Email<input class="input w-full mt-1" value="linh@example.com"/></label><label class="text-[10px]">Phone<input class="input w-full mt-1" value="+84 ••• ••• 218"/></label><div class="md:col-span-2"><button class="btn btn-dark">Save changes</button></div></div></div>
+            <div id="settings-branches" class="settings-view hidden"><div class="px-4 py-3 border-b border-[#eee] flex justify-between items-center"><div><div class="section-title">Branches & locations</div><div class="text-[10px] text-[#999] mt-0.5">Scope listings, calendars and reporting by location.</div></div><button class="btn btn-dark">+ Add branch</button></div><table class="dense-table w-full"><thead><tr><th class="text-left">Branch</th><th class="text-left">Listings</th><th class="text-left">Staff</th><th class="text-left">Status</th><th></th></tr></thead><tbody><tr><td><b>Hoàn Kiếm</b><div class="text-[9px] text-[#999] mt-1">Hà Nội</div></td><td>4</td><td>6</td><td><span class="pill pill-ok">Active</span></td><td><button class="font-semibold">Edit</button></td></tr><tr><td><b>Tây Hồ</b><div class="text-[9px] text-[#999] mt-1">Hà Nội</div></td><td>2</td><td>3</td><td><span class="pill pill-ok">Active</span></td><td><button class="font-semibold">Edit</button></td></tr><tr><td><b>Online</b></td><td>5</td><td>4</td><td><span class="pill pill-ok">Active</span></td><td><button class="font-semibold">Edit</button></td></tr></tbody></table></div>
+            <div id="settings-team" class="settings-view hidden"><div class="px-4 py-3 border-b border-[#eee] flex justify-between items-center"><div><div class="section-title">Team & permissions</div><div class="text-[10px] text-[#999] mt-0.5">Role-based access modeled after mature seller-center operations.</div></div><button data-action="inviteTeam" class="btn btn-dark">Invite member</button></div><div class="overflow-x-auto"><table class="dense-table w-full min-w-[760px]"><thead><tr><th class="text-left">Member</th><th class="text-left">Role</th><th class="text-left">Scope</th><th class="text-left">Status</th><th></th></tr></thead><tbody><tr><td><b>Linh Nguyen</b><div class="text-[9px] text-[#999] mt-1">linh@example.com</div></td><td>Owner</td><td>Everything</td><td><span class="pill pill-ok">Active</span></td><td><button class="font-semibold">View</button></td></tr><tr><td><b>Mai Tran</b><div class="text-[9px] text-[#999] mt-1">mai@studio.vn</div></td><td>Operations manager</td><td>Bookings + Calendar</td><td><span class="pill pill-ok">Active</span></td><td><button data-action="editPermissions" class="font-semibold">Permissions</button></td></tr><tr><td><b>Thanh Le</b><div class="text-[9px] text-[#999] mt-1">finance@studio.vn</div></td><td>Finance</td><td>Earnings</td><td><span class="pill pill-ok">Active</span></td><td><button data-action="editPermissions" class="font-semibold">Permissions</button></td></tr></tbody></table></div><div class="p-4 border-t border-[#eee]"><div class="section-title mb-3">Permission matrix</div><div class="overflow-x-auto"><table class="dense-table w-full min-w-[700px]"><thead><tr><th class="text-left">Role</th><th>Bookings</th><th>Listings</th><th>Marketing</th><th>Analytics</th><th>Earnings</th><th>Team</th></tr></thead><tbody><tr><td class="font-semibold">Administrator</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>—</td></tr><tr><td class="font-semibold">Operations manager</td><td>✓</td><td>View</td><td>—</td><td>View</td><td>—</td><td>—</td></tr><tr><td class="font-semibold">Marketing</td><td>View</td><td>View</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr><tr><td class="font-semibold">Finance</td><td>View</td><td>—</td><td>—</td><td>View</td><td>✓</td><td>—</td></tr></tbody></table></div></div></div>
+            <div id="settings-holiday" class="settings-view hidden p-4"><div class="section-title">Holiday mode</div><p class="text-[10px] text-[#777] mt-1">Temporarily pause new bookings while preserving existing commitments.</p><label class="mt-4 flex items-center gap-2 text-[11px]"><input type="checkbox"/> Enable holiday mode</label></div>
+            <div id="settings-communication" class="settings-view hidden p-4"><div class="section-title">Communication preference</div><div class="mt-4 space-y-3 text-[11px]"><label class="flex justify-between"><span>Booking requests</span><input type="checkbox" checked/></label><label class="flex justify-between"><span>Daily operations summary</span><input type="checkbox" checked/></label><label class="flex justify-between"><span>Marketing opportunities</span><input type="checkbox" checked/></label><label class="flex justify-between"><span>Academy recommendations</span><input type="checkbox"/></label></div></div>
+            <div id="settings-security" class="settings-view hidden p-4"><div class="section-title">Security</div><div class="mt-4 space-y-3"><div class="border border-[#eee] rounded-lg p-4 flex items-center justify-between"><div><b class="text-[11px]">Two-factor authentication</b><div class="text-[9px] text-[#999] mt-1">Protect payouts and owner settings.</div></div><span class="pill pill-ok">Enabled</span></div><div class="border border-[#eee] rounded-lg p-4 flex items-center justify-between"><div><b class="text-[11px]">Active sessions</b><div class="text-[9px] text-[#999] mt-1">3 signed-in devices.</div></div><button class="btn">Manage</button></div></div></div>
+            <div id="settings-delegation" class="settings-view hidden p-4"><div class="section-title">Delegation mode</div><p class="text-[10px] text-[#777] mt-1">Temporarily allow an administrator to handle specified owner workflows without exposing bank or identity settings.</p><button class="btn mt-4">Configure delegation</button></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- Backdrop -->
+<div id="overlay" class="overlay fixed inset-0 z-[60] bg-black/35"></div>
+
+<!-- Mobile tutor booking detail -->
+<aside id="bookingDrawer" class="drawer fixed right-0 top-14 bottom-0 z-[65] w-full bg-white shadow-float overflow-y-auto lg:hidden" aria-label="Booking detail">
+  <div class="sticky top-0 z-10 bg-white border-b border-[#eee] px-3 py-2.5 flex items-center gap-2">
+    <button data-close="bookingDrawer" class="w-9 h-9 rounded-md hover:bg-[#f5f5f5] focus-ring" aria-label="Back to booking list">←</button>
+    <div><div class="text-[9px] text-[#888] uppercase tracking-[.1em]">Booking</div><div id="mobileBookingTitle" class="text-[12px] font-semibold">Booking detail</div></div>
+  </div>
+  <div id="mobileBookingDetailContent" class="mobile-booking-sheet"></div>
+</aside>
+
+<!-- Listing OS drawer -->
+<aside id="listingDrawer" class="drawer fixed right-0 top-14 bottom-0 z-[65] w-full md:w-[78vw] xl:w-[1040px] bg-[#f5f5f5] border-l border-[#ddd] shadow-float overflow-y-auto">
+  <div class="sticky top-0 z-10 bg-white border-b border-[#eee]"><div class="px-4 py-3 flex items-center justify-between"><div class="flex items-center gap-3"><button data-close="listingDrawer" class="w-8 h-8 rounded hover:bg-[#f5f5f5]">←</button><div><div class="text-[9px] text-[#888] uppercase tracking-[.1em]">Listing</div><div id="listingTitle" class="text-[15px] font-semibold">Pizza-Making Workshop</div></div></div><div class="flex gap-2"><button class="btn">Preview</button><button class="btn btn-dark">Save changes</button></div></div><div class="px-4 flex gap-5 overflow-x-auto" id="listingTabs"><button data-listingtab="overview" class="listing-tab subtab active py-3 text-[10px]">Overview</button><button data-listingtab="details" class="listing-tab subtab py-3 text-[10px]">Details</button><button data-listingtab="gallery" class="listing-tab subtab py-3 text-[10px]">Gallery</button><button data-listingtab="sessions" class="listing-tab subtab py-3 text-[10px]">Sessions</button><button data-listingtab="locations" class="listing-tab subtab py-3 text-[10px]">Locations</button><button data-listingtab="pricing" class="listing-tab subtab py-3 text-[10px]">Pricing</button><button data-listingtab="bookings" class="listing-tab subtab py-3 text-[10px]">Bookings</button><button data-listingtab="reviews" class="listing-tab subtab py-3 text-[10px]">Reviews</button><button data-listingtab="marketing" class="listing-tab subtab py-3 text-[10px]">Marketing</button><button data-listingtab="analytics" class="listing-tab subtab py-3 text-[10px]">Analytics</button><button data-listingtab="settings" class="listing-tab subtab py-3 text-[10px]">Settings</button></div></div>
+  <div class="p-4 md:p-5">
+    <div id="listingview-overview" class="listing-view"><div class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4"><div class="metric-card"><div class="text-[9px] text-[#777]">Status</div><div class="text-[16px] font-semibold mt-2">Published</div></div><div class="metric-card"><div class="text-[9px] text-[#777]">Rating</div><div class="text-[16px] font-semibold mt-2">4.9 ★</div></div><div class="metric-card"><div class="text-[9px] text-[#777]">Bookings</div><div class="text-[16px] font-semibold mt-2">124</div></div><div class="metric-card"><div class="text-[9px] text-[#777]">Conversion</div><div class="text-[16px] font-semibold mt-2">8.2%</div></div></div><div class="grid xl:grid-cols-3 gap-4"><div class="xl:col-span-2 panel p-4"><div class="section-title">Upcoming sessions</div><table class="dense-table w-full mt-2"><thead><tr><th class="text-left">Date</th><th class="text-left">Capacity</th><th class="text-left">Status</th><th></th></tr></thead><tbody><tr><td>9 Aug · 17:00</td><td>8 / 15</td><td><span class="pill pill-ok">Confirmed</span></td><td><button class="font-semibold">Manage</button></td></tr><tr><td>15 Aug · 09:00</td><td>12 / 15</td><td><span class="pill pill-ok">Confirmed</span></td><td><button class="font-semibold">Manage</button></td></tr></tbody></table></div><div class="panel p-4"><div class="eyebrow">Recommendation</div><div class="text-[13px] font-semibold mt-2">Add a Saturday afternoon session</div><p class="text-[10px] text-[#777] mt-1.5 leading-5">Saturday sessions fill 2.4× faster than weekdays.</p><button class="btn btn-dark mt-3">Add session</button></div></div></div>
+    <div id="listingview-details" class="listing-view hidden"><div class="panel p-4"><div class="section-title">Listing details</div><div class="grid md:grid-cols-2 gap-4 mt-4"><label class="text-[10px]">Title<input class="input w-full mt-1" value="Pizza-Making Workshop"/></label><label class="text-[10px]">Category<select class="input w-full mt-1"><option>Cooking</option></select></label><label class="text-[10px] md:col-span-2">One-sentence promise<input class="input w-full mt-1" value="Make your own pizza from dough to oven with the Pizza 4P's team."/></label><label class="text-[10px] md:col-span-2">Description<textarea class="w-full border border-[#dedede] rounded-md mt-1 p-3 text-[11px] h-28">A hands-on pizza-making workshop for beginners.</textarea></label></div></div></div>
+    <div id="listingview-gallery" class="listing-view hidden"><div class="panel p-4"><div class="flex justify-between"><div><div class="section-title">Gallery</div><div class="text-[10px] text-[#999] mt-1">Cover, gallery images and video.</div></div><button class="btn btn-dark">+ Upload</button></div><div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4"><div class="aspect-[4/3] bg-[#dedede] rounded-lg grid place-items-center text-[10px]">Cover</div><div class="aspect-[4/3] bg-[#e8e8e8] rounded-lg grid place-items-center text-[10px]">Image 2</div><div class="aspect-[4/3] bg-[#e8e8e8] rounded-lg grid place-items-center text-[10px]">Image 3</div><div class="aspect-[4/3] bg-[#ececec] rounded-lg grid place-items-center text-[10px]">Video</div></div></div></div>
+    <div id="listingview-sessions" class="listing-view hidden"><div class="panel overflow-hidden"><div class="px-4 py-3 border-b border-[#eee] flex justify-between"><div class="section-title">Sessions</div><button class="btn btn-dark">+ Add session</button></div><table class="dense-table w-full"><thead><tr><th class="text-left">Date</th><th class="text-left">Time</th><th class="text-left">Branch</th><th class="text-left">Booked</th><th class="text-left">Status</th><th></th></tr></thead><tbody><tr><td>9 Aug</td><td>17:00–19:30</td><td>Hoàn Kiếm</td><td>8 / 15</td><td><span class="pill pill-ok">Confirmed</span></td><td><button class="font-semibold">Edit</button></td></tr><tr><td>15 Aug</td><td>09:00–11:30</td><td>Hoàn Kiếm</td><td>12 / 15</td><td><span class="pill pill-ok">Confirmed</span></td><td><button class="font-semibold">Edit</button></td></tr></tbody></table></div></div>
+    <div id="listingview-locations" class="listing-view hidden"><div class="panel p-4"><div class="section-title">Locations</div><div class="mt-3 border border-[#eee] rounded-lg p-4 flex justify-between"><div><b class="text-[11px]">Hoàn Kiếm branch</b><div class="text-[9px] text-[#999] mt-1">Hà Nội · Private exact address saved</div></div><button class="btn">Edit</button></div></div></div>
+    <div id="listingview-pricing" class="listing-view hidden"><div class="panel p-4"><div class="section-title">Pricing</div><label class="text-[10px] block mt-4">Price per participant<div class="flex mt-1"><span class="h-[34px] px-3 border border-r-0 border-[#dedede] rounded-l-md bg-[#fafafa] grid place-items-center">₫</span><input class="input rounded-l-none flex-1" value="650,000"/></div></label><div class="grid md:grid-cols-2 gap-3 mt-4"><label class="text-[10px]">Minimum participants<input class="input w-full mt-1" value="5"/></label><label class="text-[10px]">Maximum participants<input class="input w-full mt-1" value="15"/></label></div></div></div>
+    <div id="listingview-bookings" class="listing-view hidden"><div class="panel p-4"><div class="section-title">Recent bookings</div><p class="text-[10px] text-[#777] mt-1">124 lifetime bookings · 21 upcoming participants.</p><button data-close="listingDrawer" data-page="bookings" class="jump-page btn mt-3">Open booking manager</button></div></div>
+    <div id="listingview-reviews" class="listing-view hidden"><div class="panel p-4"><div class="flex items-end gap-3"><div class="text-[34px] font-semibold">4.9</div><div class="text-[10px] text-[#777] pb-1">214 reviews</div></div><div class="mt-4 space-y-2 text-[10px]"><div class="flex justify-between"><span>Fun atmosphere</span><b>68 mentions</b></div><div class="flex justify-between"><span>Beginner friendly</span><b>52 mentions</b></div><div class="flex justify-between"><span>Good instructor</span><b>47 mentions</b></div></div></div></div>
+    <div id="listingview-marketing" class="listing-view hidden"><div class="panel p-4"><div class="section-title">Listing marketing</div><p class="text-[10px] text-[#777] mt-1">Promotions, campaign eligibility and partner collaboration.</p><div class="mt-4 flex gap-2"><button data-action="createPromotion" class="btn btn-dark">Create promotion</button><button data-page="partners" data-close="listingDrawer" class="jump-page btn">Partner settings</button></div></div></div>
+    <div id="listingview-analytics" class="listing-view hidden"><div class="panel p-4"><div class="section-title">Listing analytics</div><div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4"><div class="bg-[#f8f8f8] rounded p-3"><div class="text-[9px] text-[#777]">Visitors</div><b class="block mt-1">2,841</b></div><div class="bg-[#f8f8f8] rounded p-3"><div class="text-[9px] text-[#777]">Checkout starts</div><b class="block mt-1">231</b></div><div class="bg-[#f8f8f8] rounded p-3"><div class="text-[9px] text-[#777]">Bookings</div><b class="block mt-1">124</b></div><div class="bg-[#f8f8f8] rounded p-3"><div class="text-[9px] text-[#777]">Conversion</div><b class="block mt-1">8.2%</b></div></div></div></div>
+    <div id="listingview-settings" class="listing-view hidden"><div class="panel p-4"><div class="section-title">Listing settings</div><div class="mt-4 space-y-3 text-[11px]"><label class="flex justify-between"><span>Instant confirmation after minimum is reached</span><input type="checkbox" checked/></label><label class="flex justify-between"><span>Allow rescheduling</span><input type="checkbox" checked/></label><label class="flex justify-between"><span>Allow partners to promote</span><input type="checkbox" checked/></label></div><button class="btn btn-danger mt-5">Archive listing</button></div></div>
+  </div>
+</aside>
+
+<!-- Learner drawer -->
+<aside id="learnerDrawer" class="drawer fixed right-0 top-14 bottom-0 z-[65] w-full sm:w-[450px] bg-white border-l border-[#ddd] shadow-float overflow-y-auto"><div class="sticky top-0 bg-white border-b border-[#eee] px-4 py-3 flex justify-between items-center"><div><div class="text-[9px] text-[#888] uppercase tracking-[.1em]">Learner</div><div class="text-[15px] font-semibold">Minh Nguyen</div></div><button data-close="learnerDrawer" class="w-8 h-8">✕</button></div><div class="p-4"><div class="grid grid-cols-2 gap-3"><div class="bg-[#f8f8f8] rounded p-3"><div class="text-[9px] text-[#777]">Bookings</div><b class="block mt-1">12</b></div><div class="bg-[#f8f8f8] rounded p-3"><div class="text-[9px] text-[#777]">Lifetime value</div><b class="block mt-1">₫2.60m</b></div></div><div class="mt-4 section-title">History</div><div class="mt-2 divide-y border border-[#eee] rounded-lg"><div class="p-3 text-[10px]"><b>IELTS Speaking</b><div class="text-[#999] mt-1">8 bookings</div></div><div class="p-3 text-[10px]"><b>Interview Preparation</b><div class="text-[#999] mt-1">4 bookings</div></div></div><div class="mt-4 section-title">Private notes</div><textarea class="w-full h-24 border border-[#ddd] rounded-md p-3 mt-2 text-[10px]">Prefers evening sessions. Preparing IELTS September 2026.</textarea><button class="btn btn-dark mt-2">Save note</button></div></aside>
+
+<!-- Message drawer -->
+<aside id="messageDrawer" class="drawer fixed right-0 top-14 bottom-0 z-[65] w-full md:w-[760px] bg-white border-l border-[#ddd] shadow-float overflow-hidden"><div class="h-full grid md:grid-cols-[280px_1fr]"><div class="border-r border-[#eee] overflow-y-auto"><div class="px-3 py-3 border-b"><div class="font-semibold text-[13px]">Customer messages</div><input class="input w-full mt-2" placeholder="Search conversations"/></div><button class="w-full text-left p-3 bg-[#f5f5f5] border-b"><div class="flex justify-between text-[10px]"><b>Mai Anh</b><span class="text-[#999]">2m</span></div><div class="text-[9px] text-[#777] mt-1 truncate">Can I join five minutes early?</div></button><button class="w-full text-left p-3 border-b hover:bg-[#fafafa]"><div class="flex justify-between text-[10px]"><b>Anh Pham</b><span class="text-[#999]">1h</span></div><div class="text-[9px] text-[#777] mt-1 truncate">About the interview practice booking...</div></button></div><div class="flex flex-col min-w-0"><div class="px-4 py-3 border-b flex justify-between items-center"><div><b class="text-[12px]">Mai Anh</b><div class="text-[9px] text-[#999] mt-0.5">IELTS Speaking · today 15:30</div></div><button data-close="messageDrawer">✕</button></div><div class="flex-1 p-4 overflow-y-auto bg-[#fafafa]"><div class="max-w-[72%] bg-white border rounded-lg p-3 text-[10px]">Hi! Can I join five minutes early to test my mic?</div><div class="ml-auto mt-3 max-w-[72%] bg-[#222] text-white rounded-lg p-3 text-[10px]">Yes, I'll open the room early.</div></div><div class="p-3 border-t flex gap-2"><input class="input flex-1" placeholder="Write a message"/><button id="sendMessage" class="btn btn-dark">Send</button></div></div></div></aside>
+
+<!-- Notification panel -->
+<div id="notificationPanel" class="hidden fixed right-4 top-[60px] z-[75] w-[340px] bg-white border border-[#ddd] rounded-lg shadow-float overflow-hidden"><div class="px-4 py-3 border-b flex justify-between"><b class="text-[12px]">Notifications</b><button class="text-[10px]">Mark all read</button></div><div class="divide-y"><button data-page="bookings" class="jump-page w-full text-left p-3 hover:bg-[#fafafa]"><div class="text-[10px] font-semibold">New booking request</div><div class="text-[9px] text-[#999] mt-1">Pizza-Making Workshop · 8 minutes ago</div></button><button data-page="quality" class="jump-page w-full text-left p-3 hover:bg-[#fafafa]"><div class="text-[10px] font-semibold">Credential expires soon</div><div class="text-[9px] text-[#999] mt-1">Update within 21 days</div></button></div></div>
+
+<!-- Booking decision dialog -->
+<dialog id="bookingDecisionDialog" class="booking-decision-dialog bg-white text-[#171717]">
+  <form method="dialog" class="overflow-hidden rounded-[10px] bg-white">
+    <div class="px-5 py-4 border-b border-[#eee] flex items-start justify-between gap-4">
+      <div><div id="bookingDecisionEyebrow" class="eyebrow">Booking request</div><div id="bookingDecisionTitle" class="text-[15px] font-semibold mt-1">Accept this booking?</div></div>
+      <button id="bookingDecisionClose" value="cancel" class="w-8 h-8 rounded hover:bg-[#f5f5f5] focus-ring" aria-label="Close">✕</button>
+    </div>
+    <div id="bookingDecisionBody" class="px-5 py-4"></div>
+    <div class="px-5 py-3 border-t border-[#eee] flex justify-end gap-2">
+      <button id="bookingDecisionCancel" value="cancel" class="btn">Back</button>
+      <button id="bookingDecisionConfirm" value="default" data-qa-bound="1" class="btn btn-dark">Accept request</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Modal -->
+<div id="modal" class="modal fixed inset-0 z-[80] bg-black/40 grid place-items-center p-4"><div class="modal-card w-full max-w-[560px] bg-white rounded-lg shadow-float overflow-hidden"><div class="px-4 py-3 border-b flex justify-between"><div><div id="modalEyebrow" class="eyebrow">Create</div><div id="modalTitle" class="text-[15px] font-semibold mt-1">Create promotion</div></div><button id="modalClose" class="w-8 h-8">✕</button></div><div id="modalBody" class="p-4"></div><div class="px-4 py-3 border-t flex justify-end gap-2"><button id="modalCancel" class="btn">Cancel</button><button id="modalSave" class="btn btn-dark">Save</button></div></div></div>
+
+<!-- Toast -->
+<div id="toast" class="toast fixed bottom-5 right-5 z-[100] bg-[#171717] text-white rounded-lg px-4 py-3 shadow-float text-[10px]">Saved</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+let currentPage='home';
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),1800)}
+function hideFloating(){ $('#searchPanel').classList.add('hidden'); $('#notificationPanel').classList.add('hidden'); $('#accountMenu').classList.add('hidden'); }
+function showPage(page){currentPage=page;$$('.page').forEach(p=>p.classList.remove('active'));$('#page-'+page)?.classList.add('active');$$('.nav-row[data-page]').forEach(n=>n.dataset.active=String(n.dataset.page===page));$$('.nav-sub[data-page]').forEach(n=>n.dataset.active=String(n.dataset.page===page));if(innerWidth<1024)$('#sidebar').classList.add('-translate-x-full');hideFloating();window.scrollTo({top:0,behavior:'smooth'});}
+$$('[data-page]').forEach(el=>el.addEventListener('click',e=>{const page=el.dataset.page;if(page)showPage(page)}));
+$$('.nav-parent').forEach(btn=>btn.addEventListener('click',()=>btn.classList.toggle('open')));
+$('#mobileMenu').addEventListener('click',()=>$('#sidebar').classList.toggle('-translate-x-full'));
+$('#globalSearch').addEventListener('focus',()=>$('#searchPanel').classList.remove('hidden'));$('#globalSearch').addEventListener('input',e=>$('#searchPanel').classList.toggle('hidden',!e.target.value));
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#globalSearch').focus();$('#searchPanel').classList.remove('hidden')}if(e.key==='Escape'){closeAll();hideFloating();closeModal()}});
+$('#notificationButton').addEventListener('click',e=>{e.stopPropagation();$('#notificationPanel').classList.toggle('hidden')});
+$('#accountSwitcher').addEventListener('click',e=>{e.stopPropagation();$('#accountMenu').classList.toggle('hidden')});
+$$('.branch-option').forEach(b=>b.addEventListener('click',()=>{toast('Workspace filtered to '+b.dataset.branch);$('#accountMenu').classList.add('hidden')}));
+document.addEventListener('click',e=>{if(!e.target.closest('#notificationPanel')&&!e.target.closest('#notificationButton'))$('#notificationPanel').classList.add('hidden');if(!e.target.closest('#accountMenu')&&!e.target.closest('#accountSwitcher'))$('#accountMenu').classList.add('hidden')});
+
+function openDrawer(id){$('#overlay').classList.add('open');$('#'+id).classList.add('open')}
+function closeDrawer(id){$('#'+id).classList.remove('open');if(!$$('.drawer.open').length)$('#overlay').classList.remove('open')}
+function closeAll(){$$('.drawer.open').forEach(d=>d.classList.remove('open'));$('#overlay').classList.remove('open')}
+$('#overlay').addEventListener('click',closeAll);$$('[data-close]').forEach(b=>b.addEventListener('click',()=>closeDrawer(b.dataset.close)));
+$$('.open-booking').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.booking;if(window.openMergedBooking)window.openMergedBooking(id);else {showPage('bookings');toast('Opening booking…')}}));
+$$('.open-listing').forEach(b=>b.addEventListener('click',()=>{const key=b.dataset.listing;const titles={pizza:'Pizza-Making Workshop',ielts:'IELTS Speaking with Linh',course:'Business English Essentials',class:'Hoi An Market Cooking Class'};$('#listingTitle').textContent=titles[key]||'Listing';switchListingTab('overview');openDrawer('listingDrawer')}));
+$$('.listing-tab').forEach(b=>b.addEventListener('click',()=>switchListingTab(b.dataset.listingtab)));function switchListingTab(tab){$$('.listing-tab').forEach(b=>b.classList.toggle('active',b.dataset.listingtab===tab));$$('.listing-view').forEach(v=>v.classList.toggle('hidden',v.id!=='listingview-'+tab))}
+$$('.open-learner').forEach(b=>b.addEventListener('click',()=>openDrawer('learnerDrawer')));
+$('#messageButton').addEventListener('click',()=>openDrawer('messageDrawer'));$$('[data-action="messages"],[data-action="messageLearner"]').forEach(b=>b.addEventListener('click',()=>openDrawer('messageDrawer')));$('#sendMessage').addEventListener('click',()=>toast('Message sent'));
+$$('.open-payout').forEach(b=>b.addEventListener('click',()=>{openModal('Payout '+b.dataset.payout,'Payout detail',`<div class="space-y-3 text-[11px]"><div class="flex justify-between"><span class="text-[#777]">Amount</span><b>₫4,850,000</b></div><div class="flex justify-between"><span class="text-[#777]">Bank</span><b>Vietcombank ••••1284</b></div><div class="flex justify-between"><span class="text-[#777]">Status</span><span class="pill pill-ok">Scheduled</span></div><div class="border-t pt-3 text-[10px] text-[#777]">Includes 27 settled bookings from 1–7 Aug.</div></div>`)}));
+
+$$('.booking-tab').forEach(btn=>btn.addEventListener('click',()=>filterOperationsBookings(btn.dataset.bookingTab)));function filterOperationsBookings(tab){$$('.booking-tab').forEach(b=>b.classList.toggle('active',b.dataset.bookingTab===tab));$$('#bookingRows tr').forEach(r=>r.classList.toggle('hidden',tab!=='all'&&r.dataset.status!==tab))}
+$$('.marketing-tab').forEach(btn=>btn.addEventListener('click',()=>switchMarketing(btn.dataset.marketingView)));function switchMarketing(v){$$('.marketing-tab').forEach(b=>b.classList.toggle('active',b.dataset.marketingView===v));$$('.marketing-view').forEach(x=>x.classList.toggle('hidden',x.id!=='marketing-'+v))}
+$$('[data-marketingtab]').forEach(b=>b.addEventListener('click',()=>setTimeout(()=>switchMarketing(b.dataset.marketingtab),0)));
+$$('.earnings-tab').forEach(btn=>btn.addEventListener('click',()=>switchEarnings(btn.dataset.earningsView)));function switchEarnings(v){$$('.earnings-tab').forEach(b=>b.classList.toggle('active',b.dataset.earningsView===v));$$('.earnings-view').forEach(x=>x.classList.toggle('hidden',x.id!=='earnings-'+v))}
+$$('[data-earningstab]').forEach(b=>b.addEventListener('click',()=>setTimeout(()=>switchEarnings(b.dataset.earningstab),0)));
+$$('.settings-tab').forEach(btn=>btn.addEventListener('click',()=>{const v=btn.dataset.settings;$$('.settings-tab').forEach(b=>{b.classList.remove('bg-[#f1f1f1]','font-semibold');if(b.dataset.settings===v)b.classList.add('bg-[#f1f1f1]','font-semibold')});$$('.settings-view').forEach(x=>x.classList.toggle('hidden',x.id!=='settings-'+v))}));
+
+function openModal(title,eyebrow,body){$('#modalTitle').textContent=title;$('#modalEyebrow').textContent=eyebrow;$('#modalBody').innerHTML=body;$('#modal').classList.add('open')}
+function closeModal(){$('#modal').classList.remove('open')}$('#modalClose').addEventListener('click',closeModal);$('#modalCancel').addEventListener('click',closeModal);$('#modalSave').addEventListener('click',()=>{closeModal();toast('Saved')});
+function field(label,control){return `<label class="block text-[10px]">${label}${control}</label>`}
+function actionModal(action,el){
+  if(action==='addListing')openModal('Add listing','Create',`<p class="text-[10px] text-[#777] mb-3">Choose what you want to offer. The matching creator flow will open next.</p><div class="grid grid-cols-2 md:grid-cols-3 gap-2">${['Tutor / coaching','Workshop','Class','Event','Course','Photobooth'].map(x=>`<button class="border border-[#ddd] rounded-lg p-4 text-left hover:bg-[#fafafa]"><b class="text-[11px]">${x}</b></button>`).join('')}</div>`);
+  else if(action==='addSession')openModal('Add availability / session','Calendar',`${field('Type','<select class="input w-full mt-1"><option>Open tutor availability</option><option>Workshop session</option><option>Class session</option></select>')}<div class="grid grid-cols-2 gap-3 mt-3">${field('Date','<input type="date" class="input w-full mt-1"/>')}${field('Start time','<input type="time" class="input w-full mt-1"/>')}</div><div class="grid grid-cols-2 gap-3 mt-3">${field('Capacity','<input class="input w-full mt-1" value="15"/>')}${field('Branch','<select class="input w-full mt-1"><option>Hoàn Kiếm</option><option>Tây Hồ</option><option>Online</option></select>')}</div>`);
+  else if(action==='blockTime')openModal('Block time','Calendar',`${field('Date','<input type="date" class="input w-full mt-1"/>')}<div class="grid grid-cols-2 gap-3 mt-3">${field('From','<input type="time" class="input w-full mt-1"/>')}${field('To','<input type="time" class="input w-full mt-1"/>')}</div>`);
+  else if(action==='createPromotion'||action==='promotionType')openModal(el?.dataset.type||'Create promotion','Marketing',`${field('Listing','<select class="input w-full mt-1"><option>Pottery for Beginners</option><option>Pizza-Making Workshop</option><option>IELTS Speaking</option></select>')}<div class="grid grid-cols-2 gap-3 mt-3">${field('Discount','<input class="input w-full mt-1" value="15%"/>')}${field('End date','<input type="date" class="input w-full mt-1"/>')}</div>${field('Eligibility','<select class="input w-full mt-1"><option>All learners</option><option>New learners only</option><option>Saved this listing</option></select>')}`);
+  else if(action==='createCode')openModal('Create promo code','Marketing',`${field('Code','<input class="input w-full mt-1" value="WELCOME10"/>')}<div class="grid grid-cols-2 gap-3 mt-3">${field('Discount','<input class="input w-full mt-1" value="10%"/>')}${field('Usage limit','<input class="input w-full mt-1" value="100"/>')}</div>`);
+  else if(action==='invitePartner')openModal('Invite partner','Partners',`${field('Creator / community','<input class="input w-full mt-1" placeholder="Name or email"/>')}<div class="grid grid-cols-2 gap-3 mt-3">${field('Listing','<select class="input w-full mt-1"><option>Pizza-Making Workshop</option></select>')}${field('Commission','<input class="input w-full mt-1" value="10%"/>')}</div>`);
+  else if(action==='editCommission')openModal('Edit commission','Partners',`${field('Commission rate','<input class="input w-full mt-1" value="10%"/>')}<p class="text-[10px] text-[#777] mt-3">At ₫650,000 booking price, partner earns ₫65,000 per attributed booking.</p>`);
+  else if(action==='inviteTeam')openModal('Invite team member','Settings',`${field('Email','<input class="input w-full mt-1" placeholder="name@company.com"/>')}<div class="grid grid-cols-2 gap-3 mt-3">${field('Role','<select class="input w-full mt-1"><option>Administrator</option><option>Operations manager</option><option>Listing manager</option><option>Marketing</option><option>Customer support</option><option>Finance</option><option>Analyst</option></select>')}${field('Scope','<select class="input w-full mt-1"><option>All locations</option><option>Hoàn Kiếm</option><option>Tây Hồ</option></select>')}</div>`);
+  else if(action==='editPermissions')openModal('Edit permissions','Settings',`<div class="space-y-3 text-[11px]">${['Bookings & calendar','Listings','Marketing','Analytics','Earnings','Team settings'].map(x=>`<label class="flex justify-between items-center"><span>${x}</span><select class="input h-8"><option>View & edit</option><option>View only</option><option>No access</option></select></label>`).join('')}</div>`);
+  else if(action==='refund')openModal('Refund booking','Booking action',`${field('Refund amount','<input class="input w-full mt-1" value="250,000"/>')}${field('Reason','<select class="input w-full mt-1"><option>Learner cancellation</option><option>Host cancellation</option><option>Service issue</option></select>')}`);
+  else if(action==='reschedule')openModal('Reschedule booking','Booking action',`<div class="grid grid-cols-2 gap-3">${field('New date','<input type="date" class="input w-full mt-1"/>')}${field('New time','<input type="time" class="input w-full mt-1"/>')}</div><p class="text-[10px] text-[#777] mt-3">Learner will be asked to confirm the new time.</p>`);
+  else if(action==='newBooking')openModal('Manual booking','Bookings',`${field('Learner','<input class="input w-full mt-1" placeholder="Search learner"/>')}${field('Listing','<select class="input w-full mt-1"><option>IELTS Speaking</option><option>Pizza Workshop</option></select>')}`);
+}
+$$('[data-action]').forEach(el=>el.addEventListener('click',()=>{const a=el.dataset.action;if(['messages','messageLearner'].includes(a))return;actionModal(a,el)}));
+$$('.session-chip').forEach(b=>b.addEventListener('click',()=>openModal('Session detail','Calendar',`<div class="space-y-3 text-[11px]"><div class="flex justify-between"><span class="text-[#777]">Listing</span><b>Pizza-Making Workshop</b></div><div class="flex justify-between"><span class="text-[#777]">Capacity</span><b>8 / 15</b></div><div class="flex justify-between"><span class="text-[#777]">Minimum</span><b>5 · reached</b></div><div class="flex justify-between"><span class="text-[#777]">Staff</span><b>Workshop Team</b></div></div>`)));
+$$('.campaign-join').forEach(b=>b.addEventListener('click',()=>{b.textContent='Joined';b.classList.remove('btn-dark');toast('Campaign joined')}));$$('.copy-referral').forEach(b=>b.addEventListener('click',()=>toast('Referral link copied')));$$('.academy-start').forEach(b=>b.addEventListener('click',()=>toast('Lesson opened')));
+</script>
+
+<script id="qa-functionality-patch">
+(()=>{
+  const q=(s,r=document)=>r.querySelector(s), qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const byText=(root,text)=>qa('button',root).filter(b=>b.textContent.trim().replace(/\s+/g,' ')===text);
+  const bind=(els,fn)=>els.forEach(el=>{if(el.dataset.qaBound)return;el.dataset.qaBound='1';el.addEventListener('click',e=>fn(e,el))});
+  const simpleModal=(title,eyebrow='Action',body='This action is available in the prototype.')=>openModal(title,eyebrow,`<p class="text-[11px] text-[#666] leading-5">${body}</p>`);
+  function downloadCSV(filename,rows){const csv=rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast(filename+' downloaded')}
+  const backdrop=q('#sidebarBackdrop');
+  q('#mobileMenu')?.addEventListener('click',()=>{setTimeout(()=>backdrop?.classList.toggle('hidden',q('#sidebar').classList.contains('-translate-x-full')),0)});
+  backdrop?.addEventListener('click',()=>{q('#sidebar').classList.add('-translate-x-full');backdrop.classList.add('hidden')});
+  const oldShowPage=window.showPage; window.showPage=function(page){oldShowPage(page);backdrop?.classList.add('hidden')};
+  q('#helpButton')?.addEventListener('click',()=>showPage('academy'));
+  q('#profileButton')?.addEventListener('click',e=>{e.stopPropagation();q('#accountMenu').classList.toggle('hidden')});
+  bind(byText(q('#page-home'),'Join →'),()=>{showPage('marketing');switchMarketing('campaigns')});
+
+  const bookingRows=()=>qa('#bookingRows tr');
+  function applyBookingFilters(){const term=(q('#bookingSearch')?.value||'').toLowerCase(), listing=q('#bookingListingFilter')?.value||'All listings', loc=q('#bookingLocationFilter')?.value||'All locations';bookingRows().forEach(r=>{const txt=r.innerText.toLowerCase();const ok=(!term||txt.includes(term))&&(listing==='All listings'||txt.includes(listing.toLowerCase().replace(' workshop','')))&&(loc==='All locations'||txt.includes(loc.toLowerCase()));r.style.display=ok&&!r.classList.contains('hidden')?'table-row':'none'})}
+  q('#bookingSearch')?.addEventListener('input',applyBookingFilters);q('#bookingListingFilter')?.addEventListener('change',applyBookingFilters);q('#bookingLocationFilter')?.addEventListener('change',applyBookingFilters);q('#bookingDateFilter')?.addEventListener('change',()=>toast('Date filter applied'));
+  bind(byText(q('#page-bookings'),'More filters'),()=>openModal('More booking filters','Bookings','<div class="grid grid-cols-2 gap-3"><label class="text-[10px]">Payment<select class="input w-full mt-1"><option>Any</option><option>Paid</option><option>Authorized</option><option>Refunded</option></select></label><label class="text-[10px]">Amount<select class="input w-full mt-1"><option>Any</option><option>&lt; ₫300k</option><option>₫300k–₫1m</option><option>₫1m+</option></select></label></div>'));
+  bind(byText(q('#page-bookings'),'Columns'),()=>openModal('Choose columns','Bookings','<div class="space-y-2 text-[11px]">'+['Offering','Learner','Session','Amount','Status','Payment'].map(x=>`<label class="flex items-center gap-2"><input type="checkbox" checked> ${x}</label>`).join('')+'</div>'));
+  bind(byText(q('#page-bookings'),'Bulk actions'),()=>{const n=qa('#bookingRows input[type=checkbox]:checked').length;n?simpleModal('Bulk actions','Bookings',`${n} booking${n>1?'s':''} selected. Choose confirm, message, reschedule or export in production.`):toast('Select at least one booking')});
+  bind(qa('#page-bookings button').filter(b=>['‹','1','2','3','›'].includes(b.textContent.trim())),(e,b)=>{qa('#page-bookings button').filter(x=>['1','2','3'].includes(x.textContent.trim())).forEach(x=>x.classList.remove('bg-[#f1f1f1]'));if(['1','2','3'].includes(b.textContent.trim()))b.classList.add('bg-[#f1f1f1]');toast('Booking page '+b.textContent.trim())});
+
+  const listingRows=()=>qa('#page-listings tbody tr');
+  qa('.listing-status-tab').forEach(btn=>btn.addEventListener('click',()=>{qa('.listing-status-tab').forEach(x=>x.classList.toggle('active',x===btn));const st=btn.dataset.listingStatus;listingRows().forEach(r=>{const t=r.innerText.toLowerCase();const ok=st==='all'||(st==='published'&&t.includes('published'))||(st==='draft'&&t.includes('draft'))||(st==='action'&&t.includes('action needed'))||(st==='archived'&&t.includes('archived'));r.style.display=ok?'table-row':'none'})}));
+  q('#listingSearch')?.addEventListener('input',e=>{const t=e.target.value.toLowerCase();listingRows().forEach(r=>r.style.display=!t||r.innerText.toLowerCase().includes(t)?'table-row':'none')});
+  bind(byText(q('#page-listings'),'More filters'),()=>simpleModal('More listing filters','Listings','Filter by branch, rating, booking volume, creation date, availability or quality state.'));
+  bind(byText(q('#page-listings'),'Bulk edit'),()=>{const n=qa('#page-listings tbody input[type=checkbox]:checked').length;n?simpleModal('Bulk edit listings','Listings',`${n} listings selected.`):toast('Select listings to bulk edit')});
+
+  const calTitle=qa('#page-calendar div').find(x=>x.textContent.trim()==='August 2026');let calMonth=7;const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  bind(byText(q('#page-calendar'),'‹').concat(byText(q('#page-calendar'),'›'),byText(q('#page-calendar'),'Today')),(e,b)=>{if(b.textContent.trim()==='‹')calMonth=Math.max(0,calMonth-1);else if(b.textContent.trim()==='›')calMonth=Math.min(11,calMonth+1);else calMonth=7;if(calTitle)calTitle.textContent=monthNames[calMonth]+' 2026';toast('Calendar moved to '+monthNames[calMonth])});
+  bind(byText(q('#page-calendar'),'Month'),(e,b)=>{b.textContent=b.textContent.trim()==='Month'?'Week':'Month';toast(b.textContent+' view')});
+  qa('#page-calendar .calendar-filterbar select').forEach(s=>s.addEventListener('change',()=>toast('Calendar filter: '+s.value)));
+  bind(qa('#calendarGrid button').filter(b=>!b.classList.contains('session-chip')),(e,b)=>openModal((b.innerText.split('\n')[0]||'Session').trim(),'Calendar','<p class="text-[11px] text-[#666]">Manage booking status, staff, capacity and attendee details for this session.</p>'));
+
+  q('#learnerSearch')?.addEventListener('input',e=>{const t=e.target.value.toLowerCase();qa('#page-learners tbody tr').forEach(r=>r.style.display=!t||r.innerText.toLowerCase().includes(t)?'table-row':'none')});qa('#page-learners select').forEach(s=>s.addEventListener('change',()=>toast('Learner filter applied')));
+  q('#partnerSearch')?.addEventListener('input',e=>{const t=e.target.value.toLowerCase();qa('#page-partners tbody tr').forEach(r=>r.style.display=!t||r.innerText.toLowerCase().includes(t)?'table-row':'none')});qa('#page-partners select').forEach(s=>s.addEventListener('change',()=>toast('Partner category filter applied')));
+  bind(byText(q('#page-marketing'),'Edit'),()=>actionModal('createPromotion'));
+  qa('.analytics-tab').forEach(b=>b.addEventListener('click',()=>{qa('.analytics-tab').forEach(x=>x.classList.toggle('active',x===b));toast(b.textContent.trim()+' analytics selected')}));
+
+  q('[data-action=exportBookings]')?.addEventListener('click',()=>downloadCSV('tutoria-bookings.csv',[['Booking','Offering','Learner','Session'],...bookingRows().map(r=>Array.from(r.cells).slice(1,5).map(c=>c.innerText.replace(/\n/g,' '))) ]));
+  q('[data-action=exportAnalytics]')?.addEventListener('click',()=>downloadCSV('tutoria-analytics.csv',[['Metric','Value'],['Impressions','42800'],['Listing visits','8988'],['Bookings','281']]));
+  q('[data-action=downloadStatement]')?.addEventListener('click',()=>downloadCSV('tutoria-statement.csv',[['Gross bookings','18200000'],['Refunds','-650000'],['Tutoria fee','-1755000'],['Net earnings','15475000']]));
+  q('[data-action=withdraw]')?.addEventListener('click',()=>openModal('Withdraw funds','Earnings','<label class="text-[10px]">Amount<input class="input w-full mt-1" value="4,850,000"></label><p class="text-[10px] text-[#777] mt-3">Destination: Vietcombank ••••1284</p>'));
+  q('[data-action=saveTax]')?.addEventListener('click',()=>toast('Tax information saved'));
+  q('[data-action=changeBank]')?.addEventListener('click',()=>openModal('Change bank account','Earnings','<label class="text-[10px]">Bank<select class="input w-full mt-1"><option>Vietcombank</option><option>Techcombank</option><option>MB Bank</option></select></label><label class="text-[10px] block mt-3">Account number<input class="input w-full mt-1" placeholder="Account number"></label>'));
+  q('[data-action=updateCredential]')?.addEventListener('click',()=>openModal('Update credential','Quality & Trust','<label class="text-[10px]">Credential file<input type="file" class="block mt-2 text-[11px]"></label><p class="text-[10px] text-[#777] mt-3">PDF, JPG or PNG.</p>'));
+  bind(byText(q('#page-quality'),'Details'),()=>simpleModal('Late host cancellation','Incident','No action is required. The incident remains visible in your quality history.'));bind(byText(q('#page-quality'),'View'),()=>simpleModal('Listing image review','Resolved incident','The review was resolved and the listing remains published.'));
+
+  bind(byText(q('#page-settings'),'Save changes'),()=>toast('Account changes saved'));bind(byText(q('#page-settings'),'+ Add branch'),()=>openModal('Add branch','Settings','<label class="text-[10px]">Branch name<input class="input w-full mt-1" placeholder="Branch name"></label><label class="text-[10px] block mt-3">Address<input class="input w-full mt-1" placeholder="Address"></label>'));bind(byText(q('#page-settings'),'Edit'),(e,b)=>simpleModal('Edit '+(b.closest('tr')?.cells?.[0]?.innerText||'branch'),'Settings','Update branch name, address, rooms and operating hours.'));bind(byText(q('#page-settings'),'View'),()=>simpleModal('Team member','Settings','View assigned locations, role and recent access.'));bind(byText(q('#page-settings'),'Manage'),()=>simpleModal('Security management','Settings','Manage password, two-factor authentication and active sessions.'));bind(byText(q('#page-settings'),'Configure delegation'),()=>openModal('Delegation mode','Settings','<label class="flex items-center gap-2 text-[11px]"><input type="checkbox"> Allow an administrator to act on behalf of the owner</label>'));
+
+  bind(byText(q('#listingDrawer'),'Preview'),()=>simpleModal(q('#listingTitle').textContent+' preview','Listing preview','Marketplace preview opened for QA.'));bind(byText(q('#listingDrawer'),'Save changes'),()=>toast('Listing changes saved'));bind(byText(q('#listingDrawer'),'Manage'),()=>simpleModal('Manage session','Listing','Open capacity, attendees, status and staff assignment.'));bind(byText(q('#listingDrawer'),'Add session'),()=>actionModal('addSession'));bind(byText(q('#listingDrawer'),'+ Add session'),()=>actionModal('addSession'));bind(byText(q('#listingDrawer'),'+ Upload'),()=>openModal('Upload media','Gallery','<input type="file" multiple class="text-[11px]"><p class="text-[10px] text-[#777] mt-3">Add photos or video to this listing.</p>'));bind(byText(q('#listingDrawer'),'Edit'),()=>simpleModal('Edit item','Listing','This editor is available in the prototype.'));bind(byText(q('#listingDrawer'),'Archive listing'),()=>openModal('Archive listing','Listing settings','<p class="text-[11px] text-[#666]">Archiving hides this listing from discovery while preserving historical bookings and analytics.</p>'));
+  bind(byText(q('#learnerDrawer'),'Save note'),()=>toast('Learner note saved'));
+  qa('#messageDrawer > div:first-child button').forEach(b=>b.addEventListener('click',()=>{qa('#messageDrawer > div:first-child button').forEach(x=>x.classList.remove('bg-[#f5f5f5]'));b.classList.add('bg-[#f5f5f5]');toast('Conversation opened')}));bind(byText(document,'Mark all read'),()=>{const badge=q('#notificationButton span');if(badge)badge.classList.add('hidden');toast('Notifications marked as read')});
+
+  const handledSelector='[data-page],[data-action],[data-close],[data-branch],.nav-parent,.open-booking,.open-listing,.open-learner,.open-payout,.booking-tab,.marketing-tab,.earnings-tab,.settings-tab,.listing-tab,.session-chip,.campaign-join,.copy-referral,.academy-start,.listing-status-tab,.analytics-tab';
+  qa('button').filter(b=>!b.matches(handledSelector)&&!b.dataset.qaBound&&!['mobileMenu','messageButton','notificationButton','accountSwitcher','acceptBooking','declineBooking','sendMessage','modalClose','modalCancel','modalSave','helpButton','profileButton'].includes(b.id)).forEach(b=>b.addEventListener('click',()=>{if(!b.closest('#modal'))toast((b.textContent.trim().replace(/\s+/g,' ')||'Action')+' selected')}));
+})();
+</script>
+
+<script id="tutor-booking-management-merge">
+(()=>{
+  const q=(s,r=document)=>r.querySelector(s), qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const initials=name=>name.split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
+  const money=n=>new Intl.NumberFormat('vi-VN').format(n)+'₫';
+  const typeMeta={
+    tutor:{label:'Tutor',badge:'1:1'}, workshop:{label:'Workshop',badge:'WS'}, class:{label:'Class',badge:'CLASS'}, event:{label:'Event',badge:'EVENT'}, course:{label:'Course',badge:'COURSE'}
+  };
+  let activeStage='requests', activeType='all', selectedId=null, bookingMode='workspace', demoMode='ready', decision=null, liveTutorMode=false;
+  const initialFixtures=[
+    {id:'T28484',type:'tutor',stage:'requests',backendStatus:'requested',hostAccepted:false,paymentState:'not_ready',learner:'Đăng Nguyễn',offering:'Interview Practice',date:'Mon, 17 Aug',time:'14:00–15:00',format:'Online',duration:60,participants:1,price:300000,received:'8 minutes ago',note:'I want to practise concise interview answers and get direct feedback.',new:true,approval:'host'},
+    {id:'T28485',type:'workshop',stage:'requests',backendStatus:'requested',hostAccepted:false,paymentState:'not_ready',learner:'Linh Trần',offering:'Pizza-Making Workshop · private group',date:'Tue, 18 Aug',time:'17:00–19:30',format:'Hoàn Kiếm',duration:150,participants:4,price:2600000,received:'18 minutes ago',note:'Private booking for four friends. We are all beginners.',new:true,approval:'host'},
+    {id:'T28486',type:'class',stage:'requests',backendStatus:'requested',hostAccepted:false,paymentState:'not_ready',learner:'Phương Anh Nguyễn',offering:'Japanese for Beginners',date:'Wed, 19 Aug',time:'18:30–20:00',format:'Online',duration:90,participants:1,price:1200000,received:'2 hours ago',note:'Joining the four-week cohort. I have no prior Japanese experience.',new:false,approval:'host'},
+    {id:'T28470',type:'tutor',stage:'awaiting',backendStatus:'requested',hostAccepted:true,paymentState:'required',learner:'Minh Châu',offering:'IELTS Speaking',date:'Thu, 20 Aug',time:'10:00–11:00',format:'Online',duration:60,participants:1,price:300000,received:'Yesterday',note:'Speaking mock test before my exam.',new:false,approval:'host'},
+    {id:'T28471',type:'workshop',stage:'awaiting',backendStatus:'requested',hostAccepted:true,paymentState:'required',learner:'Tuấn Lê',offering:'Pottery for Beginners · private group',date:'Sun, 23 Aug',time:'14:00–16:00',format:'Tây Hồ',duration:120,participants:3,price:1350000,received:'Yesterday',note:'Three-person private group.',new:false,approval:'host'},
+    {id:'T28493',type:'tutor',stage:'upcoming',backendStatus:'confirmed',hostAccepted:true,paymentState:'paid',learner:'Mai Anh',offering:'IELTS Speaking',date:'Wed, 19 Aug',time:'09:00–10:00',format:'Online',duration:60,participants:1,price:300000,received:'3 days ago',note:'Focus on Speaking Part 3.',new:false},
+    {id:'T28491',type:'workshop',stage:'upcoming',backendStatus:'confirmed',hostAccepted:true,paymentState:'paid',learner:'Nguyễn Minh + 1 guest',offering:'Pizza-Making Workshop',date:'Sun, 23 Aug',time:'09:00–11:30',format:'Hoàn Kiếm',duration:150,participants:2,price:1300000,received:'2 days ago',note:'Standard public session booking.',new:false,capacity:'8 / 15 booked'},
+    {id:'T28496',type:'class',stage:'upcoming',backendStatus:'confirmed',hostAccepted:true,paymentState:'paid',learner:'Ngọc Hà',offering:'Japanese for Beginners',date:'Thu, 20 Aug',time:'18:30–20:00',format:'Online',duration:90,participants:1,price:1200000,received:'2 days ago',note:'Week 1 of a four-week class.',new:false,capacity:'11 / 16 enrolled'},
+    {id:'T28497',type:'event',stage:'upcoming',backendStatus:'confirmed',hostAccepted:true,paymentState:'paid',learner:'Trung Nguyễn + 2 guests',offering:'Founder Meetup Hanoi',date:'Sun, 23 Aug',time:'18:00–21:00',format:'Tây Hồ',duration:180,participants:3,price:450000,received:'Yesterday',note:'Three event tickets.',new:false,capacity:'72 / 100 tickets'},
+    {id:'T28498',type:'course',stage:'upcoming',backendStatus:'confirmed',hostAccepted:true,paymentState:'paid',learner:'Khánh Linh',offering:'Business English Essentials',date:'Enrolled 13 Aug',time:'Self-paced',format:'On-demand',duration:null,participants:1,price:499000,received:'Yesterday',note:'Course access is active.',new:false,access:'Lifetime access',progress:'18% complete'},
+    {id:'T28351',type:'tutor',stage:'past',backendStatus:'completed',hostAccepted:true,paymentState:'paid',learner:'Huy Nguyễn',offering:'IELTS Speaking',date:'Tue, 11 Aug',time:'15:00–16:00',format:'Online',duration:60,participants:1,price:300000,received:'Last week',note:'Completed lesson.',new:false},
+    {id:'T28352',type:'workshop',stage:'past',backendStatus:'completed',hostAccepted:true,paymentState:'paid',learner:'Mai Phương',offering:'Pottery for Beginners',date:'Sun, 9 Aug',time:'14:00–16:00',format:'Tây Hồ',duration:120,participants:1,price:450000,received:'Last week',note:'Workshop attended.',new:false},
+    {id:'T28353',type:'course',stage:'past',backendStatus:'completed',hostAccepted:true,paymentState:'paid',learner:'Bảo Trâm',offering:'Complete Web Development Bootcamp 2026',date:'Enrolled 2 May',time:'Completed 8 Aug',format:'On-demand',duration:null,participants:1,price:0,received:'3 months ago',note:'Course completed.',new:false,access:'Completed',progress:'100% complete'},
+    {id:'T28299',type:'event',stage:'cancelled',backendStatus:'cancelled',hostAccepted:false,paymentState:'refunded',learner:'Quang Minh',offering:'Photography Walk · Tây Hồ',date:'Sun, 9 Aug',time:'06:30–09:00',format:'Tây Hồ',duration:150,participants:2,price:400000,received:'Last week',note:'Event booking cancelled and refunded.',new:false}
+  ];
+  let fixtures=initialFixtures.map(x=>({...x}));
+  window.__tutorBookingFixtures=fixtures;
+  window.__bookingFixtures=fixtures;
+
+  const stageCopy={
+    requests:{empty:'Nothing needs approval',help:'Booking requests that require host approval will appear here.'},
+    awaiting:{empty:'Nothing awaiting payment',help:'Accepted requests will stay here until the learner completes payment.'},
+    upcoming:{empty:'No upcoming or active bookings',help:'Confirmed sessions, event tickets and active course enrollments will appear here.'},
+    past:{empty:'No completed bookings',help:'Completed sessions, attended experiences and finished courses will appear here.'},
+    cancelled:{empty:'No closed bookings',help:'Rejected, cancelled and refunded bookings will appear here for reference.'}
+  };
+  const filteredByType=b=>activeType==='all'||b.type===activeType;
+  function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));}
+  function stageItems(){const term=(q('#tutorBookingSearch')?.value||'').trim().toLowerCase();return fixtures.filter(b=>b.stage===activeStage&&filteredByType(b)&&(!term||`${b.learner} ${b.offering} ${b.date} ${b.id} ${typeMeta[b.type]?.label||''}`.toLowerCase().includes(term)))}
+  function count(stage, respectType=true){return fixtures.filter(b=>b.stage===stage&&(!respectType||filteredByType(b))).length}
+  function updateCounts(){
+    qa('[data-count]').forEach(el=>el.textContent=count(el.dataset.count,true));
+    if(q('#navRequestCount'))q('#navRequestCount').textContent=count('requests',false);
+    if(q('#navAwaitingCount'))q('#navAwaitingCount').textContent=count('awaiting',false);
+  }
+  function typePill(b){const t=typeMeta[b.type]||typeMeta.tutor;return `<span class="pill pill-neutral">${t.label}</span>`}
+  function statusPill(b){
+    if(b.stage==='requests')return b.canAccept||b.canReject?'<span class="pill pill-warn">Approval needed</span>':'<span class="pill pill-neutral">Request received</span>';
+    if(b.stage==='awaiting')return '<span class="pill pill-warn">Awaiting payment</span>';
+    if(b.stage==='upcoming')return b.type==='course'?'<span class="pill pill-ok">Access active</span>':'<span class="pill pill-ok">Confirmed</span>';
+    if(b.stage==='past')return '<span class="pill pill-neutral">Completed</span>';
+    return b.backendStatus==='rejected'?'<span class="pill pill-bad">Request declined</span>':'<span class="pill pill-neutral">Closed</span>';
+  }
+  function participantNoun(b){return b.type==='event'?'ticket':b.type==='workshop'?'participant':b.type==='course'?'learner':'learner'}
+  function participantLine(b){if(b.type==='event')return `${b.participants} ${b.participants===1?'ticket':'tickets'}`;if(b.type==='workshop')return `${b.participants} ${b.participants===1?'participant':'participants'}`;if(b.type==='class')return `${b.participants} learner${b.participants===1?'':'s'}`;return b.participants>1?`${b.participants} learners`:'1 learner'}
+  function renderList(){
+    const list=q('#tutorBookingList'); if(!list)return;
+    const items=stageItems(); q('#tutorBookingListMeta').textContent=`${items.length} ${items.length===1?'booking':'bookings'}`;
+    if(!items.length){
+      const c=stageCopy[activeStage];
+      list.innerHTML=`<div class="min-h-[360px] grid place-items-center px-6 text-center"><div><div class="text-[12px] font-semibold">${c.empty}</div><p class="text-[10px] text-[#888] mt-1.5 leading-5 max-w-[280px]">${c.help}</p></div></div>`;
+      selectedId=null; renderDetail(); return;
+    }
+    if(!items.some(x=>x.id===selectedId))selectedId=items[0].id;
+    list.innerHTML=items.map(b=>`<button data-tutor-booking-id="${b.id}" data-qa-bound="1" class="tutor-booking-item" aria-current="${b.id===selectedId}">
+      <div class="flex gap-3 min-w-0"><div class="w-[38px] h-[38px] rounded-md bg-[#ececec] grid place-items-center text-[8px] font-bold shrink-0">${typeMeta[b.type].badge}</div><div class="min-w-0 flex-1">
+        <div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="flex items-center gap-2"><span class="text-[11px] font-semibold truncate">${escapeHtml(b.learner)}</span>${b.new&&b.stage==='requests'?'<span class="w-1.5 h-1.5 bg-[#171717] rounded-full" aria-label="Unread request"></span>':''}</div><div class="text-[10px] text-[#666] mt-0.5 truncate">${escapeHtml(b.offering)}</div></div><div class="text-[9px] text-[#999] whitespace-nowrap">${escapeHtml(b.received)}</div></div>
+        <div class="text-[10px] mt-2.5">${escapeHtml(b.date)}${b.time?` · ${escapeHtml(b.time)}`:''}</div>
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[9px] text-[#888]"><span>${escapeHtml(b.format)}${b.duration?` · ${b.duration} min`:''}</span><span>•</span><span>${escapeHtml(participantLine(b))}</span><span>•</span><span>${money(b.price)}</span></div>
+        <div class="mt-2 flex flex-wrap gap-1.5">${typePill(b)}${statusPill(b)}</div>
+      </div></div></button>`).join('');
+    qa('[data-tutor-booking-id]',list).forEach(btn=>btn.addEventListener('click',()=>selectBooking(btn.dataset.tutorBookingId,true)));
+    renderDetail();
+  }
+  function summaryRows(b){
+    if(b.type==='course')return `<div class="grid sm:grid-cols-2 gap-4 text-[11px]"><div><div class="booking-detail-label">Enrollment</div><div class="font-semibold mt-1.5">${escapeHtml(b.date)}</div></div><div><div class="booking-detail-label">Delivery</div><div class="font-semibold mt-1.5">${escapeHtml(b.format)}</div></div><div><div class="booking-detail-label">Access</div><div class="font-semibold mt-1.5">${escapeHtml(b.access||'Active access')}</div></div><div><div class="booking-detail-label">Progress</div><div class="font-semibold mt-1.5">${escapeHtml(b.progress||'Not started')}</div></div></div>`;
+    return `<div class="grid sm:grid-cols-2 gap-4 text-[11px]"><div><div class="booking-detail-label">Date</div><div class="font-semibold mt-1.5">${escapeHtml(b.date)}</div></div><div><div class="booking-detail-label">Time</div><div class="font-semibold mt-1.5">${escapeHtml(b.time)}</div></div><div><div class="booking-detail-label">Format / location</div><div class="font-semibold mt-1.5">${escapeHtml(b.format)}</div></div><div><div class="booking-detail-label">${b.type==='event'?'Tickets':b.type==='workshop'?'Participants':b.type==='class'?'Enrollment':'Duration'}</div><div class="font-semibold mt-1.5">${b.type==='tutor'?`${b.duration} minutes`:escapeHtml(participantLine(b))}</div></div></div>`;
+  }
+  function cancellationLabel(b){if(b.cancellation?.cancelledBySessionId||b.cancelledBySessionId)return 'Session cancelled';if(b.cancellation?.actor==='host')return 'Cancelled by you';if(b.cancellation?.actor==='attendee')return 'Cancelled by learner';return 'Booking cancelled';}
+  function refundSummary(b){const status=b.refund?.status;if(!status)return '';const amount=b.refund?.amountVnd??b.refund?.refundedAmountVnd;const suffix=typeof amount==='number'&&amount>0?` · ${money(amount)}`:'';return status==='processing'?`Refund processing${suffix}`:status==='refunded'||status==='succeeded'?`Refunded${suffix}`:status==='needs_attention'?'Refund needs attention':'';}
+  function detailMarkup(b,mobile=false){
+    if(!b)return `<div class="h-full grid place-items-center px-6 text-center"><div><div class="text-[12px] font-semibold">Select a booking</div><p class="text-[10px] text-[#888] mt-1">Choose an item from the list to review its details.</p></div></div>`;
+    let intro='';
+    if(b.stage==='requests')intro=`<p class="text-[10px] text-[#777] mt-2 leading-5">This ${typeMeta[b.type].label.toLowerCase()} booking requires host approval before payment can continue.</p>`;
+    else if(b.stage==='awaiting')intro='<p class="text-[10px] text-[#777] mt-2 leading-5">You’ve accepted this request. The learner needs to complete payment before it becomes confirmed.</p>';
+    else if(b.stage==='upcoming'&&b.type==='course')intro='<p class="text-[10px] text-[#777] mt-2 leading-5">Payment is complete and course access is active.</p>';
+    else if(b.stage==='upcoming')intro='<p class="text-[10px] text-[#777] mt-2 leading-5">Payment is complete and this booking is confirmed.</p>';
+    else if(b.stage==='past')intro='<p class="text-[10px] text-[#777] mt-2 leading-5">This booking is complete.</p>';
+    else if(b.stage==='cancelled')intro=`<p class="text-[10px] text-[#777] mt-2 leading-5">${cancellationLabel(b)}. This booking is closed and no longer actionable.</p>`;
+    else intro='<p class="text-[10px] text-[#777] mt-2 leading-5">This booking is closed and no longer actionable.</p>';
+    let actions='';
+    if(b.stage==='requests'&&(b.canAccept||b.canReject))actions=`<div class="booking-detail-section ${mobile?'sticky bottom-0 bg-white':''}"><div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">${b.canReject?`<button data-booking-decision="reject" data-id="${b.id}" data-qa-bound="1" class="btn btn-danger sm:min-w-[110px]">Decline</button>`:''}${b.canAccept?`<button data-booking-decision="accept" data-id="${b.id}" data-qa-bound="1" class="btn btn-dark sm:min-w-[150px]">Accept request</button>`:''}</div></div>`;
+    else if(b.type==='tutor'&&b.canTutorCancel)actions=`<div class="booking-detail-section ${mobile?'sticky bottom-0 bg-white':''}"><div class="flex justify-end"><button data-booking-decision="cancel" data-id="${b.id}" data-qa-bound="1" class="btn btn-danger sm:min-w-[150px]">Cancel booking</button></div></div>`;
+    const capacity=b.capacity?`<div class="booking-detail-section"><div class="booking-detail-label">Session capacity</div><div class="text-[11px] font-semibold mt-2">${b.capacity}</div></div>`:'';
+    return `<div class="h-full flex flex-col"><div class="px-5 sm:px-6 py-5"><div class="flex items-start justify-between gap-4"><div><div class="flex items-center gap-2">${typePill(b)}<span class="eyebrow">${b.stage==='requests'?'Booking request':'Booking'}</span></div><div class="text-[18px] font-semibold mt-2 break-words">${escapeHtml(b.offering)}</div><div class="text-[11px] text-[#555] mt-1">${escapeHtml(b.learner)}</div>${intro}</div>${statusPill(b)}</div></div>
+      <div class="booking-detail-section">${summaryRows(b)}</div>
+      <div class="booking-detail-section"><div class="booking-detail-label">${b.type==='event'?'Booker':b.type==='workshop'?'Booking contact':'Learner'}</div><div class="flex items-center gap-3 mt-3"><div class="booking-avatar">${escapeHtml(initials(b.learner))}</div><div><div class="text-[11px] font-semibold break-words">${escapeHtml(b.learner)}</div><div class="text-[9px] text-[#888] mt-0.5">${escapeHtml(participantLine(b))}</div></div></div></div>
+      <div class="booking-detail-section"><div class="booking-detail-label">Listing</div><div class="text-[12px] font-semibold mt-2">${escapeHtml(b.offering)}</div><div class="text-[10px] text-[#777] mt-1">${typeMeta[b.type].label}${b.type!=='course'?` · ${escapeHtml(b.date)} · ${escapeHtml(b.time)} · ${escapeHtml(b.format)}`:` · ${escapeHtml(b.format)}`}</div></div>
+      ${capacity}
+      <div class="booking-detail-section"><div class="booking-detail-label">${b.price===0?'Price':'Amount'}</div><div class="text-[15px] font-semibold mt-2">${b.price===0?'Free':money(b.price)}</div></div>
+      ${b.stage==='requests'?'<div class="booking-detail-section"><div class="bg-[#f7f7f7] border border-[#ececec] rounded-lg p-3.5 text-[10px] text-[#666] leading-5">Accepting reserves this request under the listing policy and moves it to payment. It is not confirmed until the required payment succeeds.</div></div>':''}
+      ${b.stage==='awaiting'?'<div class="booking-detail-section"><div class="bg-[#faf7f1] border border-[#eee4d3] rounded-lg p-3.5"><div class="text-[11px] font-semibold">Request accepted</div><div class="text-[10px] text-[#7a6a50] mt-1">Waiting for learner payment. No host payment action is required.</div></div></div>':''}
+      ${b.stage==='cancelled'&&b.type==='tutor'&&refundSummary(b)?`<div class="booking-detail-section"><div class="booking-detail-label">Refund</div><div class="text-[11px] font-semibold mt-2">${escapeHtml(refundSummary(b))}</div></div>`:''}
+      ${b.note?`<div class="booking-detail-section"><div class="booking-detail-label">Note</div><p class="text-[10px] text-[#666] leading-5 mt-2">${b.note}</p></div>`:''}
+      <div class="flex-1"></div>${actions}</div>`;
+  }
+  function bindDecisionButtons(root=document){qa('[data-booking-decision]',root).forEach(btn=>btn.addEventListener('click',()=>openDecision(btn.dataset.bookingDecision,btn.dataset.id)))}
+  function renderDetail(){const b=fixtures.find(x=>x.id===selectedId);const pane=q('#tutorBookingDetail');if(pane){pane.innerHTML=detailMarkup(b,false);bindDecisionButtons(pane)}if(innerWidth<1024&&q('#bookingDrawer')?.classList.contains('open'))renderMobileDetail()}
+  function renderMobileDetail(){const b=fixtures.find(x=>x.id===selectedId);q('#mobileBookingTitle').textContent=b?b.offering:'Booking detail';q('#mobileBookingDetailContent').innerHTML=detailMarkup(b,true);bindDecisionButtons(q('#mobileBookingDetailContent'))}
+  function selectBooking(id,openMobile=false){
+    const b=fixtures.find(x=>x.id===id);if(!b)return false;selectedId=id;b.new=false;
+    qa('[data-tutor-booking-id]').forEach(btn=>btn.setAttribute('aria-current',String(btn.dataset.tutorBookingId===id)));
+    renderDetail();
+    if(openMobile&&innerWidth<1024){renderMobileDetail();openDrawer('bookingDrawer')}
+    return true;
+  }
+  function switchStage(stage){
+    activeStage=stage;bookingMode='workspace';setModeUI();
+    qa('.tutor-booking-tab').forEach(btn=>{const active=btn.dataset.tutorBookingTab===stage;btn.classList.toggle('active',active);btn.setAttribute('aria-selected',String(active))});
+    selectedId=null;renderList();
+  }
+  function switchType(type){
+    activeType=type;selectedId=null;
+    qa('.booking-type-filter').forEach(btn=>{const active=btn.dataset.bookingType===type;btn.classList.toggle('bg-[#171717]',active);btn.classList.toggle('!text-white',active);btn.classList.toggle('!border-[#171717]',active)});
+    updateCounts();renderList();
+  }
+  function setModeUI(){
+    const workspace=bookingMode==='workspace';q('#tutorBookingWorkspace').classList.toggle('hidden',!workspace);q('#bookingOperationsView').classList.toggle('hidden',workspace);
+    q('#tutorWorkspaceToggle').className=`h-8 px-3 rounded-[4px] text-[10px] font-semibold ${workspace?'bg-[#171717] text-white':'text-[#666] hover:bg-[#f5f5f5]'}`;
+    q('#operationsToggle').className=`h-8 px-3 rounded-[4px] text-[10px] font-semibold ${!workspace?'bg-[#171717] text-white':'text-[#666] hover:bg-[#f5f5f5]'}`;
+  }
+  function switchMode(mode){bookingMode=mode;setModeUI();if(mode==='workspace')renderList()}
+  function openDecision(type,id){
+    const b=fixtures.find(x=>x.id===id);if(!b||((type==='accept'||type==='reject')&&b.stage!=='requests')||(type==='cancel'&&(!b.canTutorCancel||b.type!=='tutor')))return;decision={type,id};
+    const accept=type==='accept',cancel=type==='cancel';q('#bookingDecisionEyebrow').textContent=cancel?'Tutor booking':`${typeMeta[b.type].label} booking request`;q('#bookingDecisionTitle').textContent=accept?'Accept this booking?':cancel?'Cancel this confirmed lesson?':'Decline this request?';
+    q('#bookingDecisionBody').innerHTML=accept?`<div class="space-y-3 text-[11px]"><div class="flex justify-between gap-4"><span class="text-[#777]">Listing</span><b class="text-right">${escapeHtml(b.offering)}</b></div><div class="flex justify-between gap-4"><span class="text-[#777]">Schedule</span><b class="text-right">${escapeHtml(b.date)}<br>${escapeHtml(b.time)}</b></div><div class="flex justify-between gap-4"><span class="text-[#777]">Booking</span><b>${escapeHtml(b.learner)}<br><span class="font-normal text-[#777]">${escapeHtml(participantLine(b))}</span></b></div><div class="flex justify-between gap-4"><span class="text-[#777]">Amount</span><b>${money(b.price)}</b></div><div class="border-t border-[#eee] pt-3 text-[10px] text-[#666] leading-5">The learner will be asked to complete payment after you accept. This does not mark the booking confirmed.</div></div>`:cancel?`<div class="space-y-3 text-[11px]"><p class="text-[#666] leading-5">This will cancel the confirmed lesson for ${escapeHtml(b.learner)}. ${b.paymentStatus==='succeeded'?'A full refund will be processed for the learner.':'No payment has been captured for this booking.'}</p><p class="border-t border-[#eee] pt-3 text-[10px] text-[#666] leading-5">The cancellation is submitted to Tutoria for processing. No financial operation happens in Center.</p></div>`:`<p class="text-[11px] text-[#666] leading-5">The learner will be notified that this ${escapeHtml(typeMeta[b.type].label.toLowerCase())} booking request is no longer available.</p>`;
+    const confirm=q('#bookingDecisionConfirm');confirm.textContent=accept?'Accept request':cancel?'Cancel booking':'Decline request';confirm.className=accept?'btn btn-dark':'btn btn-danger';q('#bookingDecisionCancel').textContent=accept?'Back':cancel?'Keep booking':'Keep request';
+    q('#bookingDecisionDialog').showModal();setTimeout(()=>confirm.focus(),0);
+  }
+  async function commitDecision(){
+    if(!decision)return;const b=fixtures.find(x=>x.id===decision.id);if(!b)return;const confirm=q('#bookingDecisionConfirm');const type=decision.type;
+    confirm.disabled=true;confirm.textContent=type==='accept'?'Accepting…':type==='cancel'?'Cancelling…':'Declining…';
+    if(liveTutorMode&&window.tutoriaCenterRequestDecision){try{if(type==='cancel'&&window.tutoriaCenterRequestCancellation)await window.tutoriaCenterRequestCancellation(b.id,b.version);else await window.tutoriaCenterRequestDecision(b.id,type,b.version);q('#bookingDecisionDialog').close();decision=null;await window.tutoriaCenterReloadTutorBookings();toast(type==='accept'?'Request accepted · waiting for learner payment':type==='cancel'?'Booking cancelled':'Request declined');}catch(error){toast(error?.message||'This booking changed. Reload and try again.');await window.tutoriaCenterReloadTutorBookings();}confirm.disabled=false;confirm.textContent=type==='accept'?'Accept request':type==='cancel'?'Cancel booking':'Decline request';return;}
+    await new Promise(r=>setTimeout(r,450));
+    if(type==='accept'){b.hostAccepted=true;b.paymentState='required';b.stage='awaiting';b.backendStatus='requested';q('#bookingDecisionDialog').close();updateCounts();switchStage('awaiting');selectedId=b.id;renderList();selectBooking(b.id,false);toast('Request accepted · waiting for learner payment')}
+    else{b.hostAccepted=false;b.paymentState='not_ready';b.stage='cancelled';b.backendStatus='rejected';q('#bookingDecisionDialog').close();updateCounts();switchStage('requests');toast('Request declined')}
+    confirm.disabled=false;decision=null;
+  }
+  function renderDemoMode(){q('#tutorBookingReady').classList.toggle('hidden',demoMode!=='ready');q('#tutorBookingLoading').classList.toggle('hidden',demoMode!=='loading');q('#tutorBookingError').classList.toggle('hidden',demoMode!=='error')}
+  window.tutoriaBookingDemo=(mode='ready')=>{demoMode=mode;renderDemoMode();if(mode==='ready')renderList()};
+  window.resetTutorBookingFixtures=()=>{fixtures=initialFixtures.map(x=>({...x}));window.__tutorBookingFixtures=fixtures;window.__bookingFixtures=fixtures;activeStage='requests';activeType='all';selectedId=null;updateCounts();switchType('all');switchStage('requests');toast('Mock booking state reset')};
+  window.openMergedBooking=id=>{showPage('bookings');switchMode('workspace');const b=fixtures.find(x=>x.id===id);if(b){activeType='all';switchType('all');switchStage(b.stage);selectedId=id;renderList();selectBooking(id,true)}else{switchMode('operations');const row=qa('#bookingRows tr').find(r=>r.innerText.includes(id));row?.scrollIntoView({block:'center'});toast('Opened in all bookings')}};
+  const liveDate=(value,options)=>{try{return new Intl.DateTimeFormat('en-GB',options).format(new Date(value))}catch{return 'Date unavailable'}};
+  const liveTime=value=>liveDate(value,{hour:'2-digit',minute:'2-digit',hour12:false});
+  function setLiveTutorIdentity(identity){const name=typeof identity?.name==='string'&&identity.name.trim()?identity.name.trim():'';if(!name)return;const initials=name.split(/\s+/).filter(Boolean).slice(-2).map(x=>x[0]).join('').toUpperCase();const nameNode=q('[data-center-account-name]'),initialsNode=q('[data-center-account-initials]');if(nameNode)nameNode.textContent=name;if(initialsNode)initialsNode.textContent=initials||'T';}
+  function mapLiveTutorBooking(raw){const session=raw?.session||{},pricing=raw?.pricing||null,status=raw?.status,stage=status==='rejected'||status==='cancelled'?'cancelled':status==='completed'?'past':status==='confirmed'?'upcoming':raw?.paymentReady?'awaiting':'requests',label=session.offeringId?`Tutor session · ${String(session.offeringId).slice(0,8)}`:'1:1 tutor session',learnerName=typeof raw?.learner?.displayName==='string'&&raw.learner.displayName.trim()?raw.learner.displayName.trim():'Learner identity unavailable';return{id:String(raw.id),type:'tutor',stage,backendStatus:String(status||'unknown'),hostAccepted:Boolean(raw?.paymentReady),paymentState:raw?.paymentReady?'required':'not_ready',learner:learnerName,offering:label,date:liveDate(session.startsAt,{weekday:'short',day:'numeric',month:'short'}),time:`${liveTime(session.startsAt)}–${liveTime(session.endsAt)}`,format:'Session details',duration:Number(pricing?.durationMinutes)||null,participants:Number(raw?.participantCount)||1,price:Number(pricing?.amountVnd)||0,received:raw.createdAt?liveDate(raw.createdAt,{day:'numeric',month:'short'}):'',note:'',new:false,version:Number(raw.version)||1,canAccept:raw?.canTutorAccept===true,canReject:raw?.canTutorReject===true,canTutorCancel:raw?.canTutorCancel===true,paymentReady:raw?.paymentReady===true,paymentInFlight:raw?.paymentInFlight===true,paymentStatus:raw?.payment?.status||null,refund:raw?.refund||null,cancellation:raw?.cancellation||null,cancelledBySessionId:raw?.cancelledBySessionId||null};}
+  window.setTutorBookingLiveData=(rows,identity)=>{liveTutorMode=true;setLiveTutorIdentity(identity);fixtures=(Array.isArray(rows)?rows:[]).map(mapLiveTutorBooking);window.__tutorBookingFixtures=fixtures;window.__bookingFixtures=fixtures;updateCounts();switchType(activeType);switchStage(activeStage)};
+
+  qa('.tutor-booking-tab').forEach(btn=>btn.addEventListener('click',()=>switchStage(btn.dataset.tutorBookingTab)));
+  qa('.booking-type-filter').forEach(btn=>btn.addEventListener('click',()=>switchType(btn.dataset.bookingType)));
+  qa('[data-booking-stage]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(()=>switchStage(btn.dataset.bookingStage),0)));
+  qa('[data-booking-mode]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(()=>switchMode(btn.dataset.bookingMode),0)));
+  q('#tutorBookingSearch')?.addEventListener('input',renderList);
+  q('#retryTutorBookings')?.addEventListener('click',()=>{if(liveTutorMode&&window.tutoriaCenterReloadTutorBookings){window.tutoriaCenterReloadTutorBookings();}else{demoMode='loading';renderDemoMode();setTimeout(()=>{demoMode='ready';renderDemoMode();renderList()},500)}});
+  q('#bookingDecisionConfirm')?.addEventListener('click',e=>{e.preventDefault();commitDecision()});
+  q('#bookingDecisionDialog')?.addEventListener('close',()=>{if(decision)decision=null});
+  window.addEventListener('resize',()=>{if(innerWidth>=1024&&q('#bookingDrawer')?.classList.contains('open'))closeDrawer('bookingDrawer')});
+  switchType('all');updateCounts();switchStage('requests');renderDemoMode();
+})();
+</script>
+
+<script id="tutoria-center-live-tutor-adapter">
+(()=>{
+  if(window.parent===window||!window.postMessage)return;
+  const origin=window.location.origin,pending=new Map(),requestId=()=>`center-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  function load(){window.tutoriaBookingDemo?.('loading');const id=requestId();window.parent.postMessage({type:'tutoria-center-load-tutor-bookings',requestId:id},origin)}
+  window.tutoriaCenterReloadTutorBookings=load;
+  window.tutoriaCenterRequestDecision=(bookingId,action,expectedVersion)=>new Promise((resolve,reject)=>{const id=requestId();pending.set(id,{resolve,reject});window.parent.postMessage({type:'tutoria-center-decide-tutor-booking',requestId:id,bookingId,action,expectedVersion},origin)});
+  window.tutoriaCenterRequestCancellation=(bookingId,expectedVersion,reason)=>new Promise((resolve,reject)=>{const id=requestId();pending.set(id,{resolve,reject});window.parent.postMessage({type:'tutoria-center-cancel-tutor-booking',requestId:id,bookingId,expectedVersion,reason},origin)});
+  window.addEventListener('message',event=>{if(event.origin!==origin||event.source!==window.parent)return;const message=event.data||{};if(message.type==='tutoria-center-parent-ready'){load();return}if(message.type==='tutoria-center-demo'){window.tutoriaBookingDemo?.('ready');return}if(message.type==='tutoria-center-tutor-bookings'&&Array.isArray(message.bookings)){window.tutoriaBookingDemo?.('ready');window.setTutorBookingLiveData?.(message.bookings,message.tutor);return}if(message.type==='tutoria-center-tutor-bookings-error'){window.tutoriaBookingDemo?.('error');return}if(message.type==='tutoria-center-tutor-booking-decision'||message.type==='tutoria-center-tutor-booking-decision-error'||message.type==='tutoria-center-tutor-booking-cancellation'||message.type==='tutoria-center-tutor-booking-cancellation-error'){const entry=pending.get(message.requestId);if(!entry)return;pending.delete(message.requestId);if(message.type.endsWith('-error'))entry.reject(new Error(typeof message.message==='string'?message.message:'This booking changed. Reload and try again.'));else entry.resolve(message.booking)}});
+})();
+</script>
+
+</body>
+</html>

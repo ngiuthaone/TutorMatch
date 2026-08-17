@@ -9,6 +9,14 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <script>
+    (() => {
+      const params = new URLSearchParams(window.location.search);
+      const requestedName = decodeURIComponent(String(params.get("name") || "").replace(/\+/g, " ")).trim();
+      if (requestedName) document.documentElement.dataset.profilePending = "true";
+    })();
+  </script>
+
+  <script>
     tailwind.config = {
       theme: {
         extend: {
@@ -31,6 +39,7 @@
 
   <style>
     :root { --profile-nav-top: 0px; }
+    html[data-profile-pending="true"] body { visibility: hidden; }
     html { scroll-behavior: smooth; }
     body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -1012,7 +1021,7 @@
               <a href="/bookings" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="calendar-days" class="h-4 w-4"></i>My bookings</a>
               <a href="/saved" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="heart" class="h-4 w-4"></i>Saved</a>
               <a href="/settings" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="settings" class="h-4 w-4"></i>Settings</a>
-              <a href="/auth/sign-in" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="log-out" class="h-4 w-4"></i>Sign out</a>
+              <a href="/auth/sign-in" target="_top" data-auth-sign-out class="discover-user-item" role="menuitem"><i data-lucide="log-out" class="h-4 w-4"></i>Sign out</a>
             </div>
           </div>
           <button id="discoverMobileMenuButton" class="discover-mobile-menu-button" type="button" aria-label="Open navigation menu" aria-expanded="false">
@@ -1397,7 +1406,7 @@
                 <p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Rates & offers</p>
                 <div class="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                   <h2 class="text-3xl font-semibold tracking-[-0.03em]">Select the lesson length that fits your goal.</h2>
-                  <span class="text-sm text-muted">Prices include Tutoria secure payment</span>
+                  <span class="text-sm text-muted">Payment becomes available after tutor approval</span>
                 </div>
 
                 <div class="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -1585,7 +1594,7 @@
                     <i data-lucide="plus" class="faq-icon h-5 w-5 shrink-0 transition"></i>
                   </button>
                   <div class="faq-answer hidden px-6 pb-6 leading-7 text-muted">
-                    Select a lesson length, choose your preferred format, then pick one of the available time slots. Payment is completed securely through Tutoria.
+                    Select a lesson length, choose your preferred format, then pick one of the available time slots. You’ll send a booking request first, then pay securely through Tutoria after the tutor accepts.
                   </div>
                 </div>
 
@@ -1615,7 +1624,7 @@
                     <i data-lucide="plus" class="faq-icon h-5 w-5 shrink-0 transition"></i>
                   </button>
                   <div class="faq-answer hidden px-6 pb-6 leading-7 text-muted">
-                    Payment is collected by Tutoria at booking. The platform releases the payment after the lesson according to its payment and cancellation rules.
+                    You’ll pay through Tutoria after the tutor accepts your booking request.
                   </div>
                 </div>
               </section>
@@ -1820,8 +1829,7 @@
 
             <div class="border-t border-line bg-canvas px-6 py-5">
               <div class="space-y-3 text-sm text-muted">
-                <p class="flex items-center gap-3"><i data-lucide="rotate-ccw" class="h-4 w-4 text-ink"></i> Free cancellation up to 24 hours before</p>
-                <p class="flex items-center gap-3"><i data-lucide="shield-check" class="h-4 w-4 text-ink"></i> Secure payment through Tutoria</p>
+                <p class="flex items-center gap-3"><i data-lucide="shield-check" class="h-4 w-4 text-ink"></i> Secure payment through Tutoria after approval</p>
                 <p class="flex items-center gap-3"><i data-lucide="message-circle" class="h-4 w-4 text-ink"></i> Thu usually replies within an hour</p>
               </div>
             </div>
@@ -1844,14 +1852,14 @@
 
   <!-- Booking flow -->
   <div id="bookingModal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/70 p-3 sm:p-6">
-    <div class="booking-drawer flex h-[min(94vh,900px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[26px] border border-line bg-[#151517] shadow-soft sm:rounded-[28px]">
-      <header class="flex shrink-0 items-center justify-between gap-4 border-b border-line px-5 py-4 sm:px-7">
+    <div class="booking-drawer flex h-[min(820px,calc(100vh-28px))] w-full max-w-[1135px] flex-col overflow-hidden rounded-[28px] border border-white/[0.13] bg-[#171717] shadow-[0_28px_100px_rgba(0,0,0,.62)]">
+      <header class="flex h-[78px] shrink-0 items-center justify-between gap-5 border-b border-white/[0.12] px-5 sm:px-7">
         <div class="flex min-w-0 items-center gap-3">
           <button id="closeModal" class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line transition hover:border-ink" aria-label="Close booking">
             <i data-lucide="x" class="h-4 w-4"></i>
           </button>
           <div class="min-w-0">
-            <p id="bookingKindLabel" class="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Book a lesson</p>
+            <p id="bookingKindLabel" class="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50">Book a lesson</p>
             <h3 class="truncate text-lg font-semibold">Thu Ha</h3>
           </div>
         </div>
@@ -1864,12 +1872,12 @@
           <span class="h-px w-6 bg-line"></span>
           <button class="booking-progress flex items-center gap-2 text-xs font-semibold" data-step="2">
             <span class="booking-progress-number grid h-7 w-7 place-items-center rounded-full border border-line">2</span>
-            Review
+            Review request
           </button>
         </div>
       </header>
 
-      <div class="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div class="grid min-h-0 flex-1 lg:grid-cols-[72%_28%]">
         <main class="min-h-0 overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
           <!-- Step 1 -->
           <section id="bookingStep1" class="booking-panel active">
@@ -1884,13 +1892,13 @@
                 <span class="block text-sm font-semibold">One lesson</span>
                 <span class="mt-1 block text-xs text-muted">One time</span>
               </button>
-              <button class="booking-mode-option rounded-xl border border-transparent px-4 py-3 text-left" data-mode="weekly">
+              <button disabled aria-disabled="true" class="booking-mode-option cursor-not-allowed rounded-xl border border-transparent px-4 py-3 text-left opacity-50" data-mode="weekly">
                 <span class="block text-sm font-semibold">Weekly schedule</span>
-                <span class="mt-1 block text-xs text-muted">Repeats each week</span>
+                <span class="mt-1 block text-xs text-muted">Coming soon</span>
               </button>
-              <button class="booking-mode-option rounded-xl border border-transparent px-4 py-3 text-left" data-mode="dates">
+              <button disabled aria-disabled="true" class="booking-mode-option cursor-not-allowed rounded-xl border border-transparent px-4 py-3 text-left opacity-50" data-mode="dates">
                 <span class="block text-sm font-semibold">Pick dates</span>
-                <span class="mt-1 block text-xs text-muted">No repetition</span>
+                <span class="mt-1 block text-xs text-muted">Coming soon</span>
               </button>
             </div>
 
@@ -1909,10 +1917,10 @@
                     <div>
                       <p class="text-xs font-semibold text-muted">Duration</p>
                       <div class="mt-2 grid grid-cols-4 gap-2">
-                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-center text-xs font-semibold" data-duration="30 minutes">30 min</button>
-                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-center text-xs font-semibold" data-duration="50 minutes">50 min</button>
-                        <button class="starting-duration selected rounded-xl border border-line px-2 py-2.5 text-center text-xs font-semibold" data-duration="60 minutes">60 min</button>
-                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-center text-xs font-semibold" data-duration="90 minutes">90 min</button>
+                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="30 minutes"><span class="block">30 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
+                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="50 minutes"><span class="block">50 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
+                        <button class="starting-duration selected rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="60 minutes"><span class="block">60 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
+                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="90 minutes"><span class="block">90 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
                       </div>
                     </div>
 
@@ -1953,7 +1961,7 @@
 
             <div class="mt-7 flex items-center justify-between gap-3">
               <button class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted" disabled aria-label="Previous dates"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
-              <div class="hide-scrollbar flex flex-1 gap-2 overflow-x-auto pb-1">
+              <div id="bookingDates" class="hide-scrollbar flex flex-1 gap-2 overflow-x-auto pb-1">
                 <button class="booking-date active min-w-[82px] rounded-2xl border border-line px-3 py-3 text-center" data-date="Monday, July 27" data-short="Mon, Jul 27" data-weekday="Monday">
                   <span class="flex items-center justify-center gap-1.5"><span class="text-xs text-muted">Mon</span><span class="booking-date-count">0</span></span><span class="mt-1 block text-lg font-semibold">27</span>
                 </button>
@@ -1984,7 +1992,7 @@
               <span id="activeDateSelectionCount" class="hidden rounded-full border border-line px-2.5 py-1 text-xs text-muted">0 selected</span>
             </div>
 
-            <div class="mt-5 space-y-7">
+            <div id="bookingTimeGrid" class="mt-5 space-y-7">
               <div>
                 <div class="flex items-center justify-between gap-4"><p class="text-sm font-semibold">Morning</p><span class="text-xs text-muted">4 available</span></div>
                 <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -2035,7 +2043,7 @@
               <div id="mobileSessionList" class="mt-2 divide-y divide-line"><p class="py-3 text-sm text-muted">No sessions selected yet.</p></div>
             </div>
 
-            <section id="sessionCustomization" class="mt-10 border-t border-line pt-8">
+            <section id="sessionCustomization" class="hidden mt-10 border-t border-line pt-8">
               <div class="max-w-2xl">
                 <div class="flex items-start gap-3">
                   <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white"><i data-lucide="sliders-horizontal" class="h-4 w-4"></i></span>
@@ -2088,8 +2096,8 @@
           <section id="bookingStep2" class="booking-panel">
             <div class="max-w-2xl">
               <p class="text-xs font-semibold uppercase tracking-[0.15em] text-muted">Step 2 of 2</p>
-              <h4 class="mt-2 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">Review and pay</h4>
-              <p class="mt-2 text-sm leading-6 text-muted">Review every session before confirming the booking.</p>
+              <h4 class="mt-2 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">Review your request</h4>
+              <p class="mt-2 text-sm leading-6 text-muted">Check your session details before sending your request.</p>
             </div>
 
             <div class="mt-8 overflow-hidden rounded-[22px] border border-line bg-white">
@@ -2104,42 +2112,36 @@
               </section>
 
               <section class="review-section p-5 sm:p-6">
-                <p class="text-xs font-semibold uppercase tracking-[0.13em] text-muted">Payment</p>
-                <div class="mt-4 space-y-3 text-sm">
-                  <div class="flex items-center justify-between gap-4"><span class="text-muted">Selected lessons</span><span id="reviewLessonQuantity">1</span></div>
+                <p class="text-xs font-semibold uppercase tracking-[0.13em] text-muted">Price</p>
+                  <div class="mt-4 space-y-3 text-sm">
+                    <div class="flex items-center justify-between gap-4"><span class="text-muted">Selected lessons</span><span id="reviewLessonQuantity">1</span></div>
                   <div class="flex items-center justify-between gap-4"><span class="text-muted">Tutoria fee</span><span>Included</span></div>
-                  <div class="flex items-center justify-between gap-4 border-t border-line pt-4"><span class="font-semibold">Total due now</span><span id="reviewTotal" class="text-lg font-semibold">300.000 đ</span></div>
+                  <div class="flex items-center justify-between gap-4 border-t border-line pt-4"><span class="font-semibold">Estimated total</span><span id="reviewTotal" class="text-lg font-semibold">300.000 đ</span></div>
                 </div>
-                <p id="reviewChargeNote" class="mt-4 text-xs leading-5 text-muted">Payment is collected now to reserve the selected lesson.</p>
+                <p id="reviewChargeNote" class="mt-4 rounded-xl border border-line bg-canvas p-4 text-xs leading-5 text-muted">You won't be charged yet. Payment becomes available after the tutor accepts your request.</p>
+                <p id="bookingAuthNote" class="mt-3 text-xs leading-5 text-muted">Sign in to send your booking request.</p>
+                <p id="bookingVerificationNote" class="mt-3 hidden rounded-xl border border-line bg-canvas p-4 text-xs leading-5 text-muted">Email verification is required before you can send this request.</p>
               </section>
             </div>
 
-            <button id="paymentMethod" class="mt-5 flex w-full items-center justify-between gap-4 rounded-2xl border border-line bg-white p-4 text-left transition hover:border-ink">
-              <span class="flex items-center gap-4"><span class="grid h-10 w-10 place-items-center rounded-xl bg-canvas"><i data-lucide="credit-card" class="h-5 w-5"></i></span><span><span class="block text-sm font-semibold">Visa •••• 4242</span><span class="mt-1 block text-xs text-muted">Demo payment method</span></span></span>
-              <i data-lucide="chevron-right" class="h-4 w-4 text-muted"></i>
-            </button>
-
-            <div class="mt-5 rounded-2xl border border-line bg-canvas p-4">
-              <div class="flex gap-3"><i data-lucide="rotate-ccw" class="mt-0.5 h-4 w-4 shrink-0"></i><div><p class="text-sm font-semibold">Free cancellation</p><p class="mt-1 text-xs leading-5 text-muted">Cancel a session at least 24 hours before it begins for a full refund.</p></div></div>
-            </div>
           </section>
 
           <!-- Success -->
           <section id="bookingSuccess" class="booking-panel">
             <div class="mx-auto max-w-xl py-8 text-center sm:py-16">
               <span class="mx-auto grid h-16 w-16 place-items-center rounded-full border border-line bg-white"><i data-lucide="check" class="h-7 w-7"></i></span>
-              <p class="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-muted">Booking confirmed</p>
-              <h4 class="mt-2 text-3xl font-semibold tracking-[-0.03em]">Your sessions with Thu are booked.</h4>
+              <p class="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-muted">Request sent</p>
+              <h4 id="bookingRequestSentTitle" class="mt-2 text-3xl font-semibold tracking-[-0.03em]">Your booking request has been sent to Thu Ha.</h4>
               <p id="successDateTime" class="mt-4 text-sm text-neutral-700"></p>
               <div class="mx-auto mt-8 max-w-md divide-y divide-line rounded-[22px] border border-line bg-white px-5 text-left">
                 <div class="flex items-center justify-between gap-5 py-4"><span class="text-sm text-muted">Plan</span><span id="successLesson" class="text-right text-sm font-semibold"></span></div>
-                <div class="flex items-center justify-between gap-5 py-4"><span class="text-sm text-muted">Total paid</span><span id="successPrice" class="text-sm font-semibold"></span></div>
+                <div class="flex items-center justify-between gap-5 py-4"><span class="text-sm text-muted">Price</span><span id="successPrice" class="text-sm font-semibold"></span></div>
               </div>
               <div class="mt-7 grid gap-3 sm:grid-cols-2">
-                <button class="rounded-xl border border-line px-5 py-3 text-sm font-semibold transition hover:border-ink"><span class="inline-flex items-center gap-2"><i data-lucide="calendar-plus" class="h-4 w-4"></i>Add to calendar</span></button>
+                <a href="/bookings" target="_top" class="rounded-xl border border-line px-5 py-3 text-center text-sm font-semibold transition hover:border-ink">View booking</a>
                 <button class="rounded-xl border border-line px-5 py-3 text-sm font-semibold transition hover:border-ink"><span class="inline-flex items-center gap-2"><i data-lucide="message-circle" class="h-4 w-4"></i>Message Thu</span></button>
               </div>
-              <button id="doneBooking" class="primary-action mt-3 w-full rounded-xl px-5 py-3.5 text-sm font-semibold">Done</button>
+              <button id="doneBooking" class="mt-3 w-full rounded-xl border border-line px-5 py-3.5 text-sm font-semibold transition hover:border-ink">Back to profile</button>
             </div>
           </section>
         </main>
@@ -2147,11 +2149,11 @@
         <aside id="bookingSummary" class="hidden min-h-0 overflow-y-auto border-l border-line bg-canvas p-6 lg:block">
           <div class="flex items-center gap-3 border-b border-line pb-5">
             <img class="h-12 w-12 rounded-xl object-cover" src="https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=160&q=80" alt="Thu Ha" />
-            <div><p class="font-semibold">Thu Ha</p><p class="mt-1 text-xs text-muted">Cooking instructor · 4.9</p></div>
+            <div><p id="bookingSummaryTutorName" class="font-semibold">Thu Ha</p><p id="bookingSummaryTutorMeta" class="mt-1 text-xs text-muted">Cooking instructor · 4.9</p></div>
           </div>
 
           <div class="py-6">
-            <div class="flex items-center justify-between gap-3"><p class="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Your sessions</p><span id="summarySessionCount" class="text-xs text-muted">0 sessions</span></div>
+            <div class="flex items-center justify-between gap-3"><p class="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Your session</p><span id="summarySessionCount" class="text-xs text-muted">0 sessions</span></div>
             <div id="summarySessionList" class="mt-3 divide-y divide-line"><p class="py-4 text-sm text-muted">Select a date and time.</p></div>
           </div>
 
@@ -2163,8 +2165,8 @@
           <div class="border-t border-line pt-5">
             <div class="flex items-center justify-between gap-4 text-sm"><span class="text-muted">Selected sessions</span><span id="summarySubtotal">0 đ</span></div>
             <div class="mt-3 flex items-center justify-between gap-4 text-sm"><span class="text-muted">Number of lessons</span><span id="summaryLessonQuantity">0</span></div>
-            <div class="mt-5 flex items-center justify-between gap-4 border-t border-line pt-5"><span class="font-semibold">Total</span><span id="summaryTotal" class="text-lg font-semibold">0 đ</span></div>
-            <p id="summaryChargeNote" class="mt-2 text-xs leading-5 text-muted">You’ll review the total before payment.</p>
+            <div class="mt-5 flex items-center justify-between gap-4 border-t border-line pt-5"><span class="font-semibold">Estimated total</span><span id="summaryTotal" class="text-lg font-semibold">0 đ</span></div>
+            <p id="summaryChargeNote" class="mt-2 text-xs leading-5 text-muted">No payment is due yet.</p>
           </div>
         </aside>
       </div>
@@ -2182,7 +2184,7 @@
   </div>
 
   <script src="/tutor-profile-data.js?v=4"></script>
-  <script src="/tutor-profile-adapter.js?v=14"></script>
+  <script src="/tutor-profile-adapter.js?v=15"></script>
   <script>
     lucide.createIcons();
 
@@ -2209,6 +2211,12 @@
       userMenu?.classList.remove("is-open");
       userMenu?.querySelector("button")?.setAttribute("aria-expanded", "false");
     }
+
+    document.querySelector("[data-auth-sign-out]")?.addEventListener("click", event => {
+      if (window.parent === window) return;
+      event.preventDefault();
+      window.parent.postMessage({ type: "tutoria-auth-sign-out" }, window.location.origin);
+    });
 
     function setDiscoverMenuOpen(group, open) {
       closeDiscoverMenus();
@@ -2444,6 +2452,15 @@
     let sessionsPerWeek = 2;
     let recurrenceWeeks = 4;
     let currentBookingStep = 1;
+    let authoritativeSessions = [];
+    let sessionsLoading = false;
+    let sessionsError = "";
+    let bookingSubmitting = false;
+    let bookingAuthenticated = false;
+    let requestSequence = 0;
+    let activeRequestId = "";
+    const resumeSessionId = new URLSearchParams(location.search).get("bookingSessionId");
+    let resumeAttempted = false;
 
     const modal = document.getElementById("bookingModal");
     const nextButton = document.getElementById("bookingNext");
@@ -2548,18 +2565,166 @@
     }
 
     function currentSessionFor(time) {
-      return {
-        ...activeDate,
-        time,
-        duration: flowDuration,
-        price: durationPrices[flowDuration] || flowPrice,
-        format: flowFormat,
-        location: "",
-        note: "",
-        override: null,
-        overrideOpen: false
-      };
+      const session = authoritativeSessions.find(item => item.date === activeDate.date && item.time === time);
+      if (!session) return null;
+      return { ...session, location: "", note: "", override: null, overrideOpen: false };
     }
+
+    function sessionDateParts(value) {
+      const date = new Date(value);
+      const dateLabel = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(date);
+      const short = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(date);
+      const weekday = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date);
+      return { date: dateLabel, short, weekday, day: date.getDate(), weekdayShort: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(date) };
+    }
+
+    function normalizeAuthoritativeSessions(sessions) {
+      return sessions
+        .filter(session => session && typeof session.id === "string" && typeof session.startsAt === "string" && typeof session.endsAt === "string")
+        .map(session => {
+          const parts = sessionDateParts(session.startsAt);
+          const duration = Math.max(1, Math.round((new Date(session.endsAt).getTime() - new Date(session.startsAt).getTime()) / 60000));
+          const hourlyRate = Number(session.hourlyRateVnd || 0);
+          return {
+            ...parts,
+            id: session.id,
+            time: new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(session.startsAt)),
+            duration: `${duration} minutes`,
+            price: formatVnd(Math.round((hourlyRate * duration) / 60)),
+            format: "Online",
+            location: "",
+            note: "",
+            override: null,
+            overrideOpen: false,
+            startsAt: session.startsAt,
+            endsAt: session.endsAt,
+          };
+        })
+        .sort((first, second) => first.startsAt.localeCompare(second.startsAt));
+    }
+
+    function renderAuthoritativeAvailability() {
+      const dates = [...new Map(authoritativeSessions.map(session => [session.date, session])).values()];
+      const dateContainer = document.getElementById("bookingDates");
+      const timeContainer = document.getElementById("bookingTimeGrid");
+      if (!dateContainer || !timeContainer) return;
+      if (sessionsLoading) {
+        dateContainer.innerHTML = '<p class="px-3 py-3 text-sm text-muted">Loading available Sessions…</p>';
+        timeContainer.innerHTML = '<p class="rounded-2xl border border-line p-5 text-sm text-muted">Loading authoritative availability…</p>';
+        return;
+      }
+      if (sessionsError) {
+        dateContainer.innerHTML = '<p class="px-3 py-3 text-sm text-muted">Availability unavailable</p>';
+        timeContainer.innerHTML = `<div class="rounded-2xl border border-line p-5 text-sm text-muted">${escapeHtml(sessionsError)}</div>`;
+        return;
+      }
+      if (!dates.length) {
+        dateContainer.innerHTML = '<p class="px-3 py-3 text-sm text-muted">No bookable Sessions yet.</p>';
+        timeContainer.innerHTML = '<p class="rounded-2xl border border-line p-5 text-sm text-muted">This tutor has no bookable Sessions at the moment.</p>';
+        return;
+      }
+      if (!dates.some(item => item.date === activeDate.date)) activeDate = dates[0];
+      dateContainer.innerHTML = dates.map(item => `<button class="booking-date ${item.date === activeDate.date ? "active" : ""} min-w-[82px] rounded-2xl border border-line px-3 py-3 text-center" data-date="${escapeHtml(item.date)}" data-short="${escapeHtml(item.short)}" data-weekday="${escapeHtml(item.weekday)}"><span class="flex items-center justify-center gap-1.5"><span class="text-xs text-muted">${escapeHtml(item.weekdayShort)}</span><span class="booking-date-count">${authoritativeSessions.filter(session => session.date === item.date).length}</span></span><span class="mt-1 block text-lg font-semibold">${item.day}</span></button>`).join("");
+      const daySessions = authoritativeSessions.filter(session => session.date === activeDate.date);
+      const groups = [["Morning", 5, 12], ["Afternoon", 12, 18], ["Evening", 18, 24]];
+      timeContainer.innerHTML = groups.map(([label, start, end]) => {
+        const items = daySessions.filter(session => Number(session.time.slice(0, 2)) >= start && Number(session.time.slice(0, 2)) < end);
+        if (!items.length) return "";
+        return `<div><div class="flex items-center justify-between gap-4"><p class="text-sm font-semibold">${label}</p><span class="text-xs text-muted">${items.length} available</span></div><div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">${items.map(session => `<button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="${session.time}">${timeRange(session.time, session.duration)}</button>`).join("")}</div></div>`;
+      }).join("") || '<p class="rounded-2xl border border-line p-5 text-sm text-muted">No Sessions are available on this date.</p>';
+      document.getElementById("activeDateLabel").textContent = activeDate.date;
+      updateDateAndTimeUI();
+    }
+
+    function requestAuthoritativeSessions() {
+      const tutorProfileId = activeTutorProfile?.id;
+      sessionsLoading = true;
+      sessionsError = "";
+      renderAuthoritativeAvailability();
+      if (!tutorProfileId) {
+        sessionsLoading = false;
+        sessionsError = "This tutor is not connected to bookable Sessions.";
+        renderAuthoritativeAvailability();
+        return;
+      }
+      const requestId = `sessions-${++requestSequence}`;
+      activeRequestId = requestId;
+      window.parent?.postMessage({ type: "tutoria-booking-load-sessions", requestId, tutorProfileId }, window.location.origin);
+    }
+
+    function submitBookingRequest() {
+      if (bookingSubmitting || selectedSessions.length !== 1) return;
+      if (!bookingAuthenticated) {
+        window.parent?.postMessage({ type: "tutoria-booking-auth-required", sessionId: selectedSessions[0].id }, window.location.origin);
+        return;
+      }
+      bookingSubmitting = true;
+      nextButton.disabled = true;
+      footerSelection.textContent = "Sending booking request…";
+      const requestId = `booking-${++requestSequence}`;
+      activeRequestId = requestId;
+      window.parent?.postMessage({ type: "tutoria-booking-create", requestId, sessionId: selectedSessions[0].id, participantCount: 1 }, window.location.origin);
+    }
+
+    window.addEventListener("message", event => {
+      if (event.origin !== window.location.origin || event.source !== window.parent) return;
+      const data = event.data || {};
+      if (data.type === "tutoria-booking-auth-state") {
+        bookingAuthenticated = data.authenticated === true;
+        const authNote = document.getElementById("bookingAuthNote");
+        if (authNote) authNote.classList.toggle("hidden", bookingAuthenticated);
+        updateFooter();
+        return;
+      }
+      if (data.type === "tutoria-booking-auth-required") {
+        bookingSubmitting = false;
+        bookingAuthenticated = false;
+        updateFooter();
+        window.parent?.postMessage({ type: "tutoria-booking-auth-required" }, window.location.origin);
+        return;
+      }
+      if (typeof data.requestId !== "string" || data.requestId !== activeRequestId) return;
+      if (data.type === "tutoria-booking-sessions" && Array.isArray(data.sessions)) {
+        sessionsLoading = false;
+        sessionsError = "";
+        authoritativeSessions = normalizeAuthoritativeSessions(data.sessions);
+        if (!resumeAttempted && resumeSessionId) {
+          resumeAttempted = true;
+          const resumeSession = authoritativeSessions.find(session => session.id === resumeSessionId);
+          if (resumeSession) {
+            flowMode = "single";
+            flowDuration = resumeSession.duration;
+            flowPrice = resumeSession.price;
+            activeDate = { date: resumeSession.date, short: resumeSession.short, weekday: resumeSession.weekday };
+            selectedSessions = [resumeSession];
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            document.body.style.overflow = "hidden";
+            currentBookingStep = 2;
+          }
+        }
+        renderAuthoritativeAvailability();
+        renderAll();
+        if (resumeSessionId && selectedSessions.length === 1 && currentBookingStep === 2) goToBookingStep(2);
+      } else if (data.type === "tutoria-booking-error") {
+        bookingSubmitting = false;
+        sessionsLoading = false;
+        const messages = { UNAUTHORIZED: "Sign in to send a booking request.", EMAIL_VERIFICATION_REQUIRED: "Verify your email before sending this booking request.", RATE_LIMITED: "You have sent several booking requests recently. Please wait a little before trying again.", FORBIDDEN: "You are not allowed to send this booking request.", SESSION_CAPACITY_EXHAUSTED: "That Session is no longer available. Refresh availability and try another time.", SESSION_UNAVAILABLE: "That Session is no longer available. Refresh availability and try another time.", SESSION_NOT_FOUND: "That Session could not be found. Refresh availability and try another time.", BOOKING_CONFLICT: "You already have an active request for that Session.", BOOKING_PRICE_MISSING: "This Session is not ready for booking.", STALE_VERSION: "Availability changed. Refresh and choose a current Session.", BOOKING_SERVICE_UNAVAILABLE: "Booking is temporarily unavailable. Please try again." };
+        const message = messages[data.code] || "We could not complete the booking request. Please try again.";
+        if (String(data.requestId || "").startsWith("sessions-")) sessionsError = message;
+        nextButton.disabled = false;
+        renderAuthoritativeAvailability();
+        renderAll();
+        footerSelection.textContent = message;
+        if (data.code === "EMAIL_VERIFICATION_REQUIRED") {
+          document.getElementById("bookingVerificationNote")?.classList.remove("hidden");
+          window.parent?.postMessage({ type: "tutoria-booking-verification-required", sessionId: data.sessionId }, window.location.origin);
+        }
+      } else if (data.type === "tutoria-booking-created" && data.booking) {
+        bookingSubmitting = false;
+        showBookingSuccess(data.booking);
+      }
+    });
 
     function sessionCountForDate(date) {
       return selectedSessions.filter(session => session.date === date).length;
@@ -2675,6 +2840,15 @@
       document.getElementById("summaryStartingSetup").textContent = setupLabel;
       document.getElementById("startingSetup").classList.toggle("hidden", flowKind === "Consultation");
       updateTimeRanges();
+      updateAuthoritativeDurationPrices();
+    }
+
+    function updateAuthoritativeDurationPrices() {
+      const prices = new Map(authoritativeSessions.map(session => [session.duration, session.price]));
+      document.querySelectorAll(".starting-duration").forEach(button => {
+        const price = button.querySelector(".duration-price");
+        if (price) price.textContent = prices.get(button.dataset.duration) || "Not available";
+      });
     }
 
     function updateTimeRanges() {
@@ -2856,9 +3030,8 @@
 
       document.getElementById("reviewLessonQuantity").textContent = lessonQuantity();
       document.getElementById("reviewTotal").textContent = formatVnd(totalBookingValue());
-      document.getElementById("reviewChargeNote").textContent = flowMode === "weekly"
-        ? `Payment is collected now to reserve all ${lessonQuantity()} lessons in this weekly plan.`
-        : `Payment is collected now to reserve ${lessonQuantity() === 1 ? "the selected lesson" : `all ${lessonQuantity()} selected lessons`}.`;
+      const tutorName = activeTutorProfile?.name || "the tutor";
+      document.getElementById("reviewChargeNote").textContent = `You won't be charged yet. Payment becomes available after ${tutorName} accepts your request.`;
     }
 
     function renderAll() {
@@ -2866,7 +3039,7 @@
       updateModeUI();
       updateDateAndTimeUI();
 
-      document.getElementById("sessionCustomization").classList.toggle("hidden", selectedSessions.length === 0);
+      document.getElementById("sessionCustomization").classList.add("hidden");
       renderCompactSessionList(document.getElementById("summarySessionList"), true);
       renderCompactSessionList(document.getElementById("mobileSessionList"), false);
       document.getElementById("summarySessionCount").textContent = `${selectedSessions.length} ${selectedSessions.length === 1 ? "session" : "sessions"}`;
@@ -2875,7 +3048,7 @@
       document.getElementById("summarySubtotal").textContent = formatVnd(weeklySubtotal());
       document.getElementById("summaryLessonQuantity").textContent = lessonQuantity();
       document.getElementById("summaryTotal").textContent = formatVnd(totalBookingValue());
-      document.getElementById("summaryChargeNote").textContent = flowMode === "weekly" ? "Total includes every recurring lesson in the selected plan." : "You’ll review the total before payment.";
+      document.getElementById("summaryChargeNote").textContent = "No payment is due yet.";
       document.getElementById("mobileCustomizeTotal").textContent = formatVnd(totalBookingValue());
       document.getElementById("mobileCustomizePlan").textContent = planLabel();
 
@@ -2893,7 +3066,7 @@
       backButton.classList.toggle("invisible", currentBookingStep === 1);
 
       if (currentBookingStep === 1) {
-        nextButton.textContent = "Review booking";
+        nextButton.textContent = "Review request";
         nextButton.disabled = !(isStepOneComplete() && isStepTwoComplete());
         if (!selectedSessions.length) footerSelection.textContent = "Select a time to continue";
         else if (flowMode === "weekly" && selectedSessions.length < sessionsPerWeek) footerSelection.textContent = `${selectedSessions.length} of ${sessionsPerWeek} weekly sessions selected`;
@@ -2903,8 +3076,8 @@
       }
 
       if (currentBookingStep === 2) {
-        nextButton.textContent = `Confirm and pay ${formatVnd(totalBookingValue())}`;
-        nextButton.disabled = false;
+        nextButton.textContent = bookingAuthenticated ? "Send booking request" : "Sign in to send request";
+        nextButton.disabled = bookingSubmitting || selectedSessions.length !== 1;
         footerSelection.textContent = `${lessonQuantity()} ${lessonQuantity() === 1 ? "lesson" : "lessons"}`;
       }
     }
@@ -2926,14 +3099,14 @@
       document.querySelector(".booking-drawer main").scrollTop = 0;
     }
 
-    function showBookingSuccess() {
+    function showBookingSuccess(booking) {
       document.querySelectorAll(".booking-panel").forEach(panel => panel.classList.remove("active"));
       document.getElementById("bookingSuccess").classList.add("active");
       bookingFooter.classList.add("hidden");
       bookingSummary.style.display = "none";
       document.getElementById("successDateTime").textContent = `${lessonQuantity()} ${lessonQuantity() === 1 ? "lesson" : "lessons"} · ${planLabel()}`;
       document.getElementById("successLesson").textContent = planLabel();
-      document.getElementById("successPrice").textContent = formatVnd(totalBookingValue());
+      document.getElementById("successPrice").textContent = booking?.pricing?.amountVnd ? formatVnd(booking.pricing.amountVnd) : formatVnd(totalBookingValue());
       document.querySelectorAll(".booking-progress").forEach(button => button.classList.add("complete"));
       lucide.createIcons();
     }
@@ -2951,6 +3124,7 @@
 
     function toggleSession(time) {
       const candidate = currentSessionFor(time);
+      if (!candidate) return;
       const key = sessionKey(candidate);
       const existingIndex = selectedSessions.findIndex(session => sessionKey(session) === key);
 
@@ -3102,7 +3276,11 @@
       flowDuration = duration;
       flowPrice = price;
       flowFormat = selectedFormat;
-      flowMode = kind === "Consultation" ? "single" : (selectedMode === "weekly" ? "weekly" : "single");
+      flowMode = "single";
+      document.getElementById("bookingModeSection")?.classList.remove("sm:grid-cols-1");
+      flowFormat = "Online";
+      const formatSelect = document.getElementById("startingFormat");
+      if (formatSelect) { formatSelect.value = "Online"; formatSelect.disabled = true; }
       activeDate = { date: "Monday, July 27", short: "Mon, Jul 27", weekday: "Monday" };
       selectedSessions = [];
       sessionsPerWeek = 2;
@@ -3120,6 +3298,7 @@
       modal.classList.add("flex");
       document.body.style.overflow = "hidden";
       goToBookingStep(1);
+      requestAuthoritativeSessions();
     }
 
     function closeBookingModal() {
@@ -3167,13 +3346,20 @@
       renderAll();
     });
 
-    document.querySelectorAll(".booking-date").forEach(button => button.addEventListener("click", () => {
+    document.getElementById("bookingDates").addEventListener("click", event => {
+      const button = event.target.closest(".booking-date");
+      if (!button) return;
       document.querySelectorAll(".booking-date").forEach(item => item.classList.remove("active"));
       button.classList.add("active");
       activeDate = { date: button.dataset.date, short: button.dataset.short, weekday: button.dataset.weekday };
       document.getElementById("activeDateLabel").textContent = activeDate.date;
-      updateDateAndTimeUI();
-    }));
+      renderAuthoritativeAvailability();
+    });
+
+    document.getElementById("bookingTimeGrid").addEventListener("click", event => {
+      const button = event.target.closest(".booking-time");
+      if (button && !button.disabled) toggleSession(button.dataset.time);
+    });
 
     document.querySelectorAll(".booking-time[data-time]:not(:disabled)").forEach(button => button.addEventListener("click", () => toggleSession(button.dataset.time)));
 
@@ -3218,7 +3404,7 @@
 
     nextButton.addEventListener("click", () => {
       if (currentBookingStep === 1 && isStepOneComplete() && isStepTwoComplete()) goToBookingStep(2);
-      else if (currentBookingStep === 2) showBookingSuccess();
+      else if (currentBookingStep === 2) submitBookingRequest();
     });
 
     backButton.addEventListener("click", () => { if (currentBookingStep > 1) goToBookingStep(currentBookingStep - 1); });
@@ -3231,6 +3417,8 @@
 
     document.querySelectorAll(".edit-booking-step").forEach(button => button.addEventListener("click", () => goToBookingStep(Number(button.dataset.editStep))));
     document.querySelectorAll(".availability-cell button, button.availability-cell").forEach(button => button.addEventListener("click", () => openBookingFlow()));
+
+    if (resumeSessionId) requestAuthoritativeSessions();
 
   </script>
 </body>

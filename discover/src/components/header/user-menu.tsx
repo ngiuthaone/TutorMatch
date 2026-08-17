@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   IconUser,
+  IconLayoutDashboard,
   IconBook2,
   IconCalendarEvent,
   IconHeart,
@@ -11,19 +12,24 @@ import {
   IconHelpCircle,
   IconLogout,
   IconMessage,
-  IconBell,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { isLiveMode } from "@/lib/auth/config";
+import { signOutLive } from "@/lib/auth/session";
 import type { HeaderUser } from "./types";
 import styles from "./tutoria-navigation.module.css";
+import { NotificationCenter } from "../notifications/notification-center";
 
 interface UserMenuProps {
   user: HeaderUser;
 }
 
 export function UserMenu({ user }: UserMenuProps) {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const live = isLiveMode();
 
   const close = useCallback(() => setMenuOpen(false), []);
 
@@ -58,6 +64,7 @@ export function UserMenu({ user }: UserMenuProps) {
 
   const items = [
     { icon: IconUser, label: "View profile", href: profileHref },
+    { icon: IconLayoutDashboard, label: "Center", href: "/center" },
     { icon: IconBook2, label: "My learning", href: "/learning" },
     { icon: IconCalendarEvent, label: "My bookings", href: "/bookings" },
     { icon: IconHeart, label: "Saved", href: "/saved" },
@@ -66,7 +73,7 @@ export function UserMenu({ user }: UserMenuProps) {
       : [{ icon: IconSparkles, label: "Start creating", href: "/auth/sign-up?intent=creator" as const }]),
     { icon: IconSettings, label: "Settings", href: "/settings" },
     { icon: IconHelpCircle, label: "Help", href: "/help" },
-    { icon: IconLogout, label: "Sign out", href: "/auth/sign-in" },
+    { icon: IconLogout, label: "Sign out", href: "/auth/sign-in", onSignOut: true },
   ];
 
   return (
@@ -86,15 +93,7 @@ export function UserMenu({ user }: UserMenuProps) {
       </Link>
 
       {/* Notifications */}
-      <button
-        className={styles.iconButton}
-        aria-label="Notifications"
-      >
-        <IconBell size={19} stroke={1.7} />
-        {typeof user.unreadNotifications === "number" && user.unreadNotifications > 0 && (
-          <span className={styles.notificationDot} />
-        )}
-      </button>
+      <NotificationCenter user={user} />
 
       {/* Avatar */}
       <div ref={ref} className={styles.menuAnchor}>
@@ -131,7 +130,16 @@ export function UserMenu({ user }: UserMenuProps) {
                   key={item.label}
                   href={item.href}
                   role="menuitem"
-                  onClick={close}
+                  onClick={() => {
+                    close();
+                    if (item.onSignOut) {
+                      if (live) void signOutLive();
+                      try {
+                        window.localStorage.removeItem("tutoria_signup");
+                      } catch {}
+                      router.replace("/auth/sign-in");
+                    }
+                  }}
                   className={styles.userMenuItem}
                 >
                   <Icon size={16} stroke={1.7} className={styles.menuIcon} />
