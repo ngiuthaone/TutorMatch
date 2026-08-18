@@ -40,6 +40,14 @@ async function main() {
   process.once("SIGTERM", () => void shutdown("SIGTERM"));
   await app.listen({ host: config.HOST, port: config.PORT });
   app.log.info({ host: config.HOST, port: config.PORT }, "Tutoria API started");
+  app.log.info({
+    VNPAY_TMN_CODE: Boolean(config.VNPAY_TMN_CODE),
+    VNPAY_HASH_SECRET: Boolean(config.VNPAY_HASH_SECRET),
+    VNPAY_RETURN_URL: Boolean(config.VNPAY_RETURN_URL),
+    VNPAY_IPN_URL: Boolean(config.VNPAY_IPN_URL),
+    VNPAY_ENVIRONMENT: config.VNPAY_ENVIRONMENT,
+    paymentRoutesRegistered: Boolean(config.VNPAY_TMN_CODE && config.VNPAY_HASH_SECRET && config.VNPAY_RETURN_URL && config.VNPAY_IPN_URL),
+  }, "VNPay env diagnostics");
 
   if (process.env.START_WORKER === "true" && config.VNPAY_TMN_CODE && config.VNPAY_HASH_SECRET && config.VNPAY_RETURN_URL && config.VNPAY_IPN_URL) {
     try {
