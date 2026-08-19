@@ -16,6 +16,7 @@ function setup(overrides: Partial<BookingService> = {}, authenticated = false) {
     createBooking: async (...args) => { calls.push({ name: "createBooking", args }); return ok({ id: "booking-1" }); },
     listLearnerBookings: async (...args) => { calls.push({ name: "listLearnerBookings", args }); return ok([]); },
     listTutorBookings: async (...args) => { calls.push({ name: "listTutorBookings", args }); return ok([]); },
+    listHostBookings: async (...args) => { calls.push({ name: "listHostBookings", args }); return ok([]); },
     getBooking: async (...args) => { calls.push({ name: "getBooking", args }); return ok({ id: "booking-1", paymentReady: true }); },
     tutorAccept: async (...args) => { calls.push({ name: "tutorAccept", args }); return ok({ bookingId: "booking-1" }); },
     tutorReject: async (...args) => { calls.push({ name: "tutorReject", args }); return ok({ id: "booking-1" }); },

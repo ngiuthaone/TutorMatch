@@ -5,10 +5,11 @@ const auth = { persistSession: false, autoRefreshToken: false, detectSessionInUr
 export type BookingServiceResult = { data: unknown; error: { code?: string; message?: string } | null };
 
 export type BookingService = {
-  listSessions(tutorProfileId?: string): Promise<BookingServiceResult>;
+  listSessions(tutorProfileId?: string, offeringId?: string, kind?: string): Promise<BookingServiceResult>;
   getSession(sessionId: string): Promise<BookingServiceResult>;
   createBooking(token: string, sessionId: string, participantCount: number): Promise<BookingServiceResult>;
   listLearnerBookings(token: string): Promise<BookingServiceResult>;
+  listHostBookings(token: string): Promise<BookingServiceResult>;
   listTutorBookings(token: string): Promise<BookingServiceResult>;
   getBooking(token: string, bookingId: string): Promise<BookingServiceResult>;
   tutorAccept(token: string, bookingId: string): Promise<BookingServiceResult>;
@@ -38,10 +39,15 @@ export function createSupabaseBookingService(url: string, publishableKey: string
     }
   }
   return {
-    listSessions: (tutorProfileId) => rpc("list_bookable_sessions", { p_tutor_profile_id: tutorProfileId ?? null }),
+    listSessions: (tutorProfileId, offeringId, kind) => rpc("list_bookable_sessions", {
+      p_tutor_profile_id: tutorProfileId ?? null,
+      p_offering_id: offeringId ?? null,
+      p_kind: kind ?? null
+    }),
     getSession: (sessionId) => rpc("get_bookable_session", { p_session_id: sessionId }),
     createBooking: (token, sessionId, participantCount) => rpc("create_booking", { session_id: sessionId, participant_count: participantCount }, token),
     listLearnerBookings: (token) => rpc("get_my_bookings", {}, token),
+    listHostBookings: (token) => rpc("get_my_host_bookings", {}, token),
     listTutorBookings: (token) => rpc("get_my_tutor_bookings", {}, token),
     getBooking: (token, bookingId) => rpc("get_booking", { bid: bookingId }, token),
     tutorAccept: (token, bookingId) => rpc("approve_booking_for_payment", { p_booking_id: bookingId }, token),
