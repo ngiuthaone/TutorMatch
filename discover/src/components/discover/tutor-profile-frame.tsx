@@ -103,7 +103,7 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
         });
         let bookableSessions: BookableSession[] = [];
         try {
-          bookableSessions = sortFutureBookableSessions(await listBookableSessions(detail.id));
+          bookableSessions = sortFutureBookableSessions(await listBookableSessions({ tutorProfileId: detail.id }));
         } catch {
           // The profile remains viewable, but availability must not be inferred from tutor rules when Sessions cannot be read.
         }
@@ -192,7 +192,7 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
         frameRef.current?.contentWindow?.postMessage({ ...payload, requestId: data.requestId }, window.location.origin);
       };
       if (data.type === "tutoria-booking-load-sessions" && typeof data.tutorProfileId === "string") {
-        void listBookableSessions(data.tutorProfileId)
+        void listBookableSessions({ tutorProfileId: data.tutorProfileId })
           .then((sessions) => respond({ type: "tutoria-booking-sessions", sessions }))
           .catch((error: unknown) => respond({ type: "tutoria-booking-error", code: error instanceof BookingApiError ? error.code : "BOOKING_SERVICE_UNAVAILABLE" }));
       }

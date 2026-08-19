@@ -44,7 +44,7 @@ describe("booking-api", () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(jsonResponse({ ok: true, sessions: [session] }));
 
-    const result = await listBookableSessions(TUTOR_PROFILE_ID);
+    const result = await listBookableSessions({ tutorProfileId: TUTOR_PROFILE_ID });
 
     expect(result).toEqual([session]);
     expect(fetchMock).toHaveBeenCalledWith(
