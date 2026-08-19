@@ -15,7 +15,7 @@ export class BookingApiError extends Error {
 
 export interface BookableSession {
   id: string;
-  tutorProfileId: string;
+  tutorProfileId?: string;
   status: "scheduled";
   startsAt: string;
   endsAt: string;
@@ -24,15 +24,28 @@ export interface BookableSession {
   hardReservedCapacity: number;
   spotsLeft: number | null;
   version: number;
-  hourlyRateVnd: number | null;
-  currency: "VND";
+  hourlyRateVnd?: number | null;
+  unitPriceVnd?: number | null;
+  currency?: string;
+  pricingModel?: string;
+  offering?: {
+    id: string;
+    kind: string;
+    title: string;
+  };
+  host?: {
+    id: string;
+    displayName: string;
+  };
 }
 
 export interface BookingPricing {
   amountVnd: number;
   currency: "VND";
-  hourlyRateVnd: number;
-  durationMinutes: number;
+  hourlyRateVnd?: number;
+  durationMinutes?: number;
+  unitPriceVnd?: number;
+  participantCountPricing?: number;
   model: string;
   snapshottedAt: string;
 }
@@ -47,7 +60,16 @@ export interface BookingRecord {
   updatedAt: string;
   pricing: BookingPricing | null;
   session: BookableSession;
-  tutor: {
+  tutor?: {
+    id: string;
+    displayName: string;
+  };
+  offering?: {
+    id: string;
+    kind: string;
+    title: string;
+  };
+  host?: {
     id: string;
     displayName: string;
   };
@@ -115,7 +137,7 @@ function sessionFrom(value: unknown): BookableSession {
 
 function bookingFrom(value: unknown): BookingRecord {
   const booking = value as Partial<BookingRecord> | null;
-  if (!booking || typeof booking.id !== "string" || typeof booking.sessionId !== "string" || typeof booking.status !== "string" || !booking.session || !booking.tutor || typeof booking.tutor.id !== "string" || typeof booking.tutor.displayName !== "string") {
+  if (!booking || typeof booking.id !== "string" || typeof booking.sessionId !== "string" || typeof booking.status !== "string" || !booking.session) {
     throw new BookingApiError("INVALID_RESPONSE", 500);
   }
   return booking as BookingRecord;
@@ -141,8 +163,13 @@ async function request(path: string, options: { method?: string; body?: unknown;
   return payload;
 }
 
-export async function listBookableSessions(tutorProfileId: string): Promise<BookableSession[]> {
-  const payload = await request(`/api/v1/sessions?tutorProfileId=${encodeURIComponent(tutorProfileId)}`) as { ok?: unknown; sessions?: unknown };
+export async function listBookableSessions(params: { tutorProfileId?: string; offeringId?: string; kind?: string } = {}): Promise<BookableSession[]> {
+  const queryParts: string[] = [];
+  if (params.tutorProfileId) queryParts.push(`tutorProfileId=${encodeURIComponent(params.tutorProfileId)}`);
+  if (params.offeringId) queryParts.push(`offeringId=${encodeURIComponent(params.offeringId)}`);
+  if (params.kind) queryParts.push(`kind=${encodeURIComponent(params.kind)}`);
+  const query = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+  const payload = await request(`/api/v1/sessions${query}`) as { ok?: unknown; sessions?: unknown };
   if (payload.ok !== true || !Array.isArray(payload.sessions)) throw new BookingApiError("INVALID_RESPONSE", 500);
   return payload.sessions.map(sessionFrom);
 }
@@ -193,4 +220,10 @@ export async function cancelLearnerBooking(bookingId: string, expectedVersion: n
   }) as { ok?: unknown; booking?: unknown };
   if (payload.ok !== true) throw new BookingApiError("INVALID_RESPONSE", 500);
   return bookingFrom(payload.booking);
+}
+
+export async function listHostBookings(): Promise<BookingRecord[]> {
+  const payload = await request("/api/v1/me/host-bookings", { authenticated: true }) as { ok?: unknown; bookings?: unknown };
+  if (payload.ok !== true || !Array.isArray(payload.bookings)) throw new BookingApiError("INVALID_RESPONSE", 500);
+  return payload.bookings.map(bookingFrom);
 }

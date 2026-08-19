@@ -52,7 +52,8 @@ export function bookingPaymentLabel(booking: BookingRecord): string {
 export function bookingTitle(booking: BookingRecord): string {
   const accepted = booking.paymentReady || booking.status === "confirmed";
   const confirmed = booking.status === "confirmed" && booking.payment?.status === "succeeded";
-  return confirmed ? "Payment complete" : accepted ? `${booking.tutor.displayName} accepted your request` : `Lesson with ${booking.tutor.displayName}`;
+  const hostName = booking.host?.displayName ?? booking.tutor?.displayName ?? "Tutor";
+  return confirmed ? "Payment complete" : accepted ? `${hostName} accepted your request` : `Lesson with ${hostName}`;
 }
 
 export function paymentReturnState(booking: BookingRecord): PaymentReturnState {
