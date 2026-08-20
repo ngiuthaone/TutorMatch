@@ -1685,6 +1685,12 @@ a.primaryButton {
   }
 }
 
+/* ── Workshop listing grid spacing ── */
+
+.workshopListingGrid {
+  margin-top: clamp(2rem, 4vw, 3.5rem);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .page *,
   .page *::before,
