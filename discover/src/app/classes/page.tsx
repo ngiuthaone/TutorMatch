@@ -1,0 +1,10 @@
+import { ClassesListing } from "./classes-listing";
+
+export const metadata = {
+  title: "Classes | Tutoria",
+  description: "Discover hands-on classes on Tutoria.",
+};
+
+export default function ClassesPage() {
+  return <ClassesListing />;
+}
