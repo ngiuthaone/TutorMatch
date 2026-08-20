@@ -1,207 +1,107 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { IconClock, IconMapPin, IconUsers, IconWorld } from "@tabler/icons-react";
+import type { EventOffering, EventSession, EventWithHost } from "@/lib/event-booking-api";
 import {
-  IconArrowUpRight,
-  IconClock,
-  IconUsers,
-} from "@tabler/icons-react";
-import {
-  listBookableSessions,
-  type BookableSession,
-} from "@/lib/booking-api";
-import { sortFutureBookableSessions } from "@/lib/bookable-session-projection";
+  isFreeEvent,
+  formatEventPriceVnd,
+  formatDuration,
+  formatDateShort,
+  formatTimeShort,
+} from "@/lib/event-booking-api";
 import styles from "./event-live-grid.module.css";
 
-/* ── Helpers ── */
-
-function formatVnd(amount: number): string {
-  return `${new Intl.NumberFormat("vi-VN").format(amount)} \u0111`;
-}
-
-function durationLabel(startsAt: string, endsAt: string): string {
-  const ms = Date.parse(endsAt) - Date.parse(startsAt);
-  if (!Number.isFinite(ms) || ms <= 0) return "";
-  const totalMinutes = Math.round(ms / 60_000);
-  if (totalMinutes < 60) return `${totalMinutes}m`;
-  const hours = Math.floor(totalMinutes / 60);
-  const mins = totalMinutes % 60;
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-}
-
-function formatSessionDate(startsAt: string): string {
-  return new Date(startsAt).toLocaleDateString("en-US", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
-}
-
-function formatSessionTime(startsAt: string): string {
-  return new Date(startsAt).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
-
-/* ── Single card ── */
-
-function EventCard({ session }: { session: BookableSession }) {
-  const title = session.offering?.title ?? "Event";
-  const hostName = session.host?.displayName ?? "Host";
-  const unitPrice = session.unitPriceVnd ?? null;
-  const isFree = unitPrice === 0;
-  const isUnknownPrice = unitPrice === null;
-  const duration = durationLabel(session.startsAt, session.endsAt);
-  const spotsLeft = session.spotsLeft;
-  const nextDate = formatSessionDate(session.startsAt);
-  const nextTime = formatSessionTime(session.startsAt);
-
-  const slug = session.offering?.id ?? session.id;
-  const href = `/events-live/${encodeURIComponent(slug)}`;
-
-  return (
-    <Link href={href} className={styles.card}>
-      <span className={styles.cardBody}>
-        <span className={styles.cardKicker}>{hostName}</span>
-        <h3 className={styles.cardTitle}>{title}</h3>
-
-        <span className={styles.cardMeta}>
-          {duration && (
-            <span>
-              <IconClock size={14} aria-hidden="true" /> {duration}
-            </span>
-          )}
-          {spotsLeft != null && (
-            <span>
-              <IconUsers size={14} aria-hidden="true" />{" "}
-              {spotsLeft > 0 ? `${spotsLeft} left` : "Full"}
-            </span>
-          )}
-        </span>
-
-        <span className={styles.cardSchedule}>
-          {nextDate} · {nextTime}
-        </span>
-      </span>
-
-      <span className={styles.cardFooter}>
-        <span className={styles.cardPrice}>
-          {isFree ? "Free" : isUnknownPrice ? "\u2014" : formatVnd(unitPrice)}
-          {!isFree && !isUnknownPrice && (
-            <span className={styles.cardUnit}>/ attendee</span>
-          )}
-        </span>
-        <IconArrowUpRight size={17} className={styles.cardArrow} aria-hidden="true" />
-      </span>
-    </Link>
-  );
-}
-
-/* ── Loading skeleton ── */
-
-function CardSkeleton() {
-  return (
-    <div className={`${styles.card} ${styles.cardSkeleton}`} aria-hidden="true">
-      <span className={styles.cardBody}>
-        <span className={styles.skeletonLine} style={{ width: "40%", height: 10 }} />
-        <span className={styles.skeletonLine} style={{ width: "80%", height: 18, marginTop: 10 }} />
-        <span className={styles.skeletonLine} style={{ width: "55%", height: 12, marginTop: 14 }} />
-        <span className={styles.skeletonLine} style={{ width: "45%", height: 12, marginTop: 8 }} />
-      </span>
-      <span className={styles.cardFooter}>
-        <span className={styles.skeletonLine} style={{ width: "35%", height: 14 }} />
-      </span>
-    </div>
-  );
-}
-
-/* ── Main grid ── */
-
-interface EventGridProps {
-  /** Maximum number of cards to display. Shows all when omitted. */
+interface EventLiveGridProps {
   limit?: number;
-  /** Optional label shown above the grid (e.g. "Events"). */
-  heading?: string;
-  /** Link target for the "View all" link. Omit to hide the link. */
-  viewAllHref?: string;
-  /** Additional CSS class on the wrapper. */
-  className?: string;
 }
 
-export function EventGrid({
-  limit,
-  heading,
-  viewAllHref,
-  className,
-}: EventGridProps) {
-  const [sessions, setSessions] = useState<BookableSession[]>([]);
+export function EventLiveGrid({ limit = 6 }: EventLiveGridProps) {
+  const [events, setEvents] = useState<EventWithHost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let active = true;
-    (async () => {
+    let cancelled = false;
+    async function load() {
       try {
-        const raw = await listBookableSessions({ kind: "event" });
-        if (!active) return;
-        setSessions(sortFutureBookableSessions(raw));
+        const { listBookableEvents } = await import("@/lib/event-booking-api");
+        const data = await listBookableEvents();
+        if (!cancelled) {
+          setEvents(data.slice(0, limit));
+        }
       } catch {
-        if (active) setError("Unable to load events.");
+        // Silent fail — grid shows empty state
       } finally {
-        if (active) setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [limit]);
 
-  const visibleSessions = useMemo(
-    () => (limit ? sessions.slice(0, limit) : sessions),
-    [sessions, limit],
-  );
+  if (loading) {
+    return (
+      <div className={styles.grid}>
+        {Array.from({ length: Math.min(limit, 3) }).map((_, i) => (
+          <div className={`${styles.card} ${styles.skeleton}`} key={`skeleton-${i}`}>
+            <div className={styles.imageSkeleton} />
+            <div className={styles.bodySkeleton}>
+              <div className={styles.lineShort} />
+              <div className={styles.lineLong} />
+              <div className={styles.lineMedium} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (events.length === 0) return null;
 
   return (
-    <div className={className}>
-      {heading && (
-        <div className={styles.gridHeader}>
-          <h2 className={styles.gridTitle}>{heading}</h2>
-          {viewAllHref && sessions.length > 0 && (
-            <Link href={viewAllHref} className={styles.viewAllLink}>
-              View all <IconArrowUpRight size={16} aria-hidden="true" />
-            </Link>
-          )}
-        </div>
-      )}
+    <div className={styles.grid}>
+      {events.map(({ offering, sessions, hostDisplayName }) => {
+        const free = isFreeEvent(offering);
+        const priceLabel = formatEventPriceVnd(offering);
+        const totalSpots = sessions.reduce((s, session) => s + session.spotsLeft, 0);
+        const nextSession = [...sessions]
+          .filter((s) => s.status === "scheduled" && new Date(s.startsAt) > new Date())
+          .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())[0];
 
-      {loading && (
-        <div className={styles.grid}>
-          {[0, 1, 2].map((i) => (
-            <CardSkeleton key={i} />
-          ))}
-        </div>
-      )}
-
-      {!loading && error && (
-        <p className={styles.emptyState}>{error}</p>
-      )}
-
-      {!loading && !error && visibleSessions.length === 0 && (
-        <p className={styles.emptyState}>
-          No events are available right now. Check back soon.
-        </p>
-      )}
-
-      {!loading && !error && visibleSessions.length > 0 && (
-        <div className={styles.grid}>
-          {visibleSessions.map((session) => (
-            <EventCard key={session.id} session={session} />
-          ))}
-        </div>
-      )}
+        return (
+          <Link className={styles.card} href={`/events-live/${offering.id}`} key={offering.id}>
+            <div className={styles.imageWrap}>
+              <Image
+                src={`https://picsum.photos/seed/event-${offering.id}/680/430`}
+                alt={offering.title}
+                fill
+                sizes="(max-width: 600px) 100vw, 33vw"
+                unoptimized
+              />
+              <span className={styles.formatBadge}>
+                <IconWorld size={12} /> Online
+              </span>
+              {free && <span className={styles.freeBadge}>Free</span>}
+            </div>
+            <div className={styles.body}>
+              <p className={styles.host}>{hostDisplayName}</p>
+              <h3 className={styles.title}>{offering.title}</h3>
+              {nextSession && (
+                <div className={styles.meta}>
+                  <span><IconClock size={14} /> {formatDateShort(nextSession.startsAt)} · {formatTimeShort(nextSession.startsAt)}</span>
+                  <span><IconUsers size={14} /> {totalSpots} spots left</span>
+                </div>
+              )}
+              <div className={styles.priceRow}>
+                <span className={`${styles.price} ${free ? styles.freePrice : ""}`}>{priceLabel}</span>
+                {!free && <span className={styles.perPerson}>/ participant</span>}
+              </div>
+            </div>
+          </Link>
+        );
+      })}
     </div>
   );
 }

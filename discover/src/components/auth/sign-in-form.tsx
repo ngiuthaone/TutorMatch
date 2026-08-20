@@ -150,7 +150,7 @@ export function SignInForm({ nextPath = "/discover", resetComplete: resetComplet
         {mode === "reset" && <p>Enter your email and we&apos;ll send you a secure recovery link.</p>}
       </header>
 
-      <form action="/discover" method="get" onSubmit={mode === "reset" ? handleReset : handleSubmit} className="auth-form" noValidate>
+      <form onSubmit={mode === "reset" ? handleReset : handleSubmit} className="auth-form" noValidate>
         <Input
           label="Email address"
           type="email"
@@ -225,7 +225,7 @@ export function SignInForm({ nextPath = "/discover", resetComplete: resetComplet
           </div>
           {live && (
             <p className="auth-social-note">
-              <IconMail size={14} /> Google and Apple sign-in appear when those providers are enabled in your Supabase dashboard.
+              <IconMail size={14} /> Social sign-in is coming soon.
             </p>
           )}
         </>

@@ -6,6 +6,16 @@ import type { BookingService, BookingServiceResult } from "../services/booking-s
 const id = z.string().uuid();
 const version = z.number().int().positive();
 const createBookingSchema = z.object({ sessionId: id, participantCount: z.number().int().positive().max(100).default(1) });
+const createOfferingSchema = z.object({
+  offeringType: z.enum(["tutor", "workshop", "class", "event"]),
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(2000).optional(),
+  pricingModel: z.enum(["hourly_v1", "flat_per_participant_v1"]),
+  pricePerParticipantVnd: z.number().int().positive().optional(),
+  hourlyRateVnd: z.number().int().min(50000).max(10000000).optional(),
+  bookingMode: z.enum(["approval", "instant"]).default("approval")
+});
+const updateOfferingStatusSchema = z.object({ expectedVersion: version, status: z.enum(["draft", "published", "unpublished"]) });
 const versionBody = z.object({ expectedVersion: version });
 const cancelBody = versionBody.extend({ reason: z.string().trim().max(500).optional() });
 const rescheduleBody = versionBody.extend({ targetSessionId: id, reason: z.string().trim().max(500).optional() });
@@ -191,5 +201,70 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = as
     const result = await options.service.rescheduleSession(request.auth.accessToken, sessionId, body.data.startsAt, body.data.endsAt, body.data.expectedVersion);
     if (result.error) fail(result);
     return { ok: true, session: result.data };
+  });
+
+  // ============================================================
+  // Offering routes (Workshop booking V1)
+  // ============================================================
+
+  app.get("/api/v1/offerings/:offeringId", async (request) => {
+    const offeringId = routeId((request.params as { offeringId?: unknown }).offeringId, "offeringId");
+    const result = await options.service.getOffering(offeringId);
+    if (result.error) fail(result);
+    if (result.data === null) throw new ApiError(404, "OFFERING_NOT_FOUND", "Offering was not found.");
+    return { ok: true, offering: result.data };
+  });
+
+  app.get("/api/v1/offerings/:offeringId/sessions", async (request) => {
+    const offeringId = routeId((request.params as { offeringId?: unknown }).offeringId, "offeringId");
+    const result = await options.service.listSessionsByOffering(offeringId);
+    if (result.error) fail(result);
+    return { ok: true, sessions: result.data };
+  });
+
+  app.post("/api/v1/offerings", { preHandler: app.authenticate }, async (request) => {
+    const body = createOfferingSchema.safeParse(request.body);
+    if (!body.success) throw new ApiError(400, "OFFERING_INVALID", "Offering details are invalid.");
+    const d = body.data;
+    const params: { offeringType: string; title: string; pricingModel: string; pricePerParticipantVnd?: number; hourlyRateVnd?: number; bookingMode?: string; description?: string } = {
+      offeringType: d.offeringType,
+      title: d.title,
+      pricingModel: d.pricingModel
+    };
+    if (d.pricePerParticipantVnd !== undefined) params.pricePerParticipantVnd = d.pricePerParticipantVnd;
+    if (d.hourlyRateVnd !== undefined) params.hourlyRateVnd = d.hourlyRateVnd;
+    if (d.bookingMode !== undefined) params.bookingMode = d.bookingMode;
+    if (d.description !== undefined) params.description = d.description;
+    const result = await options.service.createOffering(request.auth.accessToken, params);
+    if (result.error) fail(result);
+    return { ok: true, offering: result.data };
+  });
+
+  app.patch("/api/v1/offerings/:offeringId/status", { preHandler: app.authenticate }, async (request) => {
+    const offeringId = routeId((request.params as { offeringId?: unknown }).offeringId, "offeringId");
+    const body = updateOfferingStatusSchema.safeParse(request.body);
+    if (!body.success) throw new ApiError(400, "OFFERING_INVALID", "Status update details are invalid.");
+    const result = await options.service.updateOfferingStatus(request.auth.accessToken, offeringId, body.data.expectedVersion, body.data.status);
+    if (result.error) fail(result);
+    return { ok: true, offering: result.data };
+  });
+
+  // ============================================================
+  // Workshop Booking Management routes
+  // ============================================================
+
+  app.get("/api/v1/me/workshop-bookings", { preHandler: app.authenticate }, async (request) => {
+    const result = await options.service.listWorkshopBookings(request.auth.accessToken);
+    if (result.error) fail(result);
+    return { ok: true, bookings: result.data };
+  });
+
+  app.post("/api/v1/workshop/bookings/:bookingId/cancel", { preHandler: app.authenticate }, async (request) => {
+    const bookingId = routeId((request.params as { bookingId?: unknown }).bookingId, "bookingId");
+    const body = cancelBody.safeParse(request.body);
+    if (!body.success) throw new ApiError(400, "BOOKING_INVALID", "Cancellation details are invalid.");
+    const result = await options.service.cancelWorkshopBooking(request.auth.accessToken, bookingId, body.data.expectedVersion, body.data.reason);
+    if (result.error) fail(result);
+    return { ok: true, booking: await readAfterMutation(options.service, request.auth.accessToken, bookingId, result.data) };
   });
 };

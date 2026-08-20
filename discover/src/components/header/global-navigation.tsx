@@ -152,7 +152,7 @@ export function GlobalNavigation() {
     <div className={styles.globalNavigation}>
       <nav aria-label="Primary navigation" className={styles.desktopNav}>
         <Link
-          href="/landing"
+          href="/discover"
           aria-current={homeIsActive ? "page" : undefined}
           className={`${styles.navLink} ${homeIsActive ? styles.navLinkActive : ""}`}
         >

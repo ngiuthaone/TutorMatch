@@ -23,6 +23,14 @@ export type BookingService = {
   cancelReschedule(token: string, requestId: string): Promise<BookingServiceResult>;
   cancelSession(token: string, sessionId: string, expectedVersion: number, reason?: string): Promise<BookingServiceResult>;
   rescheduleSession(token: string, sessionId: string, startsAt: string, endsAt: string, expectedVersion: number): Promise<BookingServiceResult>;
+  // Offering RPCs
+  getOffering(offeringId: string): Promise<BookingServiceResult>;
+  listSessionsByOffering(offeringId: string): Promise<BookingServiceResult>;
+  createOffering(token: string, params: { offeringType: string; title: string; pricingModel: string; pricePerParticipantVnd?: number; hourlyRateVnd?: number; bookingMode?: string; description?: string }): Promise<BookingServiceResult>;
+  updateOfferingStatus(token: string, offeringId: string, expectedVersion: number, status: string): Promise<BookingServiceResult>;
+  // Workshop Booking RPCs
+  listWorkshopBookings(token: string): Promise<BookingServiceResult>;
+  cancelWorkshopBooking(token: string, bookingId: string, expectedVersion: number, reason?: string): Promise<BookingServiceResult>;
 };
 
 export function createSupabaseBookingService(url: string, publishableKey: string): BookingService {
@@ -60,6 +68,30 @@ export function createSupabaseBookingService(url: string, publishableKey: string
     rejectReschedule: (token, requestId) => rpc("reject_reschedule_request", { request_id: requestId }, token),
     cancelReschedule: (token, requestId) => rpc("cancel_reschedule_request", { request_id: requestId }, token),
     cancelSession: (token, sessionId, expectedVersion, reason) => rpc("cancel_session", { sid: sessionId, expected_version: expectedVersion, cause: "host", reason: reason ?? null }, token),
-    rescheduleSession: (token, sessionId, startsAt, endsAt, expectedVersion) => rpc("reschedule_session", { sid: sessionId, starts_at: startsAt, ends_at: endsAt, expected_version: expectedVersion }, token)
+    rescheduleSession: (token, sessionId, startsAt, endsAt, expectedVersion) => rpc("reschedule_session", { sid: sessionId, starts_at: startsAt, ends_at: endsAt, expected_version: expectedVersion }, token),
+    // Offering RPCs
+    getOffering: (offeringId) => rpc("get_offering", { p_offering_id: offeringId }),
+    listSessionsByOffering: (offeringId) => rpc("list_sessions_by_offering_id", { p_offering_id: offeringId }),
+    createOffering: (token, params) => rpc("create_offering", {
+      p_offering_type: params.offeringType,
+      p_title: params.title,
+      p_pricing_model: params.pricingModel,
+      p_price_per_participant_vnd: params.pricePerParticipantVnd ?? null,
+      p_hourly_rate_vnd: params.hourlyRateVnd ?? null,
+      p_booking_mode: params.bookingMode ?? "approval",
+      p_description: params.description ?? null
+    }, token),
+    updateOfferingStatus: (token, offeringId, expectedVersion, status) => rpc("update_offering_status", {
+      p_offering_id: offeringId,
+      p_expected_version: expectedVersion,
+      p_status: status
+    }, token),
+    // Workshop Booking RPCs
+    listWorkshopBookings: (token) => rpc("get_my_workshop_bookings", {}, token),
+    cancelWorkshopBooking: (token, bookingId, expectedVersion, reason) => rpc("cancel_workshop_booking", {
+      p_booking_id: bookingId,
+      p_expected_version: expectedVersion,
+      p_reason: reason ?? null
+    }, token)
   };
 }

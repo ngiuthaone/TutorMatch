@@ -129,7 +129,7 @@ export function EventsPage() {
                       <span className={styles.metaItem}><IconMapPin size={14} />{event.location}</span>
                     </div>
                     <div className={styles.priceRow}>
-                      <span className={styles.metaItem}><IconUsers size={14} />{event.attending}/{event.capacity}{remaining > 0 && remaining <= 5 && <span className={styles.capacity}>{remaining} left</span>}</span>
+                      <span className={styles.metaItem}><IconUsers size={14} />{event.attending} of {event.capacity} seats{remaining > 0 && remaining <= 5 && <span className={styles.capacity}> · {remaining} left</span>}</span>
                       <span className={`${styles.price} ${event.price === "Free" ? styles.free : ""}`}>{event.price}</span>
                     </div>
                   </div>

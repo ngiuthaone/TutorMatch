@@ -1,8 +1,9 @@
+import type { Metadata } from "next";
 import { EventsLiveListing } from "./events-live-listing";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Events | Tutoria",
-  description: "Discover live events on Tutoria.",
+  description: "Join live sessions, workshops, and gatherings from the Tutoria community.",
 };
 
 export default function EventsLivePage() {

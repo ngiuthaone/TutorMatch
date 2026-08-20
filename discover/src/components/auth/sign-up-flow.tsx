@@ -132,7 +132,7 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
             account, then sign in to explore Tutoria.
           </p>
           <div className="mt-8 flex flex-col gap-3 w-full max-w-xs">
-            <Link href={`/auth/sign-in?next=${encodeURIComponent("/discover")}`}>
+            <Link href={`/auth/sign-in?next=${encodeURIComponent(nextPath)}`}>
               <Button size="lg" className="w-full">Go to sign in</Button>
             </Link>
             <button
@@ -233,7 +233,7 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
           </div>
           {live && (
             <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted">
-              <IconMail size={13} /> Provider buttons appear once enabled in your Supabase dashboard.
+              <IconMail size={13} /> Social sign-in is coming soon.
             </p>
           )}
 

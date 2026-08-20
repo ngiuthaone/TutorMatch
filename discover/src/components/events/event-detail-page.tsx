@@ -125,7 +125,7 @@ export function EventDetailPage({ event, similarEvents }: EventDetailPageProps) 
             <aside className={styles.bookingPanel} aria-label="Booking summary">
               <div className={styles.bookingHead}>
                 <div><strong>{event.price}</strong><span>/ participant</span></div>
-                <em>{event.spotsLeft} spots</em>
+                <em>{event.spotsLeft} seats left</em>
               </div>
 
               <div className={styles.sessionSummary}>

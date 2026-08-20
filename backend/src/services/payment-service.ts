@@ -18,6 +18,7 @@ export type PaymentService = {
   sweepRefundExecutions(workerId: string): Promise<{ data?: any; error?: any }>;
   sweepRefundReconciliations(workerId: string): Promise<{ data?: any; error?: any }>;
   sweepPendingFinalizations(workerId: string): Promise<{ data?: any; error?: any }>;
+  sweepExpiredWorkshopBookings(workerId: string): Promise<{ data?: any; error?: any }>;
 };
 export type PaymentWorkerOptions = {
   batchSize?: number;
@@ -201,6 +202,11 @@ export function createSupabasePaymentService(url: string, publishableKey: string
         finalized += 1;
       }
       return { data: { claimed: (data ?? []).length, finalized }, error: null };
+    },
+    async sweepExpiredWorkshopBookings(workerId: string) {
+      if (workerOptions.signal?.aborted) return { data: { expired: 0 }, error: null };
+      if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
+      return await trusted.rpc("expire_stale_workshop_bookings", { p_worker_id: workerId });
     }
   };
 }
