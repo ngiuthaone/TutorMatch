@@ -58,7 +58,7 @@ describe("1:1 booking API boundary", () => {
     const created = await app.inject({ method: "POST", url: "/api/v1/bookings", headers: auth, payload: { sessionId: "11111111-1111-4111-8111-111111111111", participantCount: 2 } });
     expect(created.statusCode).toBe(200);
     expect(created.json().booking.paymentReady).toBe(true);
-    expect(calls.find((call) => call.name === "createBooking")?.args.slice(1)).toEqual(["11111111-1111-4111-8111-111111111111", 2]);
+    expect(calls.find((call) => call.name === "createBooking")?.args.slice(1)).toEqual(["11111111-1111-4111-8111-111111111111", 2, undefined]);
     expect((await app.inject({ method: "GET", url: "/api/v1/bookings", headers: auth })).statusCode).toBe(200);
   });
 

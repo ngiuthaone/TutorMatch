@@ -1,6 +1,8 @@
--- Phase 5 Workshop V1: Fix booking_read_json for workshop bookings
--- 1. Add pricePerParticipantVnd to pricing object
--- 2. Fix paymentReady logic to account for INSTANT bookings
+-- Fix booking_read_json for workshop bookings:
+-- 1. LEFT JOIN tutor_profiles (hosts may not have tutor_profiles rows)
+-- 2. Add pricePerParticipantVnd to pricing object
+-- 3. Fix paymentReady for INSTANT bookings
+-- 4. Add learner name, cancellation object, tutor/learner display fields
 
 create or replace function public.booking_read_json(bid uuid) returns jsonb
 language sql stable security definer set search_path='' as $$
@@ -26,7 +28,7 @@ select jsonb_build_object(
     'snapshottedAt', b.pricing_snapshotted_at
   ) end,
   'session', public.session_json(b.session_id),
-  'tutor', jsonb_build_object('id', tp.id, 'displayName', tp.display_name),
+  'tutor', case when tp.id is not null then jsonb_build_object('id', tp.id, 'displayName', tp.display_name) else null end,
   'learner', jsonb_build_object('displayName', learner.name),
   'payment', case when p.id is null then null else jsonb_build_object(
     'id', p.id,
@@ -39,10 +41,8 @@ select jsonb_build_object(
   'paymentRequired', b.pricing_amount_vnd is not null,
   'paymentReady', b.status = 'requested' and s.status = 'scheduled'
     and (
-      -- Approval bookings: require explicit host approval
       (o.booking_mode = 'approval' and exists(select 1 from public.booking_approvals a where a.booking_id = b.id and a.revoked_at is null and (a.expires_at is null or a.expires_at > now())))
       or
-      -- Instant bookings: no approval required, payment is immediately ready
       (o.booking_mode = 'instant')
     )
     and coalesce(p.status, 'pending') not in ('succeeded', 'refunded'),
@@ -75,7 +75,7 @@ select jsonb_build_object(
 )
 from public.bookings b
 join public.sessions s on s.id = b.session_id
-join public.tutor_profiles tp on tp.user_id = s.host_id
+left join public.tutor_profiles tp on tp.user_id = s.host_id
 join public.profiles learner on learner.id = b.learner_id
 left join public.payments p on p.booking_id = b.id
 left join public.offerings o on o.id = s.offering_id

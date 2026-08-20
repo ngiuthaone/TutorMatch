@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuth } from "@/components/auth/auth-provider";
+import { useSession } from "@/lib/auth/session";
 import {
   getWorkshopOffering,
   getWorkshopSessions,
@@ -37,7 +37,8 @@ interface BookingState {
  */
 export function WorkshopBookingBridge({ offeringId, className }: WorkshopBookingBridgeProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
-  const { user } = useAuth();
+  const session = useSession();
+  const user = session.status === "authenticated" ? session.user : null;
   const [offering, setOffering] = useState<WorkshopOffering | null>(null);
   const [sessions, setSessions] = useState<WorkshopSession[]>([]);
   const [booking, setBooking] = useState<BookingState>({

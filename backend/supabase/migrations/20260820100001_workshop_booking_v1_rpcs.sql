@@ -1,41 +1,60 @@
 -- Workshop booking V1: RPC modifications for flat_per_participant_v1 pricing,
 -- INSTANT booking (skip approval check), minimum_not_met cancellation,
--- and offering CRUD RPCs.
+-- offering CRUD RPCs, payment TTL, and workshop booking management.
 
 -- ============================================================
--- 1. Modify create_booking for workshop pricing
+-- 1. create_booking: add workshop pricing + idempotency
 -- ============================================================
--- Replace the existing create_booking to support both hourly_v1 and
--- flat_per_participant_v1 pricing models.
 
-create or replace function public.create_booking(session_id uuid, participant_count int default 1) returns jsonb
+create or replace function public.create_booking(
+  session_id uuid,
+  participant_count int default 1,
+  p_idempotency_key text default null
+) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare
   uid uuid; s public.sessions%rowtype; o public.offerings%rowtype;
   bid uuid := gen_random_uuid(); reserved bigint;
   rate bigint; duration_minutes integer; amount bigint;
-  ppv bigint; -- price_per_participant_vnd
+  ppv bigint;
+  sid uuid := session_id;
 begin
   if participant_count is null or participant_count < 1 then
     raise exception 'INVALID_TRANSITION' using errcode='22023';
   end if;
+  if p_idempotency_key is not null and char_length(btrim(p_idempotency_key)) not between 8 and 128 then
+    raise exception 'INVALID_IDEMPOTENCY_KEY' using errcode='22023';
+  end if;
   uid := public.assert_verified_booking_caller();
+
+  -- Idempotency fast path: if key provided, check for existing active booking
+  if p_idempotency_key is not null then
+    if exists (
+      select 1 from public.bookings b
+      where b.learner_id = uid
+        and b.session_id = sid
+        and b.idempotency_key = btrim(p_idempotency_key)
+        and b.status in ('requested', 'confirmed')
+    ) then
+      raise exception 'BOOKING_CONFLICT' using errcode='23505';
+    end if;
+  end if;
+
   perform public.consume_booking_create_attempt(uid);
 
   -- Lock session (canonical lock order: session first)
-  select * into s from public.sessions where id = session_id for update;
+  select * into s from public.sessions where id = sid for update;
   if s.id is null then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if s.status <> 'scheduled' then raise exception 'SESSION_NOT_OPEN' using errcode='22023'; end if;
   if s.host_id = uid then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
 
-  -- Read offering for pricing (if session has an offering)
+  -- Read offering for pricing
   if s.offering_id is not null then
     select * into o from public.offerings where id = s.offering_id for share;
   end if;
 
   -- Compute pricing based on offering's pricing model
   if o.id is not null and o.pricing_model = 'flat_per_participant_v1' then
-    -- Workshop flat per-participant pricing
     ppv := o.price_per_participant_vnd;
     if ppv is null or ppv <= 0 then
       raise exception 'BOOKING_PRICE_NOT_SNAPSHOTTED' using errcode='22023';
@@ -44,14 +63,13 @@ begin
     if amount <= 0 then
       raise exception 'BOOKING_PRICE_NOT_SNAPSHOTTED' using errcode='22023';
     end if;
-    -- Insert with flat pricing snapshot
     begin
       insert into public.bookings(
-        id, session_id, learner_id, participant_count, status,
+        id, session_id, learner_id, participant_count, status, idempotency_key,
         pricing_amount_vnd, pricing_currency, pricing_price_per_participant_vnd,
         pricing_model, pricing_snapshotted_at
       ) values (
-        bid, session_id, uid, participant_count, 'requested',
+        bid, session_id, uid, participant_count, 'requested', btrim(p_idempotency_key),
         amount, 'VND', ppv,
         'flat_per_participant_v1', now()
       );
@@ -59,7 +77,7 @@ begin
       raise exception 'BOOKING_CONFLICT' using errcode='23505';
     end;
   else
-    -- Original hourly_v1 pricing (tutor 1:1)
+    -- Hourly_v1 pricing (tutor 1:1)
     select tp.hourly_rate_vnd into rate
       from public.tutor_profiles tp where tp.user_id = s.host_id for share;
     if rate is null then
@@ -73,14 +91,13 @@ begin
     if amount <= 0 then
       raise exception 'BOOKING_PRICE_NOT_SNAPSHOTTED' using errcode='22023';
     end if;
-    -- Insert with hourly pricing snapshot
     begin
       insert into public.bookings(
-        id, session_id, learner_id, participant_count, status,
+        id, session_id, learner_id, participant_count, status, idempotency_key,
         pricing_amount_vnd, pricing_currency, pricing_hourly_rate_vnd,
         pricing_duration_minutes, pricing_model, pricing_snapshotted_at
       ) values (
-        bid, session_id, uid, participant_count, 'requested',
+        bid, session_id, uid, participant_count, 'requested', btrim(p_idempotency_key),
         amount, 'VND', rate, duration_minutes, 'hourly_v1', now()
       );
     exception when unique_violation then
@@ -89,9 +106,8 @@ begin
   end if;
 
   -- Capacity check (after insert to use actual reserved count)
-  reserved := public.session_hard_reserved(session_id);
+  reserved := public.session_hard_reserved(sid);
   if s.max_participants is not null and reserved > s.max_participants then
-    -- Rollback: delete the booking we just created
     delete from public.bookings where id = bid;
     raise exception 'INSUFFICIENT_CAPACITY' using errcode='22023';
   end if;
@@ -101,7 +117,7 @@ begin
 
   perform public.insert_outbox_event('BOOKING_REQUESTED', 'booking', bid, 1,
     jsonb_build_object(
-      'bookingId', bid, 'sessionId', session_id,
+      'bookingId', bid, 'sessionId', sid,
       'participantCount', participant_count,
       'amountVnd', amount, 'currency', 'VND',
       'pricingModel', coalesce(o.pricing_model, 'hourly_v1')
@@ -110,12 +126,12 @@ begin
   return public.booking_json(bid);
 end $$;
 
+revoke all on function public.create_booking(uuid, int, text) from public, anon, authenticated;
+grant execute on function public.create_booking(uuid, int, text) to authenticated;
+
 -- ============================================================
--- 2. Modify start_payment_attempt for INSTANT bookings
+-- 2. start_payment_attempt: skip approval for INSTANT bookings
 -- ============================================================
--- For INSTANT offerings, skip the approval check. The approval gate
--- is a Tutor-specific host-authorized step; INSTANT Workshop bookings
--- go directly to payment.
 
 create or replace function public.start_payment_attempt(
   p_booking_id uuid,
@@ -153,7 +169,6 @@ begin
   if o.booking_mode = 'instant' then
     approval_required := false;
   else
-    -- Tutor path: approval required
     approval_required := true;
   end if;
 
@@ -212,11 +227,8 @@ begin
 end $$;
 
 -- ============================================================
--- 3. Modify cancel_session for minimum_not_met
+-- 3. cancel_session: add minimum_not_met cause
 -- ============================================================
--- Extend cancel_session to accept cause='minimum_not_met' when called
--- via service_role (auth.uid() is null). Set cancelled_by='system'
--- for minimum-not-met cancellations.
 
 create or replace function public.cancel_session(
   sid uuid,
@@ -231,20 +243,16 @@ declare
   in_flight_at timestamptz; obligation_created boolean := false;
   cancelled_by text;
 begin
-  -- Authorization: host for 'host' cause, service_role for 'minimum_not_met'
   if cause = 'minimum_not_met' then
-    -- System actor: must be service_role (auth.uid() is null)
     if auth.uid() is not null then
       raise exception 'UNAUTHORIZED' using errcode='42501';
     end if;
     cancelled_by := 'system';
   else
-    -- Host actor: must be the session host
     uid := public.assert_host_of_session(sid);
     cancelled_by := 'host';
   end if;
 
-  -- Canonical lock order: session -> booking -> payment
   select * into cur from public.sessions where id = sid for update;
   if cur.id is null then raise insufficient_privilege; end if;
   if cur.version <> expected_version then
@@ -253,13 +261,9 @@ begin
   if cur.status <> 'scheduled' then
     raise exception 'INVALID_TRANSITION' using errcode='22023';
   end if;
-
-  -- Validate cause
   if cause is distinct from 'host' and cause is distinct from 'minimum_not_met' then
     raise exception 'INVALID_TRANSITION' using errcode='22023';
   end if;
-
-  -- Must have at least one active booking
   if not exists (
     select 1 from public.bookings
     where session_id = sid and status in ('requested', 'confirmed')
@@ -267,19 +271,14 @@ begin
     raise exception 'INVALID_TRANSITION' using errcode='22023';
   end if;
 
-  -- Cancel session
   update public.sessions set status = 'cancelled', version = version + 1 where id = sid;
-
-  -- Session history
   insert into public.session_history(session_id, change_type, by, at, cause, reason)
   values (sid, 'cancelled', cancelled_by, now(), cause, reason);
 
-  -- Outbox: SESSION_CANCELLED
   perform public.insert_outbox_event('SESSION_CANCELLED', 'session', sid, cur.version + 1,
     jsonb_build_object('sessionId', sid, 'cause', cause, 'actor', cancelled_by)
     || case when reason is not null then jsonb_build_object('reason', reason) else '{}'::jsonb end);
 
-  -- Booking fan-out: cancel all active bookings
   for b in
     select id, status, version from public.bookings
     where session_id = sid and status in ('requested', 'confirmed')
@@ -292,10 +291,8 @@ begin
 
     if p.id is not null then
       if p.status = 'pending' then
-        -- P4: payment in flight, mark duty
         in_flight_at := now();
       elsif p.status = 'succeeded' then
-        -- P6: unconditional full refund for every paid booking
         insert into public.refunds(
           payment_id, kind, status, amount_vnd, idempotency_key, reason
         ) values (
@@ -318,7 +315,6 @@ begin
       end if;
     end if;
 
-    -- Update booking to cancelled
     update public.bookings set
       status = 'cancelled',
       cancelled_by = cancelled_by,
@@ -327,14 +323,12 @@ begin
       version = version + 1
     where id = b.id;
 
-    -- Booking history
     insert into public.booking_history(
       booking_id, from_status, to_status, actor, at, cancelled_by_session_id
     ) values (
       b.id, b.status, 'cancelled', cancelled_by, now(), sid
     );
 
-    -- Outbox: BOOKING_CANCELLED
     perform public.insert_outbox_event('BOOKING_CANCELLED', 'booking', b.id, b.version + 1,
       jsonb_build_object(
         'bookingId', b.id, 'sessionId', sid,
@@ -343,7 +337,6 @@ begin
         'cancelledBySessionId', sid
       ));
 
-    -- Outbox: REFUND_OBLIGATION_CREATED
     if obligation_created then
       perform public.insert_outbox_event(
         'REFUND_OBLIGATION_CREATED', 'payment', p.id, p.version,
@@ -351,7 +344,6 @@ begin
       );
     end if;
 
-    -- Terminate pending reschedule request for this booking
     update public.reschedule_requests set status = 'cancelled', resolved_at = now()
     where public.reschedule_requests.booking_id = b.id and status = 'requested'
     returning id, from_session_id, to_session_id into rr;
@@ -369,7 +361,6 @@ begin
     end if;
   end loop;
 
-  -- Second loop: terminate inbound reschedule requests from OTHER bookings
   for qr in
     select id, booking_id, from_session_id, to_session_id
     from public.reschedule_requests
@@ -393,10 +384,9 @@ begin
 end $$;
 
 -- ============================================================
--- 4. Offering CRUD RPCs
+-- 4. Offering CRUD RPCs (adapted for shared_booking_engine schema)
 -- ============================================================
 
--- 4a. get_offering: read offering by ID
 create or replace function public.get_offering(p_offering_id uuid)
 returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -404,27 +394,26 @@ begin
   return (
     select jsonb_build_object(
       'id', o.id,
-      'hostId', o.host_id,
-      'offeringType', o.offering_type,
+      'kind', o.kind,
+      'creatorId', o.creator_id,
       'title', o.title,
       'description', o.description,
+      'unitPriceVnd', o.unit_price_vnd,
       'pricingModel', o.pricing_model,
       'pricePerParticipantVnd', o.price_per_participant_vnd,
       'hourlyRateVnd', o.hourly_rate_vnd,
-      'currency', o.currency,
       'bookingMode', o.booking_mode,
-      'status', o.status,
+      'publicationStatus', o.publication_status,
       'version', o.version
     )
     from public.offerings o
     where o.id = p_offering_id
-      and o.status = 'published'
+      and o.publication_status = 'published'
   );
 end $$;
 
 grant execute on function public.get_offering(uuid) to anon, authenticated;
 
--- 4b. list_sessions_by_offering_id: list sessions for an offering
 create or replace function public.list_sessions_by_offering_id(p_offering_id uuid)
 returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -449,9 +438,8 @@ end $$;
 
 grant execute on function public.list_sessions_by_offering_id(uuid) to anon, authenticated;
 
--- 4c. create_offering: host creates a new offering
 create or replace function public.create_offering(
-  p_offering_type text,
+  p_kind text,
   p_title text,
   p_pricing_model text,
   p_price_per_participant_vnd bigint default null,
@@ -463,44 +451,52 @@ language plpgsql security definer set search_path='' as $$
 declare
   uid uuid := public.assert_verified_booking_caller();
   offering_id uuid;
+  slug text;
 begin
-  -- Validate pricing model
   if p_pricing_model not in ('hourly_v1', 'flat_per_participant_v1') then
     raise exception 'INVALID_TRANSITION' using errcode='22023';
   end if;
-
   if p_pricing_model = 'hourly_v1' and p_hourly_rate_vnd is null then
     raise exception 'MISSING_HOURLY_RATE' using errcode='22023';
   end if;
-
   if p_pricing_model = 'flat_per_participant_v1' and p_price_per_participant_vnd is null then
     raise exception 'MISSING_PRICE_PER_PARTICIPANT' using errcode='22023';
   end if;
-
   if p_booking_mode not in ('approval', 'instant') then
     raise exception 'INVALID_TRANSITION' using errcode='22023';
   end if;
-
-  if p_offering_type not in ('tutor', 'workshop', 'class', 'event') then
+  if p_kind not in ('tutor', 'workshop', 'class', 'event') then
     raise exception 'INVALID_TRANSITION' using errcode='22023';
   end if;
 
+  -- Generate slug from title (lowercase, hyphens, max 120 chars)
+  slug := lower(regexp_replace(btrim(p_title), '[^a-z0-9]+', '-', 'g'));
+  slug := regexp_replace(slug, '^-+|-+$', '', 'g');
+  if char_length(slug) > 120 then
+    slug := left(slug, 120);
+  end if;
+  if slug = '' then slug := 'offering-' || replace(gen_random_uuid()::text, '-', ''); end if;
+
+  -- Ensure slug uniqueness within kind
+  if exists (select 1 from public.offerings where kind = p_kind and slug = slug) then
+    slug := slug || '-' || left(replace(gen_random_uuid()::text, '-', ''), 8);
+  end if;
+
   insert into public.offerings(
-    host_id, offering_type, title, description,
+    kind, slug, title, description, creator_id,
     pricing_model, price_per_participant_vnd, hourly_rate_vnd,
-    booking_mode, status
+    booking_mode, publication_status
   ) values (
-    uid, p_offering_type, p_title, p_description,
+    p_kind, slug, p_title, p_description, uid,
     p_pricing_model, p_price_per_participant_vnd, p_hourly_rate_vnd,
     p_booking_mode, 'draft'
   ) returning id into offering_id;
 
-  return jsonb_build_object('id', offering_id, 'status', 'draft', 'version', 1);
+  return jsonb_build_object('id', offering_id, 'slug', slug, 'publicationStatus', 'draft', 'version', 1);
 end $$;
 
 grant execute on function public.create_offering(text, text, text, bigint, bigint, text, text) to authenticated;
 
--- 4d. update_offering_status: publish/unpublish an offering
 create or replace function public.update_offering_status(
   p_offering_id uuid,
   p_expected_version bigint,
@@ -510,49 +506,49 @@ language plpgsql security definer set search_path='' as $$
 declare
   uid uuid := public.assert_verified_booking_caller();
   o record;
+  pub_status text;
 begin
+  -- Map API status to publication_status
+  if p_status = 'published' then pub_status := 'published';
+  elsif p_status = 'draft' then pub_status := 'draft';
+  elsif p_status = 'unpublished' then pub_status := 'unpublished';
+  else raise exception 'INVALID_TRANSITION' using errcode='22023';
+  end if;
+
   select * into o from public.offerings where id = p_offering_id for update;
   if not found then raise exception 'OFFERING_NOT_FOUND' using errcode='P0002'; end if;
-  if o.host_id <> uid then raise insufficient_privilege; end if;
+  if not public.can_manage_offering(uid, p_offering_id, 'host') then
+    raise insufficient_privilege;
+  end if;
   if o.version <> p_expected_version then
     raise exception 'STALE_VERSION' using errcode='40001';
   end if;
-  if p_status not in ('draft', 'published', 'unpublished') then
-    raise exception 'INVALID_TRANSITION' using errcode='22023';
-  end if;
 
   update public.offerings
-    set status = p_status, version = version + 1, updated_at = now()
+    set publication_status = pub_status, version = version + 1, updated_at = now(),
+        published_at = case when pub_status = 'published' then now() else published_at end,
+        unpublished_at = case when pub_status = 'unpublished' then now() else unpublished_at end
     where id = p_offering_id;
 
-  return jsonb_build_object('id', p_offering_id, 'status', p_status, 'version', o.version + 1);
+  return jsonb_build_object('id', p_offering_id, 'publicationStatus', pub_status, 'version', o.version + 1);
 end $$;
 
 grant execute on function public.update_offering_status(uuid, bigint, text) to authenticated;
 
--- 4e. create_session: extend to validate offering ownership
--- (existing RPC already accepts offeringId in JSON payload;
--- we add an ownership check when offering_id is provided)
-
 -- ============================================================
 -- 5. Payment TTL for workshop INSTANT bookings
 -- ============================================================
--- Expire stale workshop bookings: requested status + pending payment
--- older than 30 minutes. This releases capacity atomically via the
--- existing booking status change mechanism.
 
 create or replace function public.expire_stale_workshop_bookings(p_worker_id text default 'system')
 returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare
   expired_count integer := 0;
-  b record;
-  s public.sessions%rowtype;
-  p public.payments%rowtype;
+  bk record;
+  sess public.sessions%rowtype;
+  pay public.payments%rowtype;
 begin
-  -- Find workshop bookings in requested status with pending payment
-  -- older than 30 minutes
-  for b in
+  for bk in
     select b.id, b.session_id, b.version, b.pricing_amount_vnd
     from public.bookings b
     join public.sessions s on s.id = b.session_id
@@ -566,41 +562,35 @@ begin
       )
     for update skip locked
   loop
-    -- Lock session (canonical lock order)
-    select * into s from public.sessions where id = b.session_id for update;
+    select * into sess from public.sessions where id = bk.session_id for update;
+    select * into pay from public.payments where booking_id = bk.id for update;
 
-    -- Lock payment
-    select * into p from public.payments where booking_id = b.id for update;
-
-    -- Verify still in requested status (race protection)
-    if b.version <> (select version from public.bookings where id = b.id) then
+    if bk.version <> (select version from public.bookings where id = bk.id) then
       continue;
     end if;
 
-    -- Mark payment as failed (provider never responded)
-    if p.status = 'pending' then
+    if pay.status = 'pending' then
       update public.payments set status = 'failed', version = version + 1, updated_at = now()
-      where id = p.id;
+      where id = pay.id;
       insert into public.payment_events(payment_id, event_type, from_status, to_status, amount_vnd, payload)
-      values (p.id, 'provider_failed', 'pending', 'failed', p.amount_vnd,
-              jsonb_build_object('reason', 'payment_ttl_expired', 'bookingId', b.id));
+      values (pay.id, 'provider_failed', 'pending', 'failed', pay.amount_vnd,
+              jsonb_build_object('reason', 'payment_ttl_expired', 'bookingId', bk.id));
     end if;
 
-    -- Cancel booking (releases capacity atomically)
     update public.bookings set
       status = 'cancelled',
       cancelled_by = 'system',
       cancelled_reason = 'payment_ttl_expired',
       version = version + 1
-    where id = b.id;
+    where id = bk.id;
 
     insert into public.booking_history(booking_id, from_status, to_status, actor, at)
-    values (b.id, 'requested', 'cancelled', 'system', now());
+    values (bk.id, 'requested', 'cancelled', 'system', now());
 
-    perform public.insert_outbox_event('BOOKING_CANCELLED', 'booking', b.id, b.version + 1,
+    perform public.insert_outbox_event('BOOKING_CANCELLED', 'booking', bk.id, bk.version + 1,
       jsonb_build_object(
-        'bookingId', b.id,
-        'sessionId', b.session_id,
+        'bookingId', bk.id,
+        'sessionId', bk.session_id,
         'cancelledBy', 'system',
         'fromStatus', 'requested',
         'reason', 'payment_ttl_expired'
@@ -612,31 +602,21 @@ begin
   return jsonb_build_object('expired', expired_count);
 end $$;
 
--- Grant to service_role only (called by worker)
 grant execute on function public.expire_stale_workshop_bookings(text) to service_role;
 
 -- ============================================================
--- Workshop Booking Management RPCs
+-- 6. Workshop Booking Management RPCs
 -- ============================================================
 
--- Get workshop bookings for the authenticated host
--- Returns bookings where the session's host_id matches the authenticated user
--- and the session has an associated offering (workshop bookings)
 create or replace function public.get_my_workshop_bookings()
 returns jsonb
-language plpgsql
-stable
-security definer
-set search_path = ''
-as $$
+language plpgsql stable security definer set search_path = '' as $$
 declare
   uid uuid;
   rows jsonb;
 begin
   uid := auth.uid();
-  if uid is null then
-    raise insufficient_privilege;
-  end if;
+  if uid is null then raise insufficient_privilege; end if;
 
   select coalesce(jsonb_agg(public.booking_read_json(b.id) order by b.created_at desc), '[]'::jsonb)
   into rows
@@ -651,71 +631,47 @@ end $$;
 revoke all on function public.get_my_workshop_bookings() from public, anon, authenticated;
 grant execute on function public.get_my_workshop_bookings() to authenticated;
 
--- Cancel a workshop booking (host action)
--- Uses the existing cancel_booking RPC with cause='host'
--- The RPC verifies host ownership via session.host_id = auth.uid()
 create or replace function public.cancel_workshop_booking(
   p_booking_id uuid,
   p_expected_version bigint,
   p_reason text default null
 )
 returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $$
+language plpgsql security definer set search_path = '' as $$
 declare
   uid uuid;
   b record;
   s record;
+  o record;
   new_version bigint;
 begin
   uid := auth.uid();
-  if uid is null then
-    raise insufficient_privilege;
-  end if;
+  if uid is null then raise insufficient_privilege; end if;
 
-  -- Get booking with lock
   select * into b
   from public.bookings
   where id = p_booking_id
   for update;
 
-  if b is null then
-    raise exception 'BOOKING_NOT_FOUND';
-  end if;
+  if b is null then raise exception 'BOOKING_NOT_FOUND'; end if;
 
-  -- Get session with lock
   select * into s
   from public.sessions
   where id = b.session_id
   for update;
 
-  if s is null then
-    raise exception 'SESSION_NOT_FOUND';
-  end if;
-
-  -- Verify host ownership
-  if s.host_id != uid then
+  if s is null then raise exception 'SESSION_NOT_FOUND'; end if;
+  if not public.can_manage_offering(uid, s.offering_id, 'host') then
     raise insufficient_privilege;
   end if;
-
-  -- Verify session has offering (is a workshop booking)
-  if s.offering_id is null then
-    raise exception 'NOT_A_WORKSHOP_BOOKING';
-  end if;
-
-  -- Verify version
+  if s.offering_id is null then raise exception 'NOT_A_WORKSHOP_BOOKING'; end if;
   if b.version != p_expected_version then
     raise exception 'STALE_VERSION' using errcode = '40001';
   end if;
-
-  -- Verify booking is cancellable
   if b.status not in ('requested', 'confirmed') then
     raise exception 'INVALID_TRANSITION';
   end if;
 
-  -- Cancel booking
   update public.bookings
   set status = 'cancelled',
       updated_at = now(),
@@ -725,11 +681,9 @@ begin
   where id = p_booking_id
   returning version into new_version;
 
-  -- Record cancellation
   insert into public.booking_history (booking_id, from_status, to_status, actor, at, reason)
   values (p_booking_id, b.status, 'cancelled', 'host', now(), p_reason);
 
-  -- Emit outbox event
   perform public.insert_outbox_event('BOOKING_CANCELLED', 'booking', p_booking_id, new_version,
     jsonb_build_object(
       'bookingId', p_booking_id,

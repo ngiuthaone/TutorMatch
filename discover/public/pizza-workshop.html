@@ -5417,8 +5417,23 @@
     const initialDate = new Date(2026, 6, 26);
     let selectedDate = new Date(initialDate);
     let selectedSession = 0;
+    let activeSessionId = null;
+    let bookingAuthenticated = false;
     let weekStart = startOfWeek(initialDate);
     let visibleMonth = new Date(2026, 6, 1);
+    const workshopSessionIds = (() => {
+      const param = new URLSearchParams(window.location.search).get('sessionIds');
+      if (!param) return [];
+      return param.split(',').map(s => s.trim()).filter(Boolean);
+    })();
+    function resolveActiveSessionId() {
+      if (workshopSessionIds.length) {
+        activeSessionId = workshopSessionIds[selectedSession] || null;
+      } else {
+        activeSessionId = null;
+      }
+    }
+    resolveActiveSessionId();
 
     function startOfWeek(date) {
       const d = new Date(date);
@@ -5435,6 +5450,7 @@
     function shortDate(date, year=true) { return new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'2-digit',month:'short',...(year?{year:'numeric'}:{})}).format(date); }
 
     function updateSessionSummary() {
+      resolveActiveSessionId();
       const [start,end] = sessionTimes[selectedSession];
       const full = `${shortDate(selectedDate)} · ${start} – ${end}`;
       document.getElementById('bookingSessionSummary').textContent = full;
@@ -5564,8 +5580,56 @@
       const ids=['checkoutFullName','checkoutEmail','checkoutPhone'];
       const invalid=ids.some(id=>!document.getElementById(id).value.trim());
       document.getElementById('checkoutError').classList.toggle('hidden',!invalid);
-      if (!invalid) { alert('Demo booking confirmed.'); closeBooking(); }
+      if (!invalid) {
+        if (!activeSessionId) {
+          const checkoutError = document.getElementById('checkoutError');
+          if (checkoutError) { checkoutError.textContent = 'No session selected. Please choose a session first.'; checkoutError.classList.remove('hidden'); }
+          return;
+        }
+        const participantCount = parseInt(document.getElementById('checkoutParticipantCount')?.value || '1', 10) || 1;
+        const requestId = 'wk-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+        const btn = document.getElementById('confirmBookingButton');
+        if (btn) { btn.textContent = 'Booking…'; btn.disabled = true; }
+        document.getElementById('checkoutError')?.classList.add('hidden');
+        window.parent?.postMessage({ type: 'tutoria-booking-create', requestId, sessionId: activeSessionId, participantCount }, window.location.origin);
+      }
     };
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin || event.source !== window.parent) return;
+      const data = event.data || {};
+      if (data.type === 'tutoria-booking-auth-state') {
+        bookingAuthenticated = data.authenticated === true;
+        return;
+      }
+      if (data.type === 'tutoria-booking-created' && data.booking) {
+        const btn = document.getElementById('confirmBookingButton');
+        if (btn) { btn.textContent = 'Booking confirmed!'; btn.disabled = true; }
+        setTimeout(() => { closeBooking(); if (btn) { btn.textContent = 'Confirm demo booking'; btn.disabled = false; } }, 2000);
+        return;
+      }
+      if (data.type === 'tutoria-booking-error') {
+        const checkoutError = document.getElementById('checkoutError');
+        const errorMessages = {
+          UNAUTHORIZED: 'Sign in to complete your booking.',
+          EMAIL_VERIFICATION_REQUIRED: 'Verify your email before booking.',
+          BOOKING_CONFLICT: 'You already have an active booking for this session.',
+          SESSION_CAPACITY_EXHAUSTED: 'This session is full. Try another time.',
+          BOOKING_SERVICE_UNAVAILABLE: 'Booking is temporarily unavailable. Please try again.'
+        };
+        const message = errorMessages[data.code] || 'Could not complete booking. Please try again.';
+        if (checkoutError) { checkoutError.textContent = message; checkoutError.classList.remove('hidden'); }
+        const btn = document.getElementById('confirmBookingButton');
+        if (btn) { btn.textContent = 'Confirm demo booking'; btn.disabled = false; }
+        return;
+      }
+      if (data.type === 'tutoria-booking-auth-required') {
+        const btn = document.getElementById('confirmBookingButton');
+        if (btn) { btn.textContent = 'Confirm demo booking'; btn.disabled = false; }
+        window.parent?.postMessage({ type: 'tutoria-booking-auth-required' }, window.location.origin);
+        return;
+      }
+    });
 
 
 
@@ -7141,6 +7205,7 @@
     }
 
     function updateAdvancedSessionSummary() {
+      resolveActiveSessionId();
       const sessions = currentPublicSessions();
       const location = activeWorkshopLocation();
       if (!sessions.length) {
