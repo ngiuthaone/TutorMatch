@@ -44,6 +44,11 @@ export default function CenterPage() {
         try { await ensureSession(); if (!getSessionAccessToken()) throw new TutorBookingApiError("UNAUTHORIZED", 401, "Sign in to manage host bookings."); const booking = await cancelHostBooking(message.bookingId, message.expectedVersion, typeof message.reason === "string" ? message.reason : undefined); frame.contentWindow?.postMessage({ type: "tutoria-center-host-booking-cancellation", requestId, booking }, window.location.origin); }
         catch (error) { const apiError = error instanceof TutorBookingApiError ? error : new TutorBookingApiError("HOST_BOOKING_UNAVAILABLE", 503, "This booking could not be cancelled. Reload and try again."); frame.contentWindow?.postMessage({ type: "tutoria-center-host-booking-cancellation-error", requestId, code: apiError.code, message: apiError.message }, window.location.origin); }
       }
+      if (message.type === "tutoria-center-decide-host-booking" && typeof message.bookingId === "string" && (message.action === "accept" || message.action === "reject")) {
+        const requestId = typeof message.requestId === "string" ? message.requestId : "";
+        try { await ensureSession(); if (!getSessionAccessToken()) throw new TutorBookingApiError("UNAUTHORIZED", 401, "Sign in to manage host bookings."); const booking = await decideTutorBooking(message.bookingId, message.action, typeof message.expectedVersion === "number" ? message.expectedVersion : undefined); frame.contentWindow?.postMessage({ type: "tutoria-center-host-booking-decision", requestId, booking }, window.location.origin); }
+        catch (error) { const apiError = error instanceof TutorBookingApiError ? error : new TutorBookingApiError("HOST_BOOKING_UNAVAILABLE", 503, "This booking could not be updated. Reload and try again."); frame.contentWindow?.postMessage({ type: "tutoria-center-host-booking-decision-error", requestId, code: apiError.code, message: apiError.message }, window.location.origin); }
+      }
     };
     window.addEventListener("message", handleMessage);
     notifyFrameReady();
