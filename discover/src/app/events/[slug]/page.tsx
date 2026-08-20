@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { PublishedEventPage } from "@/components/events/published-event-page";
-import { allEvents, getEventBySlug, getSimilarEvents } from "@/lib/event-data";
+import { WorkshopDetailPage } from "@/components/workshop/workshop-detail-page";
+import { allEvents, getEventBySlug } from "@/lib/event-data";
 import { getSharedEventBySlug } from "@/lib/published-event-store";
 
 export const dynamicParams = true;
@@ -17,10 +17,10 @@ export async function generateMetadata({
   const { slug } = await params;
   const event = getEventBySlug(slug) ?? await getSharedEventBySlug(slug);
 
-  if (!event) return { title: "Event not found | Tutoria" };
+  if (!event) return { title: "Workshop not found | Tutoria" };
 
   return {
-    title: `${event.title} | Tutoria Events`,
+    title: `${event.title} | Tutoria Workshops`,
     description: event.subtitle,
   };
 }
@@ -31,7 +31,6 @@ export default async function EventPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = getEventBySlug(slug) ?? await getSharedEventBySlug(slug);
 
-  return <PublishedEventPage slug={slug} fallback={event} similarEvents={getSimilarEvents(slug)} />;
+  return <WorkshopDetailPage slug={slug} />;
 }
