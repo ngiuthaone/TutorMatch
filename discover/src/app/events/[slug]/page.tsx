@@ -17,10 +17,10 @@ export async function generateMetadata({
   const { slug } = await params;
   const event = getEventBySlug(slug) ?? await getSharedEventBySlug(slug);
 
-  if (!event) return { title: "Workshop not found | Tutoria" };
+  if (!event) return { title: "Event not found | Tutoria" };
 
   return {
-    title: `${event.title} | Tutoria Workshops`,
+    title: `${event.title} | Tutoria Events`,
     description: event.subtitle,
   };
 }
