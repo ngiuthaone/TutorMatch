@@ -5,8 +5,9 @@ import Link from "next/link";
 import type { EventDetail, EventListing } from "@/lib/event-data";
 import { PUBLISHED_EVENTS_EVENT, PUBLISHED_EVENTS_KEY } from "@/lib/event-data";
 import { PizzaWorkshopFrame } from "./pizza-workshop-frame";
+import { WorkshopBookingBridge } from "./workshop-booking-bridge";
 
-export function PublishedEventPage({ slug, fallback }: { slug: string; fallback?: EventDetail; similarEvents: EventListing[] }) {
+export function PublishedEventPage({ slug, fallback, offeringId }: { slug: string; fallback?: EventDetail; similarEvents: EventListing[]; offeringId?: string }) {
   const [sharedEvent, setSharedEvent] = useState<EventDetail | undefined>(fallback);
   const [sharedLoaded, setSharedLoaded] = useState(Boolean(fallback));
   const snapshot = useSyncExternalStore(
@@ -46,5 +47,12 @@ export function PublishedEventPage({ slug, fallback }: { slug: string; fallback?
 
   if (!event && !sharedLoaded) return <main style={{ minHeight: "60vh", display: "grid", placeItems: "center", color: "white", textAlign: "center" }}><div><h1>Loading event…</h1></div></main>;
   if (!event) return <main style={{ minHeight: "60vh", display: "grid", placeItems: "center", color: "white", textAlign: "center" }}><div><h1>Event not found</h1><p>This event has not been published.</p><Link href="/events">Back to events</Link></div></main>;
+
+  // Use real backend bridge if offeringId is provided (production path)
+  if (offeringId) {
+    return <WorkshopBookingBridge offeringId={offeringId} />;
+  }
+
+  // Fall back to legacy demo frame (local/test environment)
   return <PizzaWorkshopFrame event={event} />;
 }

@@ -28,6 +28,12 @@ function setup(overrides: Partial<BookingService> = {}, authenticated = false) {
     cancelReschedule: async (...args) => { calls.push({ name: "cancelReschedule", args }); return ok({ status: "cancelled" }); },
     cancelSession: async (...args) => { calls.push({ name: "cancelSession", args }); return ok({ id: "session-1" }); },
     rescheduleSession: async (...args) => { calls.push({ name: "rescheduleSession", args }); return ok({ id: "session-1" }); },
+    getOffering: async (...args) => { calls.push({ name: "getOffering", args }); return ok(null); },
+    listSessionsByOffering: async (...args) => { calls.push({ name: "listSessionsByOffering", args }); return ok([]); },
+    createOffering: async (...args) => { calls.push({ name: "createOffering", args }); return ok({ id: "offering-1" }); },
+    updateOfferingStatus: async (...args) => { calls.push({ name: "updateOfferingStatus", args }); return ok({ id: "offering-1" }); },
+    listWorkshopBookings: async (...args) => { calls.push({ name: "listWorkshopBookings", args }); return ok([]); },
+    cancelWorkshopBooking: async (...args) => { calls.push({ name: "cancelWorkshopBooking", args }); return ok({ id: "booking-1" }); },
     ...overrides
   };
   const authService = new FakeAuthService();
