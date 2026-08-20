@@ -1,0 +1,544 @@
+.page {
+  --canvas: #09090b;
+  --panel: #141416;
+  --panel-2: #1b1b1e;
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #f5f5f7;
+  --muted: #a1a1aa;
+  --quiet: #71717a;
+  --accent: #d6c1ad;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent 28%), var(--canvas);
+  color: var(--text);
+}
+
+/* ── Top bar ── */
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--line);
+  background: rgba(9, 9, 11, 0.82);
+  backdrop-filter: blur(24px);
+}
+
+.topBarInner {
+  display: flex;
+  width: min(100% - 2rem, 1440px);
+  height: 4rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-inline: auto;
+}
+
+.backLink,
+.topActions button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.backLink {
+  color: #fff;
+}
+
+.topTitle {
+  display: grid;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.topTitle span,
+.sectionLabel {
+  color: var(--quiet);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.topTitle strong {
+  color: #fff;
+  font-size: 0.875rem;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.topActions button {
+  min-width: 2.5rem;
+  border-color: var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.topActions button:hover,
+.topActions .savedAction {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Main ── */
+.main {
+  padding-bottom: 8rem;
+}
+
+.heroSection,
+.overviewSection,
+.detailsSection,
+.hostLocationGrid,
+.goodToKnowSection {
+  width: min(100% - 2rem, 1440px);
+  margin-inline: auto;
+}
+
+.heroSection {
+  padding-top: clamp(2.5rem, 6vw, 4rem);
+}
+
+/* ── Hero grid (two-column desktop) ── */
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  align-items: end;
+  gap: clamp(2rem, 4vw, 2.5rem);
+}
+
+.heroContent {
+  min-width: 0;
+}
+
+.heroContent h1 {
+  max-width: 64rem;
+  color: #fff;
+  font-size: clamp(3rem, 6vw, 4.25rem);
+  font-weight: 650;
+  letter-spacing: -0.06em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.heroContent > p {
+  max-width: 42rem;
+  margin-top: 1.25rem;
+  color: var(--muted);
+  font-size: clamp(1.0625rem, 1.8vw, 1.18rem);
+  line-height: 1.75;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem 1.5rem;
+  margin-top: 1.9rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.heroMeta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.heroMeta svg {
+  color: var(--accent);
+}
+
+.heroMeta strong {
+  color: #fff;
+}
+
+/* ── Category badge ── */
+.categoryBadge {
+  display: inline-flex;
+  padding: 0.45rem 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.46);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+}
+
+/* ── Booking panel ── */
+.bookingPanel {
+  position: sticky;
+  top: 7rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(27, 27, 30, 0.96);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+}
+
+.bookingHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.4rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.bookingHead div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.bookingHead strong {
+  color: #fff;
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.bookingHead em {
+  flex: none;
+  padding: 0.42rem 0.65rem;
+  border: 1px solid rgba(214, 193, 173, 0.22);
+  border-radius: 999px;
+  background: rgba(214, 193, 173, 0.1);
+  color: var(--accent);
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ── Spots remaining ── */
+.spotsRemaining {
+  display: block;
+  padding: 0 1.4rem;
+  margin-top: 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.spotsRemaining.urgent {
+  color: var(--accent);
+}
+
+/* ── Section nav ── */
+.sectionNav {
+  position: sticky;
+  top: 4rem;
+  z-index: 40;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 2.5rem;
+  padding: 0.85rem max(1rem, calc((100vw - 1440px) / 2));
+  border-block: 1px solid var(--line);
+  background: rgba(9, 9, 11, 0.86);
+  overflow-x: auto;
+  backdrop-filter: blur(24px);
+}
+
+.sectionNav a {
+  flex: 0 0 auto;
+  padding: 0.8rem 1.25rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.sectionNav a:hover {
+  color: #09090b;
+  background: #f5f5f7;
+}
+
+/* ── Overview ── */
+.overviewSection {
+  max-width: 1200px;
+  padding-block: clamp(4rem, 9vw, 5rem);
+  text-align: center;
+}
+
+.overviewSection h2,
+.goodToKnowSection h2 {
+  color: #fff;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 650;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+}
+
+.overviewSection h2 {
+  max-width: 56rem;
+  margin: 1.25rem auto 0;
+}
+
+.overviewSection div {
+  display: grid;
+  gap: 1rem;
+  max-width: 48rem;
+  margin: 1.75rem auto 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+/* ── Details section ── */
+.detailsSection {
+  display: grid;
+  max-width: 1200px;
+  grid-template-columns: 0.82fr 1.18fr;
+  gap: 1rem;
+  padding-bottom: 5rem;
+}
+
+/* ── Learning cards ── */
+.learningCards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.learningCards section {
+  padding: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.learningCards h3 {
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.learningCards ul {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+  list-style: none;
+}
+
+.learningCards li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.learningCards svg {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  color: var(--accent);
+}
+
+/* ── Host & location grid ── */
+.hostLocationGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  max-width: 1200px;
+  scroll-margin-top: 9rem;
+}
+
+.locationCard {
+  padding: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.onlineVenue {
+  width: 100%;
+  min-height: 18rem;
+  margin-top: 1.25rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 24px;
+  overflow: hidden;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.locationCard p,
+.locationCard small {
+  color: var(--muted);
+}
+
+/* ── Good-to-know section ── */
+.goodToKnowSection {
+  max-width: 1200px;
+  padding-bottom: clamp(3rem, 6vw, 4rem);
+}
+
+.goodToKnowSection h2 {
+  max-width: 44rem;
+}
+
+.goodToKnowList {
+  display: grid;
+  gap: 0;
+  margin-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
+.goodToKnowList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.goodToKnowList svg {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  color: var(--accent);
+}
+
+/* ── Status toast ── */
+.status {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 70;
+  max-width: min(26rem, calc(100vw - 2rem));
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(27, 27, 30, 0.96);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  font-size: 0.82rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.5rem);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.status:not(:empty) {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Skeleton / loading ── */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ── 404 / not found ── */
+.notFound {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.notFound h1 {
+  color: #e8e6df;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.notFound p {
+  margin-top: 0.75rem;
+  color: #8f8e8a;
+  font-size: 0.88rem;
+}
+
+.notFound a {
+  display: inline-block;
+  margin-top: 1.5rem;
+  font-size: 0.88rem;
+  color: #e8e6df;
+  text-decoration: underline;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .bookingPanel {
+    position: static;
+    max-width: 36rem;
+  }
+
+  .detailsSection,
+  .hostLocationGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .topTitle {
+    display: none;
+  }
+
+  .topActions button span {
+    display: none;
+  }
+
+  .heroSection,
+  .overviewSection,
+  .detailsSection,
+  .hostLocationGrid,
+  .goodToKnowSection {
+    width: min(100% - 1rem, 1440px);
+  }
+
+  .heroContent h1 {
+    font-size: clamp(2.4rem, 14vw, 3.4rem);
+  }
+
+  .sectionNav {
+    justify-content: flex-start;
+  }
+
+  .status:not(:empty) {
+    bottom: 5.5rem;
+  }
+}
