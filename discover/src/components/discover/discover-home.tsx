@@ -19,6 +19,8 @@ import { RecommendationCollage } from "./recommendation-collage";
 import { TutorFeatureGrid } from "./tutor-feature-grid";
 import { CourseJourneyMotion } from "./course-journey-motion";
 import { WorkshopSection } from "./workshop-section";
+import { ClassSection } from "./class-section";
+import { EventLiveSection } from "./event-live-section";
 import { GlassCard } from "../glass-card";
 import styles from "./discover-home.module.css";
 
@@ -202,6 +204,10 @@ export function DiscoverHome() {
       <EventGatherings />
 
       <WorkshopSection />
+
+      <ClassSection />
+
+      <EventLiveSection />
 
       <ConversationTimeline />
 
