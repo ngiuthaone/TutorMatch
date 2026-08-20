@@ -115,3 +115,25 @@ export async function cancelTutorBooking(bookingId: string, expectedVersion: num
   if (payload.ok !== true || !payload.booking || typeof payload.booking !== "object") throw new TutorBookingApiError("INVALID_RESPONSE", 500);
   return payload.booking as TutorBookingRecord;
 }
+
+/* ── Host booking functions ────────────────────────────────────────── */
+
+export interface HostBookingRecord extends TutorBookingRecord {
+  offering?: { id: string; kind: string; title: string } | null;
+  host?: { id: string; displayName: string } | null;
+}
+
+export async function listHostBookings(): Promise<HostBookingRecord[]> {
+  const payload = await request("/api/v1/me/host-bookings") as { ok?: unknown; bookings?: unknown };
+  if (payload.ok !== true) throw new TutorBookingApiError("INVALID_RESPONSE", 500);
+  return recordsFrom(payload.bookings) as HostBookingRecord[];
+}
+
+export async function cancelHostBooking(bookingId: string, expectedVersion: number, reason?: string): Promise<HostBookingRecord> {
+  const payload = await request(`/api/v1/host/bookings/${encodeURIComponent(bookingId)}/cancel`, {
+    method: "POST",
+    body: { expectedVersion, ...(reason ? { reason } : {}) },
+  }) as { ok?: unknown; booking?: unknown };
+  if (payload.ok !== true || !payload.booking || typeof payload.booking !== "object") throw new TutorBookingApiError("INVALID_RESPONSE", 500);
+  return payload.booking as HostBookingRecord;
+}
