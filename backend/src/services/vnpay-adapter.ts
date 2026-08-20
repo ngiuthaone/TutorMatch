@@ -11,17 +11,18 @@ function digest(value: string, secret: string) { return createHmac("sha512", sec
 
 export function buildVnpayPaymentUrl(config: VnpayConfig, input: { merchantReference: string; amountVnd: number; orderInfo: string; createdAt: Date; returnUrl?: string }) {
   const d = input.createdAt;
-  const pad = (n: number) => String(n).padStart(2, "0");
   const returnUrl = new URL(config.returnUrl);
   if (input.returnUrl) {
     const override = new URL(input.returnUrl);
     for (const [key, value] of override.searchParams) returnUrl.searchParams.set(key, value);
   }
+  const createDate = formatVnpayDateTime(d);
+  const expireDate = formatVnpayDateTime(new Date(d.getTime() + 24 * 3600e3));
   const fields: VnpayFields = {
     vnp_Version: "2.1.0", vnp_Command: "pay", vnp_TmnCode: config.tmnCode,
     vnp_Amount: String(Math.round(input.amountVnd) * 100), vnp_CurrCode: "VND", vnp_TxnRef: input.merchantReference,
     vnp_OrderInfo: input.orderInfo, vnp_OrderType: "other", vnp_Locale: "vn", vnp_ReturnUrl: returnUrl.toString(), vnp_IpnUrl: config.ipnUrl,
-    vnp_IpAddr: "127.0.0.1", vnp_CreateDate: `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
+    vnp_IpAddr: "127.0.0.1", vnp_CreateDate: createDate, vnp_ExpireDate: expireDate
   };
   return `${config.paymentUrl}?${sortedQuery(fields)}&vnp_SecureHash=${digest(sortedQuery(fields), config.hashSecret)}`;
 }
@@ -71,8 +72,7 @@ export function formatVnpayDateTime(value: Date): string {
 
 export function buildVnpayTransactionRequest(config: VnpayConfig, input: { requestId: string; command: "querydr" | "refund"; merchantReference: string; amountVnd: number; transactionNo?: string; transactionDate?: string; transactionType?: "02" | "03"; orderInfo: string; createdAt: Date }) {
   const d = input.createdAt;
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const createDate = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  const createDate = formatVnpayDateTime(d);
   const fields: VnpayFields = input.command === "querydr" ? {
     vnp_RequestId: input.requestId, vnp_Version: "2.1.0", vnp_Command: "querydr", vnp_TmnCode: config.tmnCode, vnp_TxnRef: input.merchantReference,
     vnp_TransactionDate: input.transactionDate ?? createDate, vnp_CreateDate: createDate, vnp_IpAddr: "127.0.0.1", vnp_OrderInfo: input.orderInfo,
