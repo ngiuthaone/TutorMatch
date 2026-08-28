@@ -22,6 +22,7 @@ import { WorkshopSection } from "./workshop-section";
 import { ClassSection } from "./class-section";
 import { EventLiveSection } from "./event-live-section";
 import { GlassCard } from "../glass-card";
+import { isLiveMode } from "@/lib/auth/config";
 import styles from "./discover-home.module.css";
 
 const people = [
@@ -68,6 +69,7 @@ const creatorPaths = [
 ];
 
 export function DiscoverHome() {
+  const live = isLiveMode();
   return (
     <main className={styles.page}>
       <RecommendationCollage />
@@ -78,6 +80,8 @@ export function DiscoverHome() {
         <div className="tutoria-page-container">
           <div className={styles.peopleIntroSpace} aria-hidden="true" />
 
+          {!live && (
+            <>
           <div className={styles.peopleMarquee}>
             <div className={styles.peopleMarqueeStage}>
               <div className={styles.peopleMarqueeRows}>
@@ -151,6 +155,8 @@ export function DiscoverHome() {
               See people <IconArrowRight size={16} />
             </Link>
           </div>
+            </>
+          )}
         </div>
       </section>
 

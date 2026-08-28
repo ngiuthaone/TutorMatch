@@ -213,13 +213,14 @@ async function saveTutors(tutors: StoredTutor[]) {
 
 export async function GET() {
   const stored = await readTutors();
-  const liveCards = isServerLiveMode() ? await fetchLiveTutorCards() : [];
+  const live = isServerLiveMode();
+  const liveCards = live ? await fetchLiveTutorCards() : [];
   const liveNames = new Set(liveCards.map((card) => card.name.toLocaleLowerCase().trim()));
   const merged = [
     ...liveCards,
     ...stored.filter((item) => !liveNames.has(String(item.displayName || "").toLocaleLowerCase().trim())),
   ];
-  return NextResponse.json({ tutors: merged });
+  return NextResponse.json({ tutors: merged, live });
 }
 
 export async function POST(request: Request) {

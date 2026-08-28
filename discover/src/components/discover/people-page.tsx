@@ -11,6 +11,7 @@ import { useFilterParams } from "@/components/ui/use-filter-params";
 import { ActiveFilters } from "@/components/ui/active-filters";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
 import { FilterRadio } from "@/components/ui/filter-section";
+import { isLiveMode } from "@/lib/auth/config";
 import styles from "./marketplace-pages.module.css";
 
 interface Person {
@@ -112,6 +113,7 @@ export function PeoplePage() {
   const verifiedFilter = params.get("verified", "");
   const locationFilter = params.get("location", "");
   const sort = params.get("sort", "recommended");
+  const live = useMemo(() => isLiveMode(), []);
 
   useEffect(() => {
     let frame = 0;
@@ -140,7 +142,7 @@ export function PeoplePage() {
   }, []);
 
   const filtered = useMemo(() => {
-    let result = [...submittedPeople, ...allPeople.filter((person) => !submittedPeople.some((submitted) => submitted.name === person.name))];
+    let result = [...submittedPeople, ...(live ? [] : allPeople.filter((person) => !submittedPeople.some((submitted) => submitted.name === person.name)))];
 
     if (query) {
       const q = query.toLowerCase();
@@ -182,7 +184,7 @@ export function PeoplePage() {
     else if (sort === "experienced") result.sort((a, b) => b.learners - a.learners);
 
     return result;
-  }, [submittedPeople, query, roleFilter, skillFilter, format, priceFilter, ratingFilter, availFilter, verifiedFilter, locationFilter, sort]);
+  }, [submittedPeople, live, query, roleFilter, skillFilter, format, priceFilter, ratingFilter, availFilter, verifiedFilter, locationFilter, sort]);
 
   const activeFilters = [
     roleFilter ? { key: "role", label: roleFilter, value: roleFilter } : null,

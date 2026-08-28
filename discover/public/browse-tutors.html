@@ -378,6 +378,7 @@ const tutors = [
 
 const TUTOR_SUBMISSION_KEY = 'tutoria_tutor_profile_submission';
 let serverPublishedTutors = [];
+let serverLive = false;
 const PROFILE_IMAGES_BY_NAME = {
   'Minh Anh': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=85',
   'Huy Tran': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=85',
@@ -448,7 +449,7 @@ function submittedTutorToBrowseTutor(submission) {
 }
 
 function getBrowseTutors() {
-  let list = tutors.map(tutor => ({ ...tutor, photoUrl: tutor.photoUrl || PROFILE_IMAGES_BY_NAME[tutor.name] || '' }));
+  let list = (serverLive ? [] : tutors).map(tutor => ({ ...tutor, photoUrl: tutor.photoUrl || PROFILE_IMAGES_BY_NAME[tutor.name] || '' }));
   serverPublishedTutors.forEach(item => {
     if (item && item.source === 'live') {
       list = [{ ...item, photoUrl: item.photoUrl || PROFILE_IMAGES_BY_NAME[item.name] || '' }, ...list.filter(tutor => tutor.name !== item.name)];
@@ -967,6 +968,7 @@ function refreshPublishedTutors() {
     .then(response => response.ok ? response.json() : { tutors: [] })
     .then(payload => {
       serverPublishedTutors = Array.isArray(payload.tutors) ? payload.tutors : [];
+      serverLive = !!payload.live;
       render();
     })
     .catch(() => {});
