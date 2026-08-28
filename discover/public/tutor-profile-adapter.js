@@ -90,7 +90,7 @@ const revealTutorProfile = () => {
       return null;
     }
   })();
-  const serverProfile = (liveProfile || storedProfile) ? null : await fetch("/api/tutors")
+  const serverProfile = (liveProfile || storedProfile) ? null : await fetch("/api/tutors?source=store")
     .then((response) => response.ok ? response.json() : { tutors: [] })
     .then((payload) => {
       const submission = Array.isArray(payload.tutors)

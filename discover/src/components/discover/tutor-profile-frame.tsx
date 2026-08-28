@@ -104,7 +104,7 @@ interface TutorFrameProfile {
 
 async function findStoredProfile(displayName: string): Promise<boolean> {
   const wanted = displayName.toLocaleLowerCase().trim();
-  const response = await fetch("/api/tutors", { cache: "no-store" });
+  const response = await fetch("/api/tutors?source=store", { cache: "no-store" });
   if (!response.ok) return false;
   const payload = (await response.json()) as { tutors?: unknown };
   if (!Array.isArray(payload.tutors)) return false;
@@ -147,78 +147,80 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
       setState({ status: "ready", frameName: displayName, src: `/tutor-profile-exact.html?name=${encodeURIComponent(displayName)}${resumeQuery}` });
     };
     const resolve = async () => {
-      try {
-        const detail = isPublicTutorUuid(decodedName)
-          ? await getTutor(decodedName)
-          : await findByDisplayName(decodedName);
-        if (!detail) {
-          const stored = await findStoredProfile(decodedName);
-          if (!stored) {
-            if (!cancelled) setState({ status: "not-found" });
-            return;
+      const storePromise = findStoredProfile(decodedName);
+      const backendPromise = Promise.race([
+        (async () => {
+          try {
+            return isPublicTutorUuid(decodedName)
+              ? await getTutor(decodedName)
+              : await findByDisplayName(decodedName);
+          } catch {
+            return null;
           }
-          present(decodedName, null);
-          return;
-        }
-        const displayName = detail.displayName;
-        const languages = (detail.languages ?? []).map(
-          (lang) => `${lang.displayName} (${lang.proficiency[0].toUpperCase()}${lang.proficiency.slice(1)})`,
-        );
-        const learnerLevels: string[] = [];
-        (detail.levels ?? []).forEach((code) => {
-          const label = LEVEL_LABELS[code];
-          if (label && !learnerLevels.includes(label)) learnerLevels.push(label);
-        });
-        let bookableSessions: BookableSession[] = [];
-        try {
-          bookableSessions = sortFutureBookableSessions(await listBookableSessions({ tutorProfileId: detail.id }));
-        } catch {
-          // The profile remains viewable, but availability must not be inferred from tutor rules when Sessions cannot be read.
-        }
-        const frameProfile: TutorFrameProfile = {
-          id: detail.id,
-          name: displayName,
-          role: "Independent tutor",
-          tagline: detail.headline || "A tutor on Tutoria.",
-          image: initialsAvatar(displayName),
-          rating: 0,
-          reviewCount: 0,
-          lessons: 0,
-          responseTime: "—",
-          location: detail.regions?.[0] || "",
-          price: detail.hourlyRateVnd || 0,
-          languages,
-          subjects: detail.subjects ?? [],
-          about: (detail.bio ? [detail.bio] : []),
-          learnerLevels,
-          ageGroups: [],
-          teachingStyles: [],
-          outcomes: [],
-          typicalLesson: "",
-          sessionLengths: [30, 50, 60, 90],
-          rates: hourRateToSessionRates(detail.hourlyRateVnd || 0),
-          displayDuration: 60,
-          lessonFormat: teachingFormats(detail.teachingFormat),
-          availability: availabilityStrings(detail),
-          timeZone: timezoneLabel(detail),
-          sameDayBooking: false,
-          learnerCancellation: "Not set",
-          lateCancellation: "Not set",
-          noShowPolicy: "Not set",
-          consultationEnabled: false,
-          faqs: [],
-          isVerified: false,
-          disclosure: detail.disclosure,
-          bookableSessions,
-        };
-        present(displayName, frameProfile);
-      } catch {
-        if (await findStoredProfile(decodedName)) {
-          present(decodedName, null);
-          return;
-        }
-        if (!cancelled) setState({ status: "not-found" });
+        })(),
+        new Promise<null>((waitResolve) => window.setTimeout(() => waitResolve(null), 3500)),
+      ]);
+      if (await storePromise) {
+        present(decodedName, null);
+        return;
       }
+      const detail = await backendPromise;
+      if (!detail) {
+        if (!cancelled) setState({ status: "not-found" });
+        return;
+      }
+      const displayName = detail.displayName;
+      const languages = (detail.languages ?? []).map(
+        (lang) => `${lang.displayName} (${lang.proficiency[0].toUpperCase()}${lang.proficiency.slice(1)})`,
+      );
+      const learnerLevels: string[] = [];
+      (detail.levels ?? []).forEach((code) => {
+        const label = LEVEL_LABELS[code];
+        if (label && !learnerLevels.includes(label)) learnerLevels.push(label);
+      });
+      let bookableSessions: BookableSession[] = [];
+      try {
+        bookableSessions = sortFutureBookableSessions(await listBookableSessions({ tutorProfileId: detail.id }));
+      } catch {
+        // The profile remains viewable, but availability must not be inferred from tutor rules when Sessions cannot be read.
+      }
+      const frameProfile: TutorFrameProfile = {
+        id: detail.id,
+        name: displayName,
+        role: "Independent tutor",
+        tagline: detail.headline || "A tutor on Tutoria.",
+        image: initialsAvatar(displayName),
+        rating: 0,
+        reviewCount: 0,
+        lessons: 0,
+        responseTime: "—",
+        location: detail.regions?.[0] || "",
+        price: detail.hourlyRateVnd || 0,
+        languages,
+        subjects: detail.subjects ?? [],
+        about: (detail.bio ? [detail.bio] : []),
+        learnerLevels,
+        ageGroups: [],
+        teachingStyles: [],
+        outcomes: [],
+        typicalLesson: "",
+        sessionLengths: [30, 50, 60, 90],
+        rates: hourRateToSessionRates(detail.hourlyRateVnd || 0),
+        displayDuration: 60,
+        lessonFormat: teachingFormats(detail.teachingFormat),
+        availability: availabilityStrings(detail),
+        timeZone: timezoneLabel(detail),
+        sameDayBooking: false,
+        learnerCancellation: "Not set",
+        lateCancellation: "Not set",
+        noShowPolicy: "Not set",
+        consultationEnabled: false,
+        faqs: [],
+        isVerified: false,
+        disclosure: detail.disclosure,
+        bookableSessions,
+      };
+      present(displayName, frameProfile);
     };
     void resolve();
     return () => { cancelled = true; };

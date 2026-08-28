@@ -211,9 +211,13 @@ async function saveTutors(tutors: StoredTutor[]) {
   await writeFile(storagePath, JSON.stringify(tutors, null, 2), "utf8");
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
   const stored = await readTutors();
   const live = isServerLiveMode();
+  if (searchParams.get("source") === "store") {
+    return NextResponse.json({ tutors: stored, live });
+  }
   const liveCards = live ? await fetchLiveTutorCards() : [];
   const liveNames = new Set(liveCards.map((card) => card.name.toLocaleLowerCase().trim()));
   const merged = [
