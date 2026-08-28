@@ -102,95 +102,17 @@ interface TutorFrameProfile {
   bookableSessions: BookableSession[];
 }
 
-function stringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-}
-
-function firstRate(rates: Record<string, number> | undefined): number {
-  if (!rates) return 0;
-  const entries = Object.entries(rates).find((entry) => Number.isFinite(entry[1]) && entry[1] > 0);
-  return entries ? entries[1] : 0;
-}
-
-function frameProfileFromStore(entry: Record<string, unknown>): TutorFrameProfile {
-  const displayName = String(entry.displayName ?? entry.name ?? "").trim() || "Tutor";
-  const sessionLengths = Array.isArray(entry.sessionLengths)
-    ? entry.sessionLengths.map(Number).filter(Number.isFinite)
-    : [60];
-  const rates = entry.rates && typeof entry.rates === "object"
-    ? Object.fromEntries(
-        Object.entries(entry.rates as Record<string, unknown>)
-          .map(([key, value]) => [key, Number(value)])
-          .filter(([, value]) => Number.isFinite(value)),
-      )
-    : {};
-  const displayDuration = Number(entry.displayDuration) || (sessionLengths.includes(60) ? 60 : sessionLengths[0]) || 60;
-  const faqs = Array.isArray(entry.faqs)
-    ? entry.faqs
-        .filter((faq): faq is { id?: string; question: string; answer: string } => Boolean(
-          faq && typeof faq === "object" &&
-          typeof (faq as { question?: unknown }).question === "string" &&
-          typeof (faq as { answer?: unknown }).answer === "string",
-        ))
-        .map((faq) => ({
-          id: typeof faq.id === "string" ? faq.id : undefined,
-          question: faq.question,
-          answer: faq.answer,
-        }))
-    : [];
-  const languages = stringArray(entry.languages);
-  const lessonFormat = stringArray(entry.lessonFormat).length ? stringArray(entry.lessonFormat) : ["Online"];
-  const about = typeof entry.about === "string" && entry.about.trim() ? [entry.about] : [];
-  return {
-    id: String(entry.id ?? displayName),
-    name: displayName,
-    role: String(entry.role ?? "").trim() || "Independent tutor",
-    tagline: String(entry.headline ?? "").trim() || "A tutor on Tutoria.",
-    image: typeof entry.photoUrl === "string" && entry.photoUrl.trim() ? entry.photoUrl : initialsAvatar(displayName),
-    rating: 0,
-    reviewCount: 0,
-    lessons: 0,
-    responseTime: "—",
-    location: typeof entry.location === "string" ? entry.location : "",
-    price: rates[String(displayDuration)] ?? firstRate(rates) ?? 0,
-    languages,
-    subjects: stringArray(entry.skills),
-    about,
-    learnerLevels: stringArray(entry.learnerLevels),
-    ageGroups: stringArray(entry.ageGroups),
-    teachingStyles: stringArray(entry.teachingStyles),
-    outcomes: stringArray(entry.goals),
-    typicalLesson: typeof entry.lessonDescription === "string" ? entry.lessonDescription : "",
-    sessionLengths,
-    rates,
-    displayDuration,
-    lessonFormat,
-    availability: stringArray(entry.availability),
-    timeZone: String(entry.timeZone ?? "").trim() || "GMT+7 - Asia/Bangkok",
-    sameDayBooking: Boolean(entry.sameDayBooking),
-    learnerCancellation: String(entry.learnerCancellation ?? "Not set").trim() || "Not set",
-    lateCancellation: String(entry.lateCancellation ?? "Not set").trim() || "Not set",
-    noShowPolicy: String(entry.noShowPolicy ?? "Not set").trim() || "Not set",
-    consultationEnabled: Boolean(entry.consultationEnabled),
-    faqs,
-    isVerified: false,
-    disclosure: undefined,
-    bookableSessions: [],
-  };
-}
-
-async function findStoredProfile(displayName: string): Promise<Record<string, unknown> | null> {
+async function findStoredProfile(displayName: string): Promise<boolean> {
   const wanted = displayName.toLocaleLowerCase().trim();
   const response = await fetch("/api/tutors", { cache: "no-store" });
-  if (!response.ok) return null;
+  if (!response.ok) return false;
   const payload = (await response.json()) as { tutors?: unknown };
-  if (!Array.isArray(payload.tutors)) return null;
-  const match = payload.tutors.find((entry) => {
+  if (!Array.isArray(payload.tutors)) return false;
+  return payload.tutors.some((entry) => {
     if (!entry || typeof entry !== "object") return false;
     const candidate = String((entry as { displayName?: unknown }).displayName ?? (entry as { name?: unknown }).name ?? "");
     return candidate.toLocaleLowerCase().trim() === wanted;
   });
-  return match && typeof match === "object" ? (match as Record<string, unknown>) : null;
 }
 
 export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
@@ -211,12 +133,18 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
   useEffect(() => {
     if (!live) return;
     let cancelled = false;
-    const present = (displayName: string, frameProfile: TutorFrameProfile) => {
+    const present = (displayName: string, frameProfile: TutorFrameProfile | null) => {
       if (cancelled) return;
-      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(frameProfile))));
+      if (frameProfile) {
+        try {
+          sessionStorage.setItem("tutoria_active_tutor_profile", JSON.stringify(frameProfile));
+        } catch {
+          // The profile remains reachable from the static store when session storage is unavailable.
+        }
+      }
       const resumeSessionId = new URLSearchParams(window.location.search).get("bookingSessionId");
       const resumeQuery = resumeSessionId && UUID.test(resumeSessionId) ? `&bookingSessionId=${encodeURIComponent(resumeSessionId)}&bookingStep=review` : "";
-      setState({ status: "ready", frameName: displayName, src: `/tutor-profile-exact.html?name=${encodeURIComponent(displayName)}&profile=${encoded}${resumeQuery}` });
+      setState({ status: "ready", frameName: displayName, src: `/tutor-profile-exact.html?name=${encodeURIComponent(displayName)}${resumeQuery}` });
     };
     const resolve = async () => {
       try {
@@ -229,8 +157,7 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
             if (!cancelled) setState({ status: "not-found" });
             return;
           }
-          const storedName = String(stored.displayName ?? stored.name ?? decodedName).trim() || decodedName;
-          present(storedName, frameProfileFromStore(stored));
+          present(decodedName, null);
           return;
         }
         const displayName = detail.displayName;
@@ -286,10 +213,8 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
         };
         present(displayName, frameProfile);
       } catch {
-        const stored = await findStoredProfile(decodedName);
-        if (stored) {
-          const storedName = String(stored.displayName ?? stored.name ?? decodedName).trim() || decodedName;
-          present(storedName, frameProfileFromStore(stored));
+        if (await findStoredProfile(decodedName)) {
+          present(decodedName, null);
           return;
         }
         if (!cancelled) setState({ status: "not-found" });

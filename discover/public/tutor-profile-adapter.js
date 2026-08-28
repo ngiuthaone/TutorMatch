@@ -78,7 +78,19 @@ const revealTutorProfile = () => {
       return null;
     }
   })();
-  const serverProfile = liveProfile ? null : await fetch("/api/tutors")
+  const storedProfile = (() => {
+    try {
+      const stored = window.sessionStorage.getItem("tutoria_active_tutor_profile");
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      if (!parsed || typeof parsed !== "object" || !parsed.name || parsed.name.trim() !== profileName) return null;
+      window.sessionStorage.removeItem("tutoria_active_tutor_profile");
+      return parsed;
+    } catch {
+      return null;
+    }
+  })();
+  const serverProfile = (liveProfile || storedProfile) ? null : await fetch("/api/tutors")
     .then((response) => response.ok ? response.json() : { tutors: [] })
     .then((payload) => {
       const submission = Array.isArray(payload.tutors)
@@ -126,12 +138,12 @@ const revealTutorProfile = () => {
       };
     })
     .catch(() => null);
-  const profile = liveProfile || submittedProfile || serverProfile || profiles.find((item) => item.name === profileName) || window.TUTORIA_GET_TUTOR_PROFILE?.(params.get("name")) || profiles[0];
+  const profile = liveProfile || storedProfile || submittedProfile || serverProfile || profiles.find((item) => item.name === profileName) || window.TUTORIA_GET_TUTOR_PROFILE?.(params.get("name")) || profiles[0];
   if (!profile) {
     revealTutorProfile();
     return;
   }
-  const isCreatorProfile = Boolean(liveProfile || submittedProfile || serverProfile);
+  const isCreatorProfile = Boolean(liveProfile || storedProfile || submittedProfile || serverProfile);
   const safeEvidenceUrl = (value) => {
     try {
       const url = new URL(String(value || ""));
