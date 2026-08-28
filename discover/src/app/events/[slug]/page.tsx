@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
+import { EventDetailPage } from "@/components/events/event-detail-page";
 import { WorkshopDetailPage } from "@/components/workshop/workshop-detail-page";
-import { allEvents, getEventBySlug } from "@/lib/event-data";
+import {
+  allEvents,
+  getEventBySlug,
+  getSimilarEvents,
+} from "@/lib/event-data";
 import { getSharedEventBySlug } from "@/lib/published-event-store";
 
 export const dynamicParams = true;
@@ -31,6 +36,11 @@ export default async function EventPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const event = getEventBySlug(slug) ?? await getSharedEventBySlug(slug);
+
+  if (event) {
+    return <EventDetailPage event={event} similarEvents={getSimilarEvents(slug)} />;
+  }
 
   return <WorkshopDetailPage slug={slug} />;
 }
