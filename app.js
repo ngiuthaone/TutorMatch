@@ -1,14 +1,16 @@
 (function () {
   const STORAGE_KEY = "tutormatch_mvp_v3";
   const LEGACY_KEY = "tutormatch_mvp_v2";
+  const auth = window.TutoriaAuth;
+  const DEMO_MODE = window.TUTORIA_CONFIG?.demoMode === true;
   const API_BASE_URL = (window.TUTORMATCH_API_BASE_URL || "").replace(/\/$/, "");
   const API_STATE_URL = `${API_BASE_URL}/api/state`;
   const DISCOVER_URL = window.TUTORIA_DISCOVER_URL || "/discover";
   const DISCOVER_ORIGIN = DISCOVER_URL.match(/^https?:\/\/[^/]+/i)?.[0] || "";
-  const SIGN_IN_URL = `${DISCOVER_ORIGIN}/auth/sign-in`;
-  const SIGN_UP_URL = `${DISCOVER_ORIGIN}/auth/sign-up`;
+  const SIGN_IN_URL = DEMO_MODE ? `${DISCOVER_ORIGIN}/auth/sign-in` : "#/auth/sign-in";
+  const SIGN_UP_URL = DEMO_MODE ? `${DISCOVER_ORIGIN}/auth/sign-up` : "#/auth/sign-up";
   const app = document.getElementById("app");
-  let backendEnabled = location.protocol !== "file:";
+  let backendEnabled = DEMO_MODE && location.protocol !== "file:";
   let cleanupSubjectGallery = null;
   let cleanupCommunityJourney = null;
   let cleanupLearnerSection = null;
@@ -45,13 +47,13 @@
   const seed = {
     currentUserId: null,
     users: [
-      { id: "u_student", name: "Anh Thư", email: "student@example.com", password: "Pass123!", role: "student", studentKind: "parent", phone: "0901 111 222", address: "Quận 3, TP.HCM", avatarUrl: "assets/profile-review-emily.png", createdAt: "2026-06-01T09:00:00.000Z" },
-      { id: "u_tutor", name: "Minh Khang", email: "tutor@example.com", password: "Pass123!", role: "tutor", phone: "0902 333 444", address: "Bình Thạnh, TP.HCM", avatarUrl: "assets/tutor-alex.png", createdAt: "2026-06-01T09:10:00.000Z" },
-      { id: "u_tutor_lan", name: "Lê Lan Anh", email: "lan.tutor@example.com", password: "Pass123!", role: "tutor", phone: "0907 222 118", address: "Quận 1, TP.HCM", avatarUrl: "assets/student05-priya.png", createdAt: "2026-06-01T09:12:00.000Z" },
-      { id: "u_tutor_khoa", name: "Phạm Minh Khoa", email: "khoa.tutor@example.com", password: "Pass123!", role: "tutor", phone: "0908 667 889", address: "Thủ Đức, TP.HCM", avatarUrl: "assets/student05-daniel.png", createdAt: "2026-06-01T09:14:00.000Z" },
-      { id: "u_tutor_pending", name: "Trần Mai Chi", email: "pending.tutor@example.com", password: "Pass123!", role: "tutor", phone: "0905 999 888", address: "Quận 7, TP.HCM", avatarUrl: "assets/tutor-isabella.png", createdAt: "2026-06-01T09:20:00.000Z" },
-      { id: "u_tutor_sophia", name: "Nguyễn Phương Linh", email: "sophia.tutor@example.com", password: "Pass123!", role: "tutor", phone: "0909 555 121", address: "Quận 3, TP.HCM", avatarUrl: "assets/profile-sophia.png", createdAt: "2026-06-01T09:24:00.000Z" },
-      { id: "u_admin", name: "Admin TutorMatch", email: "admin@example.com", password: "Pass123!", role: "admin", phone: "support@tutormatch.vn", address: "Back office", createdAt: "2026-06-01T09:30:00.000Z" }
+      { id: "u_student", name: "Anh Thư", email: "student@example.com", role: "student", studentKind: "parent", phone: "0901 111 222", address: "Quận 3, TP.HCM", avatarUrl: "assets/profile-review-emily.png", createdAt: "2026-06-01T09:00:00.000Z" },
+      { id: "u_tutor", name: "Minh Khang", email: "tutor@example.com", role: "tutor", phone: "0902 333 444", address: "Bình Thạnh, TP.HCM", avatarUrl: "assets/tutor-alex.png", createdAt: "2026-06-01T09:10:00.000Z" },
+      { id: "u_tutor_lan", name: "Lê Lan Anh", email: "lan.tutor@example.com", role: "tutor", phone: "0907 222 118", address: "Quận 1, TP.HCM", avatarUrl: "assets/student05-priya.png", createdAt: "2026-06-01T09:12:00.000Z" },
+      { id: "u_tutor_khoa", name: "Phạm Minh Khoa", email: "khoa.tutor@example.com", role: "tutor", phone: "0908 667 889", address: "Thủ Đức, TP.HCM", avatarUrl: "assets/student05-daniel.png", createdAt: "2026-06-01T09:14:00.000Z" },
+      { id: "u_tutor_pending", name: "Trần Mai Chi", email: "pending.tutor@example.com", role: "tutor", phone: "0905 999 888", address: "Quận 7, TP.HCM", avatarUrl: "assets/tutor-isabella.png", createdAt: "2026-06-01T09:20:00.000Z" },
+      { id: "u_tutor_sophia", name: "Nguyễn Phương Linh", email: "sophia.tutor@example.com", role: "tutor", phone: "0909 555 121", address: "Quận 3, TP.HCM", avatarUrl: "assets/profile-sophia.png", createdAt: "2026-06-01T09:24:00.000Z" },
+      { id: "u_admin", name: "Admin TutorMatch", email: "admin@example.com", role: "admin", phone: "support@tutormatch.vn", address: "Back office", createdAt: "2026-06-01T09:30:00.000Z" }
     ],
     tutorProfiles: [
       { userId: "u_tutor", subjects: ["Toán", "Vật lý", "IELTS"], regions: ["Quận 1", "Quận 3", "Bình Thạnh", "Online"], format: "both", hourlyRate: 280000, age: 24, educationLevel: "bachelor", availability: ["T3 tối", "T5 tối", "T7 sáng"], bio: "Gia sư 5 năm kinh nghiệm luyện thi chuyển cấp. Dạy theo lộ trình rõ, có bài tập sau mỗi buổi.", credentialFiles: ["bang-su-pham.pdf", "ielts-8.0.jpg"], verificationStatus: "approved", rejectionReason: "", ratingAvg: 4.9 },
@@ -85,8 +87,9 @@
     ui: { activeConversationId: "c_seed" }
   };
 
-  let state = loadState();
-  hydrate();
+  const productionState = { users: [], tutorProfiles: [], requests: [], cases: [], confirmationLetters: [], payments: [], messages: [], reviews: [], ui: { activeConversationId: null } };
+  let state = DEMO_MODE ? loadState() : productionState;
+  if (DEMO_MODE) hydrate();
 
   function loadState() {
     if (backendEnabled) {
@@ -158,6 +161,7 @@
   }
 
   function save(next = state) {
+    if (!DEMO_MODE) return;
     state = next;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -167,7 +171,14 @@
   }
 
   function currentUser() {
-    return state.users.find((user) => user.id === state.currentUserId) || null;
+    if (!DEMO_MODE) return auth?.getProfile?.() || null;
+    const demoUser = state.users.find((user) => user.id === state.currentUserId);
+    if (demoUser) return demoUser;
+    try {
+      const session = JSON.parse(localStorage.getItem("tutoria_signup") || "null");
+      if (session?.name || session?.email) return session;
+    } catch (error) {}
+    return auth?.getProfile?.() || null;
   }
 
   function userName(id) {
@@ -229,11 +240,13 @@
   }
 
   function publicShell(content, active = "home") {
+    const user = currentUser();
+    const accountUrl = DEMO_MODE && user?.role ? `#/${user.role}` : DISCOVER_URL;
     const mobileItems = [
       [DISCOVER_URL, "Discover"],
       ["#reach-us", "About Us"],
       ["#fyp", "FYP"],
-      [SIGN_IN_URL, "Sign In"]
+      ...(user ? [[accountUrl, "My account"]] : [[SIGN_IN_URL, "Sign In"]])
     ];
     return `
       <header class="site-header public-header">
@@ -245,8 +258,10 @@
           <a href="#fyp">FYP</a>
         </nav>
         <div class="header-actions">
-          <a class="header-cta" href="${escapeHtml(SIGN_IN_URL)}">Sign In</a>
-          <a class="header-cta header-cta-primary" href="${escapeHtml(SIGN_UP_URL)}">Sign Up</a>
+          ${user
+            ? `<a class="header-cta header-cta-primary" href="${escapeHtml(accountUrl)}">${escapeHtml(user.name || "My account")}</a>`
+            : `<a class="header-cta" href="${escapeHtml(SIGN_IN_URL)}">Sign In</a>
+               <a class="header-cta header-cta-primary" href="${escapeHtml(SIGN_UP_URL)}">Sign Up</a>`}
           <button class="mobile-menu-button" type="button" data-action="open-mobile-menu" aria-label="Open menu" aria-controls="mobile-menu">
             <span></span><span></span><span></span>
           </button>
@@ -262,7 +277,7 @@
           <nav aria-label="Mobile navigation">
             ${mobileItems.map(([href, label], index) => `<a href="${href}" style="--i:${index}">${escapeHtml(label)}</a>`).join("")}
           </nav>
-          <a class="mobile-menu-cta" href="${escapeHtml(SIGN_UP_URL)}">Sign Up</a>
+          <a class="mobile-menu-cta" href="${escapeHtml(user ? accountUrl : SIGN_UP_URL)}">${user ? "My account" : "Sign Up"}</a>
         </div>
       </aside>
       ${content}
@@ -557,7 +572,7 @@
         ["#/tutor", "Tổng quan", "book", "dashboard"], ["#/tutor/open-cases", "Case mở", "search", "requests"], ["#/tutor/messages", "Tin nhắn", "chat", "messages"], ["#/tutor/schedule", "Lịch dạy", "calendar", "schedule"], ["#/tutor/earnings", "Thu nhập", "card", "earnings"], ["#/tutor/profile", "Hồ sơ", "user", "profile"], ["#/tutor/settings", "Cài đặt", "shield", "settings"]
       ];
     return `
-      <main class="workspace-shell" id="main-content">
+      <main class="workspace-shell ${active === "messages" ? "messages-workspace" : ""}" id="main-content">
         <aside class="side">
           <a class="brand side-brand" href="#/"><span class="brand-mark">${icon("book")}</span><span>TutorMatch</span></a>
           <nav aria-label="Điều hướng ${role}">${nav.map(([href, label, iconName, key]) => navLink(href, label, active === key, iconName)).join("")}</nav>
@@ -620,27 +635,37 @@
     const cases = role === "student" ? casesForStudent(user.id) : casesForTutor(user.id);
     const active = caseOf(state.ui.activeConversationId) || cases[0];
     const content = cases.length ? `
-      <section class="chat-layout">
-        <aside class="conversation-list">${cases.map((item) => {
+      <section class="inbox-shell">
+        <aside class="inbox-list-panel">
+          <div class="inbox-list-head">
+            <div><p class="inbox-eyebrow">Hộp thư</p><h1>Tin nhắn</h1></div>
+            <button class="inbox-icon-button" type="button" aria-label="Tin nhắn mới">${icon("chat")}</button>
+          </div>
+          <label class="inbox-search"><span class="sr-only">Tìm cuộc trò chuyện</span>${icon("search")}<input data-conversation-search placeholder="Tìm theo tên hoặc nội dung…"></label>
+          <div class="inbox-filters" aria-label="Bộ lọc tin nhắn"><button class="active" type="button">Tất cả</button><button type="button">Đang học</button></div>
+          <div class="conversation-list">${cases.map((item) => {
           const other = otherParty(item, user.role);
           const last = state.messages.filter((m) => m.caseId === item.id).slice(-1)[0];
-          return `<button class="${active?.id === item.id ? "active" : ""}" data-action="open-conversation" data-case-id="${item.id}">${avatar(other, "sm")}<span><b>${escapeHtml(other.name)}</b><small>${escapeHtml(last?.content || labels[item.status])}</small></span></button>`;
-        }).join("")}</aside>
+          const request = requestOf(item.requestId);
+          return `<button class="${active?.id === item.id ? "active" : ""}" data-action="open-conversation" data-case-id="${item.id}" data-conversation-text="${escapeHtml(`${other.name} ${last?.content || ""}`.toLowerCase())}">${avatar(other, "sm")}<span><span class="conversation-name"><b>${escapeHtml(other.name)}</b><time>${last ? new Date(last.createdAt).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }) : "Mới"}</time></span><em>${escapeHtml(request?.subjects?.join(", ") || "Trao đổi học tập")} · ${escapeHtml(request?.grade || labels[item.status])}</em><small>${escapeHtml(last?.content || labels[item.status])}</small></span></button>`;
+        }).join("")}</div></aside>
         <article class="chat-window">
-          <header>${avatar(otherParty(active, user.role), "sm")}<div><h2>${escapeHtml(otherParty(active, user.role).name)}</h2><p>${labels[active.status]}</p></div></header>
-          <div class="messages">${state.messages.filter((m) => m.caseId === active.id).map((m) => `<p class="${m.senderId === user.id ? "mine" : ""}">${escapeHtml(m.content)}<small>${escapeHtml(userName(m.senderId))}</small></p>`).join("")}</div>
+          <header class="chat-person">${avatar(otherParty(active, user.role), "sm")}<div><h2>${escapeHtml(otherParty(active, user.role).name)}</h2><p><span class="online-dot"></span>${labels[active.status]}</p></div><button class="inbox-icon-button" type="button" aria-label="Tùy chọn cuộc trò chuyện">•••</button></header>
+          <div class="lesson-strip"><div>${icon("book")}<span><small>Nhu cầu học</small><b>${escapeHtml(requestOf(active.requestId)?.subjects?.join(", ") || "Buổi học")}</b></span></div><div>${icon("calendar")}<span><small>Lịch mong muốn</small><b>${escapeHtml(requestOf(active.requestId)?.schedule?.join(", ") || "Trao đổi sau")}</b></span></div><span class="status">${labels[active.status]}</span></div>
+          <div class="messages"><div class="message-day"><span>Hôm nay</span></div>${state.messages.filter((m) => m.caseId === active.id).map((m) => `<p class="${m.senderId === user.id ? "mine" : ""}">${escapeHtml(m.content)}<small>${m.senderId === user.id ? "Bạn" : escapeHtml(userName(m.senderId))} · ${new Date(m.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</small></p>`).join("")}</div>
           ${active.status === "cancelled" ? `<div class="locked-note">Case đã hủy: ${escapeHtml(active.cancelledReason || "Không còn trao đổi.")}</div>` : `
             <div class="case-actions">
               ${["pending", "negotiating"].includes(active.status) ? `<button class="primary" data-action="confirm-case" data-case-id="${active.id}">Chốt lịch học</button>` : ""}
               ${["confirmed", "awaiting_payment"].includes(active.status) && user.role === "student" ? `<button class="primary" data-action="pay-case" data-case-id="${active.id}">Thanh toán để mở liên hệ</button>` : ""}
               ${["paid", "active", "completed"].includes(active.status) ? `<span>${icon("shield")} Liên hệ trực tiếp đã mở trong trang Buổi học.</span>` : `<span>${icon("shield")} Liên hệ vẫn được giữ kín.</span>`}
             </div>
-            <form class="composer" data-form="message" data-case-id="${active.id}"><input name="content" required placeholder="Nhập tin nhắn"><button class="primary" type="submit">Gửi</button></form>
+            <form class="composer" data-form="message" data-case-id="${active.id}"><button class="composer-attach" type="button" aria-label="Đính kèm tệp">+</button><label><span class="sr-only">Tin nhắn</span><input name="content" required autocomplete="off" placeholder="Nhập tin nhắn…"></label><button class="primary" type="submit">Gửi ${icon("arrowRight")}</button></form>
           `}
         </article>
+        <aside class="lesson-detail-panel"><p class="inbox-eyebrow">Thông tin buổi học</p><h2>${escapeHtml(requestOf(active.requestId)?.subjects?.join(", ") || "Nhu cầu học")}</h2><dl><div><dt>Học viên</dt><dd>${escapeHtml(userName(requestOf(active.requestId)?.studentId))}</dd></div><div><dt>Trình độ</dt><dd>${escapeHtml(requestOf(active.requestId)?.grade || "Chưa cập nhật")}</dd></div><div><dt>Hình thức</dt><dd>${escapeHtml(labels[requestOf(active.requestId)?.format] || "Linh hoạt")}</dd></div><div><dt>Ngân sách</dt><dd>${money(requestOf(active.requestId)?.budgetMin)}–${money(requestOf(active.requestId)?.budgetMax)} / buổi</dd></div></dl><div class="privacy-note">${icon("shield")}<div><b>Liên hệ được bảo vệ</b><p>Thông tin cá nhân chỉ mở sau khi hai bên xác nhận và thanh toán.</p></div></div></aside>
       </section>
     ` : empty("Chưa có cuộc trò chuyện.", role === "student" ? "Vào danh sách gia sư để bắt đầu chat." : "Nhận một case mở để trao đổi với phụ huynh.");
-    return appShell(role, "messages", `<section class="page-hero compact"><div><p class="kicker">Tin nhắn trong app</p><h1>Trao đổi trước khi mở liên hệ.</h1><p>Mọi thỏa thuận quan trọng nên được giữ trong app để dễ đối chiếu.</p></div></section>${content}`);
+    return appShell(role, "messages", content);
   }
 
   function pagePayments() {
@@ -951,11 +976,24 @@
 
   function router() {
     const hash = location.hash || "#/";
+    if (!DEMO_MODE) {
+      const guard = auth.canAccessRoute(hash);
+      if (!guard.allowed) {
+        if (guard.redirect && location.hash !== guard.redirect) queueMicrotask(() => navigate(guard.redirect));
+        if (guard.reason === "forbidden") return `<main class="auth-page"><section class="auth-panel"><h1>Access denied</h1><p>Your authenticated account role cannot open this area.</p></section></main>`;
+        return `<main class="auth-page"><section class="auth-panel" aria-busy="true"><h1>Securing your session</h1><p>Private content is hidden while authentication is resolved.</p></section></main>`;
+      }
+    }
     const [path, query = ""] = hash.slice(1).split("?");
     const parts = path.split("/").filter(Boolean);
     if (!parts.length) return pageHome();
+    if (!DEMO_MODE && parts[0] === "tutors") {
+      queueMicrotask(() => parts[1] ? window.TutoriaTutorCv.mountDetail(app, parts[1]) : window.TutoriaTutorCv.mountList(app));
+      return `<main class="cv-page" aria-busy="true">Loading tutor profiles…</main>`;
+    }
+    if (parts[0] === "terms" || parts[0] === "privacy") return `<main class="auth-page"><section class="auth-panel"><a class="auth-brand" href="#/">Tutoria</a><h1>${parts[0] === "terms" ? "Terms of Service" : "Privacy Policy"}</h1><p>This pre-launch notice describes the authentication pilot only. Formal legal terms, consent records, retention, deletion, and public-launch privacy review are still required.</p><p><a href="#/auth/sign-up">Return to sign up</a></p></section></main>`;
     if (parts[0] === "student") {
-      if (parts[1] === "tutors") return pageStudentTutors();
+      if (parts[1] === "tutors") { if (!DEMO_MODE) { queueMicrotask(() => window.TutoriaTutorCv.mountList(app)); return `<main class="cv-page" aria-busy="true">Loading published tutors…</main>`; } return pageStudentTutors(); }
       if (parts[1] === "messages") return pageMessages("student");
       if (parts[1] === "payments") return pagePayments();
       if (parts[1] === "sessions" || parts[1] === "history") return pageSessions("student");
@@ -967,6 +1005,7 @@
       return pageStudentDashboard();
     }
     if (parts[0] === "tutor") {
+      if (!DEMO_MODE && parts[1] === "profile") { queueMicrotask(() => window.TutoriaTutorCv.mountEditor(app)); return `<main class="cv-page" aria-busy="true">Loading your tutor CV…</main>`; }
       if (parts[1] === "open-cases") return pageOpenCases();
       if (parts[1] === "messages") return pageMessages("tutor");
       if (parts[1] === "schedule") return pageSessions("tutor");
@@ -981,7 +1020,10 @@
   }
 
   function render() {
+    const hash = location.hash || "#/";
+    if (!DEMO_MODE && auth?.ownsRoute(hash)) { auth.renderRoute(app, hash); return; }
     app.innerHTML = router();
+    if (DEMO_MODE && typeof document.createElement === "function") { const badge = document.createElement("div"); badge.className = "demo-mode-badge"; badge.textContent = "Local demo mode"; badge.setAttribute("role", "status"); app.prepend(badge); }
     document.body?.classList?.toggle("has-tutoria-hero", Boolean(document.querySelector(".tutoria-hero")));
     app.focus?.({ preventScroll: true });
     initSubjectGallery();
@@ -1754,10 +1796,12 @@
       return;
     }
     if (action === "logout") {
+      if (!DEMO_MODE) { void auth.signOut(); return; }
       state.currentUserId = null;
       save();
       navigate("#/");
     }
+    if (!DEMO_MODE && !["open-mobile-menu", "close-mobile-menu"].includes(action)) { alert("This feature will be connected in the next backend milestone."); return; }
     if (action === "start-chat") {
       const requestId = actionEl.dataset.requestId || "r_seed";
       const tutorId = actionEl.dataset.tutorId;
@@ -1833,6 +1877,13 @@
   });
 
   document.addEventListener("input", (event) => {
+    if (event.target.matches("[data-conversation-search]")) {
+      const query = event.target.value.trim().toLowerCase();
+      document.querySelectorAll("[data-conversation-text]").forEach((item) => {
+        item.hidden = Boolean(query) && !item.dataset.conversationText.includes(query);
+      });
+      return;
+    }
     const scope = event.target.closest("[data-filter-scope='tutors']");
     if (!scope) return;
     const text = scope.querySelector("[data-filter-text]").value.toLowerCase();
@@ -1851,6 +1902,7 @@
     if (!form) return;
     event.preventDefault();
     const type = form.dataset.form;
+    if (!DEMO_MODE) { event.preventDefault(); alert("This feature will be connected in the next backend milestone."); return; }
     const values = formValues(form);
     if (type === "hero-search") {
       window.location.assign(SIGN_UP_URL);
@@ -1891,4 +1943,5 @@
   window.tutormatchStateMachine = { getState: () => state, setCaseStatus, connectionFee };
   initStarCursor();
   render();
+  if (!DEMO_MODE) { auth.subscribe(render); void auth.initialize().then(render); }
 })();

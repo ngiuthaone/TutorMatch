@@ -44,13 +44,14 @@ const profileFaqs = [
   { question: "How do I book a lesson with this tutor?", answer: "Choose a lesson length, then select an available time. Your booking is confirmed once the tutor accepts it." },
   { question: "Can I reschedule a booked lesson?", answer: "Yes. You can reschedule from your bookings area, subject to the cancellation notice shown above." },
   { question: "What should I prepare for my first lesson?", answer: "Bring your goal, any relevant materials, and a few examples of what you would like to learn. Your tutor will tailor the first session from there." },
-  { question: "How are lessons paid for?", answer: "Payments are made securely through Tutoria when you book. The lesson price and any first-session offer are shown before you confirm." },
+  { question: "How are lessons paid for?", answer: "You send a booking request first. Payment becomes available securely through Tutoria after the tutor accepts your request." },
 ];
 
 type SubmittedTutorFaq = { id?: string; question?: string; answer?: string };
 type TutorSubmission = {
   status?: string;
   displayName?: string;
+  location?: string;
   role?: string;
   headline?: string;
   about?: string;
@@ -62,7 +63,7 @@ type TutorSubmission = {
   goals?: string[];
   teachingStyles?: string[];
   lessonDescription?: string;
-  lessonFormat?: string;
+  lessonFormat?: string | string[];
   sessionLengths?: number[];
   timeSlots?: string[];
   availability?: string[];
@@ -77,7 +78,7 @@ type TutorSubmission = {
 type SubmittedTutorProfile = {
   profile: TutorProfile;
   faqs: { question: string; answer: string }[];
-  lessonFormat: string;
+  lessonFormat: string[];
   availability: string[];
   timeSlots: string[];
   rates: Record<string, number>;
@@ -91,6 +92,12 @@ function makeSubmittedTutorProfile(submission: TutorSubmission): SubmittedTutorP
   const sessionLength = submission.sessionLengths?.includes(60) ? 60 : submission.sessionLengths?.[0];
   const subjects = submission.skills?.filter(Boolean) ?? [];
   const faqs = submission.faqs?.filter((faq): faq is { question: string; answer: string } => Boolean(faq.question?.trim() && faq.answer?.trim())).map(({ question, answer }) => ({ question, answer })) ?? [];
+  const lessonFormat = Array.isArray(submission.lessonFormat)
+    ? submission.lessonFormat.filter(Boolean)
+    : submission.lessonFormat
+      ? [submission.lessonFormat]
+      : ["Online"];
+
   return {
     profile: {
       name: submission.displayName.trim(),
@@ -101,7 +108,7 @@ function makeSubmittedTutorProfile(submission: TutorSubmission): SubmittedTutorP
       reviewCount: 0,
       lessons: 0,
       responseTime: "New to Tutoria",
-      location: "Ha Noi, Vietnam",
+      location: submission.location?.trim() || "Location not set",
       price: sessionLength ? submission.rates?.[String(sessionLength)] || 0 : 0,
       languages: submission.languages?.filter(Boolean) ?? ["Vietnamese"],
       subjects: subjects.length ? subjects : ["Tutoring"],
@@ -114,7 +121,7 @@ function makeSubmittedTutorProfile(submission: TutorSubmission): SubmittedTutorP
       reviews: [],
     },
     faqs,
-    lessonFormat: submission.lessonFormat || "Online",
+    lessonFormat,
     availability: submission.availability ?? [],
     timeSlots: submission.timeSlots?.filter((slot) => /^\d{2}:\d{2}-\d{2}:\d{2}$/.test(slot)) ?? ["09:00-12:00", "14:00-18:00", "18:00-21:00"],
     rates: submission.rates ?? {},
@@ -152,7 +159,7 @@ export function ProfileReplacement({ name }: { name?: string }) {
     { minutes: 90, price: Math.round(profile.price * 1.4 / 10000) * 10000 },
   ];
   const rateOptions = submittedTutor?.sessionLengths.length ? submittedTutor.sessionLengths.map((minutes) => ({ minutes, price: submittedTutor.rates[String(minutes)] || 0, popular: minutes === 60 })) : defaultRateOptions;
-  const submittedLessonFormats = submittedTutor ? lessonFormats.filter((format) => format.value === submittedTutor.lessonFormat) : [];
+  const submittedLessonFormats = submittedTutor ? lessonFormats.filter((format) => submittedTutor.lessonFormat.includes(format.value)) : [];
   const displayedLessonFormats = submittedLessonFormats.length ? submittedLessonFormats : lessonFormats;
   const scheduleRows = submittedTutor?.timeSlots.length ? submittedTutor.timeSlots.map((time) => ({ time: time.replace("-", " - "), days: Array.from({ length: weekDays.length }, () => false) })) : availability;
   const scheduleAvailability = submittedTutor ? scheduleRows.map((row) => ({ ...row, days: row.days.map((_, index) => submittedTutor.availability.includes(`${row.time.replace(/\s/g, "")}-${index}`)) })) : availability;

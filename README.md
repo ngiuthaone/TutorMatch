@@ -2,7 +2,24 @@
 
 Working demo marketplace 2 chiều cho học sinh/phụ huynh và gia sư dạy 1-1. App hiện có Node backend tối giản để lưu dữ liệu demo vào file `data/state.json` qua REST API, thay vì chỉ giữ trong browser.
 
-## Demo Accounts
+## Production backend foundation
+
+The independently deployed API lives in [`backend/`](backend/README.md) and runs on port 4000 by default. It includes secure tutor CV draft/publish/unpublish and public discovery. The root `server.js` and `/api/state` endpoints remain **LEGACY LOCAL DEMO ONLY** and must never receive production accounts or CV data. See [`docs/tutor-cv-milestone.md`](docs/tutor-cv-milestone.md).
+
+## Secure frontend authentication foundation
+
+The root SPA now includes a bundled Supabase Auth layer for signup, email verification, sign-in, session restoration, logout, password recovery, and role-based routing. In production mode, the browser always obtains the trusted Tutoria role from backend `GET /api/v1/me`; Supabase user metadata, hash routes, seeded IDs, and browser storage are not authorization sources.
+
+See [`docs/supabase-auth-setup.md`](docs/supabase-auth-setup.md) for runtime configuration, exact callback URLs, dashboard setup, builds, tests, and manual verification. Build and test with:
+
+```bash
+pnpm build:auth
+pnpm test:auth
+```
+
+Production mode does not call `/api/state`, use `state.currentUserId`, show seeded tutors, or fall back to demo mode. Explicit `demoMode: true` preserves the old local demonstration separately.
+
+## Demo Accounts — LOCAL DEMO ONLY
 
 | Role | Email | Password | Ghi chú |
 | --- | --- | --- | --- |
@@ -13,7 +30,7 @@ Working demo marketplace 2 chiều cho học sinh/phụ huynh và gia sư dạy 
 | Quản trị viên | `admin@example.com` | `Pass123!` | Duyệt hoặc từ chối hồ sơ gia sư |
 | Gia sư chờ duyệt | `pending.tutor@example.com` | `Pass123!` | Dùng để test trạng thái chờ duyệt/bị từ chối |
 
-## Run Local
+## Run Local — LOCAL DEMO ONLY
 
 Yêu cầu Node.js. Trong workspace Codex hiện tại có thể chạy bằng runtime bundled:
 
@@ -66,12 +83,14 @@ Sau đó reload trang để seed lại dữ liệu mẫu.
 
 Test hiện kiểm tra rule quan trọng: khi một cuộc ghép được thanh toán thành công, các cuộc trao đổi khác của cùng nhu cầu tự hủy bởi `system`, có lý do hủy, và nhu cầu học được đóng.
 
-## Deploy
+## Legacy demo deployment (not for real users)
 
-Target hiện tại:
+The configuration below is retained only for temporary, non-production demos. Do not deploy the root state API for real accounts or personal data. The production backend target is documented in `backend/README.md`.
+
+Demo target hiện tại:
 
 - Vercel serve frontend tĩnh.
-- Render chạy backend Node `server.js`.
+- Render chạy backend demo Node `server.js` (local/temporary demo data only).
 - Supabase/Postgres là database production kế tiếp; bản demo hiện vẫn lưu state vào file `data/state.json`.
 
 Vercel settings:
@@ -127,7 +146,7 @@ Trong bản production thật nên thay file backend bằng:
 - Payment: Stripe Checkout test/live mode
 - Realtime chat: Supabase Realtime hoặc WebSocket service
 
-## MVP Flow
+## Legacy demo flow — LOCAL DEMO ONLY
 
 1. Phụ huynh/học sinh đăng ký, khai rõ vai trò, rồi tạo nhu cầu học.
 2. Danh sách gợi ý chỉ hiện gia sư đã được xác minh.

@@ -1,0 +1,458 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { TutorProfileSkeleton } from "./tutor-profile-skeleton";
+import { isLiveMode } from "@/lib/auth/config";
+import { getTutor, isPublicTutorUuid, listTutors, type PublicTutorDetail } from "@/lib/tutor-cv-api";
+import { BookingApiError, createBooking, listBookableSessions, type BookableSession } from "@/lib/booking-api";
+import { sortFutureBookableSessions } from "@/lib/bookable-session-projection";
+import { ensureSession, signOutLive, useSession } from "@/lib/auth/session";
+
+interface TutorProfileFrameProps {
+  name: string;
+}
+
+const LEVEL_LABELS: Record<string, string> = {
+  primary: "Primary school ages",
+  lower_secondary: "Lower secondary ages",
+  upper_secondary: "Upper secondary ages",
+  university: "University students",
+  adult: "Adults",
+  beginner: "Complete beginners",
+  intermediate: "Intermediate learners",
+  advanced: "Advanced learners",
+  exam_preparation: "Exam preparation",
+};
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function initialsAvatar(displayName: string): string {
+  const initials = displayName
+    .split(/\s+/)
+    .map((part) => part[0])
+    .filter(Boolean)
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "T";
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800"><rect width="800" height="800" fill="#17181c"/><text x="400" y="440" font-family="Arial, Helvetica, sans-serif" font-size="300" font-weight="600" fill="#e8e6df" text-anchor="middle">${initials.replace(/[<>&"]/g, "")}</text></svg>`;
+  return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+}
+
+function hourRateToSessionRates(hourly: number): Record<string, number> {
+  const rates: Record<string, number> = {};
+  for (const duration of [30, 50, 60, 90]) {
+    rates[String(duration)] = Math.round((hourly * duration) / 60);
+  }
+  return rates;
+}
+
+function teachingFormats(format: PublicTutorDetail["teachingFormat"]): string[] {
+  const formats: string[] = [];
+  if (format === "online" || format === "both") formats.push("Online");
+  if (format === "in_person" || format === "both") formats.push("At my teaching space", "At learners' location", "Public place");
+  return formats.length ? formats : ["Online"];
+}
+
+function availabilityStrings(detail: PublicTutorDetail): string[] {
+  return (detail.availability ?? []).map((slot) => `${slot.startTime}-${slot.endTime}-${slot.dayOfWeek}`);
+}
+
+function timezoneLabel(detail: PublicTutorDetail): string {
+  const tz = detail.availability?.[0]?.timezone;
+  if (!tz) return "GMT+7 - Asia/Bangkok";
+  if (tz === "Asia/Bangkok") return "GMT+7 - Asia/Bangkok";
+  if (tz === "Asia/Singapore") return "GMT+8 - Asia/Singapore";
+  if (tz === "Asia/Tokyo") return "GMT+9 - Asia/Tokyo";
+  return tz;
+}
+
+interface TutorFrameProfile {
+  id: string;
+  name: string;
+  role: string;
+  tagline: string;
+  image: string;
+  rating: number;
+  reviewCount: number;
+  lessons: number;
+  responseTime: string;
+  location: string;
+  price: number;
+  languages: string[];
+  subjects: string[];
+  about: string[];
+  learnerLevels: string[];
+  ageGroups: string[];
+  teachingStyles: string[];
+  outcomes: string[];
+  typicalLesson: string;
+  sessionLengths: number[];
+  rates: Record<string, number>;
+  displayDuration: number;
+  lessonFormat: string[];
+  availability: string[];
+  timeZone: string;
+  sameDayBooking: boolean;
+  learnerCancellation: string;
+  lateCancellation: string;
+  noShowPolicy: string;
+  consultationEnabled: boolean;
+  faqs: { id?: string; question: string; answer: string }[];
+  isVerified: boolean;
+  disclosure: string | undefined;
+  bookableSessions: BookableSession[];
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function firstRate(rates: Record<string, number> | undefined): number {
+  if (!rates) return 0;
+  const entries = Object.entries(rates).find((entry) => Number.isFinite(entry[1]) && entry[1] > 0);
+  return entries ? entries[1] : 0;
+}
+
+function frameProfileFromStore(entry: Record<string, unknown>): TutorFrameProfile {
+  const displayName = String(entry.displayName ?? entry.name ?? "").trim() || "Tutor";
+  const sessionLengths = Array.isArray(entry.sessionLengths)
+    ? entry.sessionLengths.map(Number).filter(Number.isFinite)
+    : [60];
+  const rates = entry.rates && typeof entry.rates === "object"
+    ? Object.fromEntries(
+        Object.entries(entry.rates as Record<string, unknown>)
+          .map(([key, value]) => [key, Number(value)])
+          .filter(([, value]) => Number.isFinite(value)),
+      )
+    : {};
+  const displayDuration = Number(entry.displayDuration) || (sessionLengths.includes(60) ? 60 : sessionLengths[0]) || 60;
+  const faqs = Array.isArray(entry.faqs)
+    ? entry.faqs
+        .filter((faq): faq is { id?: string; question: string; answer: string } => Boolean(
+          faq && typeof faq === "object" &&
+          typeof (faq as { question?: unknown }).question === "string" &&
+          typeof (faq as { answer?: unknown }).answer === "string",
+        ))
+        .map((faq) => ({
+          id: typeof faq.id === "string" ? faq.id : undefined,
+          question: faq.question,
+          answer: faq.answer,
+        }))
+    : [];
+  const languages = stringArray(entry.languages);
+  const lessonFormat = stringArray(entry.lessonFormat).length ? stringArray(entry.lessonFormat) : ["Online"];
+  const about = typeof entry.about === "string" && entry.about.trim() ? [entry.about] : [];
+  return {
+    id: String(entry.id ?? displayName),
+    name: displayName,
+    role: String(entry.role ?? "").trim() || "Independent tutor",
+    tagline: String(entry.headline ?? "").trim() || "A tutor on Tutoria.",
+    image: typeof entry.photoUrl === "string" && entry.photoUrl.trim() ? entry.photoUrl : initialsAvatar(displayName),
+    rating: 0,
+    reviewCount: 0,
+    lessons: 0,
+    responseTime: "—",
+    location: typeof entry.location === "string" ? entry.location : "",
+    price: rates[String(displayDuration)] ?? firstRate(rates) ?? 0,
+    languages,
+    subjects: stringArray(entry.skills),
+    about,
+    learnerLevels: stringArray(entry.learnerLevels),
+    ageGroups: stringArray(entry.ageGroups),
+    teachingStyles: stringArray(entry.teachingStyles),
+    outcomes: stringArray(entry.goals),
+    typicalLesson: typeof entry.lessonDescription === "string" ? entry.lessonDescription : "",
+    sessionLengths,
+    rates,
+    displayDuration,
+    lessonFormat,
+    availability: stringArray(entry.availability),
+    timeZone: String(entry.timeZone ?? "").trim() || "GMT+7 - Asia/Bangkok",
+    sameDayBooking: Boolean(entry.sameDayBooking),
+    learnerCancellation: String(entry.learnerCancellation ?? "Not set").trim() || "Not set",
+    lateCancellation: String(entry.lateCancellation ?? "Not set").trim() || "Not set",
+    noShowPolicy: String(entry.noShowPolicy ?? "Not set").trim() || "Not set",
+    consultationEnabled: Boolean(entry.consultationEnabled),
+    faqs,
+    isVerified: false,
+    disclosure: undefined,
+    bookableSessions: [],
+  };
+}
+
+async function findStoredProfile(displayName: string): Promise<Record<string, unknown> | null> {
+  const wanted = displayName.toLocaleLowerCase().trim();
+  const response = await fetch("/api/tutors", { cache: "no-store" });
+  if (!response.ok) return null;
+  const payload = (await response.json()) as { tutors?: unknown };
+  if (!Array.isArray(payload.tutors)) return null;
+  const match = payload.tutors.find((entry) => {
+    if (!entry || typeof entry !== "object") return false;
+    const candidate = String((entry as { displayName?: unknown }).displayName ?? (entry as { name?: unknown }).name ?? "");
+    return candidate.toLocaleLowerCase().trim() === wanted;
+  });
+  return match && typeof match === "object" ? (match as Record<string, unknown>) : null;
+}
+
+export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const fallbackTimerRef = useRef<number | null>(null);
+  const [ready, setReady] = useState(false);
+  const live = isLiveMode();
+  const session = useSession();
+  const decodedName = useMemo(() => decodeURIComponent(name).trim(), [name]);
+  const [state, setState] = useState<{ status: "loading" } | { status: "not-found" } | { status: "ready"; frameName: string; src: string }>({ status: "loading" });
+
+  const clearFallbackTimer = useCallback(() => {
+    if (fallbackTimerRef.current === null) return;
+    window.clearTimeout(fallbackTimerRef.current);
+    fallbackTimerRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (!live) return;
+    let cancelled = false;
+    const present = (displayName: string, frameProfile: TutorFrameProfile) => {
+      if (cancelled) return;
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(frameProfile))));
+      const resumeSessionId = new URLSearchParams(window.location.search).get("bookingSessionId");
+      const resumeQuery = resumeSessionId && UUID.test(resumeSessionId) ? `&bookingSessionId=${encodeURIComponent(resumeSessionId)}&bookingStep=review` : "";
+      setState({ status: "ready", frameName: displayName, src: `/tutor-profile-exact.html?name=${encodeURIComponent(displayName)}&profile=${encoded}${resumeQuery}` });
+    };
+    const resolve = async () => {
+      try {
+        const detail = isPublicTutorUuid(decodedName)
+          ? await getTutor(decodedName)
+          : await findByDisplayName(decodedName);
+        if (!detail) {
+          const stored = await findStoredProfile(decodedName);
+          if (!stored) {
+            if (!cancelled) setState({ status: "not-found" });
+            return;
+          }
+          const storedName = String(stored.displayName ?? stored.name ?? decodedName).trim() || decodedName;
+          present(storedName, frameProfileFromStore(stored));
+          return;
+        }
+        const displayName = detail.displayName;
+        const languages = (detail.languages ?? []).map(
+          (lang) => `${lang.displayName} (${lang.proficiency[0].toUpperCase()}${lang.proficiency.slice(1)})`,
+        );
+        const learnerLevels: string[] = [];
+        (detail.levels ?? []).forEach((code) => {
+          const label = LEVEL_LABELS[code];
+          if (label && !learnerLevels.includes(label)) learnerLevels.push(label);
+        });
+        let bookableSessions: BookableSession[] = [];
+        try {
+          bookableSessions = sortFutureBookableSessions(await listBookableSessions({ tutorProfileId: detail.id }));
+        } catch {
+          // The profile remains viewable, but availability must not be inferred from tutor rules when Sessions cannot be read.
+        }
+        const frameProfile: TutorFrameProfile = {
+          id: detail.id,
+          name: displayName,
+          role: "Independent tutor",
+          tagline: detail.headline || "A tutor on Tutoria.",
+          image: initialsAvatar(displayName),
+          rating: 0,
+          reviewCount: 0,
+          lessons: 0,
+          responseTime: "—",
+          location: detail.regions?.[0] || "",
+          price: detail.hourlyRateVnd || 0,
+          languages,
+          subjects: detail.subjects ?? [],
+          about: (detail.bio ? [detail.bio] : []),
+          learnerLevels,
+          ageGroups: [],
+          teachingStyles: [],
+          outcomes: [],
+          typicalLesson: "",
+          sessionLengths: [30, 50, 60, 90],
+          rates: hourRateToSessionRates(detail.hourlyRateVnd || 0),
+          displayDuration: 60,
+          lessonFormat: teachingFormats(detail.teachingFormat),
+          availability: availabilityStrings(detail),
+          timeZone: timezoneLabel(detail),
+          sameDayBooking: false,
+          learnerCancellation: "Not set",
+          lateCancellation: "Not set",
+          noShowPolicy: "Not set",
+          consultationEnabled: false,
+          faqs: [],
+          isVerified: false,
+          disclosure: detail.disclosure,
+          bookableSessions,
+        };
+        present(displayName, frameProfile);
+      } catch {
+        const stored = await findStoredProfile(decodedName);
+        if (stored) {
+          const storedName = String(stored.displayName ?? stored.name ?? decodedName).trim() || decodedName;
+          present(storedName, frameProfileFromStore(stored));
+          return;
+        }
+        if (!cancelled) setState({ status: "not-found" });
+      }
+    };
+    void resolve();
+    return () => { cancelled = true; };
+  }, [live, decodedName]);
+
+  const readyName = state.status === "ready" ? state.frameName : null;
+
+  useEffect(() => {
+    if (!live) return;
+    const onBookingMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.source !== frameRef.current?.contentWindow) return;
+      const data = event.data as { type?: unknown; requestId?: unknown; tutorProfileId?: unknown; sessionId?: unknown; participantCount?: unknown } | null;
+      if (!data) return;
+      if (data.type === "tutoria-auth-sign-out") {
+        void signOutLive().finally(() => window.location.assign("/auth/sign-in"));
+        return;
+      }
+      const bookingReturnPath = () => {
+        const url = new URL(window.location.href);
+        if (typeof data.sessionId === "string" && UUID.test(data.sessionId)) {
+          url.searchParams.set("bookingSessionId", data.sessionId);
+          url.searchParams.set("bookingStep", "review");
+        }
+        return `${url.pathname}${url.search}`;
+      };
+      if (data.type === "tutoria-booking-auth-required") {
+        const returnPath = bookingReturnPath();
+        window.location.assign(`/auth/sign-in?next=${encodeURIComponent(returnPath)}`);
+        return;
+      }
+      if (data.type === "tutoria-booking-verification-required") {
+        const returnPath = bookingReturnPath();
+        window.location.assign(`/auth/verify-email?next=${encodeURIComponent(returnPath)}`);
+        return;
+      }
+      if (typeof data.requestId !== "string") return;
+      const respond = (payload: Record<string, unknown>) => {
+        frameRef.current?.contentWindow?.postMessage({ ...payload, requestId: data.requestId }, window.location.origin);
+      };
+      if (data.type === "tutoria-booking-load-sessions" && typeof data.tutorProfileId === "string") {
+        void listBookableSessions({ tutorProfileId: data.tutorProfileId })
+          .then((sessions) => respond({ type: "tutoria-booking-sessions", sessions }))
+          .catch((error: unknown) => respond({ type: "tutoria-booking-error", code: error instanceof BookingApiError ? error.code : "BOOKING_SERVICE_UNAVAILABLE" }));
+      }
+      if (data.type === "tutoria-booking-create" && typeof data.sessionId === "string") {
+        const sessionId = data.sessionId;
+        void ensureSession()
+          .then(() => createBooking(sessionId, typeof data.participantCount === "number" ? data.participantCount : 1))
+          .then((booking) => respond({ type: "tutoria-booking-created", booking }))
+          .catch((error: unknown) => {
+            const code = error instanceof BookingApiError ? error.code : "BOOKING_SERVICE_UNAVAILABLE";
+            if (code === "UNAUTHORIZED") respond({ type: "tutoria-booking-auth-required", sessionId });
+            else if (code === "EMAIL_VERIFICATION_REQUIRED") respond({ type: "tutoria-booking-verification-required", sessionId });
+            else respond({ type: "tutoria-booking-error", code, sessionId });
+          });
+      }
+    };
+    window.addEventListener("message", onBookingMessage);
+    return () => window.removeEventListener("message", onBookingMessage);
+  }, [live]);
+
+  useEffect(() => {
+    if (!live || !ready) return;
+    frameRef.current?.contentWindow?.postMessage({
+      type: "tutoria-booking-auth-state",
+      authenticated: session.status === "authenticated",
+    }, window.location.origin);
+  }, [live, ready, session.status]);
+
+  useEffect(() => {
+    const onReady = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.source !== frameRef.current?.contentWindow) return;
+      if (event.data?.type !== "tutoria-tutor-profile-ready") return;
+      if (readyName === null || event.data?.name !== readyName) return;
+      clearFallbackTimer();
+      setReady(true);
+    };
+    window.addEventListener("message", onReady);
+    return () => window.removeEventListener("message", onReady);
+  }, [clearFallbackTimer, readyName]);
+
+  useEffect(() => clearFallbackTimer, [clearFallbackTimer]);
+
+  const handleLoad = useCallback(() => {
+    clearFallbackTimer();
+    fallbackTimerRef.current = window.setTimeout(() => setReady(true), 1500);
+  }, [clearFallbackTimer]);
+
+  if (!live) {
+    return (
+      <div className="relative min-h-[100dvh] bg-[#101011]">
+        <TutorProfileSkeleton />
+        <iframe
+          key={decodedName}
+          ref={frameRef}
+          src={`/tutor-profile-exact.html?name=${encodeURIComponent(decodedName)}`}
+          title="Tutor profile"
+          onLoad={handleLoad}
+          className="absolute inset-0 block h-[100dvh] w-full border-0 bg-[#101011]"
+        />
+      </div>
+    );
+  }
+
+  if (state.status === "not-found") {
+    return (
+      <main className="min-h-[100dvh] grid place-items-center bg-[#101011] px-6">
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl font-semibold tracking-tight text-[#e8e6df]">Tutor profile not found</h1>
+          <p className="mt-3 text-sm text-[#8f8e8a]">
+            This tutor profile is unavailable or has been unpublished.
+          </p>
+          <a href="/discover" className="mt-6 inline-block text-sm underline text-[#e8e6df]">
+            Back to Discover
+          </a>
+        </div>
+      </main>
+    );
+  }
+
+  if (state.status === "loading") {
+    return (
+      <main className="min-h-[100dvh] bg-[#101011]" aria-busy="true">
+        <TutorProfileSkeleton />
+      </main>
+    );
+  }
+
+  return (
+    <div className="relative min-h-[100dvh] bg-[#101011]">
+      {!ready && <TutorProfileSkeleton />}
+      <iframe
+        key={state.frameName}
+        ref={frameRef}
+        src={state.src}
+        title="Tutor profile"
+        onLoad={handleLoad}
+        className="absolute inset-0 block h-[100dvh] w-full border-0 bg-[#101011]"
+        style={{
+          opacity: ready ? 1 : 0,
+          pointerEvents: ready ? "auto" : "none",
+          transition: "opacity 120ms ease",
+        }}
+      />
+    </div>
+  );
+}
+
+async function findByDisplayName(displayName: string): Promise<PublicTutorDetail | null> {
+  const wanted = displayName.toLocaleLowerCase().trim();
+  let cursor: string | null = null;
+  for (let page = 0; page < 8; page += 1) {
+    const result = await listTutors({ limit: 24, ...(cursor ? { cursor } : {}) });
+    const match = result.items.find((item) => item.displayName.toLocaleLowerCase().trim() === wanted);
+    if (match) return getTutor(match.id);
+    if (!result.nextCursor) return null;
+    cursor = result.nextCursor;
+  }
+  return null;
+}

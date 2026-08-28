@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, DM_Serif_Display, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { RuntimeConfigBootstrap } from "@/components/auth/runtime-config-bootstrap";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,6 +40,11 @@ export const metadata: Metadata = {
     "Discover skills, creators, communities, and experiences that help you grow.",
 };
 
+export const viewport: Viewport = {
+  colorScheme: "dark",
+  themeColor: "#0b0b0c",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -49,7 +55,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${dmSerifDisplay.variable} ${cormorantGaramond.variable} h-full antialiased`}
     >
-      <body className="tutoria-cosmos min-h-[100dvh] flex flex-col">{children}</body>
+      <body className="tutoria-cosmos min-h-[100dvh] flex flex-col">
+        <RuntimeConfigBootstrap />
+        {children}
+      </body>
     </html>
   );
 }

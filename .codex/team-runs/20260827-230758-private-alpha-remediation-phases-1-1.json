@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "run_id": "20260827-230758-private-alpha-remediation-phases-1-1",
+  "task": "Private Alpha remediation Phases 1-11: correct P0/P1 audit-29 defects (code + local verification only)",
+  "started_at": "2026-08-27T16:07:58Z",
+  "completed_at": null,
+  "final_status": null,
+  "summary": null,
+  "contract_path": null,
+  "contract_changes": [],
+  "activities": [
+    {
+      "id": "database_engineer-1",
+      "agent": "database_engineer",
+      "reason": "Corrective migration + local rebuild must be designed against the intended shared-engine migration chain, which was never clean-applied and has internal column/pricing inconsistencies",
+      "assignment": "Design backend/supabase/migrations/20260820130000_alpha_contract_cleanup.sql (drop obsolete create_booking(uuid,integer), reconcile resolve_booking_pricing off fixed_v1) against the intended schema, and produce a safe LOCAL-only rebuild procedure applying all tracked migrations in order",
+      "model": null,
+      "started_at": "2026-08-27T16:08:16Z",
+      "completed_at": "2026-08-27T16:22:11Z",
+      "duration_seconds": 835,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [
+        "Corrective migration SQL (drop 2-arg create_booking, reconcile resolve_booking_pricing off fixed_v1, fix create_offering param+slug ambiguity, merge booking_read_json), local-only rebuild procedure, 27-file ordered migration list"
+      ],
+      "files_changed": [],
+      "checks": [
+        "Read all 6 mandated files + 20260820100002; greps for pricing/_booking symbols; PG 41.11.1 doc check; no DDL executed (read-only)"
+      ],
+      "useful_findings": 6,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": []
+    },
+    {
+      "id": "security_reviewer-1",
+      "agent": "security_reviewer",
+      "reason": "Corrective migration touches security-definer RPCs, ACLs (create_offering had missing revoke; workshop RPCs default-grant EXECUTE to PUBLIC), auth.uid()-driven read model, and UGC offering creation",
+      "assignment": "Independently review the designed 20260820130000 corrective migration + the workshop-v1 RPC ACL posture for authorization/RLS/privacy issues; do NOT edit",
+      "model": null,
+      "started_at": "2026-08-27T16:22:41Z",
+      "completed_at": "2026-08-27T16:40:37Z",
+      "duration_seconds": 1076,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [
+        "CRITICAL: expire_stale_workshop_bookings PUBLIC-exec default hole; HIGH: get_offering leaks creator_id auth UUID + list_sessions_by_offering_id leaks drafts; MEDIUM: get_my_workshop_bookings host_id regression; ACL revoke/grant list"
+      ],
+      "files_changed": [],
+      "checks": [
+        "Whole-file reads 20100001/19120000/20120000/security migration; RLS policy search; grep ACL for all 5 RPCs; no DDL executed"
+      ],
+      "useful_findings": 4,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": [
+        "Verdict BLOCKED pending 3 fixes; independent of implementation"
+      ]
+    },
+    {
+      "id": "backend_engineer-1",
+      "agent": "backend_engineer",
+      "reason": "Validate backend booking-service.ts / routes/booking.ts wiring against the corrected RPC contracts (create_offering param rename, 3-arg create_booking, list_bookable_sessions/grids, booking_read_json shape) so the corrective migration and the TS service agree",
+      "assignment": "Read backend service+routes and confirm the corrective migration design matches the TypeScript contracts; list any remaining service-side fixes needed (e.g. createOfferingSchema, Discover type); do NOT edit",
+      "model": null,
+      "started_at": "2026-08-27T16:22:44Z",
+      "completed_at": "2026-08-27T16:40:55Z",
+      "duration_seconds": 1091,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [
+        "RPC-vs-TS mismatch table; backend/test ~60 call-site param rename sweep; get_offering output shape fix (offeringType/hostId/status/currency); list_bookable pricing overlay; booking_read_json offering/host keys + host-flag alias"
+      ],
+      "files_changed": [],
+      "checks": [
+        "Full reads of all 6 mandated files + 5 Discover clients + affected UI; static file:line evidence; no code changed"
+      ],
+      "useful_findings": 5,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": [
+        "Verdict PARTIAL; static verification only, DB/build UNVERIFIED"
+      ]
+    },
+    {
+      "id": "database_engineer-2",
+      "agent": "database_engineer",
+      "reason": "Local reset exposed a pre-existing migration replay defect in 20260820100000; second opinion on exact fix path after STOP-gate",
+      "assignment": "Adjudicate the 20260820100000 constraint-name collision root cause and recommend the least-divergent fix (edit-base migration with DROP CONSTRAINT vs corrective migration); do NOT edit yet",
+      "model": null,
+      "started_at": "2026-08-27T16:53:51Z",
+      "completed_at": "2026-08-27T16:53:56Z",
+      "duration_seconds": 5,
+      "status": "completed",
+      "acceptance": "n_a",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [
+        "Confirmed root cause: inline CHECK on pricing_model auto-names offerings_pricing_model_check colliding with ADD CONSTRAINT at 20260820100000:24-29; only unguarded site (others have DROP CONSTRAINT IF EXISTS)"
+      ],
+      "files_changed": [],
+      "checks": [],
+      "useful_findings": 1,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": [
+        "STOP gate reached; fix-direction decision deferred to founder"
+      ]
+    },
+    {
+      "id": "context_scout-1",
+      "agent": "context_scout",
+      "reason": "Read-only production migration-state reconciliation to determine whether 20260820100000 reached production (decides migration repair strategy)",
+      "assignment": "Read-only inspect tutoria-prod migration history vs repo; confirm 20260820100000 applied?, create_booking overload count on prod, and whether 20260817160000/01 exist in repo",
+      "model": null,
+      "started_at": "2026-08-27T16:59:36Z",
+      "completed_at": "2026-08-27T16:59:36Z",
+      "duration_seconds": 0,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": "READY",
+      "rework_count": 0,
+      "artifacts": [
+        "20260820100000 NOT applied on prod; prod stops at 20260815150540 + remote-only 20260817160000/01 (absent from repo); prod has exactly 1 create_booking overload (2-arg uuid,int); shared-engine/workshop chain never reached prod"
+      ],
+      "files_changed": [],
+      "checks": [],
+      "useful_findings": 4,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": [
+        "Decides fix path: repair historical migration (NOT-applied branch)"
+      ]
+    }
+  ],
+  "tests": [],
+  "qa_verdict": "N/A",
+  "security_verdict": "N/A",
+  "license_verdict": "N/A",
+  "notes": [],
+  "routing_assessment": {
+    "unnecessary_invocations": [],
+    "missing_specialists": [],
+    "recommendation": null
+  }
+}

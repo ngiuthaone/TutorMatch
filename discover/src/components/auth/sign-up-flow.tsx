@@ -1,16 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { IconBrandGoogle, IconBrandApple, IconCircleCheck } from "@tabler/icons-react";
+import Link from "next/link";
+import { IconBrandGoogle, IconBrandApple, IconCircleCheck, IconMail } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RoleCards } from "./role-cards";
 import { InterestsGrid } from "./interests-grid";
 import { PreferencesForm } from "./preferences-form";
+import { isLiveMode } from "@/lib/auth/config";
+import { signUpWithPassword, signInWithProvider } from "@/lib/auth/session";
 
 type SignUpStep = "account" | "roles" | "interests" | "preferences" | "complete";
 
 export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
+  const live = isLiveMode();
   const [step, setStep] = useState<SignUpStep>("account");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -19,19 +23,56 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
   const [interests, setInterests] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState(false);
 
   const totalSteps = 4;
   const stepIndex = ["account", "roles", "interests", "preferences"].indexOf(step) + 1;
-  const showProgress = step !== "complete";
+  const showProgress = step !== "complete" && !confirmEmail;
 
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !password) {
+    if (!name.trim() || !email.trim() || !password) {
       setError("Please fill in all fields");
       return;
     }
+    if (!live) {
+      setError("");
+      setStep("roles");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
     setError("");
-    setStep("roles");
+    setLoading(true);
+    try {
+      const result = await signUpWithPassword(email.trim(), password, name);
+      setLoading(false);
+      if (result.needsConfirmation) {
+        setConfirmEmail(true);
+        return;
+      }
+      setStep("roles");
+    } catch (signUpError) {
+      setError(signUpError instanceof Error ? signUpError.message : "Account creation failed. Try again.");
+      setLoading(false);
+    }
+  };
+
+  const handleProviderSocial = async (provider: "google" | "apple") => {
+    if (!live) {
+      setConfirmEmail(false);
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      await signInWithProvider(provider);
+    } catch (socialError) {
+      setError(socialError instanceof Error ? socialError.message : "Social sign-up is not configured.");
+      setLoading(false);
+    }
   };
 
   const handleRolesNext = () => {
@@ -54,14 +95,14 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
 
   const handleExplore = async () => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
+    await new Promise((r) => setTimeout(r, live ? 300 : 1500));
     setLoading(false);
     setStep("complete");
 
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !live) {
       const signupData = {
-        name,
-        email,
+        name: name.trim(),
+        email: email.trim(),
         roles,
         interests,
         completed: true,
@@ -69,35 +110,67 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
       };
       try {
         localStorage.setItem("tutoria_signup", JSON.stringify(signupData));
+        const accounts = JSON.parse(localStorage.getItem("tutoria_accounts") || "{}");
+        accounts[email.trim().toLocaleLowerCase()] = signupData;
+        localStorage.setItem("tutoria_accounts", JSON.stringify(accounts));
       } catch {}
     }
   };
 
+  if (confirmEmail) {
+    return (
+      <div className="signup-shell">
+        <div className="flex flex-col items-center text-center py-10">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <IconMail size={32} className="text-primary" />
+          </div>
+          <h1 className="mt-6 text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
+            Confirm your email
+          </h1>
+          <p className="mt-3 text-sm text-muted max-w-md">
+            We sent a confirmation link to <strong>{email.trim()}</strong>. Open it to activate your
+            account, then sign in to explore Tutoria.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 w-full max-w-xs">
+            <Link href={`/auth/sign-in?next=${encodeURIComponent(nextPath)}`}>
+              <Button size="lg" className="w-full">Go to sign in</Button>
+            </Link>
+            <button
+              type="button"
+              className="text-sm text-muted underline"
+              onClick={() => setConfirmEmail(false)}
+            >
+              Use a different email
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col justify-center px-6 lg:px-16 py-12 max-w-2xl mx-auto w-full">
+    <div className="signup-shell">
       {showProgress && (
-        <div className="mb-8">
-          <span className="text-xl font-bold tracking-tight text-primary">
-            Tutoria
-          </span>
-          <div className="mt-4 flex items-center gap-2">
+        <div className="signup-progress">
+          <Link href="/" className="signup-brand" aria-label="Tutoria home">T</Link>
+          <div className="signup-progress-track">
             {Array.from({ length: totalSteps }).map((_, i) => (
               <div
                 key={i}
-                className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+                className={`signup-progress-segment ${
                   i < stepIndex ? "bg-primary" : "bg-border"
                 }`}
               />
             ))}
           </div>
-          <p className="mt-2 text-xs text-muted">
+          <p className="signup-step-label">
             Step {stepIndex} of {totalSteps}
           </p>
         </div>
       )}
 
       {step === "account" && (
-        <>
+        <section className="signup-account">
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
             Join a world built around curiosity.
           </h1>
@@ -122,7 +195,7 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
             <Input
               label="Password"
               type="password"
-              placeholder="Create a password"
+              placeholder={live ? "At least 8 characters" : "Create a password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
@@ -134,7 +207,7 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
               </p>
             )}
 
-            <Button type="submit" size="lg">
+            <Button type="submit" size="lg" loading={loading}>
               Create my account
             </Button>
           </form>
@@ -148,24 +221,29 @@ export function SignUpFlow({ nextPath = "/discover" }: { nextPath?: string }) {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <Button variant="social" size="md">
+          <div className="signup-social-stack">
+            <Button variant="social" size="md" onClick={() => void handleProviderSocial("google")} disabled={loading}>
               <IconBrandGoogle size={18} />
               Google
             </Button>
-            <Button variant="social" size="md">
+            <Button variant="social" size="md" onClick={() => void handleProviderSocial("apple")} disabled={loading}>
               <IconBrandApple size={18} />
               Apple
             </Button>
           </div>
+          {live && (
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted">
+              <IconMail size={13} /> Social sign-in is coming soon.
+            </p>
+          )}
 
-          <p className="mt-8 text-center text-xs text-muted">
+          <p className="signup-legal">
             By joining Tutoria, you agree to our{" "}
-            <a href="#" className="text-primary hover:text-primary-dark transition-colors">Terms</a>{" "}
+            <Link href="/terms">Terms</Link>{" "}
             and{" "}
-            <a href="#" className="text-primary hover:text-primary-dark transition-colors">Privacy Policy</a>.
+            <Link href="/privacy">Privacy Policy</Link>.
           </p>
-        </>
+        </section>
       )}
 
       {step === "roles" && (

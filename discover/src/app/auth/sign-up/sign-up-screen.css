@@ -1,0 +1,187 @@
+body.tutoria-cosmos:has(.signup-page) {
+  overflow: auto;
+  background: #101010 !important;
+  background-image: none !important;
+}
+
+.signup-page {
+  --background: #101010;
+  --foreground: #f2f2f2;
+  --muted: #9b9b9b;
+  --border: #343434;
+  --primary: #f2f2f2;
+  --primary-light: #ffffff;
+  --primary-dark: #111111;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  min-height: 100dvh;
+  overflow: auto;
+  background: #101010;
+  color: #f2f2f2;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.signup-page .signup-shell {
+  width: min(calc(100% - 3rem), 44rem);
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: 3rem 0 4rem;
+}
+
+.signup-page .signup-account {
+  width: min(100%, 25rem);
+  margin-inline: auto;
+}
+
+.signup-page .signup-progress {
+  width: min(100%, 25rem);
+  margin: 0 auto 2.5rem;
+}
+
+.signup-page .signup-brand {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0 auto 1.75rem;
+  place-items: center;
+  border: 1px solid #3c3c3c;
+  border-radius: 50%;
+  background: #191919;
+  color: #f2f2f2;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.2rem;
+}
+
+.signup-page .signup-progress-track {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.signup-page .signup-progress-segment {
+  height: 0.2rem;
+  flex: 1;
+  border-radius: 1rem;
+  transition: background-color 200ms ease;
+}
+
+.signup-page .signup-progress-segment.bg-primary { background: #f2f2f2; }
+.signup-page .signup-progress-segment.bg-border { background: #343434; }
+
+.signup-page .signup-step-label {
+  margin-top: 0.65rem;
+  color: #777777;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+body.tutoria-cosmos .signup-page h1 {
+  margin: 0;
+  color: #f2f2f2;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  text-align: center;
+}
+
+.signup-page h1 + p {
+  color: #9b9b9b;
+  text-align: center;
+}
+
+.signup-page form input,
+.signup-page input[type="text"],
+.signup-page input[type="email"],
+.signup-page input[type="password"] {
+  min-height: 3.25rem;
+  border: 1px solid #343434;
+  border-radius: 0.4rem;
+  background: #171717 !important;
+  color: #f2f2f2;
+}
+
+.signup-page label { color: #d8d8d8; }
+.signup-page input::placeholder { color: #707070; }
+.signup-page input:focus { border-color: #8f8f8f; box-shadow: 0 0 0 1px #8f8f8f; }
+
+.signup-page form > button,
+.signup-page .mt-8 > button,
+.signup-page .mt-8 > a > button {
+  width: 100%;
+  min-height: 3.25rem;
+  border-radius: 0.4rem;
+  background: #f2f2f2;
+  color: #111111;
+  font-weight: 600;
+}
+
+.signup-page form > button:hover,
+.signup-page .mt-8 > button:hover,
+.signup-page .mt-8 > a > button:hover { background: #ffffff; }
+
+.signup-page .signup-social-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.signup-page .signup-social-stack button {
+  min-height: 3.25rem;
+  justify-content: flex-start;
+  border: 1px solid #343434;
+  border-radius: 0.4rem;
+  background: #171717;
+  color: #e8e8e8;
+  box-shadow: none;
+}
+
+.signup-page .signup-social-stack button:hover { background: #202020; border-color: #555555; }
+
+.signup-page .signup-legal {
+  margin-top: 2rem;
+  color: #777777;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.signup-page .signup-legal a { color: #d8d8d8; text-decoration: underline; text-underline-offset: 0.18em; }
+
+.signup-page .border-border { border-color: #343434; }
+.signup-page .bg-background { background: #171717; }
+.signup-page .bg-surface { background: #202020; }
+.signup-page .text-foreground { color: #f2f2f2; }
+.signup-page .text-muted { color: #9b9b9b; }
+
+.signup-page button.border-2,
+.signup-page button.border {
+  border-width: 1px;
+  border-color: #343434;
+  border-radius: 0.5rem;
+  background: #171717;
+  color: #e8e8e8;
+  box-shadow: none;
+}
+
+.signup-page button.border-primary {
+  border-color: #d8d8d8;
+  background: #242424;
+  color: #ffffff;
+}
+
+.signup-page button.border-2:hover,
+.signup-page button.border:hover { border-color: #666666; background: #202020; }
+
+.signup-page .text-primary,
+.signup-page .text-primary-light,
+.signup-page .text-primary-dark { color: #f2f2f2; }
+
+.signup-page .bg-primary { background: #f2f2f2; }
+
+@media (max-width: 640px) {
+  .signup-page .signup-shell { width: min(calc(100% - 2rem), 44rem); padding-top: 2rem; }
+  body.tutoria-cosmos .signup-page h1 { font-size: 1.65rem; }
+}

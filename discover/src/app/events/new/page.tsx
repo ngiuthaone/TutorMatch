@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
-import { RequireAuth } from "@/components/auth/require-auth";
-import { EventCreator } from "@/components/events/event-creator";
+import { EventNewFrame } from "./event-new-frame";
 
 export const metadata: Metadata = {
   title: "Create an event or workshop | Tutoria",
@@ -9,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function NewEventPage() {
-  return <RequireAuth><EventCreator /></RequireAuth>;
+  return <EventNewFrame />;
 }

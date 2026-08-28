@@ -100,9 +100,9 @@ export function ForYouPage() {
                   <button type="button" aria-label={`Save ${item.title}`} className={`${styles.forYouBookmark} absolute top-3 right-3`}><IconBookmark size={14} /></button>
                 </div>
                 <div className={`${styles.forYouCardBody} p-5`}>
-                  <h3 className="font-semibold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors">{item.title}</h3>
-                  <p className="text-xs text-muted mt-1.5">{item.author}</p>
-                  <div className="flex items-center gap-3 mt-3 text-xs text-muted">
+                  <h3 className={`${styles.forYouTitle} line-clamp-2 group-hover:text-primary transition-colors`}>{item.title}</h3>
+                  <p className={`${styles.forYouAuthor} text-muted mt-1.5`}>{item.author}</p>
+                  <div className={`${styles.forYouMeta} flex items-center gap-3 mt-3 text-muted`}>
                     <div className="flex items-center gap-1"><IconClock size={12} /><span>{item.meta}</span></div>
                     {item.rating !== undefined && <div className="flex items-center gap-1"><IconStar size={12} className="text-amber-400 fill-amber-400" /><span>{item.rating}</span></div>}
                   </div>

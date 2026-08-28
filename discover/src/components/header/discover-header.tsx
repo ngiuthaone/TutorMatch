@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useCallback, useMemo, useSyncExternalStore } from "react";
+import { useState, useCallback, useMemo, useSyncExternalStore, useEffect, useRef } from "react";
 import Link from "next/link";
-import { IconMenu2, IconX, IconBell } from "@tabler/icons-react";
+import { IconMenu2, IconX } from "@tabler/icons-react";
 import { GlobalNavigation } from "./global-navigation";
 import { UserMenu } from "./user-menu";
+import { NotificationCenter } from "../notifications/notification-center";
 import { MobileNavigation } from "./mobile-navigation";
+import { getLiveIdentity, subscribeToIdentity } from "@/lib/auth/identity";
 import type { HeaderUser } from "./types";
 import styles from "./tutoria-navigation.module.css";
 
@@ -44,13 +46,36 @@ export function DiscoverHeader({ user: userProp }: DiscoverHeaderProps) {
     getSignupSnapshot,
     getServerSignupSnapshot,
   );
+  const liveIdentity = useSyncExternalStore(
+    subscribeToIdentity,
+    getLiveIdentity,
+    () => null,
+  );
   const storedUser = useMemo(() => parseStoredUser(storedSignup), [storedSignup]);
-  const user = userProp !== undefined ? userProp : storedUser;
+  const liveUser: HeaderUser | null = liveIdentity
+    ? { id: liveIdentity.id, name: liveIdentity.name, avatarUrl: liveIdentity.avatarUrl, isCreator: liveIdentity.role === "tutor" }
+    : null;
+  const user = userProp !== undefined ? userProp : (liveUser ?? storedUser);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
+  useEffect(() => {
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      const delta = currentY - lastScrollY.current;
+      if (currentY < 16 || delta < -8) setHeaderHidden(false);
+      else if (delta > 8 && !mobileMenuOpen) setHeaderHidden(true);
+      lastScrollY.current = currentY;
+    };
+    lastScrollY.current = window.scrollY;
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [mobileMenuOpen]);
+
   return (
-    <header className={styles.header}>
+    <header className={`${styles.header} ${headerHidden ? styles.headerHidden : ""}`}>
       <div className={styles.headerInner}>
         <GlobalNavigation />
 
@@ -72,9 +97,7 @@ export function DiscoverHeader({ user: userProp }: DiscoverHeaderProps) {
           )}
 
           {user && (
-            <button className={`${styles.iconButton} ${styles.mobileNotification}`} aria-label="Notifications">
-              <IconBell size={19} stroke={1.7} />
-            </button>
+            <NotificationCenter user={user} mobile />
           )}
 
           {!user && (
@@ -85,7 +108,10 @@ export function DiscoverHeader({ user: userProp }: DiscoverHeaderProps) {
 
           <button
             className={styles.mobileMenuButton}
-            onClick={() => setMobileMenuOpen((v) => !v)}
+            onClick={() => {
+              setMobileMenuOpen((v) => !v);
+              setHeaderHidden(false);
+            }}
             aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"

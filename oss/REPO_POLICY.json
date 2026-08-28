@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-08-11",
+  "policy_note": "Registry entries are convenience hints, not permanent approvals. Every incorporation must still verify the exact commit/tag/package version and exact file/path license scope.",
+  "statuses": {
+    "PASS": "May incorporate only after exact-scope verification and notice recording.",
+    "CONDITIONAL": "Only explicitly permissive paths may be incorporated; restricted paths are blocked.",
+    "STUDY_ONLY": "May study public product behavior/docs/architecture concepts; do not copy implementation source.",
+    "BLOCKED": "Do not incorporate without explicit legal/commercial-license review."
+  },
+  "repositories": [
+    {
+      "id": "supabase",
+      "name": "Supabase",
+      "canonical_repo": "https://github.com/supabase/supabase",
+      "default_status": "PASS",
+      "license": "Apache-2.0",
+      "allowed_scope": ["files proven covered by Apache-2.0 at the pinned ref"],
+      "excluded_scope": ["third-party assets or components with separate terms unless independently verified"],
+      "notes": "Preserve applicable LICENSE and NOTICE obligations."
+    },
+    {
+      "id": "tiptap-core",
+      "name": "Tiptap core",
+      "canonical_repo": "https://github.com/ueberdosis/tiptap",
+      "default_status": "PASS",
+      "license": "MIT",
+      "allowed_scope": ["source files proven covered by the repository MIT license at the pinned ref"],
+      "excluded_scope": ["separate Pro/cloud/services repos or assets unless independently verified"],
+      "notes": "Do not assume Tiptap documentation, fonts, cloud services, or paid extensions share the core repository license. Re-verified 2026-08-11 at v3.30.0: repo LICENSE.md is MIT (Tiptap GmbH 2025), @tiptap/core manifest is MIT, npm registry shows MIT with SLSA provenance attestations."
+    },
+    {
+      "id": "shadcn-ui",
+      "name": "shadcn/ui",
+      "canonical_repo": "https://github.com/shadcn-ui/ui",
+      "default_status": "PASS",
+      "license": "MIT",
+      "allowed_scope": ["source/components covered by MIT at the pinned ref"],
+      "excluded_scope": ["third-party assets or registries with separate terms unless verified"],
+      "notes": "Conservatively preserve the MIT notice for copied/substantial component code."
+    },
+    {
+      "id": "medusa",
+      "name": "Medusa",
+      "canonical_repo": "https://github.com/medusajs/medusa",
+      "default_status": "PASS",
+      "license": "MIT",
+      "allowed_scope": ["files proven covered by MIT at the pinned ref"],
+      "excluded_scope": ["third-party assets/integrations with separate terms unless verified"],
+      "notes": "Prefer using documented APIs/packages over copying large subsystems."
+    },
+    {
+      "id": "maplibre-gl-js",
+      "name": "MapLibre GL JS",
+      "canonical_repo": "https://github.com/maplibre/maplibre-gl-js",
+      "default_status": "PASS",
+      "license": "BSD-3-Clause",
+      "allowed_scope": ["files covered by the project license at the pinned ref"],
+      "excluded_scope": ["backports from post-1.13 proprietary Mapbox GL JS or separately licensed assets"],
+      "notes": "Preserve the project license and bundled third-party notices."
+    },
+    {
+      "id": "livekit-server",
+      "name": "LiveKit server",
+      "canonical_repo": "https://github.com/livekit/livekit",
+      "default_status": "PASS",
+      "license": "Apache-2.0",
+      "allowed_scope": ["server files covered by Apache-2.0 at the pinned ref"],
+      "excluded_scope": ["other LiveKit products/repos unless independently verified"],
+      "notes": "Preserve LICENSE and applicable NOTICE information."
+    },
+    {
+      "id": "trigger-dev",
+      "name": "Trigger.dev",
+      "canonical_repo": "https://github.com/triggerdotdev/trigger.dev",
+      "default_status": "PASS",
+      "license": "Apache-2.0",
+      "allowed_scope": ["files proven covered by Apache-2.0 at the pinned ref"],
+      "excluded_scope": ["hosted-service terms or third-party integrations/assets not covered by the repo license"],
+      "notes": "Repository is Apache-2.0 as of the registry verification date; exact ref still required."
+    },
+    {
+      "id": "fullcalendar-standard",
+      "name": "FullCalendar Standard",
+      "canonical_repo": "https://github.com/fullcalendar/fullcalendar",
+      "default_status": "CONDITIONAL",
+      "license": "MIT for Standard packages; Premium has separate licensing",
+      "allowed_scope": ["Standard packages/files explicitly covered by MIT at the pinned ref"],
+      "excluded_scope": ["Premium/Scheduler/resource premium packages unless a compatible commercial license is verified"],
+      "notes": "Do not infer Premium permission from the Standard MIT license. Re-verified 2026-08-12 at v7.0.2: @fullcalendar/core and @fullcalendar/react npm metadata are MIT (daygrid/timegrid/list/multimonth/interaction are subpath exports of the react package); Premium packages (e.g. @fullcalendar/premium-common@6.1.21) carry 'SEE LICENSE IN LICENSE.md' custom commercial terms and are published from the separate fullcalendar-workspace repo; @fullcalendar/scheduler no longer exists on npm."
+    },
+    {
+      "id": "cal-diy",
+      "name": "Cal.diy",
+      "canonical_repo": "https://github.com/calcom/cal.diy",
+      "default_status": "PASS",
+      "license": "MIT",
+      "allowed_scope": ["files proven covered by MIT at the pinned ref"],
+      "excluded_scope": ["Cal.com private production code, brand assets, hosted-service-only materials, separately licensed integrations/assets"],
+      "notes": "Current public community repo is MIT. Its README warns self-hosters about production/security responsibility; that is an operational warning, not a substitute for license verification. Re-verified 2026-08-12 at branch `main` ref 176037d0afbe572f870a3c702985e7cd83fe6c0c: LICENSE is MIT (c) Cal.com, Inc.; repo is the community/D.I.Y. distribution (apps: api/docs/web) with no separate enterprise directories inside the repository; Cal.com private production code remains out of scope (see calcom-production entry)."
+    },
+    {
+      "id": "calcom-production",
+      "name": "Cal.com production/private codebase",
+      "canonical_repo": "https://cal.com",
+      "default_status": "STUDY_ONLY",
+      "license": "Private/proprietary production codebase as of April 2026",
+      "allowed_scope": ["public product behavior, public documentation, public APIs, independently derived requirements"],
+      "excluded_scope": ["private production source, leaked/mirrored source, enterprise/commercial source without a verified license"],
+      "notes": "Do not use old mirrors or historical public source to bypass current licensing. Historical AGPL/open-core code requires separate review if deliberately used."
+    },
+    {
+      "id": "meilisearch",
+      "name": "Meilisearch",
+      "canonical_repo": "https://github.com/meilisearch/meilisearch",
+      "default_status": "CONDITIONAL",
+      "license": "MIT AND BUSL-1.1",
+      "allowed_scope": ["Community Edition/files explicitly covered by LICENSE-MIT at the pinned ref"],
+      "excluded_scope": ["Enterprise Edition / LICENSE-EE / BUSL-1.1 covered files for production unless a commercial agreement is verified"],
+      "notes": "Mixed-license repository. File-level verification is mandatory."
+    },
+    {
+      "id": "novu",
+      "name": "Novu",
+      "canonical_repo": "https://github.com/novuhq/novu",
+      "default_status": "CONDITIONAL",
+      "license": "MIT core + commercial Enterprise",
+      "allowed_scope": ["core files explicitly covered by LICENSE-MIT at the pinned ref"],
+      "excluded_scope": ["enterprise/** (Novu Proprietary Software License; internal use only, written approval required)"],
+      "notes": "Never copy Enterprise paths without a verified commercial license. Re-verified 2026-08-12 at branch `next` ref 4926ef59192017a3be329ab06e9d3ea68e085fb2: LICENSE-MIT (Noti-fire Apps Ltd.) covers content outside enterprise/**; LICENSE-ENTERPRISE + EE-PACKAGES-LICENSE are 'Novu Proprietary Software License' (no redistribution, approval required) and apply to enterprise/**. npm @novu/react and @novu/js v3.19.0 declare ISC; @novu/notification-center-react has no current dist-tags (deprecated)."
+    },
+    {
+      "id": "posthog",
+      "name": "PostHog",
+      "canonical_repo": "https://github.com/PostHog/posthog",
+      "default_status": "CONDITIONAL",
+      "license": "MIT outside ee/; separate ee/ license",
+      "allowed_scope": ["files outside ee/ that are explicitly covered by MIT at the pinned ref"],
+      "excluded_scope": ["ee/**", "third-party components unless their original license is verified"],
+      "notes": "Mixed-license repository. Prefer official client SDK packages when they independently satisfy the gate."
+    }
+  ]
+}

@@ -4,6 +4,24 @@
   "trailingSlash": false,
   "routes": [
     {
+      "src": "/auth/callback",
+      "headers": {
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "X-Frame-Options": "DENY",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Content-Security-Policy-Report-Only": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; connect-src 'self' https://*.supabase.co https://*.supabase.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'"
+      },
+      "dest": "/index.html"
+    },
+    {
+      "src": "/config.js",
+      "headers": { "Cache-Control": "no-store" },
+      "dest": "/config.js"
+    },
+    {
       "src": "/api/(.*)",
       "status": 404
     },
@@ -20,6 +38,14 @@
     },
     {
       "src": "/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "X-Frame-Options": "DENY",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Content-Security-Policy-Report-Only": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; connect-src 'self' https://*.supabase.co https://*.supabase.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'"
+      },
       "dest": "/index.html"
     }
   ]

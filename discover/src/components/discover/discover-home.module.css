@@ -1133,6 +1133,13 @@
 .eventDetails > span + span::before { position: absolute; left: 0; color: rgba(174, 183, 197, .35); content: "·"; }
 .eventTime { color: var(--primary-light); font-size: .85rem; }
 
+/* ── Workshop section on Discover home ── */
+
+.workshopSection {
+  border-block: 1px solid var(--tutoria-line);
+  background: #000;
+}
+
 @keyframes eventPreviewIn {
   from { opacity: 0; transform: translate3d(0, 28px, 0); }
   to { opacity: 1; transform: translate3d(0, 0, 0); }

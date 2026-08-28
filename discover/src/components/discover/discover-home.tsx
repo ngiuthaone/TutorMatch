@@ -18,6 +18,9 @@ import { EventGatherings } from "./event-gatherings";
 import { RecommendationCollage } from "./recommendation-collage";
 import { TutorFeatureGrid } from "./tutor-feature-grid";
 import { CourseJourneyMotion } from "./course-journey-motion";
+import { WorkshopSection } from "./workshop-section";
+import { ClassSection } from "./class-section";
+import { EventLiveSection } from "./event-live-section";
 import { GlassCard } from "../glass-card";
 import styles from "./discover-home.module.css";
 
@@ -31,10 +34,10 @@ const people = [
 ];
 
 const courses = [
-  { title: "Complete web development bootcamp", tutor: "Huy Tran", duration: "16 hours", lessons: 48, rating: "4.8", image: "https://picsum.photos/seed/tutoria-web-course/680/430" },
-  { title: "IELTS speaking masterclass", tutor: "Linh Nguyen", duration: "8 hours", lessons: 24, rating: "4.9", image: "https://picsum.photos/seed/tutoria-ielts-course/680/430" },
-  { title: "Digital photography fundamentals", tutor: "Duc Pham", duration: "12 hours", lessons: 32, rating: "4.8", image: "https://picsum.photos/seed/tutoria-photo-course/680/430" },
-  { title: "Public speaking for professionals", tutor: "Minh Anh", duration: "6 hours", lessons: 16, rating: "4.7", image: "https://picsum.photos/seed/tutoria-speaking-course/680/430" },
+  { slug: "complete-web-development-bootcamp-2026", title: "Complete web development bootcamp", tutor: "Huy Tran", duration: "16 hours", lessons: 48, rating: "4.8", image: "https://picsum.photos/seed/tutoria-web-course/680/430" },
+  { slug: "ielts-speaking-masterclass", title: "IELTS speaking masterclass", tutor: "Linh Nguyen", duration: "8 hours", lessons: 24, rating: "4.9", image: "https://picsum.photos/seed/tutoria-ielts-course/680/430" },
+  { slug: "digital-photography-fundamentals", title: "Digital photography fundamentals", tutor: "Duc Pham", duration: "12 hours", lessons: 32, rating: "4.8", image: "https://picsum.photos/seed/tutoria-photo-course/680/430" },
+  { slug: "public-speaking-for-professionals", title: "Public speaking for professionals", tutor: "Minh Anh", duration: "6 hours", lessons: 16, rating: "4.7", image: "https://picsum.photos/seed/tutoria-speaking-course/680/430" },
 ];
 
 const creatorPaths = [
@@ -87,7 +90,7 @@ export function DiscoverHome() {
                             const full = Math.floor(person.rating);
                             return (
                               <Link
-                                href={`/user/${encodeURIComponent(person.name)}`}
+                                href={`/tutor/${encodeURIComponent(person.name)}`}
                                 className={styles.personCard}
                                 key={person.name}
                                 tabIndex={duplicateIndex > 0 ? -1 : undefined}
@@ -167,7 +170,7 @@ export function DiscoverHome() {
 
           <div className={`${styles.courseList} tutoria-page-container`} data-course-track>
             {courses.map((course, index) => (
-              <Link href="/courses" className={styles.course} key={course.title}>
+              <Link href={`/courses/${course.slug}`} className={styles.course} key={course.title}>
                 <GlassCard className={styles.courseGlass}>
                   <span className={styles.courseInner}>
                     <span className={styles.courseIndex}>0{index + 1}</span>
@@ -199,6 +202,12 @@ export function DiscoverHome() {
       </section>
 
       <EventGatherings />
+
+      <WorkshopSection />
+
+      <ClassSection />
+
+      <EventLiveSection />
 
       <ConversationTimeline />
 

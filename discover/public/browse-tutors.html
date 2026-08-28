@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Tutors — Tutoria</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    .fade-in { animation: fadeIn .25s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .chip-in { animation: chipPop .2s ease both; }
+    @keyframes chipPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .sheet-open { animation: sheetIn .3s ease both; }
+    @keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+    .collapsed { display: none !important; }
+    :root {
+      --studio-bg: #0f0f10;
+      --studio-shell: #141415;
+      --studio-panel: #1b1b1d;
+      --studio-panel-2: #29292b;
+      --studio-panel-3: #333437;
+      --studio-line: #333336;
+      --studio-line-soft: #27282a;
+      --studio-text: #efede7;
+      --studio-muted: #aaa7a2;
+      --studio-faint: #77757a;
+      --studio-accent: #c99a45;
+      --studio-accent-soft: rgba(201, 154, 69, .14);
+      --studio-shadow: rgba(0, 0, 0, .42);
+    }
+    html {
+      background: var(--studio-bg);
+      color-scheme: dark;
+    }
+    body {
+      background:
+        radial-gradient(circle at 18% 0%, rgba(255,255,255,.035), transparent 28rem),
+        linear-gradient(180deg, #101112 0%, var(--studio-bg) 34rem) !important;
+      color: var(--studio-text) !important;
+    }
+    #app { background: transparent; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--studio-panel-3); }
+    [class~="bg-gray-950"],
+    [class~="bg-black"] { background-color: var(--studio-bg) !important; }
+    [class~="bg-gray-900"],
+    [class*="bg-gray-900/"],
+    [class*="hover:bg-gray-900"]:hover { background-color: var(--studio-panel) !important; }
+    [class~="bg-gray-800"],
+    [class*="bg-gray-800/"],
+    [class*="hover:bg-gray-800"]:hover { background-color: var(--studio-panel-2) !important; }
+    [class~="border-gray-800"],
+    [class*="border-gray-800/"],
+    [class~="border-gray-700"] { border-color: var(--studio-line) !important; }
+    [class~="border-gray-600"],
+    [class*="hover:border-gray-600"]:hover,
+    [class*="focus:border-gray-500"]:focus { border-color: var(--studio-panel-3) !important; }
+    [class~="text-white"],
+    [class~="text-gray-100"],
+    [class~="text-gray-200"],
+    [class~="text-gray-300"] { color: var(--studio-text) !important; }
+    [class~="text-gray-400"] { color: var(--studio-muted) !important; }
+    [class~="text-gray-500"] { color: var(--studio-faint) !important; }
+    input,
+    select,
+    textarea {
+      background-color: var(--studio-panel) !important;
+      border-color: var(--studio-line) !important;
+      color: var(--studio-text) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+    }
+    input::placeholder { color: var(--studio-faint) !important; }
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--studio-accent) !important;
+      box-shadow: 0 0 0 2px var(--studio-accent-soft), inset 0 1px 0 rgba(255,255,255,.04) !important;
+    }
+    #sidebar .sticky,
+    #mobileSheet > div:last-child,
+    #mobileSortPanel,
+    #searchSuggestions,
+    #mobileSearchSuggestions {
+      background: rgba(27, 27, 29, .94) !important;
+      border-color: var(--studio-line) !important;
+      box-shadow: 0 24px 70px var(--studio-shadow), inset 0 1px 0 rgba(255,255,255,.035) !important;
+    }
+    .filter-section button,
+    #mobileSheet button,
+    #mobileSortPanel button {
+      color: var(--studio-muted);
+    }
+    .filter-section button:hover,
+    #mobileSheet button:hover,
+    #mobileSortPanel button:hover {
+      color: var(--studio-text) !important;
+      background-color: var(--studio-panel-2) !important;
+    }
+    .filter-section button.bg-gray-800,
+    .format-options button.bg-gray-800,
+    .price-shortcuts button.bg-gray-800,
+    .sort-options button.bg-gray-800,
+    .location-options button.bg-gray-800 {
+      background-color: #f3f0e8 !important;
+      border-color: #f3f0e8 !important;
+      color: #151515 !important;
+    }
+    #chipContainerDesktop span,
+    #chipContainerMobile span {
+      background: #f3f0e8 !important;
+      border-color: #f3f0e8 !important;
+      color: #151515 !important;
+    }
+    #tutorGrid > a {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01)),
+        var(--studio-panel) !important;
+      border-color: var(--studio-line) !important;
+      border-radius: 12px !important;
+      box-shadow: 0 22px 60px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.04) !important;
+    }
+    #tutorGrid > a:hover {
+      border-color: var(--studio-panel-3) !important;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015)),
+        var(--studio-panel-2) !important;
+    }
+    #tutorGrid .rounded-full,
+    #tutorGrid [class*="rounded-full"] {
+      border-color: var(--studio-line-soft) !important;
+    }
+    #tutorGrid .fa-star,
+    #tutorGrid .fa-location-dot,
+    #tutorGrid .fa-globe,
+    #tutorGrid .fa-building,
+    .filter-section .fa-chevron-down,
+    .filter-section .fa-sliders,
+    .filter-section .fa-arrow-up-wide-short {
+      color: var(--studio-accent) !important;
+    }
+    #tutorGrid span.bg-gray-900,
+    #tutorGrid span.hover\:bg-gray-800 {
+      background-color: #f3f0e8 !important;
+      color: #151515 !important;
+      border: 1px solid #f3f0e8 !important;
+    }
+    #tutorGrid span.bg-gray-950,
+    #tutorGrid [class~="bg-gray-950"] {
+      background-color: var(--studio-shell) !important;
+      border-color: var(--studio-line-soft) !important;
+      color: var(--studio-muted) !important;
+    }
+    #locationStatus {
+      background: var(--studio-panel-2) !important;
+      border-color: var(--studio-line) !important;
+      color: var(--studio-text) !important;
+    }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans antialiased">
+<div id="app" class="max-w-7xl mx-auto px-4 py-6 lg:py-8">
+  <div class="h-6 mb-6"></div>
+  <div class="lg:hidden flex items-center gap-3 mb-4">
+    <button onclick="openMobileFilters()" class="flex items-center gap-2 text-sm font-medium border border-gray-800 bg-gray-950 rounded-xl px-4 py-2.5 shadow-sm shadow-black/30 hover:border-gray-600 transition-colors">
+      <i class="fa-solid fa-sliders text-gray-400"></i>
+      Filters <span id="mobileFilterCount" class="text-xs bg-gray-900 text-white rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+    </button>
+    <button onclick="toggleMobileSort()" class="flex items-center gap-2 text-sm font-medium border border-gray-800 bg-gray-950 rounded-xl px-4 py-2.5 shadow-sm shadow-black/30 hover:border-gray-600 transition-colors">
+      <i class="fa-solid fa-arrow-up-wide-short text-gray-400"></i> Sort
+    </button>
+    <div class="flex-1"></div>
+    <span id="mobileResultCount" class="text-sm text-gray-400 font-medium hidden"></span>
+  </div>
+  <div id="mobileSortPanel" class="lg:hidden hidden absolute z-30 bg-gray-950 border border-gray-800 rounded-xl shadow-xl shadow-black/50 p-2 w-56" style="margin-top:-8px"></div>
+  <div class="lg:hidden flex flex-wrap items-center gap-1.5 mb-4 min-h-[28px]">
+    <div id="chipContainerMobile" class="flex flex-wrap items-center gap-1.5"></div>
+    <button id="clearAllBtnMobile" onclick="clearAllFilters()" class="text-xs text-gray-500 hover:text-gray-400 ml-1 hidden">Clear all</button>
+  </div>
+  <div class="hidden lg:flex items-start gap-3 mb-5">
+    <div class="relative shrink-0">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none"></i>
+      <input type="text" id="searchInput" placeholder="Search tutors or skills…" autocomplete="off" class="w-full max-w-sm pl-10 pr-10 py-3 text-sm border border-gray-700 rounded-xl bg-gray-950 focus:outline-none focus:ring-2 focus:ring-gray-600/50 focus:border-gray-500 shadow-sm shadow-black/30">
+      <button id="searchClear" onclick="clearSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-400 hidden"><i class="fa-solid fa-xmark"></i></button>
+      <div id="searchSuggestions" class="absolute top-full left-0 right-0 bg-gray-950 border border-gray-800 rounded-xl shadow-lg shadow-black/40 mt-1.5 z-30 hidden overflow-hidden"></div>
+    </div>
+    <div class="flex flex-wrap items-center gap-1.5 pt-1.5 min-h-[28px] flex-1">
+      <div id="chipContainerDesktop" class="flex flex-wrap items-center gap-1.5"></div>
+      <button id="clearAllBtnDesktop" onclick="clearAllFilters()" class="text-xs text-gray-500 hover:text-gray-400 ml-1 hidden">Clear all</button>
+    </div>
+  </div>
+  <div id="locationStatus" class="hidden mb-4 flex items-center gap-2 text-xs text-gray-300 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2">
+    <i class="fa-solid fa-location-crosshairs"></i> Location shared — distances shown on cards
+    <button onclick="state.city='';state.district='';state.userLat=null;state.userLng=null;render()" class="ml-auto text-gray-400 hover:text-gray-400"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="lg:flex lg:gap-8">
+    <aside id="sidebar" class="hidden lg:block lg:w-[270px] shrink-0">
+      <div class="sticky top-8 overflow-y-auto scrollbar-thin bg-gray-900/40 border border-gray-800/60 rounded-xl px-3 py-2" style="max-height:calc(100vh - 5rem)">
+        <div class="lg:hidden pb-4">
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none"></i>
+            <input type="text" id="mobileSearchInput" placeholder="Search tutors or skills…" autocomplete="off" class="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-800 rounded-xl bg-gray-950 focus:outline-none focus:ring-2 focus:ring-gray-600/50">
+          </div>
+          <div id="mobileSearchSuggestions" class="bg-gray-950 border border-gray-700 rounded-xl shadow-lg shadow-black/40 mt-1.5 hidden"></div>
+        </div>
+        <div class="filter-section pb-4">
+          <button class="flex items-center justify-between w-full text-xs font-semibold tracking-wide text-gray-300 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-800/50 px-2 -mx-2 py-2" onclick="toggleSection(this)"><span>Sort</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px] transition-transform duration-200" style="transform:rotate(-90deg)"></i></button>
+          <div class="mt-2 px-2 sort-options collapsed"></div>
+        </div>
+        <div class="border-b border-gray-800 mx-2 mb-4"></div>
+        <div class="filter-section pb-4">
+          <button class="flex items-center justify-between w-full text-xs font-semibold tracking-wide text-gray-300 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-800/50 px-2 -mx-2 py-2" onclick="toggleSection(this)"><span>Location</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px] transition-transform duration-200"></i></button>
+          <div class="mt-2 px-2 location-options"></div>
+        </div>
+        <div class="border-b border-gray-800 mx-2 mb-4"></div>
+        <div class="filter-section pb-4">
+          <button class="flex items-center justify-between w-full text-xs font-semibold tracking-wide text-gray-300 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-800/50 px-2 -mx-2 py-2" onclick="toggleSection(this)"><span>Format</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px] transition-transform duration-200"></i></button>
+          <div class="mt-2 px-2 flex gap-1.5 format-options"></div>
+        </div>
+        <div class="border-b border-gray-800 mx-2 mb-4"></div>
+        <div class="filter-section pb-4">
+          <button class="flex items-center justify-between w-full text-xs font-semibold tracking-wide text-gray-300 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-800/50 px-2 -mx-2 py-2" onclick="toggleSection(this)"><span>Price</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px] transition-transform duration-200"></i></button>
+          <div class="mt-2 px-2 space-y-2">
+            <div class="flex items-center gap-1.5">
+              <input type="number" id="priceMin" placeholder="Min" oninput="setPriceBound('priceMin', this.value)" class="w-full text-[11px] border border-gray-800 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-gray-600 bg-gray-950">
+              <span class="text-gray-500 text-[11px]">–</span>
+              <input type="number" id="priceMax" placeholder="Max" oninput="setPriceBound('priceMax', this.value)" class="w-full text-[11px] border border-gray-800 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-gray-600 bg-gray-950">
+              <span class="text-[11px] text-gray-500">₫</span>
+            </div>
+            <div class="flex gap-1 price-shortcuts"></div>
+          </div>
+        </div>
+        <div class="border-b border-gray-800 mx-2 mb-4"></div>
+        <div class="filter-section pb-4">
+          <button class="flex items-center justify-between w-full text-xs font-semibold tracking-wide text-gray-300 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-800/50 px-2 -mx-2 py-2" onclick="toggleSection(this)"><span>Category</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px] transition-transform duration-200"></i></button>
+          <div class="mt-2 px-2 category-content"></div>
+        </div>
+        <div class="border-b border-gray-800 mx-2 mb-4"></div>
+        <div class="filter-section pb-4">
+          <button class="flex items-center justify-between w-full text-xs font-semibold tracking-wide text-gray-300 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-800/50 px-2 -mx-2 py-2" onclick="toggleSection(this)"><span>Availability</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px] transition-transform duration-200"></i></button>
+          <div class="mt-2 px-2 availability-options"></div>
+        </div>
+        <div class="border-b border-gray-800 mx-2 mb-4"></div>
+        <div class="filter-section pb-4">
+          <button class="flex items-center justify-between w-full text-xs font-semibold tracking-wide text-gray-300 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-800/50 px-2 -mx-2 py-2" onclick="toggleSection(this)"><span>Rating</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px] transition-transform duration-200"></i></button>
+          <div class="mt-2 px-2 rating-options"></div>
+        </div>
+        <div class="border-b border-gray-800 mx-2 mb-4"></div>
+        <div class="filter-section pb-4">
+          <button class="flex items-center justify-between w-full text-xs font-semibold tracking-wide text-gray-300 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-800/50 px-2 -mx-2 py-2" onclick="toggleSection(this)"><span>Experience</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px] transition-transform duration-200"></i></button>
+          <div class="mt-2 px-2 experience-options"></div>
+        </div>
+        <div class="border-b border-gray-800 mx-2 mb-4"></div>
+        <div class="filter-section pb-4">
+          <button class="flex items-center justify-between w-full text-xs font-semibold tracking-wide text-gray-300 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-800/50 px-2 -mx-2 py-2" onclick="toggleSection(this)"><span>Verification</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px] transition-transform duration-200"></i></button>
+          <div class="mt-2 px-2 verification-options"></div>
+        </div>
+        <div class="border-b border-gray-800 mx-2 mb-4"></div>
+        <div class="filter-section pb-4">
+          <button class="flex items-center justify-between w-full text-xs font-semibold tracking-wide text-gray-300 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-800/50 px-2 -mx-2 py-2" onclick="toggleSection(this)"><span>Language</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px] transition-transform duration-200"></i></button>
+          <div class="mt-2 px-2 language-options"></div>
+        </div>
+        <div class="border-b border-gray-800 mx-2 mb-4"></div>
+        <div class="filter-section pb-4">
+          <button class="flex items-center justify-between w-full text-xs font-semibold tracking-wide text-gray-300 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-800/50 px-2 -mx-2 py-2" onclick="toggleSection(this)"><span>Session type</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px] transition-transform duration-200"></i></button>
+          <div class="mt-2 px-2 session-options"></div>
+        </div>
+      </div>
+    </aside>
+    <main class="flex-1 min-w-0">
+      <div class="hidden lg:flex items-center mb-4">
+        <span id="resultCountLabel" class="text-sm text-gray-400 font-medium hidden"></span>
+      </div>
+      <div id="tutorGrid" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+    </main>
+  </div>
+</div>
+<div id="mobileSheet" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/50" onclick="closeMobileFilters()"></div>
+  <div class="absolute bottom-0 left-0 right-0 bg-gray-950 rounded-t-2xl flex flex-col shadow-2xl shadow-black/60 sheet-open" style="max-height:88vh">
+    <div class="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-800 shrink-0">
+      <h2 class="text-base font-semibold">Filters</h2>
+      <button onclick="closeMobileFilters()" class="text-gray-500 hover:text-gray-400 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-900"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <div class="overflow-y-auto px-5 py-3 flex-1 scrollbar-thin" id="mobileSheetBody"></div>
+    <div class="flex items-center gap-3 px-5 py-4 border-t border-gray-800 bg-gray-950 shrink-0">
+      <button onclick="resetFilters()" class="text-sm font-medium text-gray-400 px-4 py-2.5 border border-gray-700 rounded-xl flex-1">Reset</button>
+      <button onclick="applyMobileFilters()" class="text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 px-4 py-2.5 rounded-xl flex-1 transition-colors shadow-sm shadow-black/30">Show <span id="mobileApplyCount">0</span> tutors</button>
+    </div>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const qs = (sel, ctx) => (ctx || document).querySelector(sel);
+function fmtPrice(p) { return Number(p).toLocaleString('vi-VN') + '₫'; }
+function abbrev(n) { return n >= 1000 ? (n/1000).toFixed(n%1000===0?0:1).replace(/\.0$/,'')+'k' : n; }
+function debounce(fn, ms=200) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+function escapeAttr(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+function makeInitials(name) { return String(name || 'Tutor').trim().split(/\s+/).slice(0, 2).map(part => part[0] || '').join('').toUpperCase() || 'T'; }
+
+const CATEGORIES = [
+  { id:'languages', label:'Languages', skills:['IELTS','English conversation','Vietnamese','Korean','Japanese','Chinese','French'] },
+  { id:'technology', label:'Technology', skills:['JavaScript','React','Node.js','Python','HTML/CSS','Data Science','Mobile Development'] },
+  { id:'business', label:'Business', skills:['Business Strategy','Marketing','Finance','Entrepreneurship','Leadership','Project Management'] },
+  { id:'communication', label:'Communication', skills:['Public Speaking','Writing','Presentation Skills','Negotiation','Storytelling'] },
+  { id:'creative', label:'Creative Skills', skills:['Photography','Video Editing','Graphic Design','Illustration','Animation','UI/UX Design'] },
+  { id:'music', label:'Music', skills:['Piano','Guitar','Music Production','Singing','Music Theory','Ableton','Sound Design'] },
+  { id:'health', label:'Health & Fitness', skills:['Yoga','Meditation','Personal Training','Nutrition','Mindfulness','Pilates'] },
+  { id:'academic', label:'Academic Subjects', skills:['Mathematics','Physics','Chemistry','Biology','History','Literature','English'] },
+  { id:'lifestyle', label:'Lifestyle', skills:['Cooking','Baking','Interior Design','Fashion','Travel Planning'] },
+];
+
+const FORMATS = ['Online', 'In person', 'Either'];
+const AVAILABILITIES = ['Available today', 'Available tomorrow', 'Available this week', 'Available this weekend', 'Choose a date'];
+const EXP_LEVELS = [
+  { id:'new', label:'New on Tutoria', fn: t => t.sessions < 10 },
+  { id:'1y', label:'1+ year teaching', fn: t => t.expYears >= 1 },
+  { id:'3y', label:'3+ years teaching', fn: t => t.expYears >= 3 },
+  { id:'5y', label:'5+ years teaching', fn: t => t.expYears >= 5 },
+  { id:'100', label:'100+ sessions completed', fn: t => t.sessions >= 100 },
+];
+const CITIES = [
+  { id:'hanoi', label:'Hanoi', districts:['Ba Đình','Cầu Giấy','Đống Đa','Hai Bà Trưng','Hoàn Kiếm','Tây Hồ'] },
+  { id:'hcmc', label:'Ho Chi Minh City', districts:[] },
+  { id:'danang', label:'Da Nang', districts:[] },
+  { id:'haiphong', label:'Hai Phong', districts:[] },
+  { id:'cantho', label:'Can Tho', districts:[] },
+];
+const DISTRICT_COORDS = {
+  'Ba Đình': { lat:21.0358, lng:105.8198 },
+  'Cầu Giấy': { lat:21.0315, lng:105.7983 },
+  'Đống Đa': { lat:21.0158, lng:105.8233 },
+  'Hai Bà Trưng': { lat:21.0136, lng:105.8583 },
+  'Hoàn Kiếm': { lat:21.0283, lng:105.8542 },
+  'Tây Hồ': { lat:21.0686, lng:105.8167 },
+};
+const RADIUS_OPTS = ['Within 2 km','Within 5 km','Within 10 km','Anywhere nearby'];
+function parseRadiusKm(r) { const m = r.match(/([\d.]+)\s*km/); return m ? Number(m[1]) : Infinity; }
+function getDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371; const dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+const LANGUAGES = ['Vietnamese','English','French','Korean','Japanese','Chinese'];
+const SESSION_TYPES = ['One-to-one','Small group','Trial session','Recurring lessons','Single session'];
+const SORT_OPTS = [
+  { id:'recommended', label:'Recommended' }, { id:'best-match', label:'Best match' },
+  { id:'rating', label:'Highest rated' }, { id:'reviews', label:'Most reviewed' },
+  { id:'experience', label:'Most experienced' }, { id:'price-asc', label:'Price: low to high' },
+  { id:'price-desc', label:'Price: high to low' }, { id:'available', label:'Earliest available' },
+  { id:'nearby', label:'Nearest to me' },
+];
+
+function withCoords(t) {
+  if (Number.isFinite(t.lat) && Number.isFinite(t.lng)) return t;
+  const c = DISTRICT_COORDS[t.location];
+  if (c) { t.lat = c.lat; t.lng = c.lng; }
+  return t;
+}
+const tutors = [
+  withCoords({ id:1, name:"Minh Anh", headline:"Public Speaking Coach", category:"communication", skills:["Public Speaking","Communication","Leadership"], format:"Online", city:"hanoi", location:"Cầu Giấy", price:250000, rating:4.9, reviews:1200, expYears:6, sessions:200, verified:true, languages:["Vietnamese","English"], sessionTypes:["One-to-one","Small group"], availability:["Available today","Available this week"], bio:"Helped 200+ learners speak with confidence", initials:"MA", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:2, name:"Huy Tran", headline:"Full-stack Developer", category:"technology", skills:["JavaScript","React","Node.js","Python"], format:"Online", city:"hanoi", location:"Ba Đình", price:350000, rating:4.8, reviews:890, expYears:8, sessions:1200, verified:true, languages:["Vietnamese","English"], sessionTypes:["One-to-one","Recurring lessons"], availability:["Available today","Available this week","Available tomorrow"], bio:"8 years building web apps for startups", initials:"HT", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:3, name:"Linh Nguyen", headline:"English & IELTS Coach", category:"languages", skills:["IELTS","English","English conversation"], format:"Online", city:"hanoi", location:"Đống Đa", price:200000, rating:4.9, reviews:2000, expYears:5, sessions:3100, verified:true, languages:["Vietnamese","English"], sessionTypes:["One-to-one","Small group","Trial session"], availability:["Available tomorrow","Available this weekend"], bio:"7.5 IELTS scorer, 5 years teaching", initials:"LN", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:4, name:"Duc Pham", headline:"Photography Artist", category:"creative", skills:["Photography","Lightroom","Photoshop","Illustration"], format:"In person", city:"hanoi", location:"Tây Hồ", price:400000, rating:4.7, reviews:540, expYears:10, sessions:800, verified:true, languages:["Vietnamese","English","French"], sessionTypes:["One-to-one","Single session"], availability:["Available this week","Available this weekend"], bio:"Commercial photographer, exhibition curator", initials:"DP", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:5, name:"Thu Ha", headline:"Cooking Instructor", category:"lifestyle", skills:["Cooking","Baking","French Culinary","Vietnamese Cuisine"], format:"Online", city:"hanoi", location:"Hoàn Kiếm", price:300000, rating:4.9, reviews:3100, expYears:7, sessions:3600, verified:true, languages:["Vietnamese","English"], sessionTypes:["Small group","Recurring lessons"], availability:["Available today","Available this week","Available this weekend"], bio:"French culinary arts, 200+ classes taught", initials:"TH", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:6, name:"Quoc Anh", headline:"Music Producer", category:"music", skills:["Music Production","Ableton","Sound Design","Music Theory"], format:"Online", city:"hanoi", location:"Cầu Giấy", price:500000, rating:4.6, reviews:320, expYears:9, sessions:450, verified:false, languages:["Vietnamese","English"], sessionTypes:["One-to-one","Trial session","Single session"], availability:["Available this weekend"], bio:"Produced for top Vietnamese artists", initials:"QA", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:7, name:"Ngoc Tram", headline:"Yoga & Meditation Coach", category:"health", skills:["Yoga","Meditation","Mindfulness","Pilates"], format:"Online", city:"hanoi", location:"Ba Đình", price:220000, rating:4.8, reviews:980, expYears:8, sessions:1500, verified:true, languages:["Vietnamese","English"], sessionTypes:["One-to-one","Small group","Recurring lessons"], availability:["Available today","Available tomorrow","Available this week"], bio:"RYT-500 certified, 8 years of practice", initials:"NT", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:8, name:"Bao Vy", headline:"Business Strategy Mentor", category:"business", skills:["Business Strategy","Leadership","Marketing","Entrepreneurship"], format:"Online", city:"hanoi", location:"Hai Bà Trưng", price:450000, rating:4.7, reviews:760, expYears:12, sessions:900, verified:true, languages:["Vietnamese","English","Korean"], sessionTypes:["One-to-one","Small group","Recurring lessons"], availability:["Available this week","Available this weekend"], bio:"Ex-McKinsey, 10+ years in corporate strategy", initials:"BV", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:9, name:"Ha Linh", headline:"Korean Language Tutor", category:"languages", skills:["Korean","English conversation","Vietnamese"], format:"Either", city:"hanoi", location:"Cầu Giấy", price:180000, rating:4.8, reviews:450, expYears:4, sessions:520, verified:true, languages:["Vietnamese","Korean","English"], sessionTypes:["One-to-one","Small group","Trial session"], availability:["Available today","Available tomorrow","Available this week","Available this weekend"], bio:"TOPIK Level 6, 4 years teaching", initials:"HL", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:10, name:"Tuan Anh", headline:"Mathematics Tutor", category:"academic", skills:["Mathematics","Physics"], format:"Either", city:"hanoi", location:"Đống Đa", price:150000, rating:4.6, reviews:320, expYears:3, sessions:400, verified:false, languages:["Vietnamese","English"], sessionTypes:["One-to-one","Small group"], availability:["Available tomorrow","Available this week"], bio:"Math Olympiad coach, 3 years experience", initials:"TA", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:11, name:"Minh Tri", headline:"Piano Instructor", category:"music", skills:["Piano","Music Theory"], format:"In person", city:"hanoi", location:"Tây Hồ", price:350000, rating:4.9, reviews:670, expYears:15, sessions:2000, verified:true, languages:["Vietnamese","English","French"], sessionTypes:["One-to-one","Recurring lessons"], availability:["Available this week","Available this weekend"], bio:"Conservatory-trained pianist, 15 years teaching", initials:"MT", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:12, name:"Phuong Thao", headline:"Graphic Design Mentor", category:"creative", skills:["Graphic Design","UI/UX Design","Illustration","Animation"], format:"Online", city:"hanoi", location:"Hoàn Kiếm", price:320000, rating:4.7, reviews:580, expYears:6, sessions:750, verified:true, languages:["Vietnamese","English","Japanese"], sessionTypes:["One-to-one","Trial session","Single session"], availability:["Available today","Available this week"], bio:"Design lead at top creative agency", initials:"PT", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:13, name:"Hoang Nam", headline:"Fitness Coach", category:"health", skills:["Personal Training","Nutrition","Yoga"], format:"Either", city:"hanoi", location:"Cầu Giấy", price:280000, rating:4.5, reviews:230, expYears:5, sessions:600, verified:false, languages:["Vietnamese","English"], sessionTypes:["One-to-one","Small group"], availability:["Available today","Available tomorrow","Available this week"], bio:"Certified personal trainer, 5 years of coaching", initials:"HN", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:14, name:"Kim Chi", headline:"English Conversation Coach", category:"languages", skills:["IELTS","English","English conversation","Presentation Skills"], format:"Online", city:"hanoi", location:"Ba Đình", price:190000, rating:4.8, reviews:1100, expYears:4, sessions:1400, verified:true, languages:["Vietnamese","English"], sessionTypes:["One-to-one","Small group","Trial session"], availability:["Available tomorrow","Available this weekend"], bio:"CELTA certified, 4 years helping students gain fluency", initials:"KC", bg:"bg-gray-800", tc:"text-gray-300" }),
+  withCoords({ id:15, name:"Dang Khoa", headline:"Data Scientist", category:"technology", skills:["Python","Data Science","JavaScript","Node.js"], format:"Online", city:"hanoi", location:"Hai Bà Trưng", price:420000, rating:4.7, reviews:340, expYears:7, sessions:420, verified:true, languages:["Vietnamese","English"], sessionTypes:["One-to-one","Recurring lessons","Single session"], availability:["Available this week"], bio:"ML engineer at FAANG, 7 years of experience", initials:"DK", bg:"bg-gray-800", tc:"text-gray-300" }),
+];
+
+const TUTOR_SUBMISSION_KEY = 'tutoria_tutor_profile_submission';
+let serverPublishedTutors = [];
+const PROFILE_IMAGES_BY_NAME = {
+  'Minh Anh': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=85',
+  'Huy Tran': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=85',
+  'Linh Nguyen': 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=900&q=85',
+  'Duc Pham': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=85',
+  'Thu Ha': '/images/tutor-profile-thu-ha.png',
+  'Quoc Anh': 'https://images.unsplash.com/photo-1531384441138-2736e62e0919?auto=format&fit=crop&w=900&q=85',
+  'Ngoc Tram': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=85',
+  'Bao Vy': 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&w=900&q=85',
+  'Ha Linh': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=85',
+  'Tuan Anh': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=85',
+  'Minh Tri': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=85',
+  'Phuong Thao': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=85',
+  'Hoang Nam': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=85',
+  'Kim Chi': 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=900&q=85',
+  'Dang Khoa': 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&w=900&q=85',
+};
+
+function normalizeLessonFormat(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return value ? [value] : [];
+}
+
+function submittedTutorToBrowseTutor(submission) {
+  if (!submission || !['pending_review', 'published'].includes(submission.status) || !String(submission.displayName || '').trim()) return null;
+  const name = submission.displayName.trim();
+  const skills = Array.isArray(submission.skills) ? submission.skills.filter(Boolean) : [];
+  const lessonFormats = normalizeLessonFormat(submission.lessonFormat);
+  const teachesOnline = lessonFormats.includes('Online');
+  const teachesInPerson = lessonFormats.some(format => format !== 'Online');
+  const format = teachesOnline && teachesInPerson ? 'Either' : teachesInPerson ? 'In person' : 'Online';
+  const duration = Array.isArray(submission.sessionLengths) && submission.sessionLengths.includes(60)
+    ? 60
+    : Array.isArray(submission.sessionLengths)
+      ? submission.sessionLengths[0]
+      : undefined;
+  const price = duration && submission.rates ? submission.rates[String(duration)] : undefined;
+
+  const tutor = {
+    id: 9000,
+    name,
+    headline: String(submission.role || '').trim() || (skills[0] ? `${skills[0]} Tutor` : 'Independent Tutor'),
+    category: 'lifestyle',
+    skills: skills.length ? skills : ['Tutoring'],
+    format,
+    city: String(submission.city || 'hanoi'),
+    location: String(submission.location || '').trim() || 'Hoàn Kiếm',
+    price: price || 0,
+    rating: 0,
+    reviews: 0,
+    expYears: 0,
+    sessions: 0,
+    verified: false,
+    languages: Array.isArray(submission.languages) && submission.languages.length ? submission.languages.filter(Boolean) : ['Vietnamese'],
+    sessionTypes: ['One-to-one'],
+    availability: Array.isArray(submission.availability) && submission.availability.length ? ['Available today', 'Available this week'] : ['Available this week'],
+    bio: String(submission.headline || '').trim() || 'A new tutor on Tutoria.',
+    initials: makeInitials(name),
+    photoUrl: submission.photoUrl || '',
+    bg: 'bg-gray-800',
+    tc: 'text-gray-300',
+  };
+  if (Number.isFinite(submission.latitude) && Number.isFinite(submission.longitude)) {
+    tutor.lat = submission.latitude;
+    tutor.lng = submission.longitude;
+  }
+  return withCoords(tutor);
+}
+
+function getBrowseTutors() {
+  let list = tutors.map(tutor => ({ ...tutor, photoUrl: tutor.photoUrl || PROFILE_IMAGES_BY_NAME[tutor.name] || '' }));
+  serverPublishedTutors.forEach(item => {
+    if (item && item.source === 'live') {
+      list = [{ ...item, photoUrl: item.photoUrl || PROFILE_IMAGES_BY_NAME[item.name] || '' }, ...list.filter(tutor => tutor.name !== item.name)];
+      return;
+    }
+    const submittedTutor = submittedTutorToBrowseTutor(item);
+    if (submittedTutor) list = [submittedTutor, ...list.filter(tutor => tutor.name !== submittedTutor.name)];
+  });
+  try {
+    const submittedTutor = submittedTutorToBrowseTutor(JSON.parse(localStorage.getItem(TUTOR_SUBMISSION_KEY) || 'null'));
+    if (submittedTutor) {
+      list = [submittedTutor, ...list.filter(tutor => tutor.name !== submittedTutor.name)];
+    }
+  } catch {
+    localStorage.removeItem(TUTOR_SUBMISSION_KEY);
+  }
+  return list;
+}
+
+function renderTutorAvatar(tutor) {
+  const baseClass = 'w-11 h-11 rounded-full bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden';
+  if (tutor.photoUrl) {
+    return `<div class="${baseClass}"><img src="${escapeAttr(tutor.photoUrl)}" alt="${escapeAttr(tutor.name)} profile photo" class="w-full h-full object-cover" loading="lazy"></div>`;
+  }
+  return `<div class="${baseClass}">${escapeAttr(tutor.initials)}</div>`;
+}
+
+const state = { search:'', category:'', format:'', availability:[], priceMin:'', priceMax:'', rating:'', experience:[], verifiedOnly:false, city:'', district:'', radius:'', languages:[], sessionTypes:[], sort:'recommended', userLat:null, userLng:null, _geoError:'', date:'', _refDistrict:'' };
+
+function score(t, q) {
+  if (!q) return 0;
+  const lq = q.toLowerCase();
+  const fields = [
+    { val: t.name.toLowerCase(), weight: 10 },
+    { val: t.headline.toLowerCase(), weight: 8 },
+    { val: t.skills.map(s => s.toLowerCase()).join(' '), weight: 7 },
+    { val: t.bio.toLowerCase(), weight: 5 },
+    { val: (t.location||'').toLowerCase(), weight: 3 },
+    { val: t.languages.map(l => l.toLowerCase()).join(' '), weight: 2 },
+  ];
+  let s = 0;
+  for (const f of fields) {
+    let matched = false;
+    if (f.val === lq) { s += f.weight * 3; matched = true; }
+    else if (f.val.startsWith(lq)) { s += f.weight * 2; matched = true; }
+    else if (f.val.includes(' ' + lq)) { s += f.weight * 1.5; matched = true; }
+    else if (f.val.includes(lq)) { s += f.weight; matched = true; }
+    if (matched) {
+      let ci = 0;
+      for (const ch of lq) { const idx = f.val.indexOf(ch, ci); if (idx >= ci) { s += f.weight * 0.05; ci = idx + 1; } }
+    }
+  }
+  return s;
+}
+
+function matches(t) {
+  const s = state;
+  if (s.search && score(t, s.search) < 2) return false;
+  if (s.category && t.category !== s.category) return false;
+  if (s.format) {
+    if (s.format === 'Either' && !['Online','Either'].includes(t.format)) return false;
+    if (s.format !== 'Either' && t.format !== s.format) return false;
+  }
+  if (s.availability.length && !s.availability.some(a => t.availability.includes(a))) return false;
+  if (s.priceMin !== '' && t.price < Number(s.priceMin)) return false;
+  if (s.priceMax !== '' && t.price > Number(s.priceMax)) return false;
+  if (s.rating) { const m = { '4.8':4.8,'4.5':4.5,'4.0':4.0 }[s.rating]||0; if (t.rating < m) return false; }
+  if (s.experience.length && !s.experience.some(e => { const x = EXP_LEVELS.find(y => y.id===e); return x && x.fn(t); })) return false;
+  if (s.verifiedOnly && !t.verified) return false;
+  if (s.district && t.location !== s.district) return false;
+  if (s.city && s.city !== 'use_my' && !s.district) {
+    const city = CITIES.find(c => c.id === s.city);
+    if (city && city.districts.length && !city.districts.includes(t.location)) return false;
+  }
+  if (t.lat && t.lng) {
+    let refLat, refLng;
+    if (s.city === 'use_my' && s.userLat) { refLat = s.userLat; refLng = s.userLng; }
+    if (refLat == null && s.district && DISTRICT_COORDS[s.district]) { refLat = DISTRICT_COORDS[s.district].lat; refLng = DISTRICT_COORDS[s.district].lng; }
+    if (refLat == null && s.city && s.city !== 'use_my') { const city = CITIES.find(c => c.id === s.city); if (city && city.districts.length) { const d = DISTRICT_COORDS[city.districts[0]]; if (d) { refLat = d.lat; refLng = d.lng; } } }
+    if (refLat == null) { refLat = 21.0285; refLng = 105.8542; }
+    if (refLat != null) {
+      t._distance = getDistance(refLat, refLng, t.lat, t.lng);
+      if (s.radius) { const maxKm = parseRadiusKm(s.radius); if (t._distance > maxKm) return false; }
+    }
+  }
+  if (s.date && s.availability.includes('Choose a date') && !t.availability.some(a => ['Available today','Available tomorrow','Available this week'].includes(a))) return false;
+  if (s.languages.length && !s.languages.some(l => t.languages.includes(l))) return false;
+  if (s.sessionTypes.length && !s.sessionTypes.some(st => t.sessionTypes.includes(st))) return false;
+  return true;
+}
+
+function withState(overrides, fn) {
+  const previous = {};
+  Object.keys(overrides).forEach(key => {
+    previous[key] = state[key];
+    state[key] = overrides[key];
+  });
+  try {
+    return fn();
+  } finally {
+    Object.keys(previous).forEach(key => {
+      state[key] = previous[key];
+    });
+  }
+}
+
+function countFor(overrides, predicate = () => true) {
+  return withState(overrides, () => getBrowseTutors().filter(t => predicate(t) && matches({...t, _score:0})).length);
+}
+
+function getResults() {
+  let list = getBrowseTutors().filter(matches);
+  const q = state.search.toLowerCase().trim();
+  if (q) list.forEach(t => t._score = score(t, q));
+  else list.forEach(t => t._score = 0);
+  const s = state.sort;
+  list.sort((a, b) => {
+    if (s === 'best-match' || s === 'recommended') { if (a._score !== b._score) return b._score - a._score; return b.rating * 0.4 + b.reviews * 0.0003 - (a.rating * 0.4 + a.reviews * 0.0003); }
+    if (s === 'rating') return b.rating - a.rating;
+    if (s === 'reviews') return b.reviews - a.reviews;
+    if (s === 'experience') return b.expYears - a.expYears;
+    if (s === 'price-asc') return a.price - b.price;
+    if (s === 'price-desc') return b.price - a.price;
+    if (s === 'available') return b.availability.length - a.availability.length;
+    if (s === 'nearby') { const da=a._distance||Infinity, db=b._distance||Infinity; return da-db; }
+    return 0;
+  });
+  return list;
+}
+
+function countActiveFilters() {
+  let n=0; const s=state;
+  if (s.search) n++; if (s.category) n++; if (s.format) n++;
+  if (s.availability.length) n++; if (s.priceMin||s.priceMax) n++; if (s.rating) n++;
+  if (s.experience.length) n++; if (s.verifiedOnly) n++; if (s.city) n++;
+  if (s.district) n++; if (s.radius) n++; if (s.languages.length) n++; if (s.sessionTypes.length) n++; if (s.date) n++;
+  return n;
+}
+
+function readURL() {
+  const p = new URLSearchParams(window.location.search);
+  return {
+    search: p.get('q')||'', category: p.get('cat')||'',
+    format: p.get('fmt')||'', availability: p.get('avail')?p.get('avail').split(','):[],
+    priceMin: p.get('pmin')||'', priceMax: p.get('pmax')||'', rating: p.get('rating')||'',
+    experience: p.get('exp')?p.get('exp').split(','):[], verifiedOnly: p.get('v')==='1',
+    city: p.get('city')||'', district: p.get('district')||'', radius: p.get('radius')||'',
+    languages: p.get('lang')?p.get('lang').split(','):[],
+    sessionTypes: p.get('st')?p.get('st').split(','):[], sort: p.get('sort')||'recommended', date: p.get('date')||'',
+  };
+}
+
+function writeURL() {
+  const p = new URLSearchParams();
+  if (state.search) p.set('q', state.search); if (state.category) p.set('cat', state.category);
+
+  if (state.format) p.set('fmt', state.format);
+  if (state.availability.length) p.set('avail', state.availability.join(','));
+  if (state.priceMin) p.set('pmin', state.priceMin); if (state.priceMax) p.set('pmax', state.priceMax);
+  if (state.rating) p.set('rating', state.rating);
+  if (state.experience.length) p.set('exp', state.experience.join(','));
+  if (state.verifiedOnly) p.set('v','1'); if (state.city) p.set('city', state.city);
+  if (state.district) p.set('district', state.district); if (state.radius) p.set('radius', state.radius);
+  if (state.languages.length) p.set('lang', state.languages.join(','));
+  if (state.sessionTypes.length) p.set('st', state.sessionTypes.join(','));
+  if (state.date) p.set('date', state.date);
+  if (state.sort !== 'recommended') p.set('sort', state.sort);
+  window.history.replaceState({}, '', p.toString() ? '?'+p.toString() : window.location.pathname);
+}
+
+function render() {
+  const results = getResults(); const count = results.length; const fc = countActiveFilters();
+  const showCount = state.search || fc > 0;
+  const rcl = $('resultCountLabel');
+  if (rcl) { rcl.textContent = count+' tutor'+(count!==1?'s':''); rcl.classList.toggle('hidden', !showCount); }
+  const mrc = $('mobileResultCount');
+  if (mrc) { mrc.textContent = count+' tutor'+(count!==1?'s':''); mrc.classList.toggle('hidden', !showCount); }
+  $('mobileApplyCount').textContent = count;
+  const badge = $('mobileFilterCount');
+  if (fc>0) { badge.classList.remove('hidden'); badge.textContent = fc; } else badge.classList.add('hidden');
+  const sl = $('sortLabel'); if (sl) sl.textContent = SORT_OPTS.find(o=>o.id===state.sort)?.label||'Recommended';
+  const chips = []; const push = (k,l,r) => chips.push({k,l,r});
+  if (state.search) push('s',`"${state.search}"`,()=>{state.search='';syncInputs();render()});
+  if (state.category) { const c=CATEGORIES.find(x=>x.id===state.category); push('c',c?c.label:state.category,()=>{state.category='';render()}); }
+  if (state.format) push('f',state.format,()=>{state.format='';render()});
+  state.availability.forEach(a=>{if(a==='Choose a date')push('av_'+a,'Choose a date',()=>{state.availability=state.availability.filter(x=>x!=='Choose a date');state.date='';render()});else push('av_'+a,a,()=>{state.availability=state.availability.filter(x=>x!==a);render()})});
+  if (state.priceMin) push('pmin','From '+fmtPrice(state.priceMin),()=>{state.priceMin='';syncInputs();render()});
+  if (state.priceMax) push('pmax','Up to '+fmtPrice(state.priceMax),()=>{state.priceMax='';syncInputs();render()});
+  if (state.rating) push('r',state.rating+'+',()=>{state.rating='';render()});
+  if (state.date) push('date',state.date,()=>{state.date='';state.availability=state.availability.filter(x=>x!=='Choose a date');render()});
+  state.experience.forEach(e=>{const x=EXP_LEVELS.find(y=>y.id===e);if(x)push('exp_'+e,x.label,()=>{state.experience=state.experience.filter(y=>y!==e);render()})});
+  if (state.verifiedOnly) push('v','Verified',()=>{state.verifiedOnly=false;render()});
+  if (state.city) { const c=CITIES.find(x=>x.id===state.city); push('city',c?c.label:state.city,()=>{state.city='';state.district='';render()}); }
+  if (state.district) push('d',state.district,()=>{state.district='';render()});
+  if (state.radius) push('rad',state.radius,()=>{state.radius='';render()});
+  state.languages.forEach(l=>push('lang_'+l,l,()=>{state.languages=state.languages.filter(x=>x!==l);render()}));
+  state.sessionTypes.forEach(st=>push('st_'+st,st,()=>{state.sessionTypes=state.sessionTypes.filter(x=>x!==st);render()}));
+  const cc = $('chipContainerDesktop'), ccm = $('chipContainerMobile');
+  const ct = chips.map(c => `<span class="chip-in inline-flex items-center gap-1 text-xs font-medium bg-gray-800 text-gray-100 px-2.5 py-1 rounded-full whitespace-nowrap border border-gray-600">${c.l} <button onclick="(${c.r.toString()})()" class="hover:text-gray-100 leading-none">&times;</button></span>`).join('');
+  if (cc) cc.innerHTML = chips.length ? ct : '';
+  if (ccm) ccm.innerHTML = chips.length ? ct : '';
+  const cab = $('clearAllBtnDesktop'), cabm = $('clearAllBtnMobile');
+  if (cab) cab.classList.toggle('hidden', chips.length === 0);
+  if (cabm) cabm.classList.toggle('hidden', chips.length === 0);
+  const locBadge = $('locationStatus');
+  if (locBadge) {
+    if (state.city==='use_my' && state.userLat) {
+      locBadge.className = 'mb-4 flex items-center gap-2 text-xs text-gray-300 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2';
+      locBadge.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Location set to <strong>'+state._refDistrict+'</strong> — distances shown on cards<button onclick="state.city=\'\';state.district=\'\';state.userLat=null;state.userLng=null;state._refDistrict=\'\';render()" class="ml-auto text-gray-400 hover:text-gray-400"><i class="fa-solid fa-xmark"></i></button>';
+    } else if (state.city==='use_my') {
+      locBadge.className = 'mb-4 flex items-center gap-2 text-xs text-gray-300 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2';
+      locBadge.innerHTML = '<i class="fa-solid fa-location-dot"></i> My location<button onclick="state.city=\'\';state.district=\'\';state.userLat=null;state.userLng=null;state._refDistrict=\'\';render()" class="ml-auto text-gray-400 hover:text-gray-400"><i class="fa-solid fa-xmark"></i></button>';
+    } else {
+      locBadge.className = 'hidden';
+    }
+  }
+  const grid = $('tutorGrid');
+  if (results.length === 0) {
+    const sug = []; const s=state;
+    if (s.search) sug.push({l:'Remove search query',a:'state.search="";syncInputs();render()'});
+    if (s.verifiedOnly) sug.push({l:'Show all tutors',a:'state.verifiedOnly=false;render()'});
+    if (s.priceMin||s.priceMax) sug.push({l:'Remove price filter',a:'state.priceMin="";state.priceMax="";syncInputs();render()'});
+    if (s.category) sug.push({l:'All categories',a:'state.category="";render()'});
+    sug.push({l:'Clear all filters',a:'clearAllFilters()'});
+    grid.innerHTML = `<div class="col-span-full text-center py-16 fade-in"><div class="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-regular fa-magnifying-glass text-gray-500 text-xl"></i></div><p class="text-gray-300 font-medium mb-1">No tutors found</p><p class="text-gray-500 text-sm mb-4">Try adjusting your search or filters</p><div class="flex flex-wrap justify-center gap-2 max-w-md mx-auto">${sug.map(sg=>`<button onclick="${sg.a}" class="text-xs bg-gray-900 hover:bg-gray-800 text-gray-400 px-3 py-1.5 rounded-full">${sg.l}</button>`).join('')}</div></div>`;
+  } else {
+    grid.innerHTML = results.map(t => {
+      const avail = t.availability[0]||'Available';
+      const badgeColor = (a) => {
+        if (a.includes('today')) return {t:'text-emerald-300',b:'bg-emerald-900/40',d:'bg-emerald-400'};
+        if (a.includes('tomorrow')) return {t:'text-sky-300',b:'bg-sky-900/40',d:'bg-sky-400'};
+        if (a.includes('week')) return {t:'text-violet-300',b:'bg-violet-900/40',d:'bg-violet-400'};
+        if (a.includes('weekend')) return {t:'text-amber-300',b:'bg-amber-900/40',d:'bg-amber-400'};
+        return {t:'text-gray-400',b:'bg-gray-800/50',d:'bg-gray-500'};
+      };
+      const bc = badgeColor(avail);
+      const profileUrl = `/tutor/${encodeURIComponent(t.name)}`;
+      return `<a href="${profileUrl}" target="_top" aria-label="View ${t.name}'s tutor profile" class="block relative overflow-hidden bg-gray-900 rounded-[20px] border border-gray-800 shadow-xl shadow-black/30 hover:shadow-2xl hover:shadow-black/40 transition-all duration-300 hover:-translate-y-1 p-5 fade-in"><div class="relative">
+        <div class="flex items-start justify-between mb-3">${renderTutorAvatar(t)}
+        <div class="flex flex-col items-end gap-1">
+          <span class="inline-flex items-center gap-1 text-[11px] font-medium ${bc.t} ${bc.b} px-2 py-0.5 rounded-full whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full ${bc.d}"></span>${avail}</span>
+          ${t._distance!==undefined?`<span class="text-[10px] font-bold text-gray-400 bg-gray-950 px-2 py-0.5 rounded-full border border-gray-700 shadow-sm shadow-black/30">${t._distance < 1 ? (t._distance*1000).toFixed(0)+'m' : t._distance.toFixed(1)+'km'} away</span>`:''}
+        </div></div>
+        <h3 class="font-semibold text-sm text-gray-100">${t.name}</h3>
+        <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium mt-0.5">${t.headline}</p>
+        <div class="flex items-center gap-2.5 text-[11px] text-gray-500 mt-1 mb-2">
+          <span><i class="fa-regular fa-star text-gray-500"></i> ${t.rating} <span class="text-gray-500">(${abbrev(t.reviews)})</span></span>
+          <span><i class="fa-solid fa-${t.format==='In person'?'building':'globe'}"></i> ${t.format}</span>
+          <span><i class="fa-solid fa-location-dot"></i> ${t.location}</span>
+        </div>
+        <p class="text-xs text-gray-400 mb-2.5 line-clamp-2">${t.bio}</p>
+        <div class="flex flex-wrap gap-1 mb-3">${t.skills.slice(0,3).map(sk=>`<span class="text-[11px] bg-gray-950 text-gray-500 px-2 py-0.5 rounded-full border border-gray-800">${sk}</span>`).join('')}</div>
+        <div class="border-t border-gray-800 pt-3 flex items-center justify-between">
+          <span class="font-bold text-base text-gray-100">${fmtPrice(t.price)} <span class="font-normal text-[11px] text-gray-500">/ session</span></span>
+          <span class="text-xs font-semibold text-white bg-gray-900 hover:bg-gray-800 px-4 py-1.5 rounded-lg transition-all shadow-sm shadow-black/30">Book</span>
+        </div>
+      </div>
+      </a>`;
+    }).join('');
+  }
+  renderSidebar();
+  writeURL();
+}
+
+function renderSidebar() {
+  const catC = qs('.category-content');
+  if (catC) catC.innerHTML = CATEGORIES.map(c => {
+    const c2 = countFor({ category:c.id });
+    return `<button onclick="state.category=state.category==='${c.id}'?'':'${c.id}';render()" class="flex items-center gap-2.5 w-full text-sm text-left rounded-lg px-2 py-1.5 -mx-2 transition-colors ${state.category===c.id?'text-gray-100 font-medium bg-gray-800':'hover:bg-gray-900/50 text-gray-100'}"><span class="flex-1">${c.label}</span><span class="text-gray-500 text-xs ml-auto">${c2}</span></button>`;
+  }).join('');
+
+  const fmtC = qs('.format-options');
+  if (fmtC) fmtC.innerHTML = FORMATS.map(f => {
+    const c = countFor({ format:f });
+    const sel = state.format === f;
+    return `<button onclick="state.format='${sel?'':f}';render()" class="flex-1 text-xs py-2 rounded-lg border text-center transition-all ${sel?'bg-gray-800 border-gray-600 text-gray-100 font-medium shadow-sm shadow-black/30':'border-gray-800 text-gray-400 hover:border-gray-600 hover:bg-gray-900/50'}"><span>${f}</span> <span class="text-gray-500">${c}</span></button>`;
+  }).join('');
+
+  const avC = qs('.availability-options');
+  if (avC) avC.innerHTML = AVAILABILITIES.map(a => {
+    if (a === 'Choose a date') {
+      const sel = state.availability.includes(a);
+      return `<div class="mt-2 pt-2 border-t border-gray-800"><button onclick="toggle('availability','${a}');if(!state.availability.includes('${a}')){state.date='';}render()" class="flex items-center gap-2.5 w-full text-sm text-left rounded-lg px-2 py-1.5 -mx-2 transition-colors ${sel?'text-gray-100 font-medium bg-gray-800':'hover:bg-gray-900/50 text-gray-100'}"><span class="font-medium">${a}</span></button><input type="date" value="${state.date}" onchange="state.date=this.value;if(!state.availability.includes('Choose a date')){state.availability.push('Choose a date')}render()" class="w-full text-xs border border-gray-800 rounded-lg px-2.5 py-1.5 bg-gray-950 focus:outline-none focus:ring-1 focus:ring-gray-600 ${sel?'':'opacity-40'}"></div>`;
+    }
+    const nextAvailability = state.availability.includes(a) ? state.availability.filter(x => x !== a) : [...state.availability.filter(x => x !== 'Choose a date'), a];
+    const c = countFor({ availability:nextAvailability });
+    return `<button onclick="toggle('availability','${a}');render()" class="flex items-center gap-2.5 w-full text-sm text-left rounded-lg px-2 py-1.5 -mx-2 transition-colors ${state.availability.includes(a)?'text-gray-100 font-medium bg-gray-800':'hover:bg-gray-900/50 text-gray-100'}"><span class="flex-1">${a}</span><span class="text-gray-500 text-xs ml-auto">${c}</span></button>`;
+  }).join('');
+
+  const prC = qs('.price-shortcuts');
+  if (prC) prC.innerHTML = [{l:'Free intro',mn:'0',mx:'0'},{l:'Under 200k',mn:'',mx:'200000'},{l:'200k–400k',mn:'200000',mx:'400000'},{l:'400k–700k',mn:'400000',mx:'700000'},{l:'700k+',mn:'700000',mx:''}].map(sc => {
+    const active = state.priceMin===sc.mn && state.priceMax===sc.mx;
+    return `<button onclick="state.priceMin='${sc.mn}';state.priceMax='${sc.mx}';syncInputs();render()" class="flex-1 text-[10px] py-1.5 rounded-md border transition-all ${active?'bg-gray-800 border-gray-600 text-gray-100 font-medium shadow-sm shadow-black/30':'border-gray-800 text-gray-400 hover:border-gray-600 hover:bg-gray-900/50'}">${sc.l}</button>`;
+  }).join('');
+
+  const rtC = qs('.rating-options');
+  if (rtC) rtC.innerHTML = [{v:'4.8',l:'4.8 and above'},{v:'4.5',l:'4.5 and above'},{v:'4.0',l:'4.0 and above'}].map(r => {
+    const c = countFor({ rating:r.v });
+    return `<button onclick="state.rating=state.rating==='${r.v}'?'':'${r.v}';render()" class="flex items-center gap-2.5 w-full text-sm text-left rounded-lg px-2 py-1.5 -mx-2 transition-colors ${state.rating===r.v?'text-gray-100 font-medium bg-gray-800':'hover:bg-gray-900/50 text-gray-100'}"><span class="flex-1">${r.l}</span><span class="text-gray-500 text-xs ml-auto">${c}</span></button>`;
+  }).join('');
+
+  const lC = qs('.location-options');
+  if (lC) {
+    const isUseMy = state.city === 'use_my';
+    const selCity = CITIES.find(c => c.id === state.city);
+    const hasD = selCity && selCity.districts.length > 0;
+    const radBtns = RADIUS_OPTS.map(r => {
+      const active = state.radius === r;
+      return `<button onclick="state.radius='${active?'':r}';render()" class="text-[11px] px-2.5 py-1.5 rounded-lg border transition-all ${active?'bg-gray-800 border-gray-600 text-gray-100 font-medium shadow-sm shadow-black/30':'border-gray-800 text-gray-400 hover:border-gray-600 hover:bg-gray-900/50'}">${r}</button>`;
+    }).join('');
+    const mode = isUseMy ? 'location' : (state.city ? 'city' : '');
+    lC.innerHTML = `<div class="flex gap-1 mb-2">
+  <button data-loc="all" class="flex-1 text-[11px] py-1.5 rounded-md border transition-all ${!mode?'bg-gray-800 border-gray-600 text-gray-100 font-medium':'border-gray-800 text-gray-400 hover:border-gray-600 hover:bg-gray-900/50'}">All areas</button>
+  <button data-loc="myloc" class="flex-1 text-[11px] py-1.5 rounded-md border transition-all ${mode==='location'?'bg-gray-800 border-gray-600 text-gray-100 font-medium':'border-gray-800 text-gray-400 hover:border-gray-600 hover:bg-gray-900/50'}">My location</button>
+</div>
+${mode !== 'location' ? `
+<div class="relative">
+  <select onchange="onCityChange(this.value)" class="w-full appearance-none text-[11px] border border-gray-700 rounded-lg px-2.5 py-2 bg-gray-900 text-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 pr-6 leading-tight cursor-pointer">
+    <option value="" class="bg-gray-900" ${!state.city?'selected':''}>Any city</option>
+    ${CITIES.map(c => `<option value="${c.id}" class="bg-gray-900" ${state.city===c.id?'selected':''}>${c.label}</option>`).join('')}
+  </select>
+  <svg class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+</div>
+${hasD ? `<div class="relative mt-1.5">
+  <select onchange="state.district=this.value;render()" class="w-full appearance-none text-[11px] border border-gray-700 rounded-lg px-2.5 py-2 bg-gray-900 text-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 pr-6 leading-tight cursor-pointer">
+    <option value="" class="bg-gray-900" ${!state.district?'selected':''}>Any district in ${selCity.label}</option>
+    ${selCity.districts.map(d => `<option value="${d}" class="bg-gray-900" ${state.district===d?'selected':''}>${d}</option>`).join('')}
+  </select>
+  <svg class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+</div>` : ''}
+` : `
+<div class="text-center py-1.5">${state.userLat ? '<span class="text-[11px] text-gray-300 font-medium">Location detected</span>' : ''}</div>
+`}
+${mode ? `<div class="flex flex-wrap gap-1 mt-2">${radBtns}</div>` : ''}`;
+  }
+
+  const exC = qs('.experience-options');
+  if (exC) exC.innerHTML = EXP_LEVELS.map(e => {
+    const nextExperience = state.experience.includes(e.id) ? state.experience.filter(x => x !== e.id) : [...state.experience, e.id];
+    const c = countFor({ experience:nextExperience });
+    return `<button onclick="toggle('experience','${e.id}');render()" class="flex items-center gap-2.5 w-full text-sm text-left rounded-lg px-2 py-1.5 -mx-2 transition-colors ${state.experience.includes(e.id)?'text-gray-100 font-medium bg-gray-800':'hover:bg-gray-900/50 text-gray-100'}"><span class="flex-1">${e.label}</span><span class="text-gray-500 text-xs ml-auto">${c}</span></button>`;
+  }).join('');
+
+  const vC = qs('.verification-options');
+  if (vC) {
+    const vc = countFor({ verifiedOnly:true });
+    vC.innerHTML = `<button onclick="state.verifiedOnly=false;render()" class="flex items-center gap-2.5 w-full text-sm text-left rounded-lg px-2 py-1.5 -mx-2 transition-colors ${!state.verifiedOnly?'text-gray-100 font-medium bg-gray-800':'hover:bg-gray-900/50 text-gray-100'}"><span class="flex-1">All people</span></button>
+<button onclick="state.verifiedOnly=true;render()" class="flex items-center gap-2.5 w-full text-sm text-left rounded-lg px-2 py-1.5 -mx-2 transition-colors ${state.verifiedOnly?'text-gray-100 font-medium bg-gray-800':'hover:bg-gray-900/50 text-gray-100'}"><span class="flex-1">Verified tutors only</span><span class="text-gray-500 text-xs ml-auto">${vc}</span></button>`;
+  }
+
+  const lgC = qs('.language-options');
+  if (lgC) lgC.innerHTML = LANGUAGES.map(l => {
+    const nextLanguages = state.languages.includes(l) ? state.languages.filter(x => x !== l) : [...state.languages, l];
+    const c = countFor({ languages:nextLanguages });
+    return `<button onclick="toggle('languages','${l}');render()" class="flex items-center gap-2.5 w-full text-sm text-left rounded-lg px-2 py-1.5 -mx-2 transition-colors ${state.languages.includes(l)?'text-gray-100 font-medium bg-gray-800':'hover:bg-gray-900/50 text-gray-100'}"><span class="flex-1">${l}</span><span class="text-gray-500 text-xs ml-auto">${c}</span></button>`;
+  }).join('');
+
+  const stC = qs('.session-options');
+  if (stC) stC.innerHTML = SESSION_TYPES.map(st => {
+    const nextSessionTypes = state.sessionTypes.includes(st) ? state.sessionTypes.filter(x => x !== st) : [...state.sessionTypes, st];
+    const c = countFor({ sessionTypes:nextSessionTypes });
+    return `<button onclick="toggle('sessionTypes','${st}');render()" class="flex items-center gap-2.5 w-full text-sm text-left rounded-lg px-2 py-1.5 -mx-2 transition-colors ${state.sessionTypes.includes(st)?'text-gray-100 font-medium bg-gray-800':'hover:bg-gray-900/50 text-gray-100'}"><span class="flex-1">${st}</span><span class="text-gray-500 text-xs ml-auto">${c}</span></button>`;
+  }).join('');
+}
+
+function onCityChange(val) {
+  state.city = val; state.district = '';
+  if (val !== 'use_my') { state._geoError = ''; state.userLat = null; state.userLng = null; state._refDistrict = ''; }
+  render();
+}
+function requestGeolocation() {
+  if (!navigator.geolocation) { state.userLat=null;state.userLng=null;render();return; }
+  if (location.protocol === 'file:') { state.userLat=null;state.userLng=null;render();return; }
+  navigator.geolocation.getCurrentPosition(
+    pos => { state.userLat = pos.coords.latitude; state.userLng = pos.coords.longitude; state._geoError = ''; render(); },
+    err => { state.userLat=null; state.userLng=null; render(); },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+function toggle(key, val) { const a = state[key]; const i = a.indexOf(val); if (i > -1) a.splice(i, 1); else a.push(val); }
+function toggleSection(btn) { const c = btn.nextElementSibling; const i = btn.querySelector('.fa-chevron-down'); if (!c||!i) return;   const was = c.classList.contains('collapsed'); c.classList.toggle('collapsed'); i.style.transform = was ? 'rotate(0deg)' : 'rotate(-90deg)'; }
+
+const debouncedRender = debounce(render, 180);
+function onSearchInput(event) {
+  state.search = event?.target?.value ?? $('searchInput').value;
+  document.querySelectorAll('#searchInput, #mobileSearchInput').forEach(input => {
+    if (input !== event?.target) input.value = state.search;
+  });
+  $('searchClear').classList.toggle('hidden', !state.search);
+  showSuggestions(state.search);
+  debouncedRender();
+}
+$('searchInput').addEventListener('input', onSearchInput);
+$('mobileSearchInput')?.addEventListener('input', onSearchInput);
+
+function clearSearch() { state.search=''; syncInputs(); $('searchSuggestions').classList.add('hidden'); $('searchClear').classList.add('hidden'); render(); }
+
+function showSuggestions(q) {
+  const c=$('searchSuggestions'), mc=$('mobileSearchSuggestions');
+  if (!q||q.length<1) { c.classList.add('hidden'); if (mc) mc.classList.add('hidden'); return; }
+  const lq=q.toLowerCase(), items=[];
+  getBrowseTutors().map(t=>({label:t.name,score:score(t,lq),icon:'fa-regular fa-user'})).filter(x=>x.score>1).sort((a,b)=>b.score-a.score).slice(0,2).forEach(x=>{if(!items.find(y=>y.label===x.label))items.push(x)});
+  if (!items.length) { c.classList.add('hidden'); if (mc) mc.classList.add('hidden'); return; }
+  const h=items.map(s=>`<button class="flex items-center gap-3 w-full text-left px-3.5 py-2 text-sm hover:bg-gray-900 first:rounded-t-lg last:rounded-b-lg" onclick="pickSuggestion('${s.label.replace(/'/g,"\\'")}')"><i class="${s.icon} text-gray-500 text-xs w-4"></i>${hl(s.label,q)}</button>`).join('');
+  c.innerHTML=h; c.classList.remove('hidden'); if (mc) { mc.innerHTML=h; mc.classList.remove('hidden'); }
+}
+function hl(t,q) { if (!q) return t; const i=t.toLowerCase().indexOf(q.toLowerCase()); return i===-1?t:t.slice(0,i)+'<mark class="bg-gray-700 text-gray-300 rounded-sm px-0.5">'+t.slice(i,i+q.length)+'</mark>'+t.slice(i+q.length); }
+function pickSuggestion(v) { state.search=v; syncInputs(); $('searchSuggestions').classList.add('hidden'); if($('mobileSearchSuggestions'))$('mobileSearchSuggestions').classList.add('hidden'); render(); }
+function syncInputs(ctx = document) {
+  ctx.querySelectorAll('#searchInput, #mobileSearchInput').forEach(input => input.value = state.search);
+  const searchClear = $('searchClear'); if (searchClear) searchClear.classList.toggle('hidden', !state.search);
+  ctx.querySelectorAll('#priceMin').forEach(input => input.value = state.priceMin);
+  ctx.querySelectorAll('#priceMax').forEach(input => input.value = state.priceMax);
+}
+function setPriceBound(key, value) {
+  state[key] = value;
+  if (!$('mobileSheet')?.classList.contains('hidden')) updateMobileCount();
+  debouncedRender();
+}
+
+function renderSort() {
+  const c=$('sortDropdown'), mc=$('mobileSortPanel'), so=qs('.sort-options');
+  const h=SORT_OPTS.map(s=>`<button onclick="setSort('${s.id}')" class="block w-full text-left text-sm px-3.5 py-2 transition-colors ${state.sort===s.id?'bg-gray-800 text-gray-100 font-medium':'hover:bg-gray-900 text-gray-300'}">${s.label}</button>`).join('');
+  if (c) c.innerHTML=h;
+  if (mc) mc.innerHTML=`<div class="space-y-0.5">${SORT_OPTS.map(s=>`<button onclick="setSort('${s.id}');$('mobileSortPanel').classList.add('hidden')" class="block w-full text-left text-sm px-3.5 py-2 rounded-lg ${state.sort===s.id?'bg-gray-800 text-gray-100 font-medium':'hover:bg-gray-900 text-gray-300'}">${s.label}</button>`).join('')}</div>`;
+  if (so) so.innerHTML=SORT_OPTS.map(s=>`<button onclick="setSort('${s.id}')" class="flex items-center gap-2.5 w-full text-sm text-left rounded-lg px-2 py-1.5 -mx-2 transition-colors ${state.sort===s.id?'text-gray-100 font-medium bg-gray-800':'hover:bg-gray-900/50 text-gray-100'}"><span class="flex-1">${s.label}</span></button>`).join('');
+  const sl=$('sortLabel'); if (sl) sl.textContent=SORT_OPTS.find(o=>o.id===state.sort)?.label||'Recommended';
+}
+function setSort(id) { state.sort=id; renderSort(); render(); }
+function toggleSortDropdown() { const sd=$('sortDropdown'); if(sd)sd.classList.toggle('hidden'); }
+function toggleMobileSort() { $('mobileSortPanel').classList.toggle('hidden'); }
+
+function hydrateMobileControls() {
+  const body = $('mobileSheetBody');
+  if (!body) return;
+  syncInputs(body);
+  body.querySelectorAll('#searchInput, #mobileSearchInput').forEach(input => {
+    input.addEventListener('input', event => {
+      state.search = event.target.value;
+      updateMobileCount();
+    });
+  });
+  body.querySelectorAll('#priceMin').forEach(input => {
+    input.addEventListener('input', event => {
+      state.priceMin = event.target.value;
+      updateMobileCount();
+    });
+  });
+  body.querySelectorAll('#priceMax').forEach(input => {
+    input.addEventListener('input', event => {
+      state.priceMax = event.target.value;
+      updateMobileCount();
+    });
+  });
+}
+
+function refreshMobileFilters() {
+  const sheet = $('mobileSheet');
+  const body = $('mobileSheetBody');
+  if (!sheet || sheet.classList.contains('hidden') || !body) return;
+  const scrollTop = body.scrollTop;
+  body.innerHTML = document.querySelector('#sidebar .sticky').innerHTML;
+  body.querySelectorAll('[onclick]').forEach(el => { el.setAttribute('onclick', el.getAttribute('onclick').replace(/render\(\)/g, 'refreshMobileFilters()').replace(/render\b/g, 'refreshMobileFilters')); });
+  body.querySelectorAll('[onchange]').forEach(el => { el.setAttribute('onchange', el.getAttribute('onchange').replace(/render\(\)/g, 'refreshMobileFilters()').replace(/render\b/g, 'refreshMobileFilters')); });
+  hydrateMobileControls();
+  updateMobileCount();
+  body.scrollTop = scrollTop;
+}
+
+function openMobileFilters() {
+  const sheet=$('mobileSheet'), body=$('mobileSheetBody');
+  body.innerHTML = document.querySelector('#sidebar .sticky').innerHTML;
+  body.querySelectorAll('[onclick]').forEach(el => { el.setAttribute('onclick', el.getAttribute('onclick').replace(/render\(\)/g, 'refreshMobileFilters()').replace(/render\b/g, 'refreshMobileFilters')); });
+  body.querySelectorAll('[onchange]').forEach(el => { el.setAttribute('onchange', el.getAttribute('onchange').replace(/render\(\)/g, 'refreshMobileFilters()').replace(/render\b/g, 'refreshMobileFilters')); });
+  hydrateMobileControls();
+  updateMobileCount(); sheet.classList.remove('hidden');
+}
+function updateMobileCount() { $('mobileApplyCount').textContent = getBrowseTutors().filter(t => matches(t)).length; }
+function closeMobileFilters() { $('mobileSheet').classList.add('hidden'); }
+
+function applyMobileFilters() {
+  if (state.availability.includes('Choose a date') && !state.date) state.availability = state.availability.filter(x => x !== 'Choose a date');
+  closeMobileFilters(); syncInputs(); render();
+}
+
+function clearAllFilters() {
+  state.search=''; state.category=''; state.format='';
+  state.availability=[]; state.priceMin=''; state.priceMax=''; state.rating='';
+  state.experience=[]; state.verifiedOnly=false; state.city=''; state.district=''; state.radius='';
+  state.languages=[]; state.sessionTypes=[]; state.userLat=null; state.userLng=null; state._geoError=''; state.date=''; state._refDistrict='';
+  syncInputs(); render();
+}
+function resetFilters() { clearAllFilters(); updateMobileCount(); }
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#sortDropdown')&&!e.target.closest('[onclick="toggleSortDropdown()"]')){const sd=$('sortDropdown');if(sd)sd.classList.add('hidden');}
+  if (!e.target.closest('#mobileSortPanel')&&!e.target.closest('[onclick="toggleMobileSort()"]')){const mp=$('mobileSortPanel');if(mp)mp.classList.add('hidden');}
+  if (!e.target.closest('#searchSuggestions')&&!e.target.closest('#searchInput')){const ss=$('searchSuggestions');if(ss)ss.classList.add('hidden');}
+  if (!e.target.closest('#mobileSearchSuggestions')&&!e.target.closest('#mobileSearchInput')){const ms=$('mobileSearchSuggestions');if(ms)ms.classList.add('hidden');}
+  const locBtn = e.target.closest('[data-loc]');
+  if (locBtn) {
+    if (locBtn.dataset.loc === 'all') { state.city='';state.district='';state.userLat=null;state.userLng=null;state._refDistrict='';state._geoError=''; }
+    if (locBtn.dataset.loc === 'myloc') { state.city='use_my';state.district='';if(!state.userLat)requestGeolocation(); }
+    render();
+    refreshMobileFilters();
+  }
+});
+
+const urlState = readURL();
+Object.assign(state, urlState);
+syncInputs();
+renderSort();
+render();
+function refreshPublishedTutors() {
+  fetch('/api/tutors')
+    .then(response => response.ok ? response.json() : { tutors: [] })
+    .then(payload => {
+      serverPublishedTutors = Array.isArray(payload.tutors) ? payload.tutors : [];
+      render();
+    })
+    .catch(() => {});
+}
+refreshPublishedTutors();
+window.setInterval(refreshPublishedTutors, 5000);
+window.addEventListener('storage', event => {
+  if (event.key === TUTOR_SUBMISSION_KEY) render();
+});
+window.addEventListener('tutoria-tutor-published', render);
+
+</script>
+</body>
+</html>

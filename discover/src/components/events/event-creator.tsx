@@ -14,6 +14,7 @@ import {
   IconCurrencyDong,
   IconLanguage,
   IconMapPin,
+  IconMenu,
   IconPhoto,
   IconPlus,
   IconSchool,
@@ -34,6 +35,7 @@ import {
 
 import styles from "./event-creator.module.css";
 import { savePublishedEvent, type EventDetail } from "@/lib/event-data";
+import { getUserFromStorage } from "@/lib/types";
 
 type EventType = "Workshop" | "Event";
 type EventFormat = "In person" | "Online";
@@ -73,17 +75,24 @@ type CreatorFaq = {
   answer: string;
 };
 
+type AttendGroup = {
+  id: string;
+  title: string;
+  items: string[];
+};
+
 type EventDraft = {
   type: EventType;
   format: EventFormat;
   category: string;
   title: string;
   promise: string;
-  outcome: string;
+  outcome: string[];
   level: ExperienceLevel;
   included: string[];
-  bring: string;
+  bring: string[];
   requirements: string[];
+  beforeAttendGroups: AttendGroup[];
   faqs: CreatorFaq[];
   languages: string[];
   coverImage: string;
@@ -109,46 +118,43 @@ const DRAFT_EVENT = "tutoria-event-draft-change";
 const defaultDraft: EventDraft = {
   type: "Workshop",
   format: "In person",
-  category: "Creative arts",
-  title: "Beginner Pottery Workshop",
-  promise: "Make and glaze your first ceramic cup in one afternoon.",
-  outcome: "Learn hand-building techniques, surface decoration, and glazing with guidance from a working ceramic artist.",
+  category: "",
+  title: "",
+  promise: "",
+  outcome: [],
   level: "Beginner",
-  included: ["Clay", "Glazes", "Firing", "Apron", "Tools"],
-  bring: "Comfortable clothes that can get a little messy",
-  requirements: ["No previous pottery experience is required", "Participants must be at least 12 years old"],
-  faqs: [
-    { id: "faq-experience", question: "Do I need previous experience?", answer: "No. This workshop is designed for complete beginners." },
-    { id: "faq-clothing", question: "What should I wear?", answer: "Wear comfortable clothes that can get a little messy." },
+  included: [],
+  bring: [],
+  requirements: [],
+  beforeAttendGroups: [
+    { id: "attend-preparation", title: "Preparation", items: [] },
+    { id: "attend-accessibility", title: "Accessibility", items: [] },
+    { id: "attend-participation", title: "Participation", items: [] },
   ],
-  languages: ["English", "Vietnamese"],
-  coverImage: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=1400&q=85",
+  faqs: [],
+  languages: [],
+  coverImage: "",
   galleryImages: [],
-  plan: [
-    { id: "welcome", title: "Welcome and introduction", duration: 15, description: "Meet the group and learn what you will make.", image: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=360&q=80" },
-    { id: "demo", title: "Pottery demonstration", duration: 20, description: "See the hand-building technique from start to finish.", image: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=360&q=80" },
-    { id: "making", title: "Guided hand-building", duration: 60, description: "Build your ceramic cup with individual support.", image: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=360&q=80" },
-    { id: "glazing", title: "Decoration and glazing", duration: 40, description: "Finish the surface and prepare your piece for firing.", image: "https://images.unsplash.com/photo-1590422749897-47036da0b0ff?auto=format&fit=crop&w=360&q=80" },
-  ],
+  plan: [],
   sessions: [
     {
       id: "date-1",
-      date: "2026-07-19",
+      date: "",
       intervals: [
-        { id: "date-1-afternoon", title: "Afternoon session", start: "14:00", end: "17:00" },
+        { id: "date-1-interval-1", title: "", start: "", end: "" },
       ],
     },
   ],
   timezone: "(GMT+7) Bangkok, Hanoi, Jakarta",
-  venueName: "ClaySpace Studio",
-  location: "123 Ceramic Road, Tay Ho, Ha Noi",
-  meetingLink: "https://meet.example.com/pottery-workshop",
-  arrival: "Please arrive 10-15 minutes early. The studio is on the second floor.",
-  capacity: 20,
-  access: "Paid",
-  price: 350000,
-  cancellation: "24 hours before start",
-  refund: "Full refund",
+  venueName: "",
+  location: "",
+  meetingLink: "",
+  arrival: "",
+  capacity: 0,
+  access: "Free",
+  price: 0,
+  cancellation: "",
+  refund: "",
   visibility: "Public",
 };
 
@@ -157,6 +163,7 @@ const defaultSnapshot = JSON.stringify(defaultDraft);
 const steps = [
   { id: "idea", title: "The idea", description: "Name the experience." },
   { id: "experience", title: "The experience", description: "Shape what people will do." },
+  { id: "before-booking", title: "Before booking", description: "Prepare guests to attend." },
   { id: "schedule", title: "Time and place", description: "Set the practical details." },
   { id: "access", title: "Access and pricing", description: "Choose how people join." },
   { id: "publish", title: "Review and publish", description: "Check the public listing." },
@@ -175,7 +182,17 @@ function subscribeToDraft(onStoreChange: () => void) {
 }
 
 function getDraftSnapshot() {
-  return window.localStorage.getItem(DRAFT_KEY) || defaultSnapshot;
+  const stored = window.localStorage.getItem(DRAFT_KEY);
+  if (!stored) return defaultSnapshot;
+  try {
+    const parsed = JSON.parse(stored) as Partial<EventDraft>;
+    const isLegacyExample = parsed.title === "Beginner Pottery Workshop"
+      && parsed.promise === "Make and glaze your first ceramic cup in one afternoon."
+      && parsed.venueName === "ClaySpace Studio";
+    return isLegacyExample ? defaultSnapshot : stored;
+  } catch {
+    return defaultSnapshot;
+  }
 }
 
 function getServerDraftSnapshot() {
@@ -184,7 +201,11 @@ function getServerDraftSnapshot() {
 
 function parseDraft(snapshot: string): EventDraft {
   try {
-    const parsed = JSON.parse(snapshot) as Partial<EventDraft> & { sessions?: StoredSessionDate[] };
+    const parsed = JSON.parse(snapshot) as Omit<Partial<EventDraft>, "outcome" | "bring"> & {
+      sessions?: StoredSessionDate[];
+      outcome?: unknown;
+      bring?: unknown;
+    };
     const sourceSessions: StoredSessionDate[] = Array.isArray(parsed.sessions) ? parsed.sessions : defaultDraft.sessions;
     const sessions = sourceSessions.map((session, dateIndex) => {
       const id = typeof session.id === "string" ? session.id : `date-${dateIndex + 1}`;
@@ -207,12 +228,26 @@ function parseDraft(snapshot: string): EventDraft {
         intervals,
       };
     });
+    // Drafts created before outcomes and preparation items became individual
+    // options stored these fields as a single block of text. Preserve that work
+    // as one option when an older draft is opened.
+    const outcome = Array.isArray(parsed.outcome)
+      ? parsed.outcome.filter((item): item is string => typeof item === "string" && Boolean(item.trim()))
+      : typeof parsed.outcome === "string" && parsed.outcome.trim() ? [parsed.outcome.trim()] : [];
+    const bring = Array.isArray(parsed.bring)
+      ? parsed.bring.filter((item): item is string => typeof item === "string" && Boolean(item.trim()))
+      : typeof parsed.bring === "string" && parsed.bring.trim() ? [parsed.bring.trim()] : [];
     const coverImage = typeof parsed.coverImage === "string" ? parsed.coverImage : defaultDraft.coverImage;
     const galleryImages = Array.isArray(parsed.galleryImages)
       ? parsed.galleryImages.filter((image): image is string => typeof image === "string" && Boolean(image))
       : [];
     const format: EventFormat = parsed.format === "Online" ? "Online" : "In person";
-    return { ...defaultDraft, ...parsed, format, coverImage, galleryImages, sessions } as EventDraft;
+    const beforeAttendGroups = Array.isArray(parsed.beforeAttendGroups)
+      ? parsed.beforeAttendGroups.filter((group): group is AttendGroup => Boolean(group && typeof group.id === "string" && typeof group.title === "string" && Array.isArray(group.items)))
+      : Array.isArray(parsed.requirements) && parsed.requirements.length
+        ? [{ id: "attend-requirements", title: "Requirements", items: parsed.requirements.filter((item): item is string => typeof item === "string") }]
+        : defaultDraft.beforeAttendGroups;
+    return { ...defaultDraft, ...parsed, outcome, bring, format, coverImage, galleryImages, sessions, beforeAttendGroups } as EventDraft;
   } catch {
     return defaultDraft;
   }
@@ -260,7 +295,11 @@ async function optimizePublishedEventImages(event: EventDetail, compact = false)
   const galleryImage = compact
     ? image
     : await optimizeImageDataUrl(event.galleryImage, 1280, 0.72);
-  return { ...event, image, galleryImage };
+  const plan = await Promise.all(event.plan.map(async (item) => ({
+    ...item,
+    image: item.image ? await optimizeImageDataUrl(item.image, compact ? 720 : 960, compact ? 0.5 : 0.66) : undefined,
+  })));
+  return { ...event, image, galleryImage, plan };
 }
 
 function formatPrice(value: number) {
@@ -285,6 +324,7 @@ function createSlug(title: string) {
 }
 
 function toPublishedEvent(draft: EventDraft): EventDetail {
+  const user = getUserFromStorage();
   const firstSession = draft.sessions[0];
   const firstInterval = firstSession?.intervals[0];
   const duration = draft.plan.reduce((sum, item) => sum + Number(item.duration || 0), 0);
@@ -293,6 +333,8 @@ function toPublishedEvent(draft: EventDraft): EventDetail {
   const location = isOnline ? "Online" : `${draft.venueName} · ${draft.location}`;
   const cancellation = [`Cancel ${draft.cancellation.toLowerCase()} for a ${draft.refund.toLowerCase()}.`, "If the host cancels, you can choose another session or receive a full refund."];
   return {
+    creatorId: user?.id,
+    creatorName: user?.name,
     slug: createSlug(draft.title), title: draft.title, host: "Sophia Nguyen", date: dateLabel,
     time: firstInterval?.start || "Time TBA", location, type: isOnline ? "Online" : "In person",
     price: draft.access === "Paid" ? formatPrice(draft.price) : "Free", attending: 0, capacity: draft.capacity,
@@ -301,24 +343,23 @@ function toPublishedEvent(draft: EventDraft): EventDetail {
     minimumAge: "All ages", accessibility: isOnline ? "Join from any device" : "Contact the host for access details",
     studioName: isOnline ? "Online session" : draft.venueName, address: isOnline ? "Joining link shared after booking" : draft.location,
     sessions: draft.sessions.map((session) => ({ id: session.id, date: formatSessionDate(session.date), times: session.intervals.map((interval) => `${interval.start} - ${interval.end}`) })),
-    spotsLeft: draft.capacity, about: [draft.promise, draft.outcome], note: draft.arrival || `Suitable for ${draft.level.toLowerCase()} participants.`,
+    spotsLeft: draft.capacity, about: [draft.promise, ...draft.outcome], note: draft.arrival || `Suitable for ${draft.level.toLowerCase()} participants.`,
     highlights: [
       { title: `${draft.capacity} places`, description: "A focused group experience." },
       { title: `${duration} minutes`, description: "A clearly structured programme." },
       { title: draft.format, description: isOnline ? "Join from wherever you are." : "Learn together in person." },
       { title: draft.level, description: `Designed for ${draft.level.toLowerCase()} participants.` },
     ],
-    learn: [draft.outcome], included: draft.included, bring: draft.bring ? [draft.bring] : ["Nothing special is required"],
-    plan: draft.plan.map((item) => ({ title: item.title, duration: `${item.duration} min`, description: item.description })),
+    learn: draft.outcome, included: draft.included, bring: draft.bring.length ? draft.bring : ["Nothing special is required"],
+    plan: draft.plan.map((item) => ({ title: item.title, duration: `${item.duration} min`, description: item.description, image: item.image || undefined })),
     faqs: draft.faqs.map(({ question, answer }) => ({ question, answer })),
     galleryImage: draft.galleryImages[0] || draft.plan.find((item) => item.image)?.image || draft.coverImage,
     hostRole: "Tutoria host and educator", hostExperience: "Community educator", hostBio: "Sophia creates practical, welcoming learning experiences on Tutoria.",
     hostImage: "https://picsum.photos/seed/sophia-nguyen/240/240", hostRecommendation: "New host",
-    beforeYouAttend: [
-      { title: "Requirements", items: draft.requirements },
-      { title: "Arrival", items: [draft.arrival || (isOnline ? "Check your joining details before the session." : "Arrive 10 minutes early.")] },
-      { title: "What to bring", items: draft.bring ? [draft.bring] : ["Nothing special is required."] },
-    ], cancellation, reviews: [],
+    beforeYouAttend: draft.beforeAttendGroups
+      .map((group) => ({ title: group.title.trim(), items: group.items.map((item) => item.trim()).filter(Boolean) }))
+      .filter((group) => group.title && group.items.length),
+    cancellation, reviews: [],
   };
 }
 
@@ -386,14 +427,14 @@ export function EventCreator() {
   const [published, setPublished] = useState(false);
   const [notice, setNotice] = useState("");
   const [activeStep, setActiveStep] = useState(0);
-  const [stepMessage, setStepMessage] = useState("");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [outcomeInput, setOutcomeInput] = useState("");
   const [includedInput, setIncludedInput] = useState("");
+  const [bringInput, setBringInput] = useState("");
   const [languageInput, setLanguageInput] = useState("");
-  const [requirementInput, setRequirementInput] = useState("");
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(() => draft.plan[0]?.id ?? null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stepSections = useRef<Array<HTMLElement | null>>([]);
-  const hasChangedStep = useRef(false);
   const previewButtonRef = useRef<HTMLButtonElement | null>(null);
   const previewCloseRef = useRef<HTMLButtonElement | null>(null);
   const previewModalRef = useRef<HTMLElement | null>(null);
@@ -446,10 +487,19 @@ export function EventCreator() {
   }, [previewOpen]);
 
   useEffect(() => {
-    if (!hasChangedStep.current) return;
-    stepSections.current[activeStep]?.focus();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [activeStep]);
+    const sections = stepSections.current.filter((section): section is HTMLElement => Boolean(section));
+    if (!sections.length) return;
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      const index = sections.indexOf(visible.target as HTMLElement);
+      if (index >= 0) setActiveStep(index);
+    }, { rootMargin: "-22% 0px -62% 0px", threshold: [0.05, 0.2, 0.5] });
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
 
   const patchDraft = useCallback(<K extends keyof EventDraft>(key: K, value: EventDraft[K]) => {
     saveDraft({ ...draft, [key]: value });
@@ -466,60 +516,53 @@ export function EventCreator() {
 
   const checklist = [
     { label: "Essential details", complete: Boolean(draft.title.trim() && draft.promise.trim()), step: 0 },
-    { label: "Experience, requirements, and FAQs", complete: Boolean(draft.outcome.trim() && draft.plan.length && draft.requirements.length && draft.requirements.every((item) => item.trim()) && draft.faqs.length && draft.faqs.every((faq) => faq.question.trim() && faq.answer.trim())), step: 1 },
-    { label: "Time and location", complete: Boolean(sessionTimesValid && locationComplete), step: 2 },
-    { label: "Capacity and price", complete: draft.capacity > 0 && (draft.access !== "Paid" || draft.price > 0), step: 3 },
+    { label: "Experience and FAQs", complete: Boolean(draft.outcome.length && draft.plan.length && draft.plan.every((item) => item.title.trim() && item.description.trim() && item.duration > 0) && draft.faqs.length && draft.faqs.every((faq) => faq.question.trim() && faq.answer.trim())), step: 1 },
+    { label: "Time and location", complete: Boolean(sessionTimesValid && locationComplete), step: 3 },
+    { label: "Capacity and price", complete: draft.capacity > 0 && (draft.access !== "Paid" || draft.price > 0), step: 4 },
     { label: "Cover image", complete: eventImages.length > 0, step: 0 },
-    { label: "Cancellation policy", complete: Boolean(draft.cancellation && draft.refund), step: 3 },
+    { label: "Cancellation policy", complete: Boolean(draft.cancellation && draft.refund), step: 4 },
   ];
   const readyToPublish = checklist.every((item) => item.complete);
   const stepComplete = [
     checklist[0].complete && checklist[4].complete,
-    checklist[1].complete,
+    Boolean(draft.outcome.length && draft.plan.length && draft.plan.every((item) => item.title.trim() && item.description.trim() && item.duration > 0)),
+    Boolean(draft.faqs.length && draft.faqs.every((faq) => faq.question.trim() && faq.answer.trim())),
     checklist[2].complete,
     checklist[3].complete && checklist[5].complete,
     readyToPublish,
   ];
-  const stepErrors = [
-    "Add a title, one-sentence promise, and cover image before continuing.",
-    "Add a learning outcome and at least one programme item before continuing.",
-    "Add a valid date and time, then confirm the location or meeting link.",
-    "Confirm capacity, pricing, cancellation, and refund details before continuing.",
-  ];
-
   const goToStep = (index: number) => {
-    hasChangedStep.current = true;
-    setStepMessage("");
-    setActiveStep(Math.max(0, Math.min(steps.length - 1, index)));
-  };
-
-  const continueToNextStep = () => {
-    if (!stepComplete[activeStep]) {
-      setStepMessage(stepErrors[activeStep] || "Complete the required details before continuing.");
-      stepSections.current[activeStep]?.querySelector<HTMLElement>(":invalid")?.focus();
-      return;
-    }
-    goToStep(activeStep + 1);
+    const nextStep = Math.max(0, Math.min(steps.length - 1, index));
+    setActiveStep(nextStep);
+    setMobileNavOpen(false);
+    window.requestAnimationFrame(() => {
+      stepSections.current[nextStep]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const updatePlan = (id: string, patch: Partial<PlanItem>) => {
     patchDraft("plan", draft.plan.map((item) => item.id === id ? { ...item, ...patch } : item));
   };
 
-  const uploadPlanImage = (id: string, event: ChangeEvent<HTMLInputElement>) => {
+  const uploadPlanImage = async (id: string, event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => updatePlan(id, { image: String(reader.result) });
-    reader.readAsDataURL(file);
+    try {
+      const image = await readFileAsDataUrl(file);
+      updatePlan(id, { image: await optimizeImageDataUrl(image, 960, 0.66) });
+    } catch {
+      setNotice("We could not add this moment photo. Please try again.");
+    } finally {
+      event.target.value = "";
+    }
   };
 
   const addPlanItem = () => {
     const item: PlanItem = {
       id: createId("plan"),
-      title: "New workshop moment",
-      duration: 30,
-      description: "Describe what happens during this part of the experience.",
+      title: "",
+      duration: 0,
+      description: "",
       image: "",
     };
     setExpandedPlanId(item.id);
@@ -628,20 +671,23 @@ export function EventCreator() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link href="/discover" className={styles.backLink}><IconArrowLeft size={17} /> Back to Discover</Link>
-          <div className={styles.headerTitle}>
-            <span>Tutoria creator studio</span>
-            <strong>Create an event or workshop</strong>
+          <div className={styles.headerBrandGroup}>
+            <button type="button" className={styles.mobileMenuButton} onClick={() => setMobileNavOpen(true)} aria-label="Open section navigation"><IconMenu size={19} /></button>
+            <Link href="/discover" className={styles.backLink}><span className={styles.brandMark}>T</span><strong>Tutoria</strong></Link>
+            <span className={styles.headerContext}>/ Create experience</span>
           </div>
           <div className={styles.headerActions}>
-            <span className={styles.saveStatus} aria-live="polite">{saveStatus === "saving" ? "Saving draft" : "Draft saved"}</span>
+            <span className={styles.saveStatus} aria-live="polite">{saveStatus === "saving" ? "Saving changes" : "All changes saved"}</span>
             <button type="button" className={styles.saveButton} onClick={() => saveDraft(draft, true)}>Save draft</button>
+            <button ref={previewButtonRef} type="button" className={styles.headerPreviewButton} onClick={() => setPreviewOpen(true)}>Preview</button>
           </div>
         </div>
-        <div className={styles.mobileProgress} aria-label="Creation sections">
+        <div className={styles.progressTrack}><span style={{ width: `${((activeStep + 1) / steps.length) * 100}%` }} /></div>
+        <div className={`${styles.mobileProgress} ${mobileNavOpen ? styles.mobileProgressOpen : ""}`} aria-label="Creation sections">
+          <div className={styles.mobileProgressHeader}><div><span>Create listing</span><strong>Your progress</strong></div><button type="button" onClick={() => setMobileNavOpen(false)} aria-label="Close section navigation"><IconX size={19} /></button></div>
           {steps.map((step, index) => (
             <button type="button" key={step.id} className={activeStep === index ? styles.activeMobileStep : ""} onClick={() => goToStep(index)} aria-current={activeStep === index ? "step" : undefined}>
-              {stepComplete[index] && index !== activeStep ? <IconCheck size={15} /> : <span>{index + 1}</span>}
+              {stepComplete[index] && index !== activeStep ? <IconCheck size={15} /> : <span>{String(index + 1).padStart(2, "0")}</span>}
               {step.title}
             </button>
           ))}
@@ -650,28 +696,25 @@ export function EventCreator() {
 
       <main className={styles.main}>
         <aside className={styles.stepRail}>
-          <nav aria-label="Event creation sections">
-            {steps.map((step, index) => (
-              <button type="button" key={step.id} className={activeStep === index ? styles.activeStep : ""} onClick={() => goToStep(index)} aria-current={activeStep === index ? "step" : undefined}>
-                <span>{stepComplete[index] && index !== activeStep ? <IconCheck size={15} /> : index + 1}</span>
-                <strong>{step.title}</strong>
-                <small>{step.description}</small>
-              </button>
-            ))}
-          </nav>
+          <div className={styles.stepRailInner}>
+            <p>Create listing</p>
+            <h2>Your progress</h2>
+            <nav aria-label="Event creation sections">
+              {steps.map((step, index) => (
+                <button type="button" key={step.id} className={activeStep === index ? styles.activeStep : ""} onClick={() => goToStep(index)} aria-current={activeStep === index ? "step" : undefined}>
+                  <span>{stepComplete[index] && index !== activeStep ? <IconCheck size={15} /> : String(index + 1).padStart(2, "0")}</span>
+                  <strong>{step.title}</strong>
+                  <small>{step.description}</small>
+                </button>
+              ))}
+            </nav>
+            <div className={styles.railTip}><span><IconSparkles size={16} /></span><div><strong>Make it specific</strong><p>Clear outcomes, exact timing, and helpful preparation notes build trust.</p></div></div>
+          </div>
         </aside>
 
         <div className={styles.workspace}>
-          <section className={styles.intro}>
-            <div>
-              <p>Event builder</p>
-              <h1>Create an event or workshop</h1>
-            </div>
-            <p>Tell guests what they will do, when it happens, and how to join.</p>
-          </section>
-
-          <section id="idea" className={styles.section} hidden={activeStep !== 0} tabIndex={-1} ref={(node) => { stepSections.current[0] = node; }}>
-            <div className={styles.sectionHeading}><span>The idea</span><h2>What are you creating?</h2></div>
+          <section id="idea" className={styles.section} tabIndex={-1} ref={(node) => { stepSections.current[0] = node; }}>
+            <div className={styles.sectionHeading}><span><b>1</b>The idea</span><h1>What are you creating?</h1><p>Start with the concept. You can refine the details before publishing.</p></div>
             <div className={styles.choiceGrid}>
               <ChoiceButton active={draft.type === "Workshop"} icon={IconSchool} title="Workshop" description="A guided, participatory learning experience." onClick={() => patchDraft("type", "Workshop")} />
               <ChoiceButton active={draft.type === "Event"} icon={IconUsers} title="Event" description="A talk, meetup, gathering, or social experience." onClick={() => patchDraft("type", "Event")} />
@@ -711,10 +754,15 @@ export function EventCreator() {
             </div>
           </section>
 
-          <section id="experience" className={styles.section} hidden={activeStep !== 1} tabIndex={-1} ref={(node) => { stepSections.current[1] = node; }}>
-            <div className={styles.sectionHeading}><span>The experience</span><h2>What will people do and learn?</h2><p>Describe the outcome, then break the experience into clear moments.</p></div>
+          <section id="experience" className={styles.section} tabIndex={-1} ref={(node) => { stepSections.current[1] = node; }}>
+            <div className={styles.sectionHeading}><span><b>2</b>The experience</span><h2>What will people do and learn?</h2><p>Describe the outcome, then break the experience into clear moments.</p></div>
             <div className={styles.formGrid}>
-              <label className={`${styles.field} ${styles.spanTwo}`}><span>What participants will make or learn</span><textarea required rows={4} maxLength={300} value={draft.outcome} onChange={(event) => patchDraft("outcome", event.target.value)} /><small>{draft.outcome.length}/300</small></label>
+              <div className={`${styles.tagField} ${styles.spanTwo}`}>
+                <span>What participants will make or learn</span>
+                <p className={styles.optionFieldHint}>Add one clear outcome at a time. Guests will see these as a checklist.</p>
+                <div className={styles.tags}>{draft.outcome.map((item) => <button type="button" key={item} aria-label={`Remove outcome: ${item}`} onClick={() => patchDraft("outcome", draft.outcome.filter((value) => value !== item))}>{item}<IconX size={13} /></button>)}</div>
+                <div className={styles.addRow}><input aria-label="Add a learning outcome" value={outcomeInput} maxLength={160} placeholder="e.g. Shape and glaze a ceramic cup" onChange={(event) => setOutcomeInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); const value = outcomeInput.trim(); if (value && !draft.outcome.includes(value)) patchDraft("outcome", [...draft.outcome, value]); setOutcomeInput(""); } }} /><button type="button" onClick={() => { const value = outcomeInput.trim(); if (value && !draft.outcome.includes(value)) patchDraft("outcome", [...draft.outcome, value]); setOutcomeInput(""); }}>Add outcome</button></div>
+              </div>
               <SegmentedControl label="Experience level" options={["Beginner", "Intermediate", "Advanced", "All levels"] as const} value={draft.level} onChange={(value) => patchDraft("level", value)} />
             </div>
 
@@ -726,21 +774,34 @@ export function EventCreator() {
                   <article className={`${styles.planItem} ${expanded ? styles.expandedPlanItem : ""}`} key={item.id}>
                     <div className={styles.planItemHeader}>
                       <span className={styles.planIndex}>{String(index + 1).padStart(2, "0")}</span>
-                      <input required className={styles.planTitleInput} aria-label={`Title for plan item ${index + 1}`} value={item.title} onChange={(event) => updatePlan(item.id, { title: event.target.value })} />
-                      <label className={styles.durationField}><input aria-label={`Duration for ${item.title}`} type="number" min={1} value={item.duration} onChange={(event) => updatePlan(item.id, { duration: Number(event.target.value) })} /><span>min</span></label>
+                      <strong className={`${styles.planTitleSummary} ${item.title ? "" : styles.emptyPlanTitle}`}>{item.title || "Untitled moment"}</strong>
+                      <span className={styles.planDurationSummary}>{item.duration > 0 ? `${item.duration} min` : "Set duration"}</span>
                       <button type="button" className={styles.planToggle} aria-label={`${expanded ? "Collapse" : "Expand"} ${item.title}`} aria-expanded={expanded} aria-controls={`plan-details-${item.id}`} onClick={() => setExpandedPlanId(expanded ? null : item.id)}>{expanded ? <IconChevronUp size={17} /> : <IconChevronDown size={17} />}</button>
                       <button type="button" className={styles.planDelete} aria-label={`Remove ${item.title}`} onClick={() => removePlanItem(item.id)}><IconTrash size={17} /></button>
                     </div>
 
                     {expanded && (
                       <div className={styles.planItemDetails} id={`plan-details-${item.id}`}>
-                        <label className={styles.planDescription}>
-                          <span>Description</span>
-                          <textarea aria-label={`Description for plan item ${index + 1}`} rows={5} maxLength={500} value={item.description} onChange={(event) => updatePlan(item.id, { description: event.target.value })} />
-                          <small>{item.description.length}/500</small>
-                        </label>
+                        <div className={styles.planCopyFields}>
+                          <div className={styles.planTitleRow}>
+                            <label className={styles.planTitleField}>
+                              <span>Moment title</span>
+                              <input required maxLength={80} placeholder="e.g. Pottery demonstration" value={item.title} onChange={(event) => updatePlan(item.id, { title: event.target.value })} />
+                              <small>{item.title.length}/80</small>
+                            </label>
+                            <label className={styles.durationField}>
+                              <span>Duration</span>
+                              <div><input required aria-label={`Duration for ${item.title || `plan item ${index + 1}`}`} type="number" min={1} value={item.duration || ""} onChange={(event) => updatePlan(item.id, { duration: Number(event.target.value) })} /><small>min</small></div>
+                            </label>
+                          </div>
+                          <label className={styles.planDescription}>
+                            <span>Description</span>
+                            <textarea required aria-label={`Description for plan item ${index + 1}`} rows={5} maxLength={500} placeholder="Explain what participants will do during this moment" value={item.description} onChange={(event) => updatePlan(item.id, { description: event.target.value })} />
+                            <small>{item.description.length}/500</small>
+                          </label>
+                        </div>
                         <div className={styles.planImageField}>
-                          <span>Image <small>(optional)</small></span>
+                          <span>Moment photo <small>(optional)</small></span>
                           {item.image ? (
                             <div className={styles.planImagePreview}>
                               <Image src={item.image} alt={`${item.title} workshop moment`} fill unoptimized sizes="(max-width: 700px) 100vw, 280px" />
@@ -748,7 +809,7 @@ export function EventCreator() {
                               <label><IconPhoto size={16} /> Replace<input type="file" accept="image/*" onChange={(event) => uploadPlanImage(item.id, event)} /></label>
                             </div>
                           ) : (
-                            <label className={styles.planImageEmpty}><IconPhoto size={20} /><strong>Add an image</strong><small>JPG or PNG</small><input type="file" accept="image/*" onChange={(event) => uploadPlanImage(item.id, event)} /></label>
+                            <label className={styles.planImageEmpty}><IconPhoto size={20} /><strong>Add a photo</strong><small>JPG or PNG · shown with this moment</small><input type="file" accept="image/*" onChange={(event) => uploadPlanImage(item.id, event)} /></label>
                           )}
                         </div>
                       </div>
@@ -762,6 +823,7 @@ export function EventCreator() {
             <div className={styles.detailsGrid}>
               <div className={styles.tagField}>
                 <span>What is included</span>
+                <p className={styles.optionFieldHint}>Add each material, service, or resource as its own option.</p>
                 <div className={styles.tags}>{draft.included.map((item) => <button type="button" key={item} onClick={() => patchDraft("included", draft.included.filter((value) => value !== item))}>{item}<IconX size={13} /></button>)}</div>
                 <div className={styles.addRow}><input aria-label="Add an included item" value={includedInput} placeholder="Add an item" onChange={(event) => setIncludedInput(event.target.value)} /><button type="button" onClick={() => { const value = includedInput.trim(); if (value && !draft.included.includes(value)) patchDraft("included", [...draft.included, value]); setIncludedInput(""); }}>Add</button></div>
               </div>
@@ -770,15 +832,27 @@ export function EventCreator() {
                 <div className={styles.tags}>{draft.languages.map((item) => <button type="button" key={item} onClick={() => patchDraft("languages", draft.languages.filter((value) => value !== item))}>{item}<IconX size={13} /></button>)}</div>
                 <div className={styles.addRow}><select aria-label="Choose a language" value={languageInput} onChange={(event) => setLanguageInput(event.target.value)}><option value="">Choose a language</option><option>English</option><option>Vietnamese</option><option>Mandarin</option><option>French</option><option>Japanese</option><option>Korean</option></select><button type="button" onClick={() => { if (languageInput && !draft.languages.includes(languageInput)) patchDraft("languages", [...draft.languages, languageInput]); setLanguageInput(""); }}>Add</button></div>
               </div>
-              <label className={styles.field}><span>What participants should bring</span><textarea rows={3} value={draft.bring} onChange={(event) => patchDraft("bring", event.target.value)} /></label>
+              <div className={styles.tagField}>
+                <span>What participants should bring</span>
+                <p className={styles.optionFieldHint}>Add each item guests need to bring, wear, download, or prepare.</p>
+                <div className={styles.tags}>{draft.bring.map((item) => <button type="button" key={item} onClick={() => patchDraft("bring", draft.bring.filter((value) => value !== item))}>{item}<IconX size={13} /></button>)}</div>
+                <div className={styles.addRow}><input aria-label="Add an item to bring" value={bringInput} maxLength={160} placeholder="e.g. Comfortable clothes" onChange={(event) => setBringInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); const value = bringInput.trim(); if (value && !draft.bring.includes(value)) patchDraft("bring", [...draft.bring, value]); setBringInput(""); } }} /><button type="button" onClick={() => { const value = bringInput.trim(); if (value && !draft.bring.includes(value)) patchDraft("bring", [...draft.bring, value]); setBringInput(""); }}>Add item</button></div>
+              </div>
             </div>
             <section className={styles.enrollmentInfo} aria-labelledby="event-guest-info-title">
-              <header className={styles.enrollmentInfoHeader}><div><span>Before booking</span><h3 id="event-guest-info-title">Help guests arrive prepared.</h3><p>Set expectations and resolve common questions before someone reserves a place.</p></div><strong>{draft.requirements.length + draft.faqs.length} items</strong></header>
+              <header className={styles.enrollmentInfoHeader}><div><span>Before booking</span><h3 id="event-guest-info-title">Help guests arrive prepared.</h3><p>Edit the exact sections and checklist items shown in “Before you attend.”</p></div><strong>{draft.beforeAttendGroups.reduce((total, group) => total + group.items.filter((item) => item.trim()).length, 0) + draft.faqs.length} items</strong></header>
               <div className={styles.infoBuilderGrid}>
-                <section className={styles.infoBuilder} aria-labelledby="event-requirements-title">
-                  <div className={styles.infoBuilderTitle}><span><IconCheck size={17} /></span><div><strong id="event-requirements-title">Requirements</strong><p>Anything guests must know or have.</p></div></div>
-                  <div className={styles.requirementList}>{draft.requirements.map((requirement, index) => <div key={`requirement-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><input aria-label={`Requirement ${index + 1}`} value={requirement} onChange={(event) => patchDraft("requirements", draft.requirements.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} /><button type="button" aria-label={`Remove requirement ${index + 1}`} onClick={() => patchDraft("requirements", draft.requirements.filter((_, itemIndex) => itemIndex !== index))}><IconTrash size={15} /></button></div>)}</div>
-                  <div className={styles.addRow}><input aria-label="New event requirement" value={requirementInput} placeholder="Add an age, skill, or material requirement" onChange={(event) => setRequirementInput(event.target.value)} /><button type="button" onClick={() => { const value = requirementInput.trim(); if (value) patchDraft("requirements", [...draft.requirements, value]); setRequirementInput(""); }}><IconPlus size={15} /> Add</button></div>
+                <section className={`${styles.infoBuilder} ${styles.attendBuilder}`} aria-labelledby="event-attend-title">
+                  <div className={styles.infoBuilderTitle}><span><IconCheck size={17} /></span><div><strong id="event-attend-title">Before you attend <small>(optional)</small></strong><p>Use one line per checklist item. Leave every section empty to hide this card.</p></div><button type="button" onClick={() => patchDraft("beforeAttendGroups", [...draft.beforeAttendGroups, { id: createId("attend"), title: "", items: [] }])}><IconPlus size={15} /> Add section</button></div>
+                  <div className={styles.attendBuilderList}>
+                    {draft.beforeAttendGroups.map((group, index) => (
+                      <article key={group.id}>
+                        <header><span>Section {String(index + 1).padStart(2, "0")}</span><button type="button" aria-label={`Remove ${group.title || `section ${index + 1}`}`} onClick={() => patchDraft("beforeAttendGroups", draft.beforeAttendGroups.filter((item) => item.id !== group.id))}><IconTrash size={15} /> Remove</button></header>
+                        <label className={styles.field}><span>Section title</span><input value={group.title} placeholder="e.g. Accessibility" onChange={(event) => patchDraft("beforeAttendGroups", draft.beforeAttendGroups.map((item) => item.id === group.id ? { ...item, title: event.target.value } : item))} /></label>
+                        <label className={styles.field}><span>Checklist items</span><textarea rows={4} value={group.items.join("\n")} placeholder={"One item per line\nExample: Step-free entrance"} onChange={(event) => patchDraft("beforeAttendGroups", draft.beforeAttendGroups.map((item) => item.id === group.id ? { ...item, items: event.target.value.split("\n") } : item))} /></label>
+                      </article>
+                    ))}
+                  </div>
                 </section>
                 <section className={styles.infoBuilder} aria-labelledby="event-faq-title">
                   <div className={styles.infoBuilderTitle}><span><IconCircleCheck size={17} /></span><div><strong id="event-faq-title">Frequently asked questions</strong><p>Give a direct answer to each common concern.</p></div><button type="button" onClick={() => patchDraft("faqs", [...draft.faqs, { id: createId("faq"), question: "", answer: "" }])}><IconPlus size={15} /> Add question</button></div>
@@ -788,8 +862,8 @@ export function EventCreator() {
             </section>
           </section>
 
-          <section id="schedule" className={styles.section} hidden={activeStep !== 2} tabIndex={-1} ref={(node) => { stepSections.current[2] = node; }}>
-            <div className={styles.sectionHeading}><span>Time and place</span><h2>When and where is it happening?</h2><p>Add multiple time intervals to each date, or create another date when needed.</p></div>
+          <section id="schedule" className={styles.section} tabIndex={-1} ref={(node) => { stepSections.current[2] = node; }}>
+            <div className={styles.sectionHeading}><span><b>3</b>Time and place</span><h2>When and where is it happening?</h2><p>Add multiple time intervals to each date, or create another date when needed.</p></div>
             <div className={styles.sessionList}>
               {draft.sessions.map((session, index) => {
                 const invalid = !intervalsAreValid(session.intervals);
@@ -818,7 +892,7 @@ export function EventCreator() {
                 );
               })}
             </div>
-            <button type="button" className={styles.addButton} onClick={() => patchDraft("sessions", [...draft.sessions, { id: createId("date"), date: "2026-07-26", intervals: [{ id: createId("interval"), title: "Morning session", start: "10:00", end: "12:00" }] }])}><IconCalendarEvent size={17} /> Add another date</button>
+            <button type="button" className={styles.addButton} onClick={() => patchDraft("sessions", [...draft.sessions, { id: createId("date"), date: "", intervals: [{ id: createId("interval"), title: "", start: "", end: "" }] }])}><IconCalendarEvent size={17} /> Add another date</button>
             <div className={styles.scheduleBasics}>
               <label className={styles.field}><span>Time zone</span><select value={draft.timezone} onChange={(event) => patchDraft("timezone", event.target.value)}><option>(GMT+7) Bangkok, Hanoi, Jakarta</option><option>(GMT+8) Singapore, Kuala Lumpur</option><option>(GMT+9) Tokyo, Seoul</option><option>(GMT+0) London</option></select></label>
               <label className={styles.field}><span>Capacity</span><input required type="number" min={1} value={draft.capacity} onChange={(event) => patchDraft("capacity", Number(event.target.value))} /></label>
@@ -839,8 +913,8 @@ export function EventCreator() {
             </section>
           </section>
 
-          <section id="access" className={styles.section} hidden={activeStep !== 3} tabIndex={-1} ref={(node) => { stepSections.current[3] = node; }}>
-            <div className={styles.sectionHeading}><span>Access and pricing</span><h2>How can people join?</h2><p>Choose the access model and tell guests what happens if plans change.</p></div>
+          <section id="access" className={styles.section} tabIndex={-1} ref={(node) => { stepSections.current[3] = node; }}>
+            <div className={styles.sectionHeading}><span><b>4</b>Access and pricing</span><h2>How can people join?</h2><p>Choose the access model and tell guests what happens if plans change.</p></div>
             <div className={styles.accessGrid}>
               <fieldset className={styles.radioList}><legend>Access</legend>{(["Free", "Paid", "Request to join", "Invitation only"] as const).map((option) => <label key={option}><input type="radio" name="access" checked={draft.access === option} onChange={() => patchDraft("access", option)} /><span><strong>{option}</strong><small>{option === "Paid" ? "Set a price for each guest." : option === "Free" ? "No payment is required." : "You decide who can attend."}</small></span></label>)}</fieldset>
               <div className={styles.pricingPanel}>
@@ -854,8 +928,8 @@ export function EventCreator() {
             </div>
           </section>
 
-          <section id="publish" className={styles.section} hidden={activeStep !== 4} tabIndex={-1} ref={(node) => { stepSections.current[4] = node; }}>
-            <div className={styles.sectionHeading}><span>Review and publish</span><h2>Ready to go live?</h2><p>Review the essentials and choose who can discover the listing.</p></div>
+          <section id="publish" className={styles.section} tabIndex={-1} ref={(node) => { stepSections.current[4] = node; }}>
+            <div className={styles.sectionHeading}><span><b>5</b>Review and publish</span><h2>Ready to go live?</h2><p>Review the essentials and choose who can discover the listing.</p></div>
             <div className={styles.publishGrid}>
               <div className={styles.checklist}>{checklist.map((item) => <button type="button" key={item.label} className={item.complete ? styles.complete : styles.incomplete} onClick={() => goToStep(item.step)}>{item.complete ? <IconCircleCheck size={19} /> : <IconClock size={19} />}<span>{item.label}</span><strong>{item.complete ? "Ready" : "Edit details"}</strong></button>)}</div>
               <fieldset className={styles.radioList}><legend>Visibility</legend>{(["Public", "Unlisted", "Community only"] as const).map((option) => <label key={option}><input type="radio" name="visibility" checked={draft.visibility === option} onChange={() => patchDraft("visibility", option)} /><span><strong>{option}</strong><small>{option === "Public" ? "Anyone can discover and join." : option === "Unlisted" ? "Only people with the link can view it." : "Only community members can view it."}</small></span></label>)}</fieldset>
@@ -864,19 +938,11 @@ export function EventCreator() {
           </section>
 
           <div className={styles.stepActions}>
-            <button type="button" className={styles.backButton} onClick={() => goToStep(activeStep - 1)} disabled={activeStep === 0}><IconArrowLeft size={17} /> Back</button>
-            <div className={styles.stepActionCopy}>
-              <span>Section {activeStep + 1} of {steps.length}</span>
-              {stepMessage && <p role="alert">{stepMessage}</p>}
+            <button type="button" className={styles.backButton} onClick={() => saveDraft(draft, true)}>Save and exit</button>
+            <div className={styles.finalActions}>
+              <button type="button" className={styles.saveButton} onClick={() => setPreviewOpen(true)}>Preview</button>
+              <button type="button" className={styles.publishButton} onClick={publish}>Review and publish</button>
             </div>
-            {activeStep < steps.length - 1 ? (
-              <button type="button" className={styles.primaryButton} onClick={continueToNextStep}>Continue <IconChevronRight size={17} /></button>
-            ) : (
-              <div className={styles.finalActions}>
-                <button ref={previewButtonRef} type="button" className={styles.saveButton} onClick={() => setPreviewOpen(true)}>Preview</button>
-                <button type="button" className={styles.publishButton} onClick={publish}>Publish {draft.type.toLowerCase()}</button>
-              </div>
-            )}
           </div>
 
           <footer className={styles.footer}><span>Tutoria hosting standards help keep every gathering clear, inclusive, and trustworthy.</span><Link href="/events">Browse events <IconChevronRight size={16} /></Link></footer>
@@ -884,23 +950,27 @@ export function EventCreator() {
 
         <aside className={styles.livePreview} aria-label="Live listing preview">
           <div className={styles.livePreviewTop}>
-            <strong>Live listing preview</strong>
-            <span>Updates as you type</span>
+            <strong>Live preview</strong>
+            <span>Draft</span>
           </div>
-          <div className={styles.livePreviewImage}>
-            {draft.coverImage ? <Image src={draft.coverImage} alt={`${draft.title} cover`} fill unoptimized sizes="320px" /> : <div className={styles.imageEmptyState}><IconPhoto size={24} /><span>Add a cover image</span></div>}
-            <span>{draft.format}</span>
-          </div>
-          <div className={styles.livePreviewBody}>
-            <small>{draft.type} / {draft.category}</small>
-            <h2>{draft.title || `Untitled ${draft.type.toLowerCase()}`}</h2>
-            <p>{draft.promise || "Add a short promise so guests know what to expect."}</p>
-            <dl>
-              <div><dt>Date</dt><dd>{formatSessionDate(draft.sessions[0]?.date || "")}</dd></div>
-              <div><dt>Time</dt><dd>{draft.sessions[0]?.intervals[0] ? `${draft.sessions[0].intervals[0].start} - ${draft.sessions[0].intervals[0].end}` : "To be announced"}</dd></div>
-              <div><dt>Location</dt><dd className={styles.previewLocationValue}>{draft.format === "Online" ? <strong>Online</strong> : <><strong>{draft.venueName || "Venue to be announced"}</strong><span>{draft.location || "Address to be announced"}</span></>}</dd></div>
-              <div><dt>Access</dt><dd>{draft.access === "Paid" ? formatPrice(draft.price) : draft.access}</dd></div>
-            </dl>
+          <div className={styles.livePreviewCard}>
+            <div className={styles.livePreviewImage}>
+              {draft.coverImage ? <Image src={draft.coverImage} alt={`${draft.title} cover`} fill unoptimized sizes="320px" /> : <div className={styles.imageEmptyState}><IconPhoto size={24} /><span>Cover image</span></div>}
+              <span>{draft.type} · {draft.format}</span>
+            </div>
+            <div className={styles.livePreviewBody}>
+              <small>{draft.category || "Category"} · {draft.level}</small>
+              <h2>{draft.title || "Your experience title"}</h2>
+              <p>{draft.promise || "Your one-sentence promise will appear here."}</p>
+              <dl>
+                <div><dt>Date</dt><dd>{draft.sessions[0]?.date ? formatSessionDate(draft.sessions[0].date) : "Not set"}</dd></div>
+                <div><dt>Capacity</dt><dd>{draft.capacity > 0 ? `${draft.capacity} guests` : "Not set"}</dd></div>
+              </dl>
+              <div className={styles.livePreviewFooter}>
+                <div><span>From</span><strong>{draft.access === "Paid" ? formatPrice(draft.price) : draft.access}</strong></div>
+                <button type="button">Reserve</button>
+              </div>
+            </div>
           </div>
         </aside>
       </main>
@@ -940,7 +1010,7 @@ export function EventCreator() {
                 <section className={styles.previewSection}>
                   <span className={styles.previewSectionLabel}>The experience</span>
                   <h3>What you will learn</h3>
-                  <p className={styles.previewCopy}>{draft.outcome || "The learning outcome will be added before publishing."}</p>
+                  {draft.outcome.length ? <ul className={styles.previewOptionList}>{draft.outcome.map((item) => <li key={item}><IconCheck size={15} />{item}</li>)}</ul> : <p className={styles.previewCopy}>Learning outcomes will be added before publishing.</p>}
                 </section>
 
                 <section className={styles.previewSection}>
@@ -974,7 +1044,7 @@ export function EventCreator() {
                   <section className={styles.previewDetailCard}>
                     <span className={styles.previewSectionLabel}>Before you arrive</span>
                     <h3>What to bring</h3>
-                    <p>{draft.bring || "Nothing special is required."}</p>
+                    {draft.bring.length ? <ul>{draft.bring.map((item) => <li key={item}>{item}</li>)}</ul> : <p>Nothing special is required.</p>}
                   </section>
                 </div>
 

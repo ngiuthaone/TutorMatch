@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create an event or workshop | Tutoria</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            page: "#0b0c0e",
+            rail: "#151618",
+            panel: "#1a1b1d",
+            raised: "#202124",
+            line: "#303236",
+            muted: "#898c92",
+            soft: "#b8bbc1",
+            whiteish: "#f2f3f5"
+          },
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"]
+          },
+          boxShadow: {
+            studio: "0 18px 45px rgba(0,0,0,.28)"
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+    html { scroll-behavior: smooth; }
+    body { font-feature-settings: "cv02","cv03","cv04","cv11"; }
+    input[type="date"], input[type="time"] { color-scheme: dark; }
+
+    .field {
+      width: 100%;
+      border: 1px solid #34363b;
+      background: #191a1c;
+      color: #f2f3f5;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .field:hover { border-color: #45484f; }
+    .field:focus {
+      border-color: #777b84;
+      box-shadow: 0 0 0 3px rgba(255,255,255,.05);
+      background: #1b1c1f;
+    }
+    .field::placeholder { color: #64676e; }
+    .option-builder {
+      border: 1px solid #303236;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #1b1c1f 0%, #18191b 100%);
+      padding: 13px;
+    }
+    .option-builder-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .option-builder-note { margin: 5px 0 0; color: #898c92; font-size: 11px; line-height: 1.45; }
+    .option-list { display: flex; min-height: 0; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+    .option-list:empty { display: none; }
+    .option-chip {
+      display: inline-flex; align-items: center; gap: 6px; min-height: 30px;
+      border: 1px solid #45484f; border-radius: 7px; background: #24262a;
+      padding: 5px 8px 5px 10px; color: #d9dbe0; font-size: 11px; font-weight: 600;
+      transition: border-color .18s ease, background .18s ease, color .18s ease;
+    }
+    .option-chip:hover { border-color: #70747c; background: #2b2d32; color: #fff; }
+    .option-chip-close { color: #989ba3; font-size: 15px; font-weight: 400; line-height: 1; }
+    .option-entry { display: flex; gap: 8px; border-top: 1px solid #2d2f33; padding-top: 12px; }
+    .option-entry .field { min-width: 0; border-color: #3a3d43; background: #141517; }
+    .option-add {
+      min-width: 82px; border: 1px solid #4b4e55; border-radius: 8px; background: #292b30;
+      padding: 0 12px; color: #eceef2; font-size: 11px; font-weight: 700;
+      transition: background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .option-add:hover { border-color: #777b84; background: #35373d; }
+    .option-add:active { transform: translateY(1px); }
+    .moment-photo-field {
+      display: flex; align-items: center; gap: 10px; margin-top: 12px;
+      border: 1px dashed #40434a; border-radius: 9px; background: #141517; padding: 9px 10px;
+      transition: border-color .18s ease, background .18s ease;
+    }
+    .moment-photo-field:hover { border-color: #70747c; background: #191a1d; }
+    .moment-photo-action { display: inline-flex; align-items: center; gap: 7px; color: #c7c9cf; font-size: 11px; font-weight: 650; }
+    .moment-photo-action > span:first-of-type { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 6px; background: #282a2f; color: #e6e8ed; }
+    .moment-photo-preview { height: 36px; width: 48px; overflow: hidden; border: 1px solid #54575f; border-radius: 6px; }
+    select.field option { background: #191a1c; color: #f2f3f5; }
+    select.field {
+      min-height: 44px;
+      appearance: none;
+      -webkit-appearance: none;
+      border-radius: 10px;
+      border-color: rgba(255,255,255,.14);
+      background-color: rgba(255,255,255,.045);
+      background-image:
+        linear-gradient(45deg, transparent 50%, #a7aab0 50%),
+        linear-gradient(135deg, #a7aab0 50%, transparent 50%);
+      background-position:
+        calc(100% - 18px) 52%,
+        calc(100% - 13px) 52%;
+      background-size:
+        5px 5px,
+        5px 5px;
+      background-repeat: no-repeat;
+      padding-right: 2.45rem !important;
+      font-weight: 500;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+      cursor: pointer;
+    }
+    select.field:hover {
+      border-color: rgba(255,255,255,.22);
+      background-color: rgba(255,255,255,.065);
+    }
+    select.field:focus {
+      border-color: rgba(255,255,255,.36);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.045),
+        0 0 0 4px rgba(255,255,255,.07);
+    }
+
+    .choice-input:checked + .choice {
+      border-color: #d7d9de;
+      background: #27292d;
+      color: #f4f5f6;
+    }
+    .choice-input:checked + .choice .choice-dot {
+      border-color: #f4f5f6;
+      box-shadow: inset 0 0 0 4px #1a1b1d;
+      background: #f4f5f6;
+    }
+
+    .step-link.active { color: #f2f3f5; opacity: 1; }
+    .step-link.active .step-circle {
+      border-color: #f2f3f5;
+      color: #f2f3f5;
+    }
+    .step-link.active .step-line { background: #f2f3f5; }
+    .step-link.done .step-circle {
+      border-color: #767a82;
+      color: #f2f3f5;
+      background: #24262a;
+    }
+
+    .studio-scrollbar::-webkit-scrollbar { width: 9px; }
+    .studio-scrollbar::-webkit-scrollbar-track { background: #0b0c0e; }
+    .studio-scrollbar::-webkit-scrollbar-thumb {
+      background: #292b2f;
+      border: 2px solid #0b0c0e;
+      border-radius: 999px;
+    }
+
+    .preview-cover {
+      background:
+        radial-gradient(circle at 75% 25%, rgba(255,255,255,.08), transparent 28%),
+        linear-gradient(135deg, #2b2d31, #17181a 58%, #222429);
+    }
+
+    .section-flash {
+      animation: flash 1.15s ease;
+    }
+    @keyframes flash {
+      0%,100% { box-shadow: none; }
+      35% { box-shadow: 0 0 0 2px rgba(255,255,255,.16); }
+    }
+  </style>
+</head>
+
+<body class="bg-page text-whiteish antialiased">
+  <div class="min-h-screen">
+    <!-- Studio header -->
+    <header class="sticky top-0 z-50 border-b border-line bg-page/95 backdrop-blur-xl">
+      <div class="grid min-h-[58px] grid-cols-[1fr_auto_1fr] items-center px-4 md:px-8">
+        <a href="/discover" class="justify-self-start inline-flex items-center gap-2 text-sm text-soft hover:text-whiteish">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+          <span class="hidden sm:inline">Back to Home</span>
+        </a>
+
+        <div class="text-center leading-tight">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Tutoria Creator Studio</p>
+          <p class="text-sm font-semibold">Create an event or workshop</p>
+        </div>
+
+        <div class="justify-self-end flex items-center gap-3">
+          <span id="saveText" class="hidden text-xs text-muted lg:block">Draft saved just now</span>
+          <button id="saveDraft" type="button" class="rounded-md border border-line bg-raised px-3.5 py-2 text-xs font-semibold text-whiteish hover:border-[#45484f]">
+            Save draft
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="mx-auto grid max-w-[1460px] grid-cols-1 lg:grid-cols-[214px_minmax(0,1fr)_290px]">
+      <!-- Left step rail -->
+      <aside class="hidden min-h-[calc(100vh-58px)] border-r border-line bg-rail lg:block">
+        <nav class="sticky top-[58px] px-5 py-7">
+          <div id="desktopSteps" class="space-y-0"></div>
+        </nav>
+      </aside>
+
+      <!-- Mobile steps -->
+      <div class="sticky top-[58px] z-40 border-b border-line bg-rail px-4 py-3 lg:hidden">
+        <button id="mobileStepButton" class="flex w-full items-center justify-between text-left">
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted">Current step</p>
+            <p id="mobileCurrentStep" class="mt-0.5 text-sm font-semibold">The idea</p>
+          </div>
+          <i data-lucide="chevron-down" class="h-4 w-4 text-muted"></i>
+        </button>
+        <div id="mobileSteps" class="hidden border-t border-line pt-3 mt-3"></div>
+      </div>
+
+      <!-- Main form -->
+      <main class="min-w-0 px-4 py-6 md:px-8 md:py-7">
+        <form id="creatorForm" class="mx-auto max-w-[820px] space-y-5" novalidate>
+          <!-- IDEA -->
+          <section id="idea" data-section="idea" class="scroll-mt-24 rounded-xl border border-line bg-panel p-5 shadow-studio md:p-6">
+            <div class="mb-6 border-b border-line pb-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.12em] text-muted">The idea</p>
+              <h1 class="mt-3 text-2xl font-semibold tracking-[-0.025em]">What are you creating?</h1>
+              <p class="mt-2 text-sm text-muted">Choose the foundation of the listing.</p>
+            </div>
+
+            <div class="space-y-6">
+              <div>
+                <label class="mb-2 block text-xs font-semibold text-soft">Experience type</label>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <label>
+                    <input class="choice-input sr-only" type="radio" name="type" value="Workshop" checked>
+                    <span class="choice flex cursor-pointer gap-3 rounded-lg border border-line bg-[#18191b] p-4 transition">
+                      <span class="choice-dot mt-0.5 h-4 w-4 shrink-0 rounded-full border border-[#5c5f66]"></span>
+                      <span>
+                        <span class="block text-sm font-semibold">Workshop</span>
+                        <span class="mt-1 block text-xs leading-5 text-muted">A guided, participatory learning experience.</span>
+                      </span>
+                    </span>
+                  </label>
+                  <label>
+                    <input class="choice-input sr-only" type="radio" name="type" value="Event">
+                    <span class="choice flex cursor-pointer gap-3 rounded-lg border border-line bg-[#18191b] p-4 transition">
+                      <span class="choice-dot mt-0.5 h-4 w-4 shrink-0 rounded-full border border-[#5c5f66]"></span>
+                      <span>
+                        <span class="block text-sm font-semibold">Event</span>
+                        <span class="mt-1 block text-xs leading-5 text-muted">A talk, meetup, gathering, or social experience.</span>
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <label class="block">
+                  <span class="mb-2 block text-xs font-semibold text-soft">Format</span>
+                  <select id="format" class="field px-3 py-2.5 text-sm">
+                    <option>In person</option>
+                    <option>Online</option>
+                  </select>
+                </label>
+                <label class="block">
+                  <span class="mb-2 block text-xs font-semibold text-soft">Category</span>
+                  <select id="category" class="field px-3 py-2.5 text-sm">
+                    <option value="">Select category</option>
+                    <option>Creative skills</option>
+                    <option>Technology</option>
+                    <option>Business</option>
+                    <option>Communication</option>
+                    <option>Languages</option>
+                    <option>Health & fitness</option>
+                    <option>Academic subjects</option>
+                    <option>Lifestyle</option>
+                    <option>Music</option>
+                  </select>
+                </label>
+              </div>
+
+              <label class="block">
+                <div class="mb-2 flex items-center justify-between">
+                  <span class="text-xs font-semibold text-soft">Working title</span>
+                  <span id="titleCount" class="text-xs text-muted">0/80</span>
+                </div>
+                <input id="title" maxlength="80" class="field px-3 py-2.5 text-sm" placeholder="e.g. Make your first ceramic coffee cup">
+              </label>
+
+              <label class="block">
+                <div class="mb-2 flex items-center justify-between">
+                  <span class="text-xs font-semibold text-soft">One-sentence promise</span>
+                  <span id="promiseCount" class="text-xs text-muted">0/120</span>
+                </div>
+                <textarea id="promise" maxlength="120" rows="3" class="field resize-none px-3 py-2.5 text-sm" placeholder="Tell guests what they will leave with."></textarea>
+              </label>
+
+              <div>
+                <div class="mb-2 flex items-center justify-between">
+                  <span class="text-xs font-semibold text-soft">Event images</span>
+                  <span id="imageCount" class="text-xs text-muted">0 images</span>
+                </div>
+                <p class="mb-3 text-xs leading-5 text-muted">The first image is your cover. Add more to show the space, materials, or experience.</p>
+                <input id="imageInput" type="file" accept="image/*" multiple class="hidden">
+                <button id="imageButton" type="button" class="flex w-full items-center justify-between rounded-lg border border-line bg-[#18191b] px-4 py-4 text-left hover:border-[#474a50]">
+                  <span class="flex items-center gap-3">
+                    <span class="grid h-9 w-9 place-items-center rounded-md bg-raised">
+                      <i data-lucide="upload" class="h-4 w-4"></i>
+                    </span>
+                    <span>
+                      <span class="block text-sm font-semibold">Upload event images</span>
+                      <span class="mt-1 block text-xs text-muted">JPG, PNG or WebP</span>
+                    </span>
+                  </span>
+                  <span class="rounded-md border border-line bg-raised px-3 py-2 text-xs font-semibold">Add images</span>
+                </button>
+                <div id="imageGrid" class="mt-3 grid grid-cols-3 gap-2"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- EXPERIENCE -->
+          <section id="experience" data-section="experience" class="scroll-mt-24 rounded-xl border border-line bg-panel p-5 shadow-studio md:p-6">
+            <div class="mb-6 border-b border-line pb-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.12em] text-muted">The experience</p>
+              <h2 class="mt-3 text-2xl font-semibold tracking-[-0.025em]">What will people do and learn?</h2>
+              <p class="mt-2 text-sm text-muted">Describe the outcome, then break the experience into clear moments.</p>
+            </div>
+
+            <div class="space-y-6">
+              <div class="option-builder">
+                <div class="option-builder-header"><span class="text-xs font-semibold text-soft">What participants will make or learn</span><span class="text-[10px] font-medium uppercase tracking-[0.12em] text-muted">Outcomes</span></div>
+                <p class="option-builder-note">Add one clear outcome at a time. Guests will see these as a checklist.</p>
+                <div id="outcomeOptions" class="option-list"></div>
+                <div class="option-entry"><input id="outcomeInput" maxlength="160" class="field flex-1 px-3 py-2.5 text-sm" placeholder="e.g. Shape and glaze a ceramic cup"><button id="addOutcome" type="button" class="option-add">Add outcome</button></div>
+              </div>
+
+              <div>
+                <span class="mb-2 block text-xs font-semibold text-soft">Experience level</span>
+                <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+                  <label><input class="choice-input sr-only" type="radio" name="level" value="Beginner" checked><span class="choice block cursor-pointer rounded-lg border border-line px-3 py-2.5 text-center text-xs font-semibold">Beginner</span></label>
+                  <label><input class="choice-input sr-only" type="radio" name="level" value="Intermediate"><span class="choice block cursor-pointer rounded-lg border border-line px-3 py-2.5 text-center text-xs font-semibold">Intermediate</span></label>
+                  <label><input class="choice-input sr-only" type="radio" name="level" value="Advanced"><span class="choice block cursor-pointer rounded-lg border border-line px-3 py-2.5 text-center text-xs font-semibold">Advanced</span></label>
+                  <label><input class="choice-input sr-only" type="radio" name="level" value="All levels"><span class="choice block cursor-pointer rounded-lg border border-line px-3 py-2.5 text-center text-xs font-semibold">All levels</span></label>
+                </div>
+              </div>
+
+              <div>
+                <div class="mb-3 flex items-center justify-between">
+                  <div>
+                    <p class="text-xs font-semibold text-soft">Workshop plan</p>
+                    <p id="totalMinutes" class="mt-1 text-xs text-muted">0 minutes</p>
+                  </div>
+                  <button id="addMoment" type="button" class="rounded-md border border-line bg-raised px-3 py-2 text-xs font-semibold hover:border-[#4a4d53]">Add moment</button>
+                </div>
+                <div id="momentList" class="space-y-3"></div>
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <div class="option-builder">
+                  <div class="option-builder-header"><span class="text-xs font-semibold text-soft">What is included</span><span class="text-[10px] font-medium uppercase tracking-[0.12em] text-muted">Provided</span></div>
+                  <p class="option-builder-note">Materials, services, and resources are clearer as individual items.</p>
+                  <div id="includedOptions" class="option-list"></div>
+                  <div class="option-entry"><input id="includedInput" class="field flex-1 px-3 py-2.5 text-sm" placeholder="e.g. Clay and pottery tools"><button id="addIncluded" type="button" class="option-add">Add item</button></div>
+                </div>
+                <label>
+                  <span class="mb-2 block text-xs font-semibold text-soft">Languages</span>
+                  <input id="languages" class="field px-3 py-2.5 text-sm" placeholder="English, Vietnamese">
+                </label>
+              </div>
+
+              <div class="option-builder">
+                <div class="option-builder-header"><span class="text-xs font-semibold text-soft">What participants should bring</span><span class="text-[10px] font-medium uppercase tracking-[0.12em] text-muted">Preparation</span></div>
+                <p class="option-builder-note">Only list items guests need to bring, wear, download, or prepare.</p>
+                <div id="bringOptions" class="option-list"></div>
+                <div class="option-entry"><input id="bringInput" maxlength="160" class="field flex-1 px-3 py-2.5 text-sm" placeholder="e.g. Comfortable clothes"><button id="addBring" type="button" class="option-add">Add item</button></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- BEFORE BOOKING -->
+          <section id="before-booking" data-section="before-booking" class="scroll-mt-24 rounded-xl border border-line bg-panel p-5 shadow-studio md:p-6">
+            <div class="mb-6 border-b border-line pb-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Before booking</p>
+              <h2 class="mt-3 text-2xl font-semibold tracking-[-0.025em]">Help guests arrive prepared.</h2>
+              <p class="mt-2 text-sm text-muted">Add checklist sections and answer common questions.</p>
+            </div>
+
+            <div>
+              <div class="mb-3 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-semibold text-soft">Before you attend <span class="font-normal text-muted">(optional)</span></p>
+                  <p class="mt-1 text-xs text-muted">Use one line per checklist item.</p>
+                </div>
+                <button id="addChecklist" type="button" class="rounded-md border border-line bg-raised px-3 py-2 text-xs font-semibold">Add section</button>
+              </div>
+              <div id="checklistList" class="space-y-3"></div>
+            </div>
+
+            <div class="mt-7 border-t border-line pt-6">
+              <div class="mb-3 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-semibold text-soft">Frequently asked questions</p>
+                  <p class="mt-1 text-xs text-muted">Give a direct answer to each concern.</p>
+                </div>
+                <button id="addFaq" type="button" class="rounded-md border border-line bg-raised px-3 py-2 text-xs font-semibold">Add question</button>
+              </div>
+              <div id="faqList" class="space-y-3"></div>
+            </div>
+          </section>
+
+          <!-- TIME PLACE -->
+          <section id="time-place" data-section="time-place" class="scroll-mt-24 rounded-xl border border-line bg-panel p-5 shadow-studio md:p-6">
+            <div class="mb-6 border-b border-line pb-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Time and place</p>
+              <h2 class="mt-3 text-2xl font-semibold tracking-[-0.025em]">When and where is it happening?</h2>
+              <p class="mt-2 text-sm text-muted">Add dates, session times, capacity, and venue details.</p>
+            </div>
+
+            <div id="schedulePanel">
+              <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p class="text-sm font-semibold">Dates and time intervals <span class="text-red-400">*</span></p>
+                  <p class="mt-1 text-xs leading-5 text-muted">Choose reusable time intervals, then click the dates when each session will run.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span id="selectedSessionsCount" class="rounded-full bg-[#242529] px-3 py-1.5 text-xs font-semibold text-soft">0 sessions</span>
+                  <button id="todayWeekButton" type="button" class="h-9 rounded-xl border border-line bg-panel px-3 text-xs font-semibold transition hover:bg-raised">Today</button>
+                </div>
+              </div>
+
+              <div class="overflow-hidden rounded-2xl border border-line bg-[#17181a]">
+                <div class="flex items-center justify-between gap-3 border-b border-line bg-panel px-3 py-3 sm:px-4">
+                  <button id="previousWeekButton" type="button" class="grid h-9 w-9 place-items-center rounded-xl border border-line text-soft transition hover:bg-raised" aria-label="Previous week">
+                    <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                  </button>
+                  <div class="text-center">
+                    <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Session week</p>
+                    <p id="scheduleWeekLabel" class="mt-0.5 text-sm font-semibold text-whiteish"></p>
+                  </div>
+                  <button id="nextWeekButton" type="button" class="grid h-9 w-9 place-items-center rounded-xl border border-line text-soft transition hover:bg-raised" aria-label="Next week">
+                    <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                  </button>
+                </div>
+
+                <div class="overflow-x-auto p-3 sm:p-4">
+                  <div id="scheduleGrid" class="min-w-[790px]"></div>
+                </div>
+
+                <div class="border-t border-line bg-panel p-3 sm:p-4">
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p class="text-xs font-semibold text-soft">Time intervals</p>
+                      <p class="mt-1 text-[11px] text-muted">Each interval becomes one selectable row in the calendar.</p>
+                    </div>
+                    <button id="addIntervalButton" type="button" class="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#44464d] px-3 text-xs font-semibold text-soft transition hover:border-[#73757d] hover:bg-raised">
+                      <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+                      Add interval
+                    </button>
+                  </div>
+
+                  <div id="intervalChips" class="mt-3 flex flex-wrap gap-2"></div>
+
+                  <div id="intervalEditor" class="mt-3 hidden rounded-xl border border-line bg-[#17181a] p-3">
+                    <div class="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                      <label>
+                        <span class="mb-1.5 block text-xs font-semibold text-soft">Starts</span>
+                        <input id="newIntervalStart" type="time" class="field px-3 py-2.5 text-sm" value="09:00">
+                      </label>
+                      <label>
+                        <span class="mb-1.5 block text-xs font-semibold text-soft">Ends</span>
+                        <input id="newIntervalEnd" type="time" class="field px-3 py-2.5 text-sm" value="11:00">
+                      </label>
+                      <div class="flex gap-2">
+                        <button id="cancelIntervalButton" type="button" class="h-[42px] rounded-xl border border-line bg-panel px-3 text-xs font-semibold hover:bg-raised">Cancel</button>
+                        <button id="saveIntervalButton" type="button" class="h-[42px] rounded-xl bg-whiteish px-4 text-xs font-semibold text-[#111214] hover:bg-white">Add</button>
+                      </div>
+                    </div>
+                    <p id="intervalError" class="mt-2 hidden text-xs font-medium text-red-400"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6 grid gap-4 md:grid-cols-2">
+              <label>
+                <span class="mb-2 block text-xs font-semibold text-soft">Time zone</span>
+                <select id="timezone" class="field px-3 py-2.5 text-sm">
+                  <option>Asia/Bangkok (GMT+7)</option>
+                  <option>Asia/Singapore (GMT+8)</option>
+                  <option>Europe/London</option>
+                  <option>America/New_York</option>
+                </select>
+              </label>
+              <label>
+                <span class="mb-2 block text-xs font-semibold text-soft">Capacity</span>
+                <input id="capacity" type="number" min="1" class="field px-3 py-2.5 text-sm" placeholder="e.g. 20">
+              </label>
+            </div>
+
+            <div class="mt-7 border-t border-line pt-6">
+              <p class="mb-4 text-sm font-semibold">Venue and location</p>
+              <div class="grid gap-4 md:grid-cols-2">
+                <label>
+                  <span class="mb-2 block text-xs font-semibold text-soft">Event format</span>
+                  <select id="venueFormat" class="field px-3 py-2.5 text-sm">
+                    <option>In person</option>
+                    <option>Online</option>
+                  </select>
+                </label>
+                <label id="venueNameWrap">
+                  <span class="mb-2 block text-xs font-semibold text-soft">Venue name</span>
+                  <input id="venueName" class="field px-3 py-2.5 text-sm" placeholder="Studio, café, community space...">
+                </label>
+              </div>
+              <label id="addressWrap" class="mt-4 block">
+                <span class="mb-2 block text-xs font-semibold text-soft">Full address</span>
+                <input id="address" class="field px-3 py-2.5 text-sm" placeholder="Street, district, city">
+              </label>
+              <label class="mt-4 block">
+                <span id="arrivalLabel" class="mb-2 block text-xs font-semibold text-soft">Arrival instructions</span>
+                <textarea rows="3" class="field resize-none px-3 py-2.5 text-sm" placeholder="Entrance, parking, check-in, or joining instructions."></textarea>
+              </label>
+            </div>
+          </section>
+
+          <!-- ACCESS -->
+          <section id="access-pricing" data-section="access-pricing" class="scroll-mt-24 rounded-xl border border-line bg-panel p-5 shadow-studio md:p-6">
+            <div class="mb-6 border-b border-line pb-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Access and pricing</p>
+              <h2 class="mt-3 text-2xl font-semibold tracking-[-0.025em]">How can people join?</h2>
+              <p class="mt-2 text-sm text-muted">Choose access, price, and cancellation rules.</p>
+            </div>
+
+            <div class="space-y-6">
+              <div>
+                <span class="mb-2 block text-xs font-semibold text-soft">Access</span>
+                <div class="grid gap-2 sm:grid-cols-2">
+                  <label><input class="choice-input sr-only" type="radio" name="access" value="Free" checked><span class="choice block cursor-pointer rounded-lg border border-line p-3"><span class="block text-sm font-semibold">Free</span><span class="mt-1 block text-xs text-muted">No payment is required.</span></span></label>
+                  <label><input class="choice-input sr-only" type="radio" name="access" value="Paid"><span class="choice block cursor-pointer rounded-lg border border-line p-3"><span class="block text-sm font-semibold">Paid</span><span class="mt-1 block text-xs text-muted">Set a price for each guest.</span></span></label>
+                  <label><input class="choice-input sr-only" type="radio" name="access" value="Request to join"><span class="choice block cursor-pointer rounded-lg border border-line p-3"><span class="block text-sm font-semibold">Request to join</span><span class="mt-1 block text-xs text-muted">You decide who can attend.</span></span></label>
+                  <label><input class="choice-input sr-only" type="radio" name="access" value="Invitation only"><span class="choice block cursor-pointer rounded-lg border border-line p-3"><span class="block text-sm font-semibold">Invitation only</span><span class="mt-1 block text-xs text-muted">Only invited people can attend.</span></span></label>
+                </div>
+              </div>
+
+              <div id="priceWrap" class="hidden">
+                <label>
+                  <span class="mb-2 block text-xs font-semibold text-soft">Price per person</span>
+                  <div class="flex">
+                    <span class="grid w-12 place-items-center rounded-l-lg border border-r-0 border-line bg-raised text-sm text-muted">₫</span>
+                    <input id="price" type="number" min="0" class="field rounded-l-none px-3 py-2.5 text-sm" placeholder="350000">
+                  </div>
+                </label>
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <label>
+                  <span class="mb-2 block text-xs font-semibold text-soft">Cancellation deadline</span>
+                  <select id="cancellation" class="field px-3 py-2.5 text-sm">
+                    <option value="">Choose deadline</option>
+                    <option>Any time before start</option>
+                    <option>24 hours before start</option>
+                    <option>48 hours before start</option>
+                    <option>7 days before start</option>
+                    <option>No cancellations</option>
+                  </select>
+                </label>
+                <label>
+                  <span class="mb-2 block text-xs font-semibold text-soft">Refund policy</span>
+                  <select id="refund" class="field px-3 py-2.5 text-sm">
+                    <option value="">Choose policy</option>
+                    <option>Full refund before deadline</option>
+                    <option>50% refund before deadline</option>
+                    <option>Credit for another session</option>
+                    <option>No refunds</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <!-- REVIEW -->
+          <section id="review" data-section="review" class="scroll-mt-24 rounded-xl border border-line bg-panel p-5 shadow-studio md:p-6">
+            <div class="mb-6 border-b border-line pb-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Review and publish</p>
+              <h2 class="mt-3 text-2xl font-semibold tracking-[-0.025em]">Ready to go live?</h2>
+              <p class="mt-2 text-sm text-muted">Review the essentials and choose who can discover the listing.</p>
+            </div>
+
+            <div id="reviewGrid" class="grid gap-2 md:grid-cols-2"></div>
+
+            <div class="mt-7">
+              <span class="mb-2 block text-xs font-semibold text-soft">Visibility</span>
+              <div class="grid gap-2 md:grid-cols-3">
+                <label><input class="choice-input sr-only" type="radio" name="visibility" value="Public" checked><span class="choice block cursor-pointer rounded-lg border border-line p-3"><span class="block text-sm font-semibold">Public</span><span class="mt-1 block text-xs text-muted">Anyone can discover and join.</span></span></label>
+                <label><input class="choice-input sr-only" type="radio" name="visibility" value="Unlisted"><span class="choice block cursor-pointer rounded-lg border border-line p-3"><span class="block text-sm font-semibold">Unlisted</span><span class="mt-1 block text-xs text-muted">Only people with the link can view it.</span></span></label>
+                <label><input class="choice-input sr-only" type="radio" name="visibility" value="Community only"><span class="choice block cursor-pointer rounded-lg border border-line p-3"><span class="block text-sm font-semibold">Community only</span><span class="mt-1 block text-xs text-muted">Only community members can view it.</span></span></label>
+              </div>
+            </div>
+
+            <div id="statusPanel" class="mt-6 rounded-lg border border-line bg-[#161719] p-4"></div>
+          </section>
+
+          <div class="sticky bottom-4 z-30 flex items-center justify-between rounded-lg border border-line bg-[#121315]/95 p-3 shadow-studio backdrop-blur-xl">
+            <button type="button" id="saveExit" class="px-3 py-2 text-xs font-semibold text-soft hover:text-whiteish">Save and exit</button>
+            <div class="flex gap-2">
+              <button type="button" id="previewButton" class="rounded-md border border-line bg-raised px-4 py-2.5 text-xs font-semibold">Preview</button>
+              <button type="submit" class="rounded-md bg-whiteish px-4 py-2.5 text-xs font-semibold text-[#111214] hover:bg-white">Review and publish</button>
+            </div>
+          </div>
+        </form>
+      </main>
+
+      <!-- Live preview -->
+      <aside class="hidden min-h-[calc(100vh-58px)] border-l border-line bg-rail xl:block">
+        <div class="sticky top-[58px]">
+          <div class="flex h-11 items-center gap-2 border-b border-line px-4">
+            <span class="text-xs font-semibold">Live listing preview</span>
+            <span class="text-xs text-muted">Updates as you type</span>
+          </div>
+
+          <div class="preview-cover relative h-[220px] overflow-hidden">
+            <img id="previewImage" class="hidden h-full w-full object-cover" alt="">
+            <div id="previewImagePlaceholder" class="absolute inset-0 grid place-items-center text-center text-muted">
+              <div>
+                <i data-lucide="image" class="mx-auto h-6 w-6"></i>
+                <p class="mt-2 text-xs">Cover image</p>
+              </div>
+            </div>
+            <div class="absolute bottom-3 left-3 right-3 rounded bg-[#101113]/90 px-2.5 py-2 text-xs font-semibold backdrop-blur">
+              <span id="previewMeta">Workshop, In person</span>
+            </div>
+          </div>
+
+          <div class="border-b border-line px-4 py-4">
+            <p class="text-xs text-muted">Your listing</p>
+            <h3 id="previewTitle" class="mt-2 text-base font-semibold">Your event title</h3>
+            <p id="previewPromise" class="mt-2 text-xs leading-5 text-soft">Add a clear promise so guests understand what they will gain.</p>
+          </div>
+
+          <div class="px-4 py-4 text-xs">
+            <div class="flex items-center justify-between border-b border-line py-2.5">
+              <span class="text-muted">Category</span><span id="previewCategory" class="font-semibold">Not set</span>
+            </div>
+            <div class="flex items-center justify-between border-b border-line py-2.5">
+              <span class="text-muted">Level</span><span id="previewLevel" class="font-semibold">Beginner</span>
+            </div>
+            <div class="flex items-center justify-between border-b border-line py-2.5">
+              <span class="text-muted">Date</span><span id="previewDate" class="font-semibold">Not set</span>
+            </div>
+            <div class="flex items-center justify-between border-b border-line py-2.5">
+              <span class="text-muted">Capacity</span><span id="previewCapacity" class="font-semibold">Not set</span>
+            </div>
+            <div class="flex items-center justify-between py-2.5">
+              <span class="text-muted">From</span><span id="previewPrice" class="font-semibold">Free</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Preview modal -->
+  <div id="previewModal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/75 p-4">
+    <div class="studio-scrollbar max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-line bg-panel shadow-2xl">
+      <div class="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel/95 px-5 py-4 backdrop-blur">
+        <div>
+          <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">Guest preview</p>
+          <p class="mt-1 text-sm font-semibold">Event listing</p>
+        </div>
+        <button id="closePreview" class="grid h-8 w-8 place-items-center rounded-md border border-line bg-raised">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+      <div class="p-5 md:p-7">
+        <div class="preview-cover relative aspect-[16/7] overflow-hidden rounded-lg">
+          <img id="modalImage" class="hidden h-full w-full object-cover" alt="">
+          <div id="modalImagePlaceholder" class="absolute inset-0 grid place-items-center text-muted">
+            <i data-lucide="image" class="h-8 w-8"></i>
+          </div>
+        </div>
+        <div class="mt-5 flex flex-wrap gap-2 text-xs">
+          <span id="modalType" class="rounded-md border border-line bg-raised px-2.5 py-1.5">Workshop</span>
+          <span id="modalFormat" class="rounded-md border border-line bg-raised px-2.5 py-1.5">In person</span>
+          <span id="modalCategory" class="rounded-md border border-line bg-raised px-2.5 py-1.5">Category</span>
+        </div>
+        <h2 id="modalTitle" class="mt-4 text-3xl font-semibold tracking-[-0.03em]">Your event title</h2>
+        <p id="modalPromise" class="mt-3 max-w-2xl text-sm leading-6 text-soft">Add a clear promise so guests understand what they will gain.</p>
+        <div class="mt-6 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-lg border border-line bg-[#17181a] p-4"><p class="text-xs text-muted">Date</p><p id="modalDate" class="mt-2 text-sm font-semibold">Not set</p></div>
+          <div class="rounded-lg border border-line bg-[#17181a] p-4"><p class="text-xs text-muted">Capacity</p><p id="modalCapacity" class="mt-2 text-sm font-semibold">Not set</p></div>
+          <div class="rounded-lg border border-line bg-[#17181a] p-4"><p class="text-xs text-muted">Access</p><p id="modalPrice" class="mt-2 text-sm font-semibold">Free</p></div>
+        </div>
+        <div class="mt-6 rounded-lg border border-line bg-[#17181a] p-5">
+          <p class="text-sm font-semibold">What participants will do</p>
+          <p id="modalOutcome" class="mt-2 text-sm leading-6 text-soft">Add the experience outcome to preview this section.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-6 left-1/2 z-[100] hidden -translate-x-1/2 rounded-md border border-line bg-raised px-4 py-3 text-xs font-semibold shadow-2xl"></div>
+
+  <script>
+    const steps = [
+      { id: "idea", title: "The idea", subtitle: "Type, format and listing basics" },
+      { id: "experience", title: "The experience", subtitle: "Outcome, level and plan" },
+      { id: "before-booking", title: "Before booking", subtitle: "Preparation and FAQs" },
+      { id: "time-place", title: "Time and place", subtitle: "Dates, capacity and venue" },
+      { id: "access-pricing", title: "Access & pricing", subtitle: "Join rules and policies" },
+      { id: "review", title: "Review & publish", subtitle: "Review and launch" }
+    ];
+
+    const state = {
+      images: [],
+      outcomes: [],
+      included: [],
+      bring: [],
+      dates: [],
+      scheduleWeekStart: "",
+      scheduleIntervals: []
+    };
+    const $ = (id) => document.getElementById(id);
+    const makeId = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    function stepMarkup() {
+      return steps.map((step, index) => `
+        <a href="#${step.id}" data-step="${step.id}" class="step-link group relative flex min-h-[78px] gap-3 opacity-45 transition hover:opacity-80">
+          <div class="relative flex w-8 shrink-0 justify-center">
+            <span class="step-circle z-10 grid h-7 w-7 place-items-center rounded-full border border-[#62656c] bg-rail text-[11px] font-semibold">
+              ${String(index + 1).padStart(2, "0")}
+            </span>
+            ${index < steps.length - 1 ? '<span class="step-line absolute bottom-0 top-7 w-px bg-[#3c3e43]"></span>' : ""}
+          </div>
+          <div class="pb-4">
+            <p class="pt-1 text-xs font-semibold">${step.title}</p>
+            <p class="mt-1 text-xs leading-4 text-muted">${step.subtitle}</p>
+          </div>
+        </a>
+      `).join("");
+    }
+
+    $("desktopSteps").innerHTML = stepMarkup();
+    $("mobileSteps").innerHTML = stepMarkup();
+
+    const sections = [...document.querySelectorAll("[data-section]")];
+    const stepLinks = [...document.querySelectorAll("[data-step]")];
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+      const active = entries.filter(e => e.isIntersecting).sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!active) return;
+      const id = active.target.dataset.section;
+      const index = steps.findIndex(s => s.id === id);
+      stepLinks.forEach((link, i) => {
+        link.classList.toggle("active", link.dataset.step === id);
+        link.classList.toggle("done", i < index);
+      });
+      $("mobileCurrentStep").textContent = steps[index].title;
+    }, { rootMargin: "-22% 0px -65% 0px", threshold: [0.08, .25, .55] });
+
+    sections.forEach(section => sectionObserver.observe(section));
+
+    $("mobileStepButton").addEventListener("click", () => $("mobileSteps").classList.toggle("hidden"));
+    $("mobileSteps").addEventListener("click", () => $("mobileSteps").classList.add("hidden"));
+
+    function selected(name) {
+      return document.querySelector(`input[name="${name}"]:checked`)?.value || "";
+    }
+
+    function bindCount(id, countId, max) {
+      $(id).addEventListener("input", () => {
+        $(countId).textContent = `${$(id).value.length}/${max}`;
+        updatePreview();
+        markSaving();
+      });
+    }
+
+    bindCount("title", "titleCount", 80);
+    bindCount("promise", "promiseCount", 120);
+    function renderOptions(kind, label, field = kind) {
+      const target = $(`${field}Options`);
+      target.innerHTML = state[kind].map((item, index) => `
+        <button type="button" data-remove-option="${kind}" data-option-index="${index}" class="option-chip">
+          ${item}<span aria-hidden="true" class="option-chip-close">×</span><span class="sr-only">Remove ${label}: ${item}</span>
+        </button>`).join("");
+      target.querySelectorAll("[data-remove-option]").forEach(button => {
+        button.onclick = () => {
+          state[button.dataset.removeOption].splice(Number(button.dataset.optionIndex), 1);
+          renderOptions(kind, label, field);
+          updatePreview();
+          markSaving();
+        };
+      });
+    }
+
+    function bindOptionInput(kind, label, field = kind) {
+      const input = $(`${field}Input`);
+      const add = () => {
+        const value = input.value.trim();
+        if (!value || state[kind].includes(value)) return;
+        state[kind].push(value);
+        input.value = "";
+        renderOptions(kind, label, field);
+        updatePreview();
+        markSaving();
+      };
+      $(`add${field[0].toUpperCase()}${field.slice(1)}`).addEventListener("click", add);
+      input.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); add(); } });
+      renderOptions(kind, label, field);
+    }
+
+    bindOptionInput("outcomes", "outcome", "outcome");
+    bindOptionInput("included", "included item");
+    bindOptionInput("bring", "item to bring");
+
+    let saveTimer;
+    function markSaving() {
+      $("saveText").textContent = "Saving...";
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => $("saveText").textContent = "Draft saved just now", 650);
+    }
+
+    $("creatorForm").addEventListener("input", markSaving);
+    $("creatorForm").addEventListener("change", markSaving);
+
+    function showToast(message) {
+      $("toast").textContent = message;
+      $("toast").classList.remove("hidden");
+      clearTimeout(window.__toast);
+      window.__toast = setTimeout(() => $("toast").classList.add("hidden"), 2200);
+    }
+
+    $("saveDraft").addEventListener("click", () => showToast("Draft saved"));
+    $("saveExit").addEventListener("click", () => showToast("Draft saved"));
+
+    // Images
+    $("imageButton").addEventListener("click", () => $("imageInput").click());
+    $("imageInput").addEventListener("change", (event) => {
+      const files = [...event.target.files].filter(file => file.type.startsWith("image/"));
+      state.images = [...state.images, ...files].slice(0, 8);
+      renderImages();
+      updateReview();
+    });
+
+    function renderImages() {
+      $("imageGrid").innerHTML = "";
+      state.images.forEach((file, index) => {
+        const url = URL.createObjectURL(file);
+        const item = document.createElement("div");
+        item.className = "relative aspect-[4/3] overflow-hidden rounded-md border border-line bg-raised";
+        item.innerHTML = `
+          <img src="${url}" class="h-full w-full object-cover" alt="">
+          ${index === 0 ? '<span class="absolute left-1.5 top-1.5 rounded bg-black/70 px-1.5 py-1 text-[10px] font-semibold">Cover</span>' : ""}
+          <button type="button" data-remove="${index}" class="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded bg-black/70">
+            <i data-lucide="x" class="h-3.5 w-3.5"></i>
+          </button>
+        `;
+        $("imageGrid").appendChild(item);
+      });
+      $("imageCount").textContent = `${state.images.length} image${state.images.length === 1 ? "" : "s"}`;
+      document.querySelectorAll("[data-remove]").forEach(button => {
+        button.onclick = () => {
+          state.images.splice(Number(button.dataset.remove), 1);
+          renderImages();
+          updateReview();
+        };
+      });
+
+      const file = state.images[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        $("previewImage").src = url;
+        $("previewImage").classList.remove("hidden");
+        $("previewImagePlaceholder").classList.add("hidden");
+        $("modalImage").src = url;
+        $("modalImage").classList.remove("hidden");
+        $("modalImagePlaceholder").classList.add("hidden");
+      } else {
+        $("previewImage").classList.add("hidden");
+        $("previewImagePlaceholder").classList.remove("hidden");
+        $("modalImage").classList.add("hidden");
+        $("modalImagePlaceholder").classList.remove("hidden");
+      }
+      lucide.createIcons();
+    }
+
+    // Moments
+    function momentTemplate() {
+      return `
+        <div class="moment rounded-lg border border-line bg-[#17181a] p-4">
+          <div class="mb-3 flex items-center justify-between">
+            <span class="moment-index text-[10px] font-semibold uppercase tracking-[0.14em] text-muted"></span>
+            <button type="button" class="remove-moment text-xs font-semibold text-muted hover:text-whiteish">Remove</button>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-[1fr_110px]">
+            <input class="field px-3 py-2.5 text-sm" placeholder="Moment title">
+            <input type="number" min="0" class="moment-minutes field px-3 py-2.5 text-sm" placeholder="Minutes">
+            <textarea rows="2" class="field resize-none px-3 py-2.5 text-sm sm:col-span-2" placeholder="What happens in this part?"></textarea>
+          </div>
+          <div class="moment-photo-field">
+            <div class="moment-photo-preview hidden shrink-0"><img class="h-full w-full object-cover" alt="Moment photo preview"></div>
+            <label class="moment-photo-action cursor-pointer"><span><i data-lucide="image-plus" class="h-4 w-4"></i></span><span>Add a photo</span><input type="file" accept="image/*" class="moment-photo hidden"></label>
+            <span class="ml-auto text-[10px] text-muted">Shown with this moment</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindMoments() {
+      [...document.querySelectorAll(".moment")].forEach((card, index) => {
+        card.querySelector(".moment-index").textContent = `Moment ${String(index + 1).padStart(2,"0")}`;
+        card.querySelector(".remove-moment").onclick = () => {
+          if ($("momentList").children.length > 1) {
+            card.remove();
+            bindMoments();
+            updateMinutes();
+          }
+        };
+        card.querySelector(".moment-minutes").oninput = updateMinutes;
+        const photoInput = card.querySelector(".moment-photo");
+        photoInput.onchange = () => {
+          const file = photoInput.files?.[0];
+          if (!file) return;
+          const preview = card.querySelector(".moment-photo-preview");
+          const image = preview.querySelector("img");
+          image.src = URL.createObjectURL(file);
+          preview.classList.remove("hidden");
+        };
+      });
+      lucide.createIcons();
+    }
+
+    function updateMinutes() {
+      const total = [...document.querySelectorAll(".moment-minutes")].reduce((sum, input) => sum + (Number(input.value) || 0), 0);
+      $("totalMinutes").textContent = `${total} minute${total === 1 ? "" : "s"}`;
+    }
+
+    $("addMoment").addEventListener("click", () => {
+      $("momentList").insertAdjacentHTML("beforeend", momentTemplate());
+      bindMoments();
+    });
+    $("momentList").innerHTML = momentTemplate();
+    bindMoments();
+
+    // Checklist
+    function checklistTemplate() {
+      return `
+        <div class="checklist rounded-lg border border-line bg-[#17181a] p-4">
+          <div class="mb-3 flex items-center justify-between">
+            <span class="checklist-index text-[10px] font-semibold uppercase tracking-[0.14em] text-muted"></span>
+            <button type="button" class="remove-checklist text-xs font-semibold text-muted hover:text-whiteish">Remove</button>
+          </div>
+          <div class="space-y-3">
+            <input class="field px-3 py-2.5 text-sm" placeholder="Section title">
+            <textarea rows="4" class="field resize-none px-3 py-2.5 text-sm" placeholder="Use one line per checklist item"></textarea>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindChecklists() {
+      [...document.querySelectorAll(".checklist")].forEach((card,index) => {
+        card.querySelector(".checklist-index").textContent = `Section ${String(index + 1).padStart(2,"0")}`;
+        card.querySelector(".remove-checklist").onclick = () => {
+          if ($("checklistList").children.length > 1) {
+            card.remove();
+            bindChecklists();
+          }
+        };
+      });
+    }
+
+    $("addChecklist").onclick = () => {
+      $("checklistList").insertAdjacentHTML("beforeend", checklistTemplate());
+      bindChecklists();
+    };
+    $("checklistList").innerHTML = checklistTemplate();
+    bindChecklists();
+
+    // FAQs
+    function faqTemplate() {
+      return `
+        <div class="faq rounded-lg border border-line bg-[#17181a] p-4">
+          <div class="mb-3 flex items-center justify-between">
+            <span class="faq-index text-[10px] font-semibold uppercase tracking-[0.14em] text-muted"></span>
+            <button type="button" class="remove-faq text-xs font-semibold text-muted hover:text-whiteish">Remove</button>
+          </div>
+          <div class="space-y-3">
+            <input class="field px-3 py-2.5 text-sm" placeholder="Question">
+            <textarea rows="3" class="field resize-none px-3 py-2.5 text-sm" placeholder="Answer"></textarea>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindFaqs() {
+      [...document.querySelectorAll(".faq")].forEach((card,index) => {
+        card.querySelector(".faq-index").textContent = `Question ${String(index + 1).padStart(2,"0")}`;
+        card.querySelector(".remove-faq").onclick = () => {
+          if ($("faqList").children.length > 1) {
+            card.remove();
+            bindFaqs();
+          }
+        };
+      });
+    }
+
+    $("addFaq").onclick = () => {
+      $("faqList").insertAdjacentHTML("beforeend", faqTemplate());
+      bindFaqs();
+    };
+    $("faqList").innerHTML = faqTemplate();
+    bindFaqs();
+
+    // Dates
+    function parseLocalDate(value) {
+      if (value instanceof Date) return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+      const [year, month, day] = String(value).split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    function toISODate(date) {
+      const local = parseLocalDate(date);
+      const year = local.getFullYear();
+      const month = String(local.getMonth() + 1).padStart(2, "0");
+      const day = String(local.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function addCalendarDays(value, amount) {
+      const date = parseLocalDate(value);
+      date.setDate(date.getDate() + amount);
+      return date;
+    }
+
+    function getStartOfWeek(value = new Date()) {
+      const date = parseLocalDate(value);
+      const weekday = date.getDay();
+      const offset = weekday === 0 ? -6 : 1 - weekday;
+      date.setDate(date.getDate() + offset);
+      return toISODate(date);
+    }
+
+    function getWeekDates() {
+      const start = parseLocalDate(state.scheduleWeekStart || getStartOfWeek());
+      return Array.from({ length: 7 }, (_, index) => toISODate(addCalendarDays(start, index)));
+    }
+
+    function formatWeekRange() {
+      const dates = getWeekDates();
+      const start = parseLocalDate(dates[0]);
+      const end = parseLocalDate(dates[6]);
+      const sameMonth = start.getMonth() === end.getMonth();
+      const sameYear = start.getFullYear() === end.getFullYear();
+      const startLabel = new Intl.DateTimeFormat("en", {
+        day: "numeric",
+        month: sameMonth ? undefined : "short",
+        year: sameYear ? undefined : "numeric"
+      }).format(start);
+      const endLabel = new Intl.DateTimeFormat("en", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      }).format(end);
+      return `${startLabel} - ${endLabel}`;
+    }
+
+    function normaliseScheduleDates() {
+      state.dates = state.dates
+        .filter(dateBlock => dateBlock.date && dateBlock.intervals?.length)
+        .map(dateBlock => ({
+          ...dateBlock,
+          intervals: dateBlock.intervals
+            .filter(interval => interval.start && interval.end)
+            .sort((a, b) => a.start.localeCompare(b.start))
+        }))
+        .filter(dateBlock => dateBlock.intervals.length)
+        .sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function getSelectedInterval(date, interval) {
+      const dateBlock = state.dates.find(item => item.date === date);
+      return dateBlock?.intervals.find(item => item.start === interval.start && item.end === interval.end);
+    }
+
+    function toggleSession(date, interval) {
+      let dateBlock = state.dates.find(item => item.date === date);
+      const selectedInterval = getSelectedInterval(date, interval);
+
+      if (selectedInterval && dateBlock) {
+        dateBlock.intervals = dateBlock.intervals.filter(item => item.id !== selectedInterval.id);
+      } else if (dateBlock) {
+        dateBlock.intervals.push({ id: makeId("interval"), start: interval.start, end: interval.end });
+      } else {
+        state.dates.push({
+          id: makeId("date"),
+          date,
+          intervals: [{ id: makeId("interval"), start: interval.start, end: interval.end }]
+        });
+      }
+
+      normaliseScheduleDates();
+      renderSchedule();
+      updatePreview();
+      markSaving();
+    }
+
+    function durationLabel(start, end) {
+      if (!start || !end) return "";
+      const [startHour, startMinute] = start.split(":").map(Number);
+      const [endHour, endMinute] = end.split(":").map(Number);
+      const minutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+      if (minutes <= 0) return "Invalid interval";
+      const hours = Math.floor(minutes / 60);
+      const remaining = minutes % 60;
+      if (!hours) return `${remaining} min`;
+      if (!remaining) return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+      return `${hours}h ${remaining}m`;
+    }
+
+    function renderSchedule() {
+      if (!state.scheduleWeekStart) state.scheduleWeekStart = getStartOfWeek();
+      const weekDates = getWeekDates();
+      const today = toISODate(new Date());
+      const selectedCount = state.dates.reduce((sum, dateBlock) => sum + dateBlock.intervals.length, 0);
+
+      $("scheduleWeekLabel").textContent = formatWeekRange();
+      $("selectedSessionsCount").textContent = `${selectedCount} ${selectedCount === 1 ? "session" : "sessions"}`;
+
+      const dayHeaders = weekDates.map(dateValue => {
+        const date = parseLocalDate(dateValue);
+        const dayName = new Intl.DateTimeFormat("en", { weekday: "short" }).format(date);
+        const dayNumber = new Intl.DateTimeFormat("en", { day: "numeric" }).format(date);
+        const isToday = dateValue === today;
+        return `
+          <div class="flex min-h-[62px] flex-col items-center justify-center rounded-xl ${isToday ? "bg-whiteish text-[#111214]" : "bg-panel text-soft"}">
+            <span class="text-[10px] font-semibold uppercase tracking-[0.12em] ${isToday ? "text-[#5f6168]" : "text-muted"}">${dayName}</span>
+            <span class="mt-1 text-sm font-semibold">${dayNumber}</span>
+          </div>`;
+      }).join("");
+
+      const intervalRows = state.scheduleIntervals.map(interval => {
+        const cells = weekDates.map(dateValue => {
+          const selectedCell = Boolean(getSelectedInterval(dateValue, interval));
+          const isPast = dateValue < today;
+          const disabled = isPast && !selectedCell;
+          const classes = selectedCell
+            ? "border-stone-950 bg-whiteish text-[#111214] shadow-sm"
+            : disabled
+              ? "cursor-not-allowed border-line bg-[#242529] text-[#5f6168]"
+              : "border-line bg-panel text-muted hover:border-[#62646c] hover:bg-[#2b2c30] hover:text-whiteish";
+          return `
+            <button type="button"
+              data-session-date="${dateValue}"
+              data-session-interval="${interval.id}"
+              ${disabled ? "disabled" : ""}
+              class="group flex min-h-[76px] flex-col items-center justify-center rounded-xl border transition ${classes}"
+              aria-pressed="${selectedCell}">
+              <span class="grid h-6 w-6 place-items-center rounded-full ${selectedCell ? "bg-[#1b1c1f]/15" : disabled ? "bg-transparent" : "bg-[#242529] group-hover:bg-[#1b1c1f]"}">
+                <i data-lucide="${selectedCell ? "check" : isPast ? "minus" : "plus"}" class="h-3.5 w-3.5"></i>
+              </span>
+              <span class="mt-1.5 text-[10px] font-semibold">${selectedCell ? "Added" : isPast ? "Past" : "Add"}</span>
+            </button>`;
+        }).join("");
+
+        return `
+          <div class="contents">
+            <div class="flex min-h-[76px] items-center rounded-xl bg-[#242529] px-3">
+              <div>
+                <p class="text-xs font-semibold text-whiteish">${interval.start}-${interval.end}</p>
+                <p class="mt-1 text-[10px] text-muted">${durationLabel(interval.start, interval.end)}</p>
+              </div>
+            </div>
+            ${cells}
+          </div>`;
+      }).join("");
+
+      $("scheduleGrid").innerHTML = `
+        <div class="grid grid-cols-[112px_repeat(7,minmax(82px,1fr))] gap-1.5">
+          <div class="flex items-end px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">Intervals</div>
+          ${dayHeaders}
+          ${intervalRows}
+        </div>`;
+
+      $("intervalChips").innerHTML = state.scheduleIntervals.map(interval => `
+        <span class="inline-flex items-center gap-1 rounded-full border border-line bg-[#17181a] py-1.5 pl-3 pr-1.5 text-xs font-semibold text-soft">
+          ${interval.start}-${interval.end}
+          <button type="button" data-remove-schedule-interval="${interval.id}" class="grid h-5 w-5 place-items-center rounded-full text-muted transition hover:bg-panel hover:text-red-400" aria-label="Remove ${interval.start} to ${interval.end}">
+            <i data-lucide="x" class="h-3 w-3"></i>
+          </button>
+        </span>
+      `).join("");
+
+      document.querySelectorAll("[data-session-date]").forEach(button => {
+        button.addEventListener("click", () => {
+          const interval = state.scheduleIntervals.find(item => item.id === button.dataset.sessionInterval);
+          if (interval) toggleSession(button.dataset.sessionDate, interval);
+        });
+      });
+
+      document.querySelectorAll("[data-remove-schedule-interval]").forEach(button => {
+        button.addEventListener("click", () => {
+          if (state.scheduleIntervals.length === 1) {
+            showToast("Keep at least one time interval.");
+            return;
+          }
+
+          const interval = state.scheduleIntervals.find(item => item.id === button.dataset.removeScheduleInterval);
+          if (!interval) return;
+          const selectedUses = state.dates.reduce(
+            (sum, dateBlock) => sum + dateBlock.intervals.filter(item => item.start === interval.start && item.end === interval.end).length,
+            0
+          );
+
+          if (selectedUses && !window.confirm(`Remove this interval and ${selectedUses} selected ${selectedUses === 1 ? "session" : "sessions"}?`)) return;
+
+          state.scheduleIntervals = state.scheduleIntervals.filter(item => item.id !== interval.id);
+          state.dates.forEach(dateBlock => {
+            dateBlock.intervals = dateBlock.intervals.filter(item => !(item.start === interval.start && item.end === interval.end));
+          });
+          normaliseScheduleDates();
+          renderSchedule();
+          updatePreview();
+          markSaving();
+        });
+      });
+
+      lucide.createIcons();
+    }
+
+    $("previousWeekButton").addEventListener("click", () => {
+      state.scheduleWeekStart = toISODate(addCalendarDays(state.scheduleWeekStart || getStartOfWeek(), -7));
+      renderSchedule();
+      markSaving();
+    });
+
+    $("nextWeekButton").addEventListener("click", () => {
+      state.scheduleWeekStart = toISODate(addCalendarDays(state.scheduleWeekStart || getStartOfWeek(), 7));
+      renderSchedule();
+      markSaving();
+    });
+
+    $("todayWeekButton").addEventListener("click", () => {
+      state.scheduleWeekStart = getStartOfWeek();
+      renderSchedule();
+      markSaving();
+    });
+
+    $("addIntervalButton").addEventListener("click", () => {
+      $("intervalEditor").classList.remove("hidden");
+      $("intervalError").classList.add("hidden");
+      $("newIntervalStart").focus();
+    });
+
+    $("cancelIntervalButton").addEventListener("click", () => {
+      $("intervalEditor").classList.add("hidden");
+      $("intervalError").classList.add("hidden");
+    });
+
+    $("saveIntervalButton").addEventListener("click", () => {
+      const start = $("newIntervalStart").value;
+      const end = $("newIntervalEnd").value;
+      const error = $("intervalError");
+      const duplicate = state.scheduleIntervals.some(interval => interval.start === start && interval.end === end);
+
+      error.classList.add("hidden");
+      if (!start || !end) {
+        error.textContent = "Choose both a start and end time.";
+        error.classList.remove("hidden");
+        return;
+      }
+      if (start >= end) {
+        error.textContent = "The end time must be later than the start time.";
+        error.classList.remove("hidden");
+        return;
+      }
+      if (duplicate) {
+        error.textContent = "This time interval already exists.";
+        error.classList.remove("hidden");
+        return;
+      }
+
+      state.scheduleIntervals.push({ id: makeId("schedule-interval"), start, end });
+      state.scheduleIntervals.sort((a, b) => a.start.localeCompare(b.start));
+      $("intervalEditor").classList.add("hidden");
+      renderSchedule();
+      updatePreview();
+      markSaving();
+    });
+
+    // Venue
+    $("venueFormat").addEventListener("change", () => {
+      const online = $("venueFormat").value === "Online";
+      $("venueNameWrap").classList.toggle("hidden", online);
+      $("addressWrap").classList.toggle("hidden", online);
+      $("arrivalLabel").textContent = online ? "Joining instructions" : "Arrival instructions";
+      updatePreview();
+      updateReview();
+    });
+
+    // Access
+    document.querySelectorAll('input[name="access"]').forEach(input => {
+      input.addEventListener("change", () => {
+        $("priceWrap").classList.toggle("hidden", selected("access") !== "Paid");
+        updatePreview();
+        updateReview();
+      });
+    });
+
+    function formatDate(value) {
+      if (!value) return "Not set";
+      const date = new Date(`${value}T00:00:00`);
+      return date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+    }
+
+    function selectedSessions() {
+      return state.dates
+        .map(dateBlock => ({
+          ...dateBlock,
+          intervals: [...dateBlock.intervals].sort((a, b) => a.start.localeCompare(b.start))
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function firstSessionBlock() {
+      const firstDate = selectedSessions()[0];
+      const firstInterval = firstDate?.intervals[0];
+      return { firstDate, firstInterval };
+    }
+
+    function previewDateText() {
+      const { firstDate, firstInterval } = firstSessionBlock();
+      if (!firstDate) return "Not set";
+      const time = firstInterval ? ` · ${firstInterval.start}-${firstInterval.end}` : "";
+      return `${formatDate(firstDate.date)}${time}`;
+    }
+
+    function scheduleIsReady() {
+      return state.dates.some(dateBlock => dateBlock.date && dateBlock.intervals.some(interval => interval.start && interval.end && interval.start < interval.end));
+    }
+
+    function priceText() {
+      const access = selected("access") || "Free";
+      if (access !== "Paid") return access;
+      const amount = Number($("price").value || 0);
+      return amount ? `${new Intl.NumberFormat("vi-VN").format(amount)}₫` : "Price not set";
+    }
+
+    function updatePreview() {
+      const type = selected("type") || "Workshop";
+      const format = $("format").value;
+      const category = $("category").value || "Not set";
+      const level = selected("level") || "Beginner";
+      const title = $("title").value.trim() || "Your event title";
+      const promise = $("promise").value.trim() || "Add a clear promise so guests understand what they will gain.";
+      const outcome = state.outcomes.join(" · ") || "Add the experience outcome to preview this section.";
+      const date = previewDateText();
+      const capacity = $("capacity").value ? `${$("capacity").value} guests` : "Not set";
+      const price = priceText();
+
+      $("previewMeta").textContent = `${type}, ${format}`;
+      $("previewTitle").textContent = title;
+      $("previewPromise").textContent = promise;
+      $("previewCategory").textContent = category;
+      $("previewLevel").textContent = level;
+      $("previewDate").textContent = date;
+      $("previewCapacity").textContent = capacity;
+      $("previewPrice").textContent = price;
+
+      $("modalType").textContent = type;
+      $("modalFormat").textContent = format;
+      $("modalCategory").textContent = category === "Not set" ? "Category" : category;
+      $("modalTitle").textContent = title;
+      $("modalPromise").textContent = promise;
+      $("modalDate").textContent = date;
+      $("modalCapacity").textContent = capacity;
+      $("modalPrice").textContent = price;
+      $("modalOutcome").textContent = outcome;
+
+      updateReview();
+    }
+
+    ["format","category","capacity","price","cancellation","refund"].forEach(id => {
+      $(id).addEventListener("input", updatePreview);
+      $(id).addEventListener("change", updatePreview);
+    });
+    document.querySelectorAll('input[name="type"],input[name="level"],input[name="visibility"]').forEach(input => input.addEventListener("change", updatePreview));
+
+    const reviewItems = [
+      { label: "Essential details", target: "idea", test: () => $("title").value.trim() && $("promise").value.trim() && $("category").value },
+      { label: "Experience and FAQs", target: "experience", test: () => state.outcomes.length > 0 },
+      { label: "Time and location", target: "time-place", test: () => scheduleIsReady() && ($("venueFormat").value === "Online" || ($("venueName").value.trim() && $("address").value.trim())) },
+      { label: "Capacity and price", target: "access-pricing", test: () => $("capacity").value && (selected("access") !== "Paid" || $("price").value) },
+      { label: "Cover image", target: "idea", test: () => state.images.length > 0 },
+      { label: "Cancellation policy", target: "access-pricing", test: () => $("cancellation").value && $("refund").value }
+    ];
+
+    function updateReview() {
+      const grid = $("reviewGrid");
+      grid.innerHTML = reviewItems.map(item => {
+        const complete = Boolean(item.test());
+        return `
+          <button type="button" data-jump="${item.target}" class="flex items-center justify-between rounded-lg border border-line bg-[#17181a] p-3 text-left hover:border-[#474a50]">
+            <span>
+              <span class="block text-sm font-semibold">${item.label}</span>
+              <span class="mt-1 block text-xs ${complete ? "text-[#8fb99a]" : "text-muted"}">${complete ? "Complete" : "Needs attention"}</span>
+            </span>
+            <i data-lucide="${complete ? "check-circle-2" : "arrow-up-right"}" class="h-4 w-4 ${complete ? "text-[#8fb99a]" : "text-muted"}"></i>
+          </button>
+        `;
+      }).join("");
+
+      const incomplete = reviewItems.filter(item => !item.test());
+      $("statusPanel").innerHTML = incomplete.length ? `
+        <div class="flex gap-3">
+          <i data-lucide="triangle-alert" class="mt-0.5 h-4 w-4 shrink-0 text-[#c9a76a]"></i>
+          <div>
+            <p class="text-sm font-semibold">A few details need attention.</p>
+            <p class="mt-1 text-xs leading-5 text-muted">Complete ${incomplete.length} review item${incomplete.length === 1 ? "" : "s"} before publishing.</p>
+          </div>
+        </div>
+      ` : `
+        <div class="flex gap-3">
+          <i data-lucide="check-circle-2" class="mt-0.5 h-4 w-4 shrink-0 text-[#8fb99a]"></i>
+          <div>
+            <p class="text-sm font-semibold">Your listing is ready.</p>
+            <p class="mt-1 text-xs leading-5 text-muted">Preview the guest experience, then publish when ready.</p>
+          </div>
+        </div>
+      `;
+
+      document.querySelectorAll("[data-jump]").forEach(button => {
+        button.onclick = () => {
+          const section = $(button.dataset.jump);
+          section.scrollIntoView({ behavior: "smooth" });
+          section.classList.add("section-flash");
+          setTimeout(() => section.classList.remove("section-flash"), 1200);
+        };
+      });
+      lucide.createIcons();
+    }
+
+    // Modal
+    function openModal() {
+      updatePreview();
+      $("previewModal").classList.remove("hidden");
+      $("previewModal").classList.add("flex");
+      document.body.classList.add("overflow-hidden");
+    }
+    function closeModal() {
+      $("previewModal").classList.add("hidden");
+      $("previewModal").classList.remove("flex");
+      document.body.classList.remove("overflow-hidden");
+    }
+    $("previewButton").onclick = openModal;
+    $("closePreview").onclick = closeModal;
+    $("previewModal").onclick = (event) => { if (event.target === $("previewModal")) closeModal(); };
+
+    function splitList(value) {
+      return value.split(/\n|,/).map(item => item.trim()).filter(Boolean);
+    }
+
+    function fileToDataUrl(file) {
+      if (!file) return Promise.resolve("");
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function createSlug(title) {
+      const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      return `${base || "event"}-${Date.now().toString(36)}`;
+    }
+
+    function readCreatorProfile() {
+      let account = {};
+      let tutor = {};
+      try { account = JSON.parse(localStorage.getItem("tutoria_signup") || "{}"); } catch {}
+      try { tutor = JSON.parse(localStorage.getItem("tutoria_tutor_profile_submission") || "{}"); } catch {}
+      const host = tutor.displayName?.trim() || account.name?.trim() || "Tutoria member";
+      const creatorId = account.completed && account.email ? String(account.email).trim().toLowerCase() : "";
+      return {
+        id: creatorId,
+        host,
+        role: tutor.role?.trim() || "Tutoria host and educator",
+        experience: tutor.skills?.length ? `Teaches ${tutor.skills.join(", ")}` : "Community event host",
+        bio: tutor.about?.trim() || tutor.headline?.trim() || `${host} creates practical, welcoming learning experiences on Tutoria.`,
+        image: tutor.photoUrl || `https://picsum.photos/seed/${encodeURIComponent(account.email || host)}/240/240`,
+      };
+    }
+
+    async function createPublishedEvent() {
+      const type = selected("type") || "Workshop";
+      const format = $("format").value === "Online" || $("venueFormat").value === "Online" ? "Online" : "In person";
+      const title = $("title").value.trim();
+      const promise = $("promise").value.trim();
+      const outcomes = state.outcomes;
+      const category = $("category").value;
+      const level = selected("level") || "Beginner";
+      const access = selected("access") || "Free";
+      const capacity = Number($("capacity").value || 0);
+      const amount = Number($("price").value || 0);
+      const creator = readCreatorProfile();
+      const imageUrls = await Promise.all(state.images.map(fileToDataUrl));
+      const cover = imageUrls[0] || "";
+      const moments = await Promise.all([...document.querySelectorAll(".moment")].map(async (card) => {
+        const inputs = card.querySelectorAll("input");
+        const imageFile = card.querySelector(".moment-photo")?.files?.[0];
+        return {
+          title: inputs[0]?.value.trim() || "Workshop activity",
+          duration: `${Number(inputs[1]?.value || 0)} min`,
+          description: card.querySelector("textarea")?.value.trim() || "Details will be shared before the event.",
+          image: imageFile ? await fileToDataUrl(imageFile) : undefined,
+        };
+      }));
+      const totalMinutes = moments.reduce((sum, item) => sum + (Number(item.duration.replace(/[^0-9]/g, "")) || 0), 0);
+      const dates = selectedSessions().map((dateBlock, index) => {
+        return {
+          id: `session-${index + 1}`,
+          date: formatDate(dateBlock.date),
+          times: dateBlock.intervals.map(interval => `${interval.start} - ${interval.end}`),
+        };
+      });
+      const { firstDate, firstInterval } = firstSessionBlock();
+      const included = state.included;
+      const bring = state.bring;
+      const arrival = document.querySelector('#time-place textarea')?.value.trim() || "";
+      const faqs = [...document.querySelectorAll(".faq")].map((card) => ({
+        question: card.querySelector("input")?.value.trim() || "What should I know before attending?",
+        answer: card.querySelector("textarea")?.value.trim() || "The host will share final details before the event.",
+      }));
+      const beforeYouAttend = [...document.querySelectorAll(".checklist")].map((card) => ({
+        title: card.querySelector("input")?.value.trim() || "Preparation",
+        items: splitList(card.querySelector("textarea")?.value || ""),
+      })).filter(group => group.items.length);
+      const dateLabel = firstDate ? new Intl.DateTimeFormat("en", { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${firstDate.date}T00:00:00`)) : "Date TBA";
+      const price = access === "Paid" ? `${new Intl.NumberFormat("vi-VN").format(amount)} đ` : access;
+      const location = format === "Online" ? "Online" : ($("address").value.trim() || $("venueName").value.trim());
+      const cancellation = $("cancellation").value || "Cancellation deadline not set";
+      const refund = $("refund").value || "Refund policy not set";
+
+      return {
+        creatorId: creator.id,
+        creatorName: creator.host,
+        slug: createSlug(title), title, host: creator.host, date: dateLabel, time: firstInterval ? `${firstInterval.start} - ${firstInterval.end}` : "Time TBA", location,
+        type: format, price, attending: 0, capacity, image: cover, topic: category, level,
+        subtitle: promise, rating: 0, reviewCount: 0, duration: totalMinutes ? `${totalMinutes} minutes` : "Flexible",
+        languages: splitList($("languages").value), minimumAge: "All ages",
+        accessibility: format === "Online" ? "Join from any device" : "Contact the host for access details",
+        studioName: format === "Online" ? "Online session" : ($("venueName").value.trim() || "Venue to be announced"),
+        address: format === "Online" ? "Joining details shared after booking" : ($("address").value.trim() || "Address to be announced"),
+        sessions: dates, spotsLeft: capacity, about: [promise, ...outcomes].filter(Boolean),
+        note: arrival || `Suitable for ${level.toLowerCase()} participants.`,
+        highlights: [
+          { title: `${capacity} places`, description: "A focused group experience." },
+          { title: totalMinutes ? `${totalMinutes} minutes` : "Flexible timing", description: "A clearly structured programme." },
+          { title: format, description: format === "Online" ? "Join from wherever you are." : "Learn together in person." },
+          { title: level, description: `Designed for ${level.toLowerCase()} participants.` },
+        ],
+        learn: outcomes, included, bring: bring.length ? bring : ["Nothing special is required"],
+        plan: moments, faqs, galleryImage: imageUrls[1] || cover,
+        hostRole: creator.role, hostExperience: creator.experience, hostBio: creator.bio, hostImage: creator.image,
+        hostRecommendation: "New host", beforeYouAttend,
+        cancellation: [`${cancellation}. ${refund}.`, "If the host cancels, guests can choose another session or receive a full refund."],
+        reviews: [], visibility: selected("visibility") || "Public", experienceType: type,
+      };
+    }
+
+    $("creatorForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const incomplete = reviewItems.filter(item => !item.test());
+      if (incomplete.length) {
+        $("review").scrollIntoView({ behavior: "smooth" });
+        showToast("Complete the review items before publishing");
+      } else {
+        try {
+          const publishedEvent = await createPublishedEvent();
+          const response = await fetch("/api/events", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(publishedEvent),
+          });
+          if (!response.ok) throw new Error("The shared event store rejected this listing.");
+          const payload = await response.json();
+          const savedEvent = payload?.event || publishedEvent;
+          try {
+            const key = "tutoria-published-events";
+            const existing = JSON.parse(localStorage.getItem(key) || "[]");
+            const events = Array.isArray(existing) ? existing : [];
+            localStorage.setItem(key, JSON.stringify([savedEvent, ...events.filter(item => item.slug !== savedEvent.slug)]));
+          } catch (storageError) {
+            console.warn("The browser copy could not be saved; the shared listing was published.", storageError);
+          }
+          showToast("Event published. Opening its public page...");
+          window.parent.postMessage({ type: "tutoria-event-published", slug: savedEvent.slug }, window.location.origin);
+          setTimeout(() => { window.top.location.href = `/events/${savedEvent.slug}`; }, 450);
+        } catch (error) {
+          console.error(error);
+          showToast("Could not publish this event. Try smaller images.");
+        }
+      }
+    });
+
+    ["venueName","address"].forEach(id => $(id).addEventListener("input", updateReview));
+
+    state.scheduleIntervals = [
+      { id: makeId("schedule-interval"), start: "09:00", end: "12:00" },
+      { id: makeId("schedule-interval"), start: "14:00", end: "18:00" },
+      { id: makeId("schedule-interval"), start: "18:00", end: "21:00" }
+    ];
+    state.scheduleWeekStart = getStartOfWeek();
+    normaliseScheduleDates();
+    renderSchedule();
+    updatePreview();
+    lucide.createIcons();
+  </script>
+</body>
+</html>

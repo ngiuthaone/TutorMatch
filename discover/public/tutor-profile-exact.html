@@ -1,0 +1,3425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thu Ha — Charcoal & Gray Theme | Tutoria</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    (() => {
+      const params = new URLSearchParams(window.location.search);
+      const requestedName = decodeURIComponent(String(params.get("name") || "").replace(/\+/g, " ")).trim();
+      if (requestedName) document.documentElement.dataset.profilePending = "true";
+    })();
+  </script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: "#F2F2F3",
+            canvas: "#101011",
+            line: "#343437",
+            muted: "#929297",
+            accent: "#F1F1F2",
+            accentDark: "#DADADC"
+          },
+          boxShadow: {
+            soft: "0 20px 60px rgba(0,0,0,.30)",
+            card: "0 1px 0 rgba(255,255,255,.025), 0 14px 34px rgba(0,0,0,.20)"
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root { --profile-nav-top: 0px; }
+    html[data-profile-pending="true"] body { visibility: hidden; }
+    html { scroll-behavior: smooth; }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { scrollbar-width: none; }
+    .availability-cell { min-height: 42px; }
+    .tab-active { color: #F2F2F3; border-color: #F2F2F3; }
+    .tab-panel {
+      display: block;
+      scroll-margin-top: calc(var(--profile-nav-top, 0px) + 88px);
+    }
+
+    #profileNavigator {
+      position: sticky;
+      top: var(--profile-nav-top, 0px);
+      z-index: 55;
+      background: rgba(16, 16, 17, .97);
+      border-color: #343437;
+      box-shadow: 0 1px 0 rgba(255,255,255,.03), 0 18px 38px rgba(0,0,0,.22);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      transition: top 240ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .profile-section {
+      position: relative;
+      padding-top: 76px;
+    }
+
+    .profile-section:first-child {
+      padding-top: 0;
+    }
+
+    .profile-section + .profile-section {
+      margin-top: 88px;
+      border-top: 1px solid #343437;
+    }
+
+    .profile-scroll-progress {
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 80ms linear;
+    }
+
+    body.scroll-animations .scroll-reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity .65s cubic-bezier(.2,.75,.25,1), transform .65s cubic-bezier(.2,.75,.25,1);
+    }
+
+    body.scroll-animations .scroll-reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      body.scroll-animations .scroll-reveal,
+      body.scroll-animations .scroll-reveal.is-visible {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+  
+    :root { color-scheme: dark; }
+
+    body {
+      background: #101011;
+      color: #F2F2F3;
+    }
+
+    ::selection {
+      background: rgba(255,255,255,.18);
+      color: #FFFFFF;
+    }
+
+    /* Main neutral palette */
+    .bg-canvas { background-color: #101011 !important; }
+    .bg-canvas\/90,
+    .bg-canvas\/95 { background-color: rgba(16,16,17,.96) !important; }
+
+    .bg-white { background-color: #1B1B1D !important; }
+    .bg-white\/95 { background-color: rgba(27,27,29,.96) !important; }
+    .bg-white\/15 { background-color: rgba(255,255,255,.10) !important; }
+
+    .bg-neutral-100,
+    .bg-neutral-200 { background-color: #29292C !important; }
+
+    .text-ink { color: #F2F2F3 !important; }
+    .text-neutral-700 { color: #B2B2B6 !important; }
+    .text-muted { color: #929297 !important; }
+
+    .border-line { border-color: #343437 !important; }
+    .bg-line { background-color: #343437 !important; }
+    .decoration-line { text-decoration-color: #56565C !important; }
+
+    /* Light primary controls on charcoal backgrounds */
+    .bg-ink {
+      background-color: #F1F1F2 !important;
+      color: #161617 !important;
+    }
+
+    .bg-ink.text-white,
+    .bg-ink .text-white {
+      color: #161617 !important;
+    }
+
+    .bg-accent {
+      background-color: #F1F1F2 !important;
+      color: #161617 !important;
+    }
+
+    .bg-accent\/40,
+    .bg-accent\/50,
+    .bg-accent\/55,
+    .bg-accent\/60 {
+      background-color: #2A2A2D !important;
+    }
+
+    .text-accent { color: #F2F2F3 !important; }
+
+    .hover\:bg-accent:hover,
+    .hover\:bg-accentDark:hover {
+      background-color: #DADADC !important;
+      color: #161617 !important;
+    }
+
+    .hover\:border-ink:hover {
+      border-color: #77777D !important;
+    }
+
+    .hover\:text-ink:hover {
+      color: #FFFFFF !important;
+    }
+
+    .status-dot {
+      background-color: #A8A8AD !important;
+      box-shadow: 0 0 0 4px rgba(255,255,255,.06);
+    }
+
+    /* Inputs and selectors */
+    select,
+    input,
+    textarea {
+      color: #F2F2F3;
+    }
+
+    select option {
+      background: #1B1B1D;
+      color: #F2F2F3;
+    }
+
+    /* Cards and imagery */
+    .shadow-card {
+      box-shadow: 0 1px 0 rgba(255,255,255,.025), 0 14px 34px rgba(0,0,0,.20) !important;
+    }
+
+    .shadow-soft {
+      box-shadow: 0 20px 60px rgba(0,0,0,.30) !important;
+    }
+
+    img {
+      color-scheme: normal;
+    }
+
+    /* Make selected pricing and schedule states restrained */
+    .rate-card.selected,
+    .sidebar-duration.selected {
+      border-color: #E2E2E4 !important;
+      background-color: #242426 !important;
+    }
+
+    .availability-cell.bg-accent\/55 {
+      border: 1px solid #444449;
+      color: #EAEAEC !important;
+    }
+
+    .availability-cell.bg-accent\/55:hover {
+      background-color: #343437 !important;
+      color: #FFFFFF !important;
+    }
+
+    /* Focus styling */
+    button:focus-visible,
+    a:focus-visible,
+    select:focus-visible {
+      outline: 2px solid rgba(255,255,255,.72);
+      outline-offset: 2px;
+    }
+
+  
+    :root {
+      --signal: #D7D7DA;
+      --signal-strong: #F5F5F6;
+      --signal-soft: rgba(255,255,255,.075);
+      --signal-border: rgba(255,255,255,.22);
+      --signal-ink: #171719;
+    }
+
+    .important-badge {
+      border-color: var(--signal-border) !important;
+      background: var(--signal-soft) !important;
+      color: var(--signal-strong) !important;
+    }
+
+    .important-badge svg,
+    .rating-signal svg { color: var(--signal) !important; }
+
+    .availability-signal { color: var(--signal-strong) !important; }
+
+    .availability-signal-dot {
+      background: var(--signal) !important;
+      box-shadow: 0 0 0 4px rgba(255,255,255,.06);
+    }
+
+    .tab-active {
+      color: var(--signal-strong) !important;
+      border-color: var(--signal) !important;
+    }
+
+    .primary-action {
+      background: var(--signal) !important;
+      color: var(--signal-ink) !important;
+      border-color: var(--signal) !important;
+    }
+
+    .primary-action:hover {
+      background: var(--signal-strong) !important;
+      color: var(--signal-ink) !important;
+    }
+
+    .selected-price {
+      border-color: var(--signal) !important;
+      background: var(--signal-soft) !important;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+
+    .popular-badge {
+      background: var(--signal) !important;
+      color: var(--signal-ink) !important;
+    }
+
+    .price-signal { color: var(--signal-strong) !important; }
+
+    .availability-cell.bg-accent\/55 {
+      border-color: var(--signal-border) !important;
+      background: var(--signal-soft) !important;
+      color: var(--signal-strong) !important;
+    }
+
+    .availability-cell.bg-accent\/55:hover {
+      border-color: var(--signal) !important;
+      background: rgba(255,255,255,.12) !important;
+      color: #FFFFFF !important;
+    }
+
+
+    /* Booking flow */
+    .booking-panel { display: none; }
+    .booking-panel.active { display: block; }
+
+    .booking-progress {
+      color: #74747A;
+      border-color: transparent;
+    }
+
+    .booking-progress.active,
+    .booking-progress.complete {
+      color: #F5F5F6;
+    }
+
+    .booking-progress.active .booking-progress-number,
+    .booking-progress.complete .booking-progress-number {
+      border-color: rgba(255,255,255,.72);
+      background: rgba(255,255,255,.10);
+      color: #FFFFFF;
+    }
+
+    .booking-date.active,
+    .booking-time.selected,
+    .format-option.selected,
+    .frequency-option.selected,
+    .booking-mode-option.selected,
+    .recurrence-option.selected {
+      border-color: rgba(255,255,255,.72) !important;
+      background: rgba(255,255,255,.085) !important;
+      color: #FFFFFF !important;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+
+    .booking-time:disabled {
+      opacity: .32;
+      cursor: not-allowed;
+    }
+
+    .booking-drawer {
+      transform: translateY(14px) scale(.985);
+      opacity: 0;
+      transition: transform .24s ease, opacity .24s ease;
+      transform-origin: center;
+    }
+
+    #bookingModal.flex .booking-drawer {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+
+    .booking-date-count {
+      display: none;
+      min-width: 18px;
+      height: 18px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: #F1F1F2;
+      color: #161617;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .booking-date.has-selection .booking-date-count { display: inline-flex; }
+
+    .booking-date.has-selection:not(.active) {
+      border-color: #55555B;
+      background: rgba(255,255,255,.035);
+    }
+
+    .session-row:last-child { border-bottom: 0; }
+
+    .session-limit-shake { animation: sessionLimitShake .28s ease; }
+
+    @keyframes sessionLimitShake {
+      0%, 100% { transform: translateX(0); }
+      33% { transform: translateX(-4px); }
+      66% { transform: translateX(4px); }
+    }
+
+    .booking-mode-option { min-height: 74px; }
+
+    @media (max-width: 639px) {
+      .booking-mode-option { min-height: auto; }
+    }
+
+
+    .session-editor-card {
+      transition: border-color .18s ease, background-color .18s ease;
+    }
+
+    .session-editor-card.has-issue {
+      border-color: rgba(255,255,255,.40) !important;
+    }
+
+    .session-editor-body { display: none; }
+    .session-editor-card.open .session-editor-body { display: block; }
+    .session-editor-card.open .session-editor-chevron { transform: rotate(180deg); }
+
+    .session-duration-option.selected,
+    .session-format-option.selected {
+      border-color: rgba(255,255,255,.72) !important;
+      background: rgba(255,255,255,.085) !important;
+      color: #FFFFFF !important;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+
+    .session-editor-chevron { transition: transform .18s ease; }
+
+    .session-validation-banner {
+      background: rgba(255,255,255,.055);
+      border-color: rgba(255,255,255,.20);
+    }
+
+    .quick-duration-option.selected {
+      border-color: rgba(255,255,255,.78) !important;
+      background: rgba(255,255,255,.09) !important;
+      color: #FFFFFF !important;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+
+    .quick-session-setup {
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025));
+    }
+
+    .edit-session {
+      color: #D7D7DA;
+    }
+
+    .edit-session:hover {
+      color: #FFFFFF;
+      background: rgba(255,255,255,.07);
+    }
+
+    .summary-session-card {
+      padding: 12px 0;
+    }
+
+    .summary-duration-option {
+      min-width: 0;
+      border: 1px solid #343437;
+      background: transparent;
+      color: #929297;
+      transition: border-color .16s ease, background-color .16s ease, color .16s ease;
+    }
+
+    .summary-duration-option:hover {
+      border-color: #66666C;
+      color: #F2F2F3;
+    }
+
+    .summary-duration-option.selected {
+      border-color: rgba(255,255,255,.78);
+      background: rgba(255,255,255,.09);
+      color: #FFFFFF;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.035);
+    }
+
+    .summary-session-card.has-conflict .summary-session-time {
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 4px;
+      text-decoration-color: #77777D;
+    }
+
+  
+
+    /* Efficient booking flow */
+    .booking-panel { display: none; }
+    .booking-panel.active { display: block; }
+
+    .booking-mode-option,
+    .starting-duration,
+    .booking-date,
+    .booking-time,
+    .recurrence-option,
+    .session-duration-option,
+    .session-format-option {
+      transition: border-color .16s ease, background-color .16s ease, color .16s ease, transform .16s ease;
+    }
+
+    .booking-mode-option.selected,
+    .starting-duration.selected,
+    .booking-date.active,
+    .booking-time.selected,
+    .recurrence-option.selected,
+    .session-duration-option.selected,
+    .session-format-option.selected {
+      border-color: rgba(255,255,255,.76) !important;
+      background: rgba(255,255,255,.085) !important;
+      color: #FFFFFF !important;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.035);
+    }
+
+    .booking-time:disabled { opacity: .28; cursor: not-allowed; }
+    .booking-time:not(:disabled):hover,
+    .booking-date:hover,
+    .starting-duration:hover { border-color: #68686E; }
+
+    .booking-date-count {
+      display: none;
+      min-width: 18px;
+      height: 18px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: #F1F1F2;
+      color: #161617;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .booking-date.has-selection .booking-date-count { display: inline-flex; }
+    .booking-date.has-selection:not(.active) { border-color: #55555B; background: rgba(255,255,255,.035); }
+
+    .booking-drawer {
+      transform: translateY(12px) scale(.988);
+      opacity: 0;
+      transition: transform .22s ease, opacity .22s ease;
+      transform-origin: center;
+    }
+
+    #bookingModal.flex .booking-drawer { transform: translateY(0) scale(1); opacity: 1; }
+
+    .starting-setup {
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.018));
+    }
+
+    .session-summary-row:last-child { border-bottom: 0; }
+    .session-summary-row.has-issue { background: rgba(255,255,255,.035); }
+
+    .session-editor-card { overflow: hidden; transition: border-color .18s ease, background-color .18s ease; }
+    .session-editor-card.has-issue { border-color: rgba(255,255,255,.45) !important; }
+    .session-editor-body { display: none; }
+    .session-editor-card.open .session-editor-body { display: block; }
+    .session-editor-card.open .session-editor-chevron { transform: rotate(180deg); }
+    .session-editor-chevron { transition: transform .18s ease; }
+
+    .booking-progress { color: #74747A; }
+    .booking-progress.active,
+    .booking-progress.complete { color: #F5F5F6; }
+    .booking-progress.active .booking-progress-number,
+    .booking-progress.complete .booking-progress-number {
+      border-color: rgba(255,255,255,.72);
+      background: rgba(255,255,255,.10);
+      color: #FFFFFF;
+    }
+
+    .discover-header-shell {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 60;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    .discover-header {
+      --nav-ink: #f6f4ed;
+      --nav-muted: #aaaeba;
+      --nav-amber: #dba45d;
+      --nav-amber-soft: rgba(219, 164, 93, 0.16);
+      --nav-panel: rgba(15, 22, 34, 0.94);
+      --nav-line: rgba(225, 229, 238, 0.14);
+      position: relative;
+      padding: 18px clamp(24px, 4vw, 56px) 0;
+      color: var(--nav-ink);
+      background: transparent;
+      transform: translate3d(0, 0, 0);
+      transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+      pointer-events: auto;
+    }
+
+    .discover-header.is-hidden {
+      transform: translate3d(0, -100%, 0);
+    }
+
+    .discover-header-inner {
+      width: min(100%, 1440px);
+      min-height: 50px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .discover-wordmark,
+    .discover-mobile-wordmark {
+      position: relative;
+      display: inline-flex;
+      align-items: flex-start;
+      color: #fffdf7;
+      font-family: "Iowan Old Style", "Baskerville", "Times New Roman", serif;
+      font-weight: 400;
+      letter-spacing: -0.045em;
+      line-height: 1;
+      text-decoration: none;
+      text-shadow: 0 0 24px rgba(249, 237, 211, 0.15);
+    }
+
+    .discover-wordmark { font-size: 2rem; }
+    .discover-mobile-wordmark { font-size: 1.75rem; }
+
+    .discover-brand-spark {
+      margin: 0.05rem 0 0 0.32rem;
+      color: var(--nav-amber);
+      font-size: 0.48rem;
+      line-height: 1;
+      text-shadow: 0 0 12px rgba(219, 164, 93, 0.65);
+    }
+
+    .discover-nav {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: clamp(22px, 3.5vw, 58px);
+      flex: 1;
+    }
+
+    .discover-desktop-nav {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .discover-nav-link,
+    .discover-nav-button {
+      position: relative;
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--nav-muted);
+      font: 500 0.82rem/1 Inter, ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 160ms ease;
+    }
+
+    .discover-nav-link:hover,
+    .discover-nav-button:hover,
+    .discover-nav-link.is-active,
+    .discover-nav-button.is-active {
+      color: var(--nav-ink);
+    }
+
+    .discover-nav-link.is-active::after,
+    .discover-nav-button.is-active::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 3px;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--nav-amber);
+      box-shadow: 0 0 8px rgba(219, 164, 93, 0.78);
+      transform: translateX(-50%);
+    }
+
+    .discover-nav-group,
+    .discover-menu-anchor {
+      position: relative;
+    }
+
+    .discover-chevron {
+      transition: transform 180ms ease;
+    }
+
+    .discover-nav-button[aria-expanded="true"] .discover-chevron {
+      transform: rotate(180deg);
+    }
+
+    .discover-dropdown,
+    .discover-user-dropdown {
+      position: absolute;
+      top: calc(100% + 12px);
+      z-index: 30;
+      padding: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(226, 230, 238, 0.14);
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 90% 4%, rgba(219, 164, 93, 0.09), transparent 34%),
+        var(--nav-panel);
+      box-shadow: 0 24px 60px rgba(0, 3, 12, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(24px) saturate(115%);
+      animation: discover-menu-in 150ms ease-out both;
+    }
+
+    .discover-dropdown {
+      left: 0;
+      width: 214px;
+      display: none;
+    }
+
+    .discover-nav-group.is-open .discover-dropdown {
+      display: block;
+    }
+
+    .discover-user-dropdown {
+      right: 0;
+      width: 224px;
+      display: none;
+    }
+
+    .discover-menu-anchor.is-open .discover-user-dropdown {
+      display: block;
+    }
+
+    .discover-dropdown-item,
+    .discover-user-item {
+      width: 100%;
+      min-height: 40px;
+      padding: 9px 11px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      border-radius: 10px;
+      color: #d9dce4;
+      font: 500 0.82rem/1.2 Inter, ui-sans-serif, system-ui, sans-serif;
+      text-decoration: none;
+      transition: color 150ms ease, background-color 150ms ease;
+    }
+
+    .discover-dropdown-item:hover,
+    .discover-user-item:hover,
+    .discover-dropdown-item.is-active {
+      color: #fffdf7;
+      background: rgba(232, 235, 242, 0.08);
+    }
+
+    .discover-dropdown-item.is-active {
+      box-shadow: inset 2px 0 0 var(--nav-amber);
+    }
+
+    .discover-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .discover-creator-link {
+      min-height: 40px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      color: var(--nav-muted);
+      font: 600 0.78rem/1 Inter, ui-sans-serif, system-ui, sans-serif;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: color 160ms ease;
+    }
+
+    .discover-creator-link:hover {
+      color: var(--nav-ink);
+    }
+
+    .discover-icon-button,
+    .discover-avatar-button,
+    .discover-mobile-menu-button,
+    .discover-mobile-close {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      border: 1px solid rgba(225, 229, 238, 0.11);
+      border-radius: 50%;
+      color: var(--nav-muted);
+      background: rgba(116, 127, 148, 0.08);
+      cursor: pointer;
+      transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+    }
+
+    .discover-icon-button:hover,
+    .discover-avatar-button:hover,
+    .discover-avatar-button[aria-expanded="true"],
+    .discover-mobile-menu-button:hover,
+    .discover-mobile-close:hover {
+      color: #fffdf7;
+      border-color: rgba(225, 229, 238, 0.24);
+      background: rgba(225, 229, 238, 0.11);
+    }
+
+    .discover-avatar-button {
+      overflow: hidden;
+      color: #f5dfbc;
+      background: var(--nav-amber-soft);
+      border-color: rgba(219, 164, 93, 0.28);
+      font: 700 0.7rem/1 Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .discover-avatar-button img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .discover-notification-dot {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 7px;
+      height: 7px;
+      border: 1px solid #070d18;
+      border-radius: 50%;
+      background: var(--nav-amber);
+      box-shadow: 0 0 8px rgba(219, 164, 93, 0.7);
+    }
+
+    .discover-mobile-menu-button,
+    .discover-mobile-overlay,
+    .discover-mobile-drawer {
+      display: none;
+    }
+
+    .discover-mobile-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      background: rgba(0, 4, 12, 0.64);
+      backdrop-filter: blur(5px);
+      pointer-events: auto;
+    }
+
+    .discover-mobile-drawer {
+      position: fixed;
+      z-index: 80;
+      inset: 0 0 0 auto;
+      width: min(88vw, 354px);
+      flex-direction: column;
+      color: var(--nav-ink);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(219, 164, 93, 0.14) 0 1px, transparent 1.8px),
+        radial-gradient(circle at 92% 6%, rgba(52, 85, 126, 0.24), transparent 34%),
+        #080f1d;
+      background-size: 86px 86px, auto, auto;
+      border-left: 1px solid rgba(225, 229, 238, 0.12);
+      box-shadow: -24px 0 70px rgba(0, 3, 12, 0.45);
+      animation: discover-drawer-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      pointer-events: auto;
+    }
+
+    .discover-mobile-drawer.is-open,
+    .discover-mobile-overlay.is-open {
+      display: flex;
+    }
+
+    .discover-mobile-drawer-header {
+      min-height: 74px;
+      padding: 0 18px 0 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(225, 229, 238, 0.1);
+    }
+
+    .discover-mobile-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 22px 18px 28px;
+    }
+
+    .discover-mobile-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .discover-mobile-nav a,
+    .discover-mobile-section-button {
+      min-height: 46px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      border: 0;
+      border-radius: 12px;
+      color: #d9dce4;
+      background: transparent;
+      font: 500 0.9rem/1.2 Inter, ui-sans-serif, system-ui, sans-serif;
+      text-decoration: none;
+      text-align: left;
+    }
+
+    .discover-mobile-nav a:hover,
+    .discover-mobile-section-button:hover {
+      color: #fffdf7;
+      background: rgba(232, 235, 242, 0.07);
+    }
+
+    .discover-mobile-eyebrow {
+      margin: 18px 0 8px;
+      padding: 0 12px;
+      color: var(--nav-amber);
+      font: 650 0.62rem/1 Inter, ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .profile-main-content {
+      padding-top: 84px;
+    }
+
+    .bulk-settings-panel { background: rgba(255,255,255,.028); }
+    .bulk-setting-check input { accent-color: #E8E8EA; }
+
+    .review-section + .review-section { border-top: 1px solid #343437; }
+
+    @media (max-width: 1023px) {
+      .booking-drawer { height: min(96vh, 920px); }
+      .discover-creator-link { display: none; }
+    }
+
+    @media (max-width: 639px) {
+      #bookingModal { padding: 0; align-items: flex-end; }
+      .booking-drawer { height: 96vh; border-radius: 24px 24px 0 0; }
+      .booking-mode-option { min-height: auto; }
+    }
+
+    @media (max-width: 767px) {
+      .discover-header { padding: 14px 18px 0; }
+      .discover-header-inner { min-height: 48px; gap: 10px; }
+      .discover-desktop-nav,
+      .discover-icon-button { display: none; }
+      .discover-wordmark { font-size: 1.75rem; }
+      .discover-mobile-menu-button { display: inline-flex; }
+      .profile-main-content { padding-top: 78px; }
+      .tab-panel { scroll-margin-top: calc(var(--profile-nav-top, 0px) + 76px); }
+    }
+
+    @keyframes discover-menu-in {
+      from { opacity: 0; transform: translateY(-5px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes discover-drawer-in {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+  </style>
+</head>
+
+<body class="bg-canvas text-ink antialiased">
+  <!-- Discover header -->
+  <div class="discover-header-shell">
+    <header id="discoverHeader" class="discover-header">
+      <div class="discover-header-inner">
+        <div class="discover-nav">
+          <nav class="discover-desktop-nav" aria-label="Primary navigation">
+            <a href="/landing" target="_top" class="discover-nav-link">Home</a>
+            <a href="/discover" target="_top" class="discover-nav-link">Discover</a>
+
+            <div class="discover-nav-group" data-discover-menu>
+              <button class="discover-nav-button is-active" type="button" aria-expanded="false" aria-haspopup="true">
+                Learn
+                <i data-lucide="chevron-down" class="discover-chevron h-3.5 w-3.5"></i>
+              </button>
+              <div class="discover-dropdown" role="menu">
+                <a href="/courses" target="_top" class="discover-dropdown-item" role="menuitem">Courses</a>
+                <a href="/people" target="_top" class="discover-dropdown-item is-active" role="menuitem">Tutors</a>
+                <a href="/discover/for-you" target="_top" class="discover-dropdown-item" role="menuitem">For You</a>
+              </div>
+            </div>
+
+            <div class="discover-nav-group" data-discover-menu>
+              <button class="discover-nav-button" type="button" aria-expanded="false" aria-haspopup="true">
+                Create
+                <i data-lucide="chevron-down" class="discover-chevron h-3.5 w-3.5"></i>
+              </button>
+              <div class="discover-dropdown" role="menu">
+                <a href="/become-a-tutor" target="_top" class="discover-dropdown-item" role="menuitem">Become a tutor</a>
+                <a href="/events/new" target="_top" class="discover-dropdown-item" role="menuitem">Create an event/workshop</a>
+                <a href="/courses/new" target="_top" class="discover-dropdown-item" role="menuitem">Create a course</a>
+                <a href="/articles/new" target="_top" class="discover-dropdown-item" role="menuitem">Write an article</a>
+              </div>
+            </div>
+
+            <div class="discover-nav-group" data-discover-menu>
+              <button class="discover-nav-button" type="button" aria-expanded="false" aria-haspopup="true">
+                Community
+                <i data-lucide="chevron-down" class="discover-chevron h-3.5 w-3.5"></i>
+              </button>
+              <div class="discover-dropdown" role="menu">
+                <a href="/discussions" target="_top" class="discover-dropdown-item" role="menuitem">Discussions</a>
+                <a href="/communities" target="_top" class="discover-dropdown-item" role="menuitem">Communities</a>
+                <a href="/people" target="_top" class="discover-dropdown-item is-active" role="menuitem">Tutors</a>
+                <a href="/events" target="_top" class="discover-dropdown-item" role="menuitem">Workshops/Events</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+
+        <div class="discover-actions">
+          <a href="/messages" target="_top" class="discover-icon-button" aria-label="Messages">
+            <i data-lucide="message-square" class="h-[19px] w-[19px]"></i>
+          </a>
+          <button class="discover-icon-button" type="button" aria-label="Notifications">
+            <i data-lucide="bell" class="h-[19px] w-[19px]"></i>
+            <span class="discover-notification-dot"></span>
+          </button>
+          <div class="discover-menu-anchor" data-user-menu>
+            <button class="discover-avatar-button" type="button" aria-label="User menu" aria-expanded="false" aria-haspopup="true">
+              <span>N</span>
+            </button>
+            <div class="discover-user-dropdown" role="menu">
+              <a href="/user/Nguyen%20Minh%20Lan" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="user" class="h-4 w-4"></i>View profile</a>
+              <a href="/learning" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="book-open" class="h-4 w-4"></i>My learning</a>
+              <a href="/bookings" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="calendar-days" class="h-4 w-4"></i>My bookings</a>
+              <a href="/saved" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="heart" class="h-4 w-4"></i>Saved</a>
+              <a href="/settings" target="_top" class="discover-user-item" role="menuitem"><i data-lucide="settings" class="h-4 w-4"></i>Settings</a>
+              <a href="/auth/sign-in" target="_top" data-auth-sign-out class="discover-user-item" role="menuitem"><i data-lucide="log-out" class="h-4 w-4"></i>Sign out</a>
+            </div>
+          </div>
+          <button id="discoverMobileMenuButton" class="discover-mobile-menu-button" type="button" aria-label="Open navigation menu" aria-expanded="false">
+            <i data-lucide="menu" class="h-5 w-5"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div id="discoverMobileOverlay" class="discover-mobile-overlay"></div>
+    <aside id="discoverMobileDrawer" class="discover-mobile-drawer" aria-hidden="true">
+      <div class="discover-mobile-drawer-header">
+        <a href="/landing" target="_top" class="discover-mobile-wordmark">Tutoria<span class="discover-brand-spark">R</span></a>
+        <button id="discoverMobileClose" class="discover-mobile-close" type="button" aria-label="Close navigation menu">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+      <div class="discover-mobile-body">
+        <nav class="discover-mobile-nav" aria-label="Mobile navigation">
+          <a href="/landing" target="_top">Home</a>
+          <a href="/discover" target="_top">Discover</a>
+          <p class="discover-mobile-eyebrow">Learn</p>
+          <a href="/courses" target="_top">Courses</a>
+          <a href="/people" target="_top">Tutors</a>
+          <a href="/discover/for-you" target="_top">For You</a>
+          <p class="discover-mobile-eyebrow">Create</p>
+          <a href="/become-a-tutor" target="_top">Become a tutor</a>
+          <a href="/events/new" target="_top">Create an event/workshop</a>
+          <a href="/courses/new" target="_top">Create a course</a>
+          <a href="/articles/new" target="_top">Write an article</a>
+          <p class="discover-mobile-eyebrow">Community</p>
+          <a href="/discussions" target="_top">Discussions</a>
+          <a href="/communities" target="_top">Communities</a>
+          <a href="/events" target="_top">Workshops/Events</a>
+        </nav>
+      </div>
+    </aside>
+  </div>
+
+  <main class="profile-main-content">
+    <!-- Breadcrumb -->
+    <div class="mx-auto max-w-[1440px] px-4 pt-6 sm:px-6 lg:px-10">
+      <nav class="flex items-center gap-2 text-sm text-muted">
+        <a href="#" class="hover:text-ink">Explore</a>
+        <i data-lucide="chevron-right" class="h-4 w-4"></i>
+        <a href="#" class="hover:text-ink">Cooking</a>
+        <i data-lucide="chevron-right" class="h-4 w-4"></i>
+        <span class="text-ink">Thu Ha</span>
+      </nav>
+    </div>
+
+    <!-- Hero -->
+    <section class="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+      <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_390px] xl:gap-12">
+        <div class="min-w-0">
+          <div class="grid gap-7 md:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
+            <div class="relative overflow-hidden rounded-[28px] bg-neutral-200 shadow-card">
+              <img
+                class="aspect-[5/6] h-full w-full object-cover"
+                src="https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=85"
+                alt="Thu Ha cooking in a kitchen"
+              />
+              <div class="important-badge absolute left-4 top-4 flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm backdrop-blur">
+                <i data-lucide="badge-check" class="h-4 w-4"></i>
+                Verified
+              </div>
+            </div>
+
+            <div class="flex min-w-0 flex-col justify-center">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
+                <span class="rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em]">
+                  Cooking instructor
+                </span>
+                <span class="important-badge inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold">
+                  <i data-lucide="shield-check" class="h-3.5 w-3.5"></i>
+                  ID verified
+                </span>
+              </div>
+
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <h1 class="text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">Thu Ha</h1>
+                </div>
+                <button class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white transition hover:border-ink" aria-label="Save tutor">
+                  <i data-lucide="heart" class="h-5 w-5"></i>
+                </button>
+              </div>
+
+              <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold">4.9</span>
+                  <div class="rating-signal flex">
+                    <i data-lucide="star" class="h-4 w-4 fill-current"></i>
+                  </div>
+                  <a href="#reviews" class="text-muted underline decoration-line underline-offset-4 hover:text-ink">(203 reviews)</a>
+                </div>
+                <span class="hidden h-4 w-px bg-line sm:block"></span>
+                <span class="flex items-center gap-2 text-muted">
+                  <i data-lucide="map-pin" class="h-4 w-4"></i>
+                  Hoan Kiem, Ha Noi
+                </span>
+              </div>
+
+              <p class="mt-6 max-w-3xl text-base leading-7 text-neutral-700">
+                Cook Vietnamese and French-inspired dishes with reliable technique, calm kitchen habits, and guidance adapted to your own space.
+              </p>
+
+              <div class="mt-6 grid max-w-xl grid-cols-2 gap-2.5 sm:grid-cols-3">
+                <div class="rounded-xl border border-line bg-white px-4 py-3">
+                  <div class="text-xl font-semibold tracking-tight">648</div>
+                  <div class="mt-0.5 text-xs text-muted">Lessons taught</div>
+                </div>
+                <div class="rounded-xl border border-line bg-white px-4 py-3">
+                  <div class="text-xl font-semibold tracking-tight">~1 hour</div>
+                  <div class="mt-0.5 text-xs text-muted">Average response</div>
+                </div>
+                <div class="col-span-2 rounded-xl border border-line bg-white px-4 py-3 sm:col-span-1">
+                  <div class="availability-signal flex items-center gap-2 text-sm font-semibold">
+                    <span class="availability-signal-dot h-2 w-2 rounded-full"></span>
+                    Available this week
+                  </div>
+                  <div class="mt-1 text-xs text-muted">Next: Mon, 09:00</div>
+                </div>
+              </div>
+
+              <div class="mt-7">
+                <p class="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted">Languages</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="rounded-full border border-line bg-white px-3 py-2 text-sm">Vietnamese <span class="text-muted">(Native)</span></span>
+                  <span class="rounded-full border border-line bg-white px-3 py-2 text-sm">English <span class="text-muted">(Fluent)</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div id="profileNavigator" class="mt-10 border-y border-line bg-canvas/95 backdrop-blur-xl">
+            <div class="hide-scrollbar flex gap-7 overflow-x-auto" role="navigation" aria-label="Profile sections">
+              <button data-tab="about" class="tab-button tab-active whitespace-nowrap border-b-2 py-4 text-sm font-semibold" aria-current="true">About</button>
+              <button data-tab="pricing" class="tab-button whitespace-nowrap border-b-2 border-transparent py-4 text-sm font-semibold text-muted">Lessons & pricing</button>
+              <button data-tab="availability" class="tab-button whitespace-nowrap border-b-2 border-transparent py-4 text-sm font-semibold text-muted">Availability</button>
+              <button data-tab="faq" class="tab-button whitespace-nowrap border-b-2 border-transparent py-4 text-sm font-semibold text-muted">FAQ</button>
+              <button data-tab="reviews" class="tab-button whitespace-nowrap border-b-2 border-transparent py-4 text-sm font-semibold text-muted">Reviews (203)</button>
+            </div>
+            <div class="h-px overflow-hidden bg-line/70">
+              <div id="profileProgressBar" class="profile-scroll-progress h-full w-full bg-[#F2F2F3]"></div>
+            </div>
+          </div>
+
+          <div class="pt-10">
+            <!-- ABOUT PANEL -->
+            <div id="panel-about" class="tab-panel profile-section space-y-16" data-profile-section="about">
+              <!-- Story and introduction video -->
+              <section class="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,.85fr)] lg:items-start">
+                <div class="max-w-3xl">
+                  <p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted">About Thu</p>
+                  <h2 class="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+                    Practical guidance for confident, independent cooking.
+                  </h2>
+
+                  <div class="mt-6 space-y-4 text-base leading-7 text-neutral-700">
+                    <p>
+                      I teach home cooks how to understand ingredients, timing, and technique instead of relying only on recipes.
+                    </p>
+                    <p>
+                      Lessons are hands-on, friendly, and adapted to your kitchen, whether you are learning one family dish or building broader confidence.
+                    </p>
+                  </div>
+
+                  <div class="mt-7 flex flex-wrap gap-x-6 gap-y-3 border-t border-line pt-6 text-sm">
+                    <span class="flex items-center gap-2">
+                      <i data-lucide="badge-check" class="h-4 w-4"></i>
+                      648 lessons taught
+                    </span>
+                    <span class="flex items-center gap-2">
+                      <i data-lucide="message-circle" class="h-4 w-4"></i>
+                      English and Vietnamese
+                    </span>
+                    <span class="flex items-center gap-2">
+                      <i data-lucide="map-pin" class="h-4 w-4"></i>
+                      Ha Noi and online
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  class="group relative overflow-hidden rounded-[24px] border border-line bg-neutral-200 text-left shadow-card"
+                  aria-label="Play introduction video"
+                >
+                  <img
+                    class="aspect-video h-full min-h-[230px] w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                    src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=1000&q=85"
+                    alt="Thu Ha preparing a cooking lesson"
+                  />
+
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+
+                  <span class="absolute left-5 top-5 grid h-12 w-12 place-items-center rounded-full bg-white text-ink shadow-lg">
+                    <i data-lucide="play" class="ml-0.5 h-5 w-5 fill-current"></i>
+                  </span>
+
+                  <div class="absolute inset-x-5 bottom-5 text-white">
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-white/65">Introduction video</p>
+                    <div class="mt-2 flex items-end justify-between gap-4">
+                      <p class="font-semibold">Meet Thu and see how lessons work</p>
+                      <span class="shrink-0 rounded-full bg-white/15 px-2.5 py-1 text-xs backdrop-blur">1:02</span>
+                    </div>
+                  </div>
+                </button>
+              </section>
+
+              <!-- Teaching overview -->
+              <section>
+                <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Teaching overview</p>
+                    <h2 class="mt-3 text-3xl font-semibold tracking-[-0.03em]">What learning with Thu looks like</h2>
+                  </div>
+                  <p class="max-w-md text-sm leading-6 text-muted">
+                    Subjects, learners, and methods are shown separately so learners can scan the profile quickly.
+                  </p>
+                </div>
+
+                <div class="mt-7 overflow-hidden rounded-[24px] border border-line bg-white">
+                  <div class="grid gap-5 border-b border-line p-6 md:grid-cols-[210px_1fr] md:items-start sm:p-7">
+                    <div class="flex items-center gap-3">
+                      <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-canvas">
+                        <i data-lucide="book-open" class="h-5 w-5"></i>
+                      </span>
+                      <h3 class="font-semibold">Skills & specialties</h3>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Vietnamese cuisine</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Baking</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">French culinary</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Knife skills</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Meal preparation</span>
+                    </div>
+                  </div>
+
+                  <div class="grid gap-5 border-b border-line p-6 md:grid-cols-[210px_1fr] md:items-start sm:p-7">
+                    <div class="flex items-center gap-3">
+                      <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-canvas">
+                        <i data-lucide="bar-chart-3" class="h-5 w-5"></i>
+                      </span>
+                      <h3 class="font-semibold">Learner levels</h3>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Complete beginners</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Intermediate learners</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Advanced learners</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Aspiring professionals</span>
+                    </div>
+                  </div>
+
+                  <div class="grid gap-5 border-b border-line p-6 md:grid-cols-[210px_1fr] md:items-start sm:p-7">
+                    <div class="flex items-center gap-3">
+                      <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-canvas">
+                        <i data-lucide="users-round" class="h-5 w-5"></i>
+                      </span>
+                      <h3 class="font-semibold">Who I teach</h3>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Children with a guardian</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Teenagers</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Adults</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Families</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Small groups</span>
+                    </div>
+                  </div>
+
+                  <div class="grid gap-5 p-6 md:grid-cols-[210px_1fr] md:items-start sm:p-7">
+                    <div class="flex items-center gap-3">
+                      <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-canvas">
+                        <i data-lucide="wand-sparkles" class="h-5 w-5"></i>
+                      </span>
+                      <h3 class="font-semibold">Teaching style</h3>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Guided demonstration</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Hands-on practice</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Recipe adaptation</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Ingredient coaching</span>
+                      <span class="rounded-full bg-canvas px-3 py-2 text-sm">Progress notes</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Outcomes and typical lesson -->
+              <section class="grid gap-10 lg:grid-cols-2 lg:gap-12">
+                <div>
+                  <h2 class="text-3xl font-semibold tracking-[-0.03em]">What you can achieve</h2>
+
+                  <ul class="mt-7 divide-y divide-line border-y border-line">
+                    <li class="flex items-center gap-4 py-5">
+                      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-canvas">
+                        <i data-lucide="check" class="h-4 w-4"></i>
+                      </span>
+                      <p class="font-medium">Prepare ingredients efficiently</p>
+                    </li>
+                    <li class="flex items-center gap-4 py-5">
+                      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-canvas">
+                        <i data-lucide="check" class="h-4 w-4"></i>
+                      </span>
+                      <p class="font-medium">Balance flavor with confidence</p>
+                    </li>
+                    <li class="flex items-center gap-4 py-5">
+                      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-canvas">
+                        <i data-lucide="check" class="h-4 w-4"></i>
+                      </span>
+                      <p class="font-medium">Use core cooking techniques</p>
+                    </li>
+                    <li class="flex items-center gap-4 py-5">
+                      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-canvas">
+                        <i data-lucide="check" class="h-4 w-4"></i>
+                      </span>
+                      <p class="font-medium">Adapt recipes to your kitchen</p>
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h2 class="text-3xl font-semibold tracking-[-0.03em]">Typical lesson</h2>
+
+                  <p class="mt-4 max-w-xl leading-7 text-neutral-700">
+                    We prepare the workspace, review the recipe and key techniques, then cook together step by step. You receive practical feedback and notes for repeating the dish.
+                  </p>
+                </div>
+              </section>
+
+              <!-- Lesson formats -->
+              <section>
+                <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Lesson formats</p>
+                    <h2 class="mt-3 text-3xl font-semibold tracking-[-0.03em]">Choose where learning happens</h2>
+                  </div>
+                  <span class="text-sm text-muted">Ha Noi and online</span>
+                </div>
+
+                <div class="mt-7 grid gap-px overflow-hidden rounded-[24px] border border-line bg-line sm:grid-cols-2">
+                  <div class="flex items-center gap-4 bg-white p-6">
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-canvas">
+                      <i data-lucide="monitor-play" class="h-5 w-5"></i>
+                    </span>
+                    <h3 class="font-semibold">Online</h3>
+                  </div>
+
+                  <div class="flex items-center gap-4 bg-white p-6">
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-canvas">
+                      <i data-lucide="house" class="h-5 w-5"></i>
+                    </span>
+                    <h3 class="font-semibold">At my teaching space</h3>
+                  </div>
+
+                  <div class="flex items-center gap-4 bg-white p-6">
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-canvas">
+                      <i data-lucide="navigation" class="h-5 w-5"></i>
+                    </span>
+                    <h3 class="font-semibold">At your location</h3>
+                  </div>
+
+                  <div class="flex items-center gap-4 bg-white p-6">
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-canvas">
+                      <i data-lucide="building-2" class="h-5 w-5"></i>
+                    </span>
+                    <h3 class="font-semibold">Public place</h3>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- PRICING PANEL -->
+            <div id="panel-pricing" class="tab-panel profile-section space-y-12" data-profile-section="pricing">
+              <section>
+                <p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Rates & offers</p>
+                <div class="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                  <h2 class="text-3xl font-semibold tracking-[-0.03em]">Select the lesson length that fits your goal.</h2>
+                  <span class="text-sm text-muted">Payment becomes available after tutor approval</span>
+                </div>
+
+                <div class="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <button class="rate-card rounded-[22px] border border-line bg-white p-5 text-left transition hover:border-ink" data-duration="30 minutes" data-price="180.000 đ">
+                    <span class="text-sm text-muted">30 minutes</span>
+                    <div class="mt-6 text-2xl font-semibold">180.000</div>
+                    <div class="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">VND</div>
+                  </button>
+                  <button class="rate-card rounded-[22px] border border-line bg-white p-5 text-left transition hover:border-ink" data-duration="50 minutes" data-price="260.000 đ">
+                    <span class="text-sm text-muted">50 minutes</span>
+                    <div class="mt-6 text-2xl font-semibold">260.000</div>
+                    <div class="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">VND</div>
+                  </button>
+                  <button class="rate-card selected selected-price relative rounded-[22px] border-2 bg-white p-5 text-left shadow-card" data-duration="60 minutes" data-price="300.000 đ">
+                    <span class="popular-badge absolute right-4 top-4 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em]">Popular</span>
+                    <span class="text-sm text-muted">60 minutes</span>
+                    <div class="mt-6 text-2xl font-semibold">300.000</div>
+                    <div class="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">VND</div>
+                  </button>
+                  <button class="rate-card rounded-[22px] border border-line bg-white p-5 text-left transition hover:border-ink" data-duration="90 minutes" data-price="420.000 đ">
+                    <span class="text-sm text-muted">90 minutes</span>
+                    <div class="mt-6 text-2xl font-semibold">420.000</div>
+                    <div class="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">VND</div>
+                  </button>
+                </div>
+              </section>
+
+              <section class="rounded-[28px] border border-line bg-accent/40 p-6 sm:p-8">
+                <div class="grid gap-7 md:grid-cols-[1fr_auto] md:items-end">
+                  <div>
+                    <span class="rounded-full bg-ink px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-white">First lesson price</span>
+                    <h3 class="mt-5 text-2xl font-semibold tracking-tight">A lower price for your first 30-minute lesson.</h3>
+                    <p class="mt-3 max-w-2xl leading-7 text-neutral-700">
+                      Get a feel for Thu’s teaching style, discuss your goals, and start building a realistic learning plan.
+                    </p>
+                  </div>
+                  <div class="rounded-2xl bg-white p-5 text-right">
+                    <div class="text-sm text-muted line-through">180.000 đ</div>
+                    <div class="price-signal mt-1 text-3xl font-semibold">160.000 đ</div>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h3 class="text-2xl font-semibold tracking-tight">Booking rules & cancellation policy</h3>
+                <div class="mt-6 divide-y divide-line rounded-[24px] border border-line bg-white px-6">
+                  <div class="grid gap-2 py-5 sm:grid-cols-[220px_1fr]">
+                    <div class="font-semibold">Same-day booking</div>
+                    <div class="text-muted">Available when the tutor has an open time.</div>
+                  </div>
+                  <div class="grid gap-2 py-5 sm:grid-cols-[220px_1fr]">
+                    <div class="font-semibold">No-show</div>
+                    <div class="text-muted">The full lesson fee is charged.</div>
+                  </div>
+                  <div class="grid gap-2 py-5 sm:grid-cols-[220px_1fr]">
+                    <div class="font-semibold">Learner cancellation</div>
+                    <div class="text-muted">Full refund at least 24 hours before the lesson.</div>
+                  </div>
+                  <div class="grid gap-2 py-5 sm:grid-cols-[220px_1fr]">
+                    <div class="font-semibold">Tutor cancellation</div>
+                    <div class="text-muted">Full refund with the option to reschedule.</div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="overflow-hidden rounded-[24px] border border-line bg-white">
+                <div class="grid lg:grid-cols-[minmax(0,1fr)_240px]">
+                  <div class="p-6 sm:p-7">
+                    <div class="flex items-start gap-4">
+                      <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-line bg-canvas">
+                        <i data-lucide="message-circle-question" class="h-5 w-5"></i>
+                      </span>
+                      <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">Short consultation</p>
+                        <h3 class="mt-2 max-w-2xl text-xl font-semibold tracking-[-0.02em] sm:text-2xl">Ask one focused question before committing to a full lesson.</h3>
+                        <p class="mt-3 max-w-2xl text-sm leading-6 text-muted">A concise session for feedback, planning, or checking whether Thu is the right fit for your goal.</p>
+                      </div>
+                    </div>
+
+                    <div class="mt-6 flex flex-wrap gap-x-6 gap-y-3 border-t border-line pt-5 text-sm text-neutral-700">
+                      <span class="inline-flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 shrink-0"></i>Quick feedback</span>
+                      <span class="inline-flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 shrink-0"></i>Goal and material review</span>
+                      <span class="inline-flex items-center gap-2"><i data-lucide="check" class="h-4 w-4 shrink-0"></i>Ideal for new learners</span>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col justify-between border-t border-line bg-canvas p-6 lg:border-l lg:border-t-0">
+                    <div>
+                      <div class="flex items-center justify-between gap-3 text-xs text-muted">
+                        <span>20 minutes</span>
+                        <span class="uppercase tracking-[0.14em]">Consultation</span>
+                      </div>
+                      <div class="mt-3 text-3xl font-semibold tracking-tight">120.000 đ</div>
+                    </div>
+                    <button id="consultationBookButton" class="primary-action mt-6 w-full rounded-xl px-4 py-3 text-sm font-semibold transition hover:-translate-y-0.5">
+                      Choose a time
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- AVAILABILITY PANEL -->
+            <div id="panel-availability" class="tab-panel profile-section space-y-10" data-profile-section="availability">
+              <section>
+                <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                  <div>
+                    <h2 class="text-3xl font-semibold tracking-[-0.03em]">Weekly availability</h2>
+                    <p class="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted">Ha Noi time, GMT+7</p>
+                  </div>
+                  <button class="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold hover:border-ink">
+                    <i data-lucide="calendar-days" class="h-4 w-4"></i>
+                    View full calendar
+                  </button>
+                </div>
+
+                <div class="mt-7 overflow-hidden rounded-[24px] border border-line bg-white">
+                  <div class="overflow-x-auto">
+                    <div class="min-w-[780px]">
+                      <div class="grid grid-cols-[120px_repeat(7,1fr)] border-b border-line bg-canvas text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                        <div class="p-4 text-left">Time</div>
+                        <div class="p-4">Mon</div>
+                        <div class="p-4">Tue</div>
+                        <div class="p-4">Wed</div>
+                        <div class="p-4">Thu</div>
+                        <div class="p-4">Fri</div>
+                        <div class="p-4">Sat</div>
+                        <div class="p-4">Sun</div>
+                      </div>
+
+                      <div class="grid grid-cols-[120px_repeat(7,1fr)] border-b border-line text-center text-sm">
+                        <div class="availability-cell flex items-center p-4 text-left font-medium">09:00–12:00</div>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                        <div class="availability-cell flex items-center justify-center text-muted">—</div>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                        <div class="availability-cell flex items-center justify-center text-muted">—</div>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                        <div class="availability-cell flex items-center justify-center text-muted">—</div>
+                      </div>
+
+                      <div class="grid grid-cols-[120px_repeat(7,1fr)] border-b border-line text-center text-sm">
+                        <div class="availability-cell flex items-center p-4 text-left font-medium">14:00–18:00</div>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                        <div class="availability-cell flex items-center justify-center text-muted">—</div>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                      </div>
+
+                      <div class="grid grid-cols-[120px_repeat(7,1fr)] text-center text-sm">
+                        <div class="availability-cell flex items-center p-4 text-left font-medium">18:00–21:00</div>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                        <div class="availability-cell flex items-center justify-center text-muted">—</div>
+                        <div class="availability-cell flex items-center justify-center text-muted">—</div>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                        <div class="availability-cell flex items-center justify-center text-muted">—</div>
+                        <div class="availability-cell flex items-center justify-center text-muted">—</div>
+                        <button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <p class="mt-4 text-sm leading-6 text-muted">
+                  Exact slots are shown after selecting a lesson length and format. Availability can change as other learners book.
+                </p>
+              </section>
+            </div>
+
+            <!-- FAQ PANEL -->
+            <div id="panel-faq" class="tab-panel profile-section space-y-8" data-profile-section="faq">
+              <section>
+                <p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Before you book</p>
+                <h2 class="mt-3 text-3xl font-semibold tracking-[-0.03em]">Frequently asked questions</h2>
+                <p class="mt-3 text-neutral-700">Everything you need to know before your first lesson with Thu.</p>
+              </section>
+
+              <section class="overflow-hidden rounded-[24px] border border-line bg-white">
+                <div class="faq-item border-b border-line">
+                  <button class="faq-button flex w-full items-center justify-between gap-4 p-6 text-left font-semibold">
+                    How do I book a lesson with this tutor?
+                    <i data-lucide="plus" class="faq-icon h-5 w-5 shrink-0 transition"></i>
+                  </button>
+                  <div class="faq-answer hidden px-6 pb-6 leading-7 text-muted">
+                    Select a lesson length, choose your preferred format, then pick one of the available time slots. You’ll send a booking request first, then pay securely through Tutoria after the tutor accepts.
+                  </div>
+                </div>
+
+                <div class="faq-item border-b border-line">
+                  <button class="faq-button flex w-full items-center justify-between gap-4 p-6 text-left font-semibold">
+                    Can I reschedule a booked lesson?
+                    <i data-lucide="plus" class="faq-icon h-5 w-5 shrink-0 transition"></i>
+                  </button>
+                  <div class="faq-answer hidden px-6 pb-6 leading-7 text-muted">
+                    Yes. You can request a new time from the booking page. Rescheduling remains free when the request is made at least 24 hours before the lesson.
+                  </div>
+                </div>
+
+                <div class="faq-item border-b border-line">
+                  <button class="faq-button flex w-full items-center justify-between gap-4 p-6 text-left font-semibold">
+                    What should I prepare for my first lesson?
+                    <i data-lucide="plus" class="faq-icon h-5 w-5 shrink-0 transition"></i>
+                  </button>
+                  <div class="faq-answer hidden px-6 pb-6 leading-7 text-muted">
+                    Thu will send a short preparation list covering ingredients, equipment, and any advance steps needed for your chosen recipe.
+                  </div>
+                </div>
+
+                <div class="faq-item">
+                  <button class="faq-button flex w-full items-center justify-between gap-4 p-6 text-left font-semibold">
+                    How are lessons paid for?
+                    <i data-lucide="plus" class="faq-icon h-5 w-5 shrink-0 transition"></i>
+                  </button>
+                  <div class="faq-answer hidden px-6 pb-6 leading-7 text-muted">
+                    You’ll pay through Tutoria after the tutor accepts your booking request.
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- REVIEWS PANEL -->
+            <div id="panel-reviews" class="tab-panel profile-section space-y-10" data-profile-section="reviews">
+              <section id="reviews">
+                <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                  <div>
+                    <h2 class="text-3xl font-semibold tracking-[-0.03em]">Reviews</h2>
+                    <p class="mt-2 text-sm text-muted">203 reviews from completed lessons</p>
+                  </div>
+                  <button class="inline-flex items-center gap-2 text-sm font-medium text-muted transition hover:text-ink">
+                    Most recent
+                    <i data-lucide="chevron-down" class="h-4 w-4"></i>
+                  </button>
+                </div>
+
+                <div class="mt-7 grid gap-8 border-y border-line py-7 md:grid-cols-[190px_minmax(0,1fr)] md:gap-12">
+                  <div>
+                    <div class="flex items-end gap-2">
+                      <span class="text-5xl font-semibold tracking-[-0.05em]">4.9</span>
+                      <span class="pb-1.5 text-sm text-muted">/ 5</span>
+                    </div>
+                    <div class="mt-3 flex gap-1 text-[#D7D7DA]" aria-label="4.9 out of 5 stars">
+                      <i data-lucide="star" class="h-4 w-4 fill-current"></i>
+                      <i data-lucide="star" class="h-4 w-4 fill-current"></i>
+                      <i data-lucide="star" class="h-4 w-4 fill-current"></i>
+                      <i data-lucide="star" class="h-4 w-4 fill-current"></i>
+                      <i data-lucide="star" class="h-4 w-4 fill-current"></i>
+                    </div>
+                    <p class="mt-3 text-xs leading-5 text-muted">Verified bookings only</p>
+                  </div>
+
+                  <div class="space-y-3">
+                    <div class="grid grid-cols-[16px_minmax(0,1fr)_32px] items-center gap-3 text-xs">
+                      <span>5</span><div class="h-1 overflow-hidden rounded-full bg-line"><div class="h-full w-[91%] rounded-full bg-[#D7D7DA]"></div></div><span class="text-right text-muted">185</span>
+                    </div>
+                    <div class="grid grid-cols-[16px_minmax(0,1fr)_32px] items-center gap-3 text-xs">
+                      <span>4</span><div class="h-1 overflow-hidden rounded-full bg-line"><div class="h-full w-[7%] rounded-full bg-[#B5B5BA]"></div></div><span class="text-right text-muted">14</span>
+                    </div>
+                    <div class="grid grid-cols-[16px_minmax(0,1fr)_32px] items-center gap-3 text-xs">
+                      <span>3</span><div class="h-1 overflow-hidden rounded-full bg-line"><div class="h-full w-[2%] rounded-full bg-[#8F8F95]"></div></div><span class="text-right text-muted">4</span>
+                    </div>
+                    <div class="grid grid-cols-[16px_minmax(0,1fr)_32px] items-center gap-3 text-xs">
+                      <span>2</span><div class="h-1 overflow-hidden rounded-full bg-line"></div><span class="text-right text-muted">0</span>
+                    </div>
+                    <div class="grid grid-cols-[16px_minmax(0,1fr)_32px] items-center gap-3 text-xs">
+                      <span>1</span><div class="h-1 overflow-hidden rounded-full bg-line"></div><span class="text-right text-muted">0</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="divide-y divide-line border-y border-line">
+                <article class="py-7">
+                  <div class="flex items-start justify-between gap-5">
+                    <div>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <p class="font-semibold">Mai Phuong</p>
+                        <span class="inline-flex items-center gap-1 text-xs text-muted"><i data-lucide="badge-check" class="h-3.5 w-3.5"></i>Verified</span>
+                      </div>
+                      <p class="mt-1 text-xs text-muted">Apr 28, 2026 · 60-minute online lesson</p>
+                    </div>
+                    <div class="flex shrink-0 gap-0.5 text-[#D7D7DA]" aria-label="5 out of 5 stars">
+                      <i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i>
+                    </div>
+                  </div>
+                  <p class="mt-4 max-w-3xl leading-7 text-neutral-700">Patient, clear, and encouraging. I left the first lesson with a plan I could use right away.</p>
+                  <p class="mt-3 text-xs text-muted">Vietnamese cuisine</p>
+                </article>
+
+                <article class="py-7">
+                  <div class="flex items-start justify-between gap-5">
+                    <div>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <p class="font-semibold">Huyen Trang</p>
+                        <span class="inline-flex items-center gap-1 text-xs text-muted"><i data-lucide="badge-check" class="h-3.5 w-3.5"></i>Verified</span>
+                      </div>
+                      <p class="mt-1 text-xs text-muted">Apr 12, 2026 · 50-minute online lesson</p>
+                    </div>
+                    <div class="flex shrink-0 gap-0.5 text-[#D7D7DA]" aria-label="5 out of 5 stars">
+                      <i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i>
+                    </div>
+                  </div>
+                  <p class="mt-4 max-w-3xl leading-7 text-neutral-700">The feedback is specific and practical. Every session feels focused on what I need most.</p>
+                  <p class="mt-3 text-xs text-muted">Knife skills</p>
+                </article>
+
+                <article class="py-7">
+                  <div class="flex items-start justify-between gap-5">
+                    <div>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <p class="font-semibold">Jason L.</p>
+                        <span class="inline-flex items-center gap-1 text-xs text-muted"><i data-lucide="badge-check" class="h-3.5 w-3.5"></i>Verified</span>
+                      </div>
+                      <p class="mt-1 text-xs text-muted">Mar 31, 2026 · 90-minute in-person lesson</p>
+                    </div>
+                    <div class="flex shrink-0 gap-0.5 text-[#D7D7DA]" aria-label="5 out of 5 stars">
+                      <i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i>
+                    </div>
+                  </div>
+                  <p class="mt-4 max-w-3xl leading-7 text-neutral-700">Great structure and thoughtful pacing. I can see my progress from one week to the next.</p>
+                  <p class="mt-3 text-xs text-muted">French culinary</p>
+                </article>
+
+                <article class="py-7">
+                  <div class="flex items-start justify-between gap-5">
+                    <div>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <p class="font-semibold">Thanh Vy</p>
+                        <span class="inline-flex items-center gap-1 text-xs text-muted"><i data-lucide="badge-check" class="h-3.5 w-3.5"></i>Verified</span>
+                      </div>
+                      <p class="mt-1 text-xs text-muted">Mar 18, 2026 · 60-minute online lesson</p>
+                    </div>
+                    <div class="flex shrink-0 gap-0.5 text-[#D7D7DA]" aria-label="5 out of 5 stars">
+                      <i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i><i data-lucide="star" class="h-3.5 w-3.5 fill-current"></i>
+                    </div>
+                  </div>
+                  <p class="mt-4 max-w-3xl leading-7 text-neutral-700">The lesson activities are useful, and the follow-up notes make it easy to keep practicing.</p>
+                  <p class="mt-3 text-xs text-muted">Meal preparation</p>
+                </article>
+              </section>
+
+              <div>
+                <button class="text-sm font-semibold underline decoration-line underline-offset-4 transition hover:text-white">
+                  View all 203 reviews
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Sticky booking sidebar -->
+        <aside class="hidden lg:block">
+          <div class="sticky top-24 overflow-hidden rounded-[28px] border border-line bg-white shadow-soft">
+            <div class="p-6">
+              <div class="flex items-start gap-4">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Book with Thu</p>
+                  <div class="mt-2 flex items-end gap-2">
+                    <span id="sidebarPrice" class="text-3xl font-semibold tracking-tight">300.000 đ</span>
+                    <span id="sidebarDuration" class="pb-1 text-sm text-muted">/ 60 min</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6 rounded-xl bg-canvas p-1">
+                <div class="grid grid-cols-2 gap-1">
+                  <button class="lesson-mode selected bg-white rounded-lg px-3 py-2.5 text-sm font-semibold" data-mode="single">One lesson</button>
+                  <button class="lesson-mode rounded-lg px-3 py-2.5 text-sm font-medium text-muted" data-mode="weekly">Weekly</button>
+                </div>
+              </div>
+              <p id="weeklyHint" class="mt-2 hidden text-xs leading-5 text-muted">Reserve this time every week. You can change or stop it later.</p>
+
+              <div class="mt-5">
+                <label class="text-sm font-semibold">Lesson length</label>
+                <div class="mt-3 grid grid-cols-4 gap-2">
+                  <button class="sidebar-duration rounded-xl border border-line px-2 py-3 text-xs font-medium hover:border-ink" data-duration="30 minutes" data-price="180.000 đ">30</button>
+                  <button class="sidebar-duration rounded-xl border border-line px-2 py-3 text-xs font-medium hover:border-ink" data-duration="50 minutes" data-price="260.000 đ">50</button>
+                  <button class="sidebar-duration selected selected-price rounded-xl border-2 px-2 py-3 text-xs font-semibold" data-duration="60 minutes" data-price="300.000 đ">60</button>
+                  <button class="sidebar-duration rounded-xl border border-line px-2 py-3 text-xs font-medium hover:border-ink" data-duration="90 minutes" data-price="420.000 đ">90</button>
+                </div>
+                <p class="mt-2 text-xs text-muted">Minutes</p>
+              </div>
+
+              <div class="mt-5">
+                <label for="sidebarFormat" class="text-sm font-semibold">Lesson format</label>
+                <div class="relative mt-3">
+                  <select id="sidebarFormat" class="w-full appearance-none rounded-xl border border-line bg-white px-4 py-3 pr-10 text-sm outline-none transition focus:border-ink">
+                    <option>Online</option>
+                    <option>At Thu's teaching space</option>
+                    <option>At your location</option>
+                    <option>Public place</option>
+                  </select>
+                  <i data-lucide="chevron-down" class="pointer-events-none absolute right-4 top-3.5 h-4 w-4 text-muted"></i>
+                </div>
+              </div>
+
+              <div class="mt-5 border-y border-line py-4">
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <p class="text-xs text-muted">Next available</p>
+                    <p class="mt-1 text-sm font-semibold">Mon, Jul 27 · 09:00</p>
+                  </div>
+                  <span class="status-dot h-2.5 w-2.5 rounded-full"></span>
+                </div>
+                <p class="mt-2 text-xs text-muted">Shown in Ha Noi time (GMT+7)</p>
+              </div>
+
+              <button id="bookLessonButton" class="primary-action mt-5 w-full rounded-xl px-5 py-3.5 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-lg">
+                Choose a time
+              </button>
+              <p class="mt-2 text-center text-xs text-muted">You won’t be charged yet</p>
+
+              <button class="mt-4 w-full rounded-xl border border-line px-5 py-3.5 text-sm font-semibold transition hover:border-ink">
+                Message Thu
+              </button>
+            </div>
+
+            <div class="border-t border-line bg-canvas px-6 py-5">
+              <div class="space-y-3 text-sm text-muted">
+                <p class="flex items-center gap-3"><i data-lucide="shield-check" class="h-4 w-4 text-ink"></i> Secure payment through Tutoria after approval</p>
+                <p class="flex items-center gap-3"><i data-lucide="message-circle" class="h-4 w-4 text-ink"></i> Thu usually replies within an hour</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile bottom booking bar -->
+  <div class="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-white/95 p-3 backdrop-blur-xl lg:hidden">
+    <div class="mx-auto flex max-w-xl items-center gap-3">
+      <div class="min-w-0 flex-1">
+        <p class="text-xs text-muted">One lesson · Online</p>
+        <p class="truncate text-sm font-semibold"><span id="mobilePrice">300.000 đ</span> · <span id="mobileDuration">60 minutes</span></p>
+      </div>
+      <button id="mobileBookButton" class="primary-action rounded-xl px-5 py-3 text-sm font-semibold">Choose time</button>
+    </div>
+  </div>
+
+  <!-- Booking flow -->
+  <div id="bookingModal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/70 p-3 sm:p-6">
+    <div class="booking-drawer flex h-[min(820px,calc(100vh-28px))] w-full max-w-[1135px] flex-col overflow-hidden rounded-[28px] border border-white/[0.13] bg-[#171717] shadow-[0_28px_100px_rgba(0,0,0,.62)]">
+      <header class="flex h-[78px] shrink-0 items-center justify-between gap-5 border-b border-white/[0.12] px-5 sm:px-7">
+        <div class="flex min-w-0 items-center gap-3">
+          <button id="closeModal" class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line transition hover:border-ink" aria-label="Close booking">
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+          <div class="min-w-0">
+            <p id="bookingKindLabel" class="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50">Book a lesson</p>
+            <h3 class="truncate text-lg font-semibold">Thu Ha</h3>
+          </div>
+        </div>
+
+        <div class="hidden items-center gap-4 sm:flex">
+          <button class="booking-progress active flex items-center gap-2 text-xs font-semibold" data-step="1">
+            <span class="booking-progress-number grid h-7 w-7 place-items-center rounded-full border border-line">1</span>
+            Schedule &amp; details
+          </button>
+          <span class="h-px w-6 bg-line"></span>
+          <button class="booking-progress flex items-center gap-2 text-xs font-semibold" data-step="2">
+            <span class="booking-progress-number grid h-7 w-7 place-items-center rounded-full border border-line">2</span>
+            Review request
+          </button>
+        </div>
+      </header>
+
+      <div class="grid min-h-0 flex-1 lg:grid-cols-[72%_28%]">
+        <main class="min-h-0 overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
+          <!-- Step 1 -->
+          <section id="bookingStep1" class="booking-panel active">
+            <div class="max-w-2xl">
+              <p class="text-xs font-semibold uppercase tracking-[0.15em] text-muted">Step 1 of 2</p>
+              <h4 class="mt-2 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">Build your schedule</h4>
+              <p class="mt-2 text-sm leading-6 text-muted">Choose your times, then adjust only the sessions that need different details.</p>
+            </div>
+
+            <div id="bookingModeSection" class="mt-7 grid gap-1.5 rounded-2xl bg-canvas p-1.5 sm:grid-cols-3">
+              <button class="booking-mode-option selected rounded-xl border border-transparent px-4 py-3 text-left" data-mode="single">
+                <span class="block text-sm font-semibold">One lesson</span>
+                <span class="mt-1 block text-xs text-muted">One time</span>
+              </button>
+              <button disabled aria-disabled="true" class="booking-mode-option cursor-not-allowed rounded-xl border border-transparent px-4 py-3 text-left opacity-50" data-mode="weekly">
+                <span class="block text-sm font-semibold">Weekly schedule</span>
+                <span class="mt-1 block text-xs text-muted">Coming soon</span>
+              </button>
+              <button disabled aria-disabled="true" class="booking-mode-option cursor-not-allowed rounded-xl border border-transparent px-4 py-3 text-left opacity-50" data-mode="dates">
+                <span class="block text-sm font-semibold">Pick dates</span>
+                <span class="mt-1 block text-xs text-muted">Coming soon</span>
+              </button>
+            </div>
+
+            <div id="startingSetup" class="starting-setup mt-5 rounded-2xl border border-line p-4 sm:p-5">
+              <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <p class="text-sm font-semibold">Default for new sessions</p>
+                      <p class="mt-1 text-xs text-muted">New sessions use these settings.</p>
+                    </div>
+                    <span id="startingSetupSummary" class="hidden rounded-full border border-line bg-canvas px-3 py-1.5 text-xs font-semibold sm:inline-flex">60 min · Online</span>
+                  </div>
+
+                  <div class="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_210px]">
+                    <div>
+                      <p class="text-xs font-semibold text-muted">Duration</p>
+                      <div class="mt-2 grid grid-cols-4 gap-2">
+                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="30 minutes"><span class="block">30 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
+                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="50 minutes"><span class="block">50 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
+                        <button class="starting-duration selected rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="60 minutes"><span class="block">60 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
+                        <button class="starting-duration rounded-xl border border-line px-2 py-2.5 text-left text-xs font-semibold" data-duration="90 minutes"><span class="block">90 min</span><span class="duration-price mt-1 block text-[11px] font-normal text-muted">—</span></button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label for="startingFormat" class="text-xs font-semibold text-muted">Format</label>
+                      <div class="relative mt-2">
+                        <select id="startingFormat" class="w-full appearance-none rounded-xl border border-line bg-canvas px-4 py-2.5 pr-10 text-sm outline-none transition focus:border-ink">
+                          <option>Online</option>
+                          <option>At Thu's teaching space</option>
+                          <option>At your location</option>
+                          <option>Public place</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="pointer-events-none absolute right-3.5 top-3 h-4 w-4 text-muted"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="weeklyControls" class="mt-5 hidden rounded-2xl border border-line bg-white p-4 sm:p-5">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-sm font-semibold">Sessions each week</p>
+                  <p class="mt-1 text-xs text-muted">Multiple sessions can be on the same day.</p>
+                </div>
+                <div class="inline-flex items-center rounded-xl border border-line bg-canvas p-1">
+                  <button id="decreaseSessions" class="grid h-9 w-9 place-items-center rounded-lg text-muted transition hover:bg-white hover:text-ink" aria-label="Decrease sessions"><i data-lucide="minus" class="h-4 w-4"></i></button>
+                  <span id="sessionsPerWeek" class="min-w-10 text-center text-sm font-semibold">2</span>
+                  <button id="increaseSessions" class="grid h-9 w-9 place-items-center rounded-lg text-muted transition hover:bg-white hover:text-ink" aria-label="Increase sessions"><i data-lucide="plus" class="h-4 w-4"></i></button>
+                </div>
+              </div>
+              <div class="mt-4 flex items-center justify-between gap-3 border-t border-line pt-4">
+                <p id="weeklyProgress" class="text-sm font-semibold">Choose 2 weekly sessions</p>
+                <span id="weeklyProgressCount" class="text-xs text-muted">0 of 2 selected</span>
+              </div>
+            </div>
+
+            <div class="mt-7 flex items-center justify-between gap-3">
+              <button class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted" disabled aria-label="Previous dates"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
+              <div id="bookingDates" class="hide-scrollbar flex flex-1 gap-2 overflow-x-auto pb-1">
+                <button class="booking-date active min-w-[82px] rounded-2xl border border-line px-3 py-3 text-center" data-date="Monday, July 27" data-short="Mon, Jul 27" data-weekday="Monday">
+                  <span class="flex items-center justify-center gap-1.5"><span class="text-xs text-muted">Mon</span><span class="booking-date-count">0</span></span><span class="mt-1 block text-lg font-semibold">27</span>
+                </button>
+                <button class="booking-date min-w-[82px] rounded-2xl border border-line px-3 py-3 text-center" data-date="Tuesday, July 28" data-short="Tue, Jul 28" data-weekday="Tuesday">
+                  <span class="flex items-center justify-center gap-1.5"><span class="text-xs text-muted">Tue</span><span class="booking-date-count">0</span></span><span class="mt-1 block text-lg font-semibold">28</span>
+                </button>
+                <button class="booking-date min-w-[82px] rounded-2xl border border-line px-3 py-3 text-center" data-date="Wednesday, July 29" data-short="Wed, Jul 29" data-weekday="Wednesday">
+                  <span class="flex items-center justify-center gap-1.5"><span class="text-xs text-muted">Wed</span><span class="booking-date-count">0</span></span><span class="mt-1 block text-lg font-semibold">29</span>
+                </button>
+                <button class="booking-date min-w-[82px] rounded-2xl border border-line px-3 py-3 text-center" data-date="Thursday, July 30" data-short="Thu, Jul 30" data-weekday="Thursday">
+                  <span class="flex items-center justify-center gap-1.5"><span class="text-xs text-muted">Thu</span><span class="booking-date-count">0</span></span><span class="mt-1 block text-lg font-semibold">30</span>
+                </button>
+                <button class="booking-date min-w-[82px] rounded-2xl border border-line px-3 py-3 text-center" data-date="Friday, July 31" data-short="Fri, Jul 31" data-weekday="Friday">
+                  <span class="flex items-center justify-center gap-1.5"><span class="text-xs text-muted">Fri</span><span class="booking-date-count">0</span></span><span class="mt-1 block text-lg font-semibold">31</span>
+                </button>
+                <button class="booking-date min-w-[82px] rounded-2xl border border-line px-3 py-3 text-center" data-date="Saturday, August 1" data-short="Sat, Aug 1" data-weekday="Saturday">
+                  <span class="flex items-center justify-center gap-1.5"><span class="text-xs text-muted">Sat</span><span class="booking-date-count">0</span></span><span class="mt-1 block text-lg font-semibold">1</span>
+                </button>
+              </div>
+              <button class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line transition hover:border-ink" aria-label="Next dates"><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
+            </div>
+
+            <div class="mt-7 flex items-center justify-between gap-4">
+              <div>
+                <p id="activeDateLabel" class="text-sm font-semibold">Monday, July 27</p>
+                <p id="timeSelectionHint" class="mt-1 text-xs text-muted">Select one available time.</p>
+              </div>
+              <span id="activeDateSelectionCount" class="hidden rounded-full border border-line px-2.5 py-1 text-xs text-muted">0 selected</span>
+            </div>
+
+            <div id="bookingTimeGrid" class="mt-5 space-y-7">
+              <div>
+                <div class="flex items-center justify-between gap-4"><p class="text-sm font-semibold">Morning</p><span class="text-xs text-muted">4 available</span></div>
+                <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="09:00"></button>
+                  <button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="10:00"></button>
+                  <button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="11:00"></button>
+                  <button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="11:30"></button>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between gap-4"><p class="text-sm font-semibold">Afternoon</p><span class="text-xs text-muted">3 available</span></div>
+                <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="14:00"></button>
+                  <button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="15:30"></button>
+                  <button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="17:00"></button>
+                  <button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="18:00" disabled>Unavailable</button>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between gap-4"><p class="text-sm font-semibold">Evening</p><span class="text-xs text-muted">2 available</span></div>
+                <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="18:30"></button>
+                  <button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="20:00"></button>
+                </div>
+              </div>
+            </div>
+
+            <div id="recurrenceSection" class="mt-8 hidden border-t border-line pt-7">
+              <div class="flex items-end justify-between gap-4">
+                <div><p class="text-sm font-semibold">Repeat this schedule</p><p class="mt-1 text-xs text-muted">Each selected weekly slot keeps its own session settings.</p></div>
+                <span id="recurrenceLessonCount" class="text-xs text-muted">8 lessons</span>
+              </div>
+              <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <button class="recurrence-option selected rounded-xl border border-line px-3 py-3 text-sm font-semibold" data-weeks="4">4 weeks</button>
+                <button class="recurrence-option rounded-xl border border-line px-3 py-3 text-sm font-medium" data-weeks="8">8 weeks</button>
+                <button class="recurrence-option rounded-xl border border-line px-3 py-3 text-sm font-medium" data-weeks="12">12 weeks</button>
+                <button class="recurrence-option rounded-xl border border-line px-3 py-3 text-sm font-medium" data-weeks="custom">Custom</button>
+              </div>
+              <div class="mt-4 grid gap-3 rounded-xl bg-canvas p-4 text-sm sm:grid-cols-3">
+                <div><p class="text-xs text-muted">Starts</p><p class="mt-1 font-semibold">Week of 27 July</p></div>
+                <div><p class="text-xs text-muted">Repeats</p><p id="recurrenceSummary" class="mt-1 font-semibold">Every week for 4 weeks</p></div>
+                <div><p class="text-xs text-muted">Total</p><p id="recurrenceTotal" class="mt-1 font-semibold">8 lessons</p></div>
+              </div>
+            </div>
+
+            <div id="mobileSelectedSessions" class="mt-8 rounded-2xl border border-line bg-white p-4 lg:hidden">
+              <div class="flex items-center justify-between gap-3"><p class="text-sm font-semibold">Your sessions</p><span id="mobileSelectedCount" class="text-xs text-muted">0 sessions</span></div>
+              <div id="mobileSessionList" class="mt-2 divide-y divide-line"><p class="py-3 text-sm text-muted">No sessions selected yet.</p></div>
+            </div>
+
+            <section id="sessionCustomization" class="hidden mt-10 border-t border-line pt-8">
+              <div class="max-w-2xl">
+                <div class="flex items-start gap-3">
+                  <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white"><i data-lucide="sliders-horizontal" class="h-4 w-4"></i></span>
+                  <div>
+                    <h5 class="text-lg font-semibold tracking-[-0.02em]">Session details</h5>
+                    <p class="mt-1 text-sm leading-6 text-muted">Every selected session starts with the default above. Open a session only when you need to change its duration, format, location, or note.</p>
+                  </div>
+                </div>
+              </div>
+
+            <div class="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p id="customizeCount" class="text-sm font-semibold">0 sessions</p>
+                <p class="mt-1 text-xs text-muted">Only one session editor opens at a time.</p>
+              </div>
+              <button id="toggleBulkSettings" class="hidden w-fit rounded-xl border border-line px-4 py-2.5 text-xs font-semibold transition hover:border-ink">Copy settings to all</button>
+            </div>
+
+            <div id="bulkSettingsPanel" class="bulk-settings-panel mt-4 hidden rounded-2xl border border-line p-4 sm:p-5">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-sm font-semibold">Copy from <span id="bulkSourceLabel">the first session</span></p>
+                  <p class="mt-1 text-xs text-muted">Choose exactly which settings to copy. Unchecked fields stay unchanged.</p>
+                </div>
+                <button id="closeBulkSettings" class="grid h-8 w-8 place-items-center rounded-full text-muted transition hover:bg-white hover:text-ink"><i data-lucide="x" class="h-4 w-4"></i></button>
+              </div>
+              <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <label class="bulk-setting-check flex items-center gap-2 rounded-xl border border-line px-3 py-3 text-xs font-semibold"><input id="bulkDuration" type="checkbox" checked />Duration</label>
+                <label class="bulk-setting-check flex items-center gap-2 rounded-xl border border-line px-3 py-3 text-xs font-semibold"><input id="bulkFormat" type="checkbox" checked />Format</label>
+                <label class="bulk-setting-check flex items-center gap-2 rounded-xl border border-line px-3 py-3 text-xs font-semibold"><input id="bulkLocation" type="checkbox" />Location</label>
+                <label class="bulk-setting-check flex items-center gap-2 rounded-xl border border-line px-3 py-3 text-xs font-semibold"><input id="bulkNote" type="checkbox" />Notes</label>
+              </div>
+              <div class="mt-4 flex justify-end"><button id="applyBulkSettings" class="primary-action rounded-xl px-4 py-2.5 text-xs font-semibold">Copy selected settings</button></div>
+            </div>
+
+            <div id="sessionEditors" class="mt-5 space-y-7"></div>
+
+            <div id="sessionValidationBanner" class="mt-5 hidden rounded-2xl border border-line bg-canvas p-4">
+              <div class="flex gap-3"><i data-lucide="circle-alert" class="mt-0.5 h-4 w-4 shrink-0"></i><div><p class="text-sm font-semibold">Check your session details</p><p id="sessionValidationText" class="mt-1 text-xs leading-5 text-muted"></p></div></div>
+            </div>
+
+            <div id="mobileCustomizeSummary" class="mt-8 rounded-2xl border border-line bg-white p-4 lg:hidden">
+              <div class="flex items-center justify-between gap-3"><p class="text-sm font-semibold">Booking total</p><span id="mobileCustomizeTotal" class="text-sm font-semibold">0 đ</span></div>
+              <p id="mobileCustomizePlan" class="mt-1 text-xs text-muted">One lesson</p>
+            </div>
+            </section>
+          </section>
+
+          <!-- Step 2 -->
+          <section id="bookingStep2" class="booking-panel">
+            <div class="max-w-2xl">
+              <p class="text-xs font-semibold uppercase tracking-[0.15em] text-muted">Step 2 of 2</p>
+              <h4 class="mt-2 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">Review your request</h4>
+              <p class="mt-2 text-sm leading-6 text-muted">Check your session details before sending your request.</p>
+            </div>
+
+            <div class="mt-8 overflow-hidden rounded-[22px] border border-line bg-white">
+              <section class="review-section p-5 sm:p-6">
+                <div class="flex items-center justify-between gap-4"><div><p class="text-xs font-semibold uppercase tracking-[0.13em] text-muted">Schedule</p><p id="reviewScheduleCount" class="mt-1 text-sm font-semibold">1 session</p></div><button class="edit-booking-step text-xs font-semibold underline decoration-line underline-offset-4" data-edit-step="1">Edit</button></div>
+                <div id="reviewSchedule" class="mt-5 space-y-4"></div>
+              </section>
+
+              <section class="review-section p-5 sm:p-6">
+                <div class="flex items-center justify-between gap-4"><p class="text-xs font-semibold uppercase tracking-[0.13em] text-muted">Session details</p><button class="edit-booking-step text-xs font-semibold underline decoration-line underline-offset-4" data-edit-step="1">Edit</button></div>
+                <div id="reviewLessonDetails" class="mt-5 space-y-4"></div>
+              </section>
+
+              <section class="review-section p-5 sm:p-6">
+                <p class="text-xs font-semibold uppercase tracking-[0.13em] text-muted">Price</p>
+                  <div class="mt-4 space-y-3 text-sm">
+                    <div class="flex items-center justify-between gap-4"><span class="text-muted">Selected lessons</span><span id="reviewLessonQuantity">1</span></div>
+                  <div class="flex items-center justify-between gap-4"><span class="text-muted">Tutoria fee</span><span>Included</span></div>
+                  <div class="flex items-center justify-between gap-4 border-t border-line pt-4"><span class="font-semibold">Estimated total</span><span id="reviewTotal" class="text-lg font-semibold">300.000 đ</span></div>
+                </div>
+                <p id="reviewChargeNote" class="mt-4 rounded-xl border border-line bg-canvas p-4 text-xs leading-5 text-muted">You won't be charged yet. Payment becomes available after the tutor accepts your request.</p>
+                <p id="bookingAuthNote" class="mt-3 text-xs leading-5 text-muted">Sign in to send your booking request.</p>
+                <p id="bookingVerificationNote" class="mt-3 hidden rounded-xl border border-line bg-canvas p-4 text-xs leading-5 text-muted">Email verification is required before you can send this request.</p>
+              </section>
+            </div>
+
+          </section>
+
+          <!-- Success -->
+          <section id="bookingSuccess" class="booking-panel">
+            <div class="mx-auto max-w-xl py-8 text-center sm:py-16">
+              <span class="mx-auto grid h-16 w-16 place-items-center rounded-full border border-line bg-white"><i data-lucide="check" class="h-7 w-7"></i></span>
+              <p class="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-muted">Request sent</p>
+              <h4 id="bookingRequestSentTitle" class="mt-2 text-3xl font-semibold tracking-[-0.03em]">Your booking request has been sent to Thu Ha.</h4>
+              <p id="successDateTime" class="mt-4 text-sm text-neutral-700"></p>
+              <div class="mx-auto mt-8 max-w-md divide-y divide-line rounded-[22px] border border-line bg-white px-5 text-left">
+                <div class="flex items-center justify-between gap-5 py-4"><span class="text-sm text-muted">Plan</span><span id="successLesson" class="text-right text-sm font-semibold"></span></div>
+                <div class="flex items-center justify-between gap-5 py-4"><span class="text-sm text-muted">Price</span><span id="successPrice" class="text-sm font-semibold"></span></div>
+              </div>
+              <div class="mt-7 grid gap-3 sm:grid-cols-2">
+                <a href="/bookings" target="_top" class="rounded-xl border border-line px-5 py-3 text-center text-sm font-semibold transition hover:border-ink">View booking</a>
+                <button class="rounded-xl border border-line px-5 py-3 text-sm font-semibold transition hover:border-ink"><span class="inline-flex items-center gap-2"><i data-lucide="message-circle" class="h-4 w-4"></i>Message Thu</span></button>
+              </div>
+              <button id="doneBooking" class="mt-3 w-full rounded-xl border border-line px-5 py-3.5 text-sm font-semibold transition hover:border-ink">Back to profile</button>
+            </div>
+          </section>
+        </main>
+
+        <aside id="bookingSummary" class="hidden min-h-0 overflow-y-auto border-l border-line bg-canvas p-6 lg:block">
+          <div class="flex items-center gap-3 border-b border-line pb-5">
+            <img class="h-12 w-12 rounded-xl object-cover" src="https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=160&q=80" alt="Thu Ha" />
+            <div><p id="bookingSummaryTutorName" class="font-semibold">Thu Ha</p><p id="bookingSummaryTutorMeta" class="mt-1 text-xs text-muted">Cooking instructor · 4.9</p></div>
+          </div>
+
+          <div class="py-6">
+            <div class="flex items-center justify-between gap-3"><p class="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Your session</p><span id="summarySessionCount" class="text-xs text-muted">0 sessions</span></div>
+            <div id="summarySessionList" class="mt-3 divide-y divide-line"><p class="py-4 text-sm text-muted">Select a date and time.</p></div>
+          </div>
+
+          <div class="space-y-5 border-t border-line py-6 text-sm">
+            <div><p class="text-xs text-muted">Plan</p><p id="summaryFrequency" class="mt-1 font-semibold">One lesson</p></div>
+            <div><p class="text-xs text-muted">Default for new sessions</p><p id="summaryStartingSetup" class="mt-1 font-semibold">60 min · Online</p></div>
+          </div>
+
+          <div class="border-t border-line pt-5">
+            <div class="flex items-center justify-between gap-4 text-sm"><span class="text-muted">Selected sessions</span><span id="summarySubtotal">0 đ</span></div>
+            <div class="mt-3 flex items-center justify-between gap-4 text-sm"><span class="text-muted">Number of lessons</span><span id="summaryLessonQuantity">0</span></div>
+            <div class="mt-5 flex items-center justify-between gap-4 border-t border-line pt-5"><span class="font-semibold">Estimated total</span><span id="summaryTotal" class="text-lg font-semibold">0 đ</span></div>
+            <p id="summaryChargeNote" class="mt-2 text-xs leading-5 text-muted">No payment is due yet.</p>
+          </div>
+        </aside>
+      </div>
+
+      <footer id="bookingFooter" class="shrink-0 border-t border-line bg-[#151517] px-5 py-4 sm:px-7">
+        <div class="ml-auto flex max-w-full items-center justify-between gap-3 lg:max-w-[calc(100%-320px)]">
+          <button id="bookingBack" class="invisible rounded-xl border border-line px-5 py-3 text-sm font-semibold transition hover:border-ink">Back</button>
+          <div class="flex items-center gap-3">
+            <p id="footerSelection" class="hidden max-w-[320px] text-right text-xs text-muted sm:block">Select a time to continue</p>
+            <button id="bookingNext" class="primary-action min-w-[180px] rounded-xl px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40" disabled>Review booking</button>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script src="/tutor-profile-data.js?v=4"></script>
+  <script src="/tutor-profile-adapter.js?v=15"></script>
+  <script>
+    lucide.createIcons();
+
+    const discoverHeader = document.getElementById("discoverHeader");
+    let discoverHeaderPinned = false;
+
+    function syncProfileNavigatorOffset() {
+      const headerVisible = discoverHeader && !discoverHeader.classList.contains("is-hidden");
+      const offset = headerVisible ? Math.ceil(discoverHeader.offsetHeight) : 0;
+      document.documentElement.style.setProperty("--profile-nav-top", `${offset}px`);
+    }
+
+    function setDiscoverHeaderHidden(hidden) {
+      discoverHeader?.classList.toggle("is-hidden", hidden);
+      syncProfileNavigatorOffset();
+    }
+
+    function closeDiscoverMenus() {
+      document.querySelectorAll("[data-discover-menu].is-open").forEach(group => {
+        group.classList.remove("is-open");
+        group.querySelector("button")?.setAttribute("aria-expanded", "false");
+      });
+      const userMenu = document.querySelector("[data-user-menu]");
+      userMenu?.classList.remove("is-open");
+      userMenu?.querySelector("button")?.setAttribute("aria-expanded", "false");
+    }
+
+    document.querySelector("[data-auth-sign-out]")?.addEventListener("click", event => {
+      if (window.parent === window) return;
+      event.preventDefault();
+      window.parent.postMessage({ type: "tutoria-auth-sign-out" }, window.location.origin);
+    });
+
+    function setDiscoverMenuOpen(group, open) {
+      closeDiscoverMenus();
+      if (!open) return;
+      group.classList.add("is-open");
+      group.querySelector("button")?.setAttribute("aria-expanded", "true");
+      discoverHeaderPinned = true;
+      setDiscoverHeaderHidden(false);
+    }
+
+    document.querySelectorAll("[data-discover-menu]").forEach(group => {
+      let closeTimer;
+      const button = group.querySelector("button");
+      const cancelClose = () => {
+        if (closeTimer) window.clearTimeout(closeTimer);
+      };
+      const scheduleClose = () => {
+        cancelClose();
+        closeTimer = window.setTimeout(() => {
+          group.classList.remove("is-open");
+          button?.setAttribute("aria-expanded", "false");
+          discoverHeaderPinned = Boolean(document.querySelector(".discover-menu-anchor.is-open"));
+          syncProfileNavigatorOffset();
+        }, 120);
+      };
+      group.addEventListener("mouseenter", () => {
+        cancelClose();
+        setDiscoverMenuOpen(group, true);
+      });
+      group.addEventListener("mouseleave", scheduleClose);
+      button?.addEventListener("click", event => {
+        event.stopPropagation();
+        setDiscoverMenuOpen(group, !group.classList.contains("is-open"));
+      });
+    });
+
+    const discoverUserMenu = document.querySelector("[data-user-menu]");
+    discoverUserMenu?.querySelector("button")?.addEventListener("click", event => {
+      event.stopPropagation();
+      const shouldOpen = !discoverUserMenu.classList.contains("is-open");
+      closeDiscoverMenus();
+      discoverUserMenu.classList.toggle("is-open", shouldOpen);
+      discoverUserMenu.querySelector("button")?.setAttribute("aria-expanded", String(shouldOpen));
+      discoverHeaderPinned = shouldOpen;
+      if (shouldOpen) setDiscoverHeaderHidden(false);
+      else syncProfileNavigatorOffset();
+    });
+
+    const mobileMenuButton = document.getElementById("discoverMobileMenuButton");
+    const mobileOverlay = document.getElementById("discoverMobileOverlay");
+    const mobileDrawer = document.getElementById("discoverMobileDrawer");
+    const mobileClose = document.getElementById("discoverMobileClose");
+
+    function setDiscoverMobileOpen(open) {
+      mobileMenuButton?.setAttribute("aria-expanded", String(open));
+      mobileOverlay?.classList.toggle("is-open", open);
+      mobileDrawer?.classList.toggle("is-open", open);
+      mobileDrawer?.setAttribute("aria-hidden", String(!open));
+      discoverHeaderPinned = open;
+      if (open) setDiscoverHeaderHidden(false);
+      else syncProfileNavigatorOffset();
+    }
+
+    mobileMenuButton?.addEventListener("click", () => setDiscoverMobileOpen(true));
+    mobileClose?.addEventListener("click", () => setDiscoverMobileOpen(false));
+    mobileOverlay?.addEventListener("click", () => setDiscoverMobileOpen(false));
+    mobileDrawer?.querySelectorAll("a").forEach(link => link.addEventListener("click", () => setDiscoverMobileOpen(false)));
+
+    document.addEventListener("click", event => {
+      if (event.target.closest(".discover-header")) return;
+      closeDiscoverMenus();
+      discoverHeaderPinned = mobileDrawer?.classList.contains("is-open") || false;
+      syncProfileNavigatorOffset();
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key !== "Escape") return;
+      closeDiscoverMenus();
+      setDiscoverMobileOpen(false);
+      discoverHeaderPinned = false;
+      syncProfileNavigatorOffset();
+    });
+
+    window.addEventListener("scroll", () => {
+      const current = window.scrollY;
+      if (!discoverHeaderPinned) {
+        if (current <= 24) setDiscoverHeaderHidden(false);
+        else if (current > 96) setDiscoverHeaderHidden(true);
+        else syncProfileNavigatorOffset();
+      }
+    }, { passive: true });
+
+    window.addEventListener("resize", syncProfileNavigatorOffset);
+    syncProfileNavigatorOffset();
+
+    const tabs = [...document.querySelectorAll(".tab-button")];
+    const panels = [...document.querySelectorAll(".profile-section")];
+    const profileNavigator = document.getElementById("profileNavigator");
+    const profileProgressBar = document.getElementById("profileProgressBar");
+
+    function setActiveProfileTab(target) {
+      tabs.forEach(tab => {
+        const isActive = tab.dataset.tab === target;
+        tab.classList.toggle("tab-active", isActive);
+        tab.classList.toggle("text-muted", !isActive);
+        tab.classList.toggle("border-transparent", !isActive);
+        if (isActive) tab.setAttribute("aria-current", "true");
+        else tab.removeAttribute("aria-current");
+      });
+
+      const activeButton = tabs.find(tab => tab.dataset.tab === target);
+      activeButton?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+
+    tabs.forEach(button => {
+      button.addEventListener("click", () => {
+        const panel = document.getElementById(`panel-${button.dataset.tab}`);
+        if (!panel) return;
+        setActiveProfileTab(button.dataset.tab);
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+        history.replaceState(null, "", `#${button.dataset.tab}`);
+      });
+    });
+
+    const sectionObserver = new IntersectionObserver(entries => {
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+      if (visible) {
+        const target = visible.target.dataset.profileSection;
+        setActiveProfileTab(target);
+        history.replaceState(null, "", `#${target}`);
+      }
+    }, {
+      rootMargin: "-24% 0px -62% 0px",
+      threshold: [0, .05, .15, .3, .6]
+    });
+
+    panels.forEach(panel => sectionObserver.observe(panel));
+
+    function updateProfileScrollProgress() {
+      if (!profileNavigator || !profileProgressBar || !panels.length) return;
+      const start = profileNavigator.offsetTop;
+      const lastPanel = panels[panels.length - 1];
+      const end = lastPanel.offsetTop + lastPanel.offsetHeight - window.innerHeight * .55;
+      const distance = Math.max(1, end - start);
+      const progress = Math.min(1, Math.max(0, (window.scrollY - start) / distance));
+      profileProgressBar.style.transform = `scaleX(${progress})`;
+    }
+
+    const revealItems = panels.flatMap(panel => [...panel.children]);
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.body.classList.add("scroll-animations");
+      revealItems.forEach(item => item.classList.add("scroll-reveal"));
+
+      const revealObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: "0px 0px -10% 0px", threshold: .08 });
+
+      revealItems.forEach(item => revealObserver.observe(item));
+    }
+
+    window.addEventListener("scroll", updateProfileScrollProgress, { passive: true });
+    window.addEventListener("resize", updateProfileScrollProgress);
+    updateProfileScrollProgress();
+
+    const initialSection = location.hash.replace("#", "");
+    if (initialSection && document.getElementById(`panel-${initialSection}`)) {
+      requestAnimationFrame(() => {
+        setActiveProfileTab(initialSection);
+        document.getElementById(`panel-${initialSection}`).scrollIntoView({ block: "start" });
+      });
+    }
+
+    document.querySelectorAll(".faq-button").forEach(button => {
+      button.addEventListener("click", () => {
+        const answer = button.nextElementSibling;
+        const icon = button.querySelector(".faq-icon");
+        const isOpen = !answer.classList.contains("hidden");
+
+        document.querySelectorAll(".faq-answer").forEach(item => item.classList.add("hidden"));
+        document.querySelectorAll(".faq-icon").forEach(item => item.classList.remove("rotate-45"));
+
+        if (!isOpen) {
+          answer.classList.remove("hidden");
+          icon.classList.add("rotate-45");
+        }
+      });
+    });
+
+    const activeTutorProfile = (() => {
+      try {
+        return JSON.parse(document.documentElement.dataset.activeTutorProfile || "null");
+      } catch {
+        return null;
+      }
+    })();
+
+    let selectedDuration = "60 minutes";
+    let selectedPrice = activeTutorProfile?.selectedPrice || "300.000 đ";
+    let selectedMode = "single";
+    let selectedFormat = "Online";
+
+    const durationPrices = activeTutorProfile?.prices || {
+      "20 minutes": "120.000 đ",
+      "30 minutes": "180.000 đ",
+      "50 minutes": "260.000 đ",
+      "60 minutes": "300.000 đ",
+      "90 minutes": "420.000 đ"
+    };
+
+    const durationOptions = ["30 minutes", "50 minutes", "60 minutes", "90 minutes"];
+    const formatOptions = activeTutorProfile?.formatOptions || [
+      { value: "Online", label: "Online", icon: "video", detail: "Tutoria classroom" },
+      { value: "At Thu's teaching space", label: "Thu’s space", icon: "house", detail: "Hoan Kiem, Ha Noi" },
+      { value: "At your location", label: "Your location", icon: "navigation", detail: "Enter an address" },
+      { value: "Public place", label: "Public place", icon: "building-2", detail: "Choose a meeting place" }
+    ];
+
+    let flowKind = "Lesson";
+    let flowDuration = selectedDuration;
+    let flowPrice = selectedPrice;
+    let flowFormat = selectedFormat;
+    let flowMode = "single";
+    let activeDate = { date: "Monday, July 27", short: "Mon, Jul 27", weekday: "Monday" };
+    let selectedSessions = [];
+    let sessionsPerWeek = 2;
+    let recurrenceWeeks = 4;
+    let currentBookingStep = 1;
+    let authoritativeSessions = [];
+    let sessionsLoading = false;
+    let sessionsError = "";
+    let bookingSubmitting = false;
+    let bookingAuthenticated = false;
+    let requestSequence = 0;
+    let activeRequestId = "";
+    const resumeSessionId = new URLSearchParams(location.search).get("bookingSessionId");
+    let resumeAttempted = false;
+
+    const modal = document.getElementById("bookingModal");
+    const nextButton = document.getElementById("bookingNext");
+    const backButton = document.getElementById("bookingBack");
+    const footerSelection = document.getElementById("footerSelection");
+    const bookingFooter = document.getElementById("bookingFooter");
+    const bookingSummary = document.getElementById("bookingSummary");
+
+    function updateSelection(duration, price) {
+      selectedDuration = duration;
+      selectedPrice = price;
+      document.getElementById("sidebarPrice").textContent = price;
+      document.getElementById("sidebarDuration").textContent = `/ ${duration.replace("minutes", "min")}`;
+      document.getElementById("mobilePrice").textContent = price;
+      document.getElementById("mobileDuration").textContent = duration;
+    }
+
+    function syncDurationButtons(duration) {
+      document.querySelectorAll(".rate-card").forEach(card => {
+        const isSelected = card.dataset.duration === duration;
+        card.classList.toggle("selected", isSelected);
+        card.classList.toggle("selected-price", isSelected);
+        card.classList.toggle("border-2", isSelected);
+        card.classList.toggle("shadow-card", isSelected);
+        card.classList.toggle("border", !isSelected);
+      });
+      document.querySelectorAll(".sidebar-duration").forEach(button => {
+        const isSelected = button.dataset.duration === duration;
+        button.classList.toggle("selected", isSelected);
+        button.classList.toggle("selected-price", isSelected);
+        button.classList.toggle("border-2", isSelected);
+        button.classList.toggle("font-semibold", isSelected);
+        button.classList.toggle("border", !isSelected);
+        button.classList.toggle("border-line", !isSelected);
+        button.classList.toggle("font-medium", !isSelected);
+      });
+    }
+
+    document.querySelectorAll(".rate-card").forEach(card => card.addEventListener("click", () => {
+      syncDurationButtons(card.dataset.duration);
+      updateSelection(card.dataset.duration, card.dataset.price);
+    }));
+
+    document.querySelectorAll(".sidebar-duration").forEach(button => button.addEventListener("click", () => {
+      syncDurationButtons(button.dataset.duration);
+      updateSelection(button.dataset.duration, button.dataset.price);
+    }));
+
+    document.querySelectorAll(".lesson-mode").forEach(button => {
+      button.addEventListener("click", () => {
+        selectedMode = button.dataset.mode;
+        document.querySelectorAll(".lesson-mode").forEach(item => {
+          const active = item === button;
+          item.classList.toggle("selected", active);
+          item.classList.toggle("bg-white", active);
+          item.classList.toggle("font-semibold", active);
+          item.classList.toggle("text-muted", !active);
+          item.classList.toggle("font-medium", !active);
+        });
+        document.getElementById("weeklyHint").classList.toggle("hidden", selectedMode !== "weekly");
+      });
+    });
+
+    document.getElementById("sidebarFormat").addEventListener("change", event => { selectedFormat = event.target.value; });
+
+    function parseVnd(value) {
+      return Number(String(value).replace(/[^0-9]/g, "")) || 0;
+    }
+
+    function formatVnd(value) {
+      return `${new Intl.NumberFormat("vi-VN").format(value)} đ`;
+    }
+
+    function escapeHtml(value = "") {
+      return String(value).replace(/[&<>'"]/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
+      })[character]);
+    }
+
+    function sessionKey(session) {
+      return `${session.date}|${session.time}`;
+    }
+
+    function durationMinutes(duration) {
+      return Number.parseInt(duration, 10) || 60;
+    }
+
+    function timeMinutes(time) {
+      const [hours, minutes] = time.split(":").map(Number);
+      return hours * 60 + minutes;
+    }
+
+    function minutesToTime(value) {
+      const normalized = ((value % 1440) + 1440) % 1440;
+      const hours = Math.floor(normalized / 60);
+      const minutes = normalized % 60;
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+    }
+
+    function timeRange(time, duration) {
+      return `${time}–${minutesToTime(timeMinutes(time) + durationMinutes(duration))}`;
+    }
+
+    function currentSessionFor(time) {
+      const session = authoritativeSessions.find(item => item.date === activeDate.date && item.time === time);
+      if (!session) return null;
+      return { ...session, location: "", note: "", override: null, overrideOpen: false };
+    }
+
+    function sessionDateParts(value) {
+      const date = new Date(value);
+      const dateLabel = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(date);
+      const short = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(date);
+      const weekday = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date);
+      return { date: dateLabel, short, weekday, day: date.getDate(), weekdayShort: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(date) };
+    }
+
+    function normalizeAuthoritativeSessions(sessions) {
+      return sessions
+        .filter(session => session && typeof session.id === "string" && typeof session.startsAt === "string" && typeof session.endsAt === "string")
+        .map(session => {
+          const parts = sessionDateParts(session.startsAt);
+          const duration = Math.max(1, Math.round((new Date(session.endsAt).getTime() - new Date(session.startsAt).getTime()) / 60000));
+          const hourlyRate = Number(session.hourlyRateVnd || 0);
+          return {
+            ...parts,
+            id: session.id,
+            time: new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(session.startsAt)),
+            duration: `${duration} minutes`,
+            price: formatVnd(Math.round((hourlyRate * duration) / 60)),
+            format: "Online",
+            location: "",
+            note: "",
+            override: null,
+            overrideOpen: false,
+            startsAt: session.startsAt,
+            endsAt: session.endsAt,
+          };
+        })
+        .sort((first, second) => first.startsAt.localeCompare(second.startsAt));
+    }
+
+    function renderAuthoritativeAvailability() {
+      const dates = [...new Map(authoritativeSessions.map(session => [session.date, session])).values()];
+      const dateContainer = document.getElementById("bookingDates");
+      const timeContainer = document.getElementById("bookingTimeGrid");
+      if (!dateContainer || !timeContainer) return;
+      if (sessionsLoading) {
+        dateContainer.innerHTML = '<p class="px-3 py-3 text-sm text-muted">Loading available Sessions…</p>';
+        timeContainer.innerHTML = '<p class="rounded-2xl border border-line p-5 text-sm text-muted">Loading authoritative availability…</p>';
+        return;
+      }
+      if (sessionsError) {
+        dateContainer.innerHTML = '<p class="px-3 py-3 text-sm text-muted">Availability unavailable</p>';
+        timeContainer.innerHTML = `<div class="rounded-2xl border border-line p-5 text-sm text-muted">${escapeHtml(sessionsError)}</div>`;
+        return;
+      }
+      if (!dates.length) {
+        dateContainer.innerHTML = '<p class="px-3 py-3 text-sm text-muted">No bookable Sessions yet.</p>';
+        timeContainer.innerHTML = '<p class="rounded-2xl border border-line p-5 text-sm text-muted">This tutor has no bookable Sessions at the moment.</p>';
+        return;
+      }
+      if (!dates.some(item => item.date === activeDate.date)) activeDate = dates[0];
+      dateContainer.innerHTML = dates.map(item => `<button class="booking-date ${item.date === activeDate.date ? "active" : ""} min-w-[82px] rounded-2xl border border-line px-3 py-3 text-center" data-date="${escapeHtml(item.date)}" data-short="${escapeHtml(item.short)}" data-weekday="${escapeHtml(item.weekday)}"><span class="flex items-center justify-center gap-1.5"><span class="text-xs text-muted">${escapeHtml(item.weekdayShort)}</span><span class="booking-date-count">${authoritativeSessions.filter(session => session.date === item.date).length}</span></span><span class="mt-1 block text-lg font-semibold">${item.day}</span></button>`).join("");
+      const daySessions = authoritativeSessions.filter(session => session.date === activeDate.date);
+      const groups = [["Morning", 5, 12], ["Afternoon", 12, 18], ["Evening", 18, 24]];
+      timeContainer.innerHTML = groups.map(([label, start, end]) => {
+        const items = daySessions.filter(session => Number(session.time.slice(0, 2)) >= start && Number(session.time.slice(0, 2)) < end);
+        if (!items.length) return "";
+        return `<div><div class="flex items-center justify-between gap-4"><p class="text-sm font-semibold">${label}</p><span class="text-xs text-muted">${items.length} available</span></div><div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">${items.map(session => `<button class="booking-time rounded-xl border border-line px-3 py-3 text-sm font-medium" data-time="${session.time}">${timeRange(session.time, session.duration)}</button>`).join("")}</div></div>`;
+      }).join("") || '<p class="rounded-2xl border border-line p-5 text-sm text-muted">No Sessions are available on this date.</p>';
+      document.getElementById("activeDateLabel").textContent = activeDate.date;
+      updateDateAndTimeUI();
+    }
+
+    function requestAuthoritativeSessions() {
+      const tutorProfileId = activeTutorProfile?.id;
+      sessionsLoading = true;
+      sessionsError = "";
+      renderAuthoritativeAvailability();
+      if (!tutorProfileId) {
+        sessionsLoading = false;
+        sessionsError = "This tutor is not connected to bookable Sessions.";
+        renderAuthoritativeAvailability();
+        return;
+      }
+      const requestId = `sessions-${++requestSequence}`;
+      activeRequestId = requestId;
+      window.parent?.postMessage({ type: "tutoria-booking-load-sessions", requestId, tutorProfileId }, window.location.origin);
+    }
+
+    function submitBookingRequest() {
+      if (bookingSubmitting || selectedSessions.length !== 1) return;
+      if (!bookingAuthenticated) {
+        window.parent?.postMessage({ type: "tutoria-booking-auth-required", sessionId: selectedSessions[0].id }, window.location.origin);
+        return;
+      }
+      bookingSubmitting = true;
+      nextButton.disabled = true;
+      footerSelection.textContent = "Sending booking request…";
+      const requestId = `booking-${++requestSequence}`;
+      activeRequestId = requestId;
+      window.parent?.postMessage({ type: "tutoria-booking-create", requestId, sessionId: selectedSessions[0].id, participantCount: 1 }, window.location.origin);
+    }
+
+    window.addEventListener("message", event => {
+      if (event.origin !== window.location.origin || event.source !== window.parent) return;
+      const data = event.data || {};
+      if (data.type === "tutoria-booking-auth-state") {
+        bookingAuthenticated = data.authenticated === true;
+        const authNote = document.getElementById("bookingAuthNote");
+        if (authNote) authNote.classList.toggle("hidden", bookingAuthenticated);
+        updateFooter();
+        return;
+      }
+      if (data.type === "tutoria-booking-auth-required") {
+        bookingSubmitting = false;
+        bookingAuthenticated = false;
+        updateFooter();
+        window.parent?.postMessage({ type: "tutoria-booking-auth-required" }, window.location.origin);
+        return;
+      }
+      if (typeof data.requestId !== "string" || data.requestId !== activeRequestId) return;
+      if (data.type === "tutoria-booking-sessions" && Array.isArray(data.sessions)) {
+        sessionsLoading = false;
+        sessionsError = "";
+        authoritativeSessions = normalizeAuthoritativeSessions(data.sessions);
+        if (!resumeAttempted && resumeSessionId) {
+          resumeAttempted = true;
+          const resumeSession = authoritativeSessions.find(session => session.id === resumeSessionId);
+          if (resumeSession) {
+            flowMode = "single";
+            flowDuration = resumeSession.duration;
+            flowPrice = resumeSession.price;
+            activeDate = { date: resumeSession.date, short: resumeSession.short, weekday: resumeSession.weekday };
+            selectedSessions = [resumeSession];
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            document.body.style.overflow = "hidden";
+            currentBookingStep = 2;
+          }
+        }
+        renderAuthoritativeAvailability();
+        renderAll();
+        if (resumeSessionId && selectedSessions.length === 1 && currentBookingStep === 2) goToBookingStep(2);
+      } else if (data.type === "tutoria-booking-error") {
+        bookingSubmitting = false;
+        sessionsLoading = false;
+        const messages = { UNAUTHORIZED: "Sign in to send a booking request.", EMAIL_VERIFICATION_REQUIRED: "Verify your email before sending this booking request.", RATE_LIMITED: "You have sent several booking requests recently. Please wait a little before trying again.", FORBIDDEN: "You are not allowed to send this booking request.", SESSION_CAPACITY_EXHAUSTED: "That Session is no longer available. Refresh availability and try another time.", SESSION_UNAVAILABLE: "That Session is no longer available. Refresh availability and try another time.", SESSION_NOT_FOUND: "That Session could not be found. Refresh availability and try another time.", BOOKING_CONFLICT: "You already have an active request for that Session.", BOOKING_PRICE_MISSING: "This Session is not ready for booking.", STALE_VERSION: "Availability changed. Refresh and choose a current Session.", BOOKING_SERVICE_UNAVAILABLE: "Booking is temporarily unavailable. Please try again." };
+        const message = messages[data.code] || "We could not complete the booking request. Please try again.";
+        if (String(data.requestId || "").startsWith("sessions-")) sessionsError = message;
+        nextButton.disabled = false;
+        renderAuthoritativeAvailability();
+        renderAll();
+        footerSelection.textContent = message;
+        if (data.code === "EMAIL_VERIFICATION_REQUIRED") {
+          document.getElementById("bookingVerificationNote")?.classList.remove("hidden");
+          window.parent?.postMessage({ type: "tutoria-booking-verification-required", sessionId: data.sessionId }, window.location.origin);
+        }
+      } else if (data.type === "tutoria-booking-created" && data.booking) {
+        bookingSubmitting = false;
+        showBookingSuccess(data.booking);
+      }
+    });
+
+    function sessionCountForDate(date) {
+      return selectedSessions.filter(session => session.date === date).length;
+    }
+
+    function sortedSessions() {
+      const dateOrder = [...document.querySelectorAll(".booking-date")].map(button => button.dataset.date);
+      return [...selectedSessions].sort((first, second) => {
+        const dateDifference = dateOrder.indexOf(first.date) - dateOrder.indexOf(second.date);
+        return dateDifference || first.time.localeCompare(second.time);
+      });
+    }
+
+    function groupedSessions() {
+      const groups = new Map();
+      sortedSessions().forEach(session => {
+        if (!groups.has(session.date)) groups.set(session.date, []);
+        groups.get(session.date).push(session);
+      });
+      return groups;
+    }
+
+    function lessonQuantity() {
+      if (flowMode !== "weekly") return selectedSessions.length;
+      const skippedOccurrences = selectedSessions.filter(session => session.override?.skip).length;
+      return Math.max(0, selectedSessions.length * recurrenceWeeks - skippedOccurrences);
+    }
+
+    function weeklySubtotal() {
+      return selectedSessions.reduce((total, session) => total + parseVnd(session.price), 0);
+    }
+
+    function totalBookingValue() {
+      if (flowMode !== "weekly") return weeklySubtotal();
+      let total = weeklySubtotal() * recurrenceWeeks;
+      selectedSessions.forEach(session => {
+        if (!session.override) return;
+        const basePrice = parseVnd(session.price);
+        if (session.override.skip) {
+          total -= basePrice;
+          return;
+        }
+        const overridePrice = parseVnd(durationPrices[session.override.duration] || session.price);
+        total += overridePrice - basePrice;
+      });
+      return Math.max(0, total);
+    }
+
+    function planLabel() {
+      if (flowMode === "weekly") return `${selectedSessions.length} weekly ${selectedSessions.length === 1 ? "session" : "sessions"} · ${recurrenceWeeks} weeks`;
+      if (flowMode === "dates") return `${selectedSessions.length} flexible ${selectedSessions.length === 1 ? "session" : "sessions"}`;
+      return "One lesson";
+    }
+
+    function scheduleLabel(session, includeRange = true) {
+      const prefix = flowMode === "weekly" ? `Every ${session.weekday}` : session.short;
+      return `${prefix} · ${includeRange ? timeRange(session.time, session.duration) : session.time}`;
+    }
+
+    function needsLocation(session) {
+      return session.format === "At your location" || session.format === "Public place";
+    }
+
+    function locationText(session) {
+      if (session.format === "Online") return "Tutoria classroom";
+      if (session.format === activeTutorProfile?.teachingSpaceFormat || session.format === "At Thu's teaching space") return activeTutorProfile?.location || "Hoan Kiem, Ha Noi";
+      return session.location.trim() || "Location required";
+    }
+
+    function conflictKeys() {
+      const conflicts = new Set();
+      for (let index = 0; index < selectedSessions.length; index += 1) {
+        for (let compare = index + 1; compare < selectedSessions.length; compare += 1) {
+          const first = selectedSessions[index];
+          const second = selectedSessions[compare];
+          if (first.date !== second.date) continue;
+          const firstStart = timeMinutes(first.time);
+          const secondStart = timeMinutes(second.time);
+          const firstEnd = firstStart + durationMinutes(first.duration);
+          const secondEnd = secondStart + durationMinutes(second.duration);
+          if (firstStart < secondEnd && secondStart < firstEnd) {
+            conflicts.add(sessionKey(first));
+            conflicts.add(sessionKey(second));
+          }
+        }
+      }
+      return conflicts;
+    }
+
+    function incompleteLocationKeys() {
+      return new Set(selectedSessions.filter(session => needsLocation(session) && !session.location.trim()).map(sessionKey));
+    }
+
+    function isStepOneComplete() {
+      if (!selectedSessions.length) return false;
+      if (flowMode === "weekly") return selectedSessions.length === sessionsPerWeek;
+      if (flowMode === "single") return selectedSessions.length === 1;
+      return true;
+    }
+
+    function isStepTwoComplete() {
+      return selectedSessions.length > 0 && conflictKeys().size === 0 && incompleteLocationKeys().size === 0;
+    }
+
+    function updateStartingSetup() {
+      document.querySelectorAll(".starting-duration").forEach(button => {
+        button.classList.toggle("selected", button.dataset.duration === flowDuration);
+      });
+      const formatSelect = document.getElementById("startingFormat");
+      if (formatSelect) formatSelect.value = flowFormat;
+      const setupLabel = `${flowDuration.replace(" minutes", " min")} · ${flowFormat}`;
+      document.getElementById("startingSetupSummary").textContent = setupLabel;
+      document.getElementById("summaryStartingSetup").textContent = setupLabel;
+      document.getElementById("startingSetup").classList.toggle("hidden", flowKind === "Consultation");
+      updateTimeRanges();
+      updateAuthoritativeDurationPrices();
+    }
+
+    function updateAuthoritativeDurationPrices() {
+      const prices = new Map(authoritativeSessions.map(session => [session.duration, session.price]));
+      document.querySelectorAll(".starting-duration").forEach(button => {
+        const price = button.querySelector(".duration-price");
+        if (price) price.textContent = prices.get(button.dataset.duration) || "Not available";
+      });
+    }
+
+    function updateTimeRanges() {
+      document.querySelectorAll(".booking-time[data-time]").forEach(button => {
+        if (button.disabled) return;
+        button.textContent = timeRange(button.dataset.time, flowDuration);
+      });
+    }
+
+    function updateModeUI() {
+      document.querySelectorAll(".booking-mode-option").forEach(button => button.classList.toggle("selected", button.dataset.mode === flowMode));
+      document.getElementById("weeklyControls").classList.toggle("hidden", flowMode !== "weekly");
+      document.getElementById("recurrenceSection").classList.toggle("hidden", flowMode !== "weekly");
+      document.getElementById("sessionsPerWeek").textContent = sessionsPerWeek;
+
+      const hint = document.getElementById("timeSelectionHint");
+      if (flowMode === "single") hint.textContent = "Select one available time.";
+      if (flowMode === "weekly") hint.textContent = `Choose ${sessionsPerWeek} repeating weekly sessions.`;
+      if (flowMode === "dates") hint.textContent = "Select any dates and times. Choices do not repeat.";
+
+      const progressText = selectedSessions.length === sessionsPerWeek
+        ? "Weekly schedule complete"
+        : `Choose ${sessionsPerWeek} weekly ${sessionsPerWeek === 1 ? "session" : "sessions"}`;
+      document.getElementById("weeklyProgress").textContent = progressText;
+      document.getElementById("weeklyProgressCount").textContent = `${selectedSessions.length} of ${sessionsPerWeek} selected`;
+
+      const totalLessons = lessonQuantity();
+      document.getElementById("recurrenceLessonCount").textContent = `${totalLessons} ${totalLessons === 1 ? "lesson" : "lessons"}`;
+      document.getElementById("recurrenceSummary").textContent = `Every week for ${recurrenceWeeks} weeks`;
+      document.getElementById("recurrenceTotal").textContent = `${totalLessons} ${totalLessons === 1 ? "lesson" : "lessons"}`;
+    }
+
+    function updateDateAndTimeUI() {
+      document.querySelectorAll(".booking-date").forEach(button => {
+        const count = sessionCountForDate(button.dataset.date);
+        button.classList.toggle("has-selection", count > 0);
+        button.querySelector(".booking-date-count").textContent = count;
+      });
+
+      const activeCount = sessionCountForDate(activeDate.date);
+      const activeCountBadge = document.getElementById("activeDateSelectionCount");
+      activeCountBadge.classList.toggle("hidden", activeCount === 0);
+      activeCountBadge.textContent = `${activeCount} selected`;
+
+      document.querySelectorAll(".booking-time[data-time]:not(:disabled)").forEach(button => {
+        const candidate = { ...activeDate, time: button.dataset.time };
+        button.classList.toggle("selected", selectedSessions.some(session => sessionKey(session) === sessionKey(candidate)));
+      });
+    }
+
+    function renderCompactSessionList(container, editable) {
+      const sessions = sortedSessions();
+      const conflicts = conflictKeys();
+      const incomplete = incompleteLocationKeys();
+      if (!sessions.length) {
+        container.innerHTML = '<p class="py-4 text-sm text-muted">Select a date and time.</p>';
+        return;
+      }
+
+      container.innerHTML = sessions.map(session => {
+        const key = sessionKey(session);
+        const hasIssue = conflicts.has(key) || incomplete.has(key);
+        return `<div class="session-summary-row ${hasIssue ? "has-issue" : ""} border-b border-line py-3" data-session-key="${escapeHtml(key)}">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-semibold">${escapeHtml(scheduleLabel(session))}</p>
+              <p class="mt-1 truncate text-xs text-muted">${escapeHtml(session.duration)} · ${escapeHtml(session.format)}${session.override ? " · 1 occurrence changed" : ""}</p>
+              ${hasIssue ? `<p class="mt-1 text-[11px] font-semibold text-muted">${conflicts.has(key) ? "Overlaps another session" : "Location required"}</p>` : ""}
+            </div>
+            ${editable ? `<div class="flex shrink-0 items-center gap-1"><button class="edit-session rounded-lg px-2 py-1.5 text-[11px] font-semibold transition hover:bg-white" data-session-key="${escapeHtml(key)}">Edit</button><button class="remove-session grid h-7 w-7 place-items-center rounded-full text-muted transition hover:bg-white hover:text-ink" data-session-key="${escapeHtml(key)}" aria-label="Remove session"><i data-lucide="x" class="h-3.5 w-3.5"></i></button></div>` : ""}
+          </div>
+          <div class="mt-2 flex items-center justify-between gap-3 text-xs"><span class="text-muted">${escapeHtml(locationText(session))}</span><span class="font-semibold">${escapeHtml(session.price)}</span></div>
+        </div>`;
+      }).join("");
+    }
+
+    function renderSessionEditors() {
+      const container = document.getElementById("sessionEditors");
+      const groups = groupedSessions();
+      const sessions = sortedSessions();
+      const conflicts = conflictKeys();
+      const incomplete = incompleteLocationKeys();
+      document.getElementById("customizeCount").textContent = `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}`;
+      document.getElementById("toggleBulkSettings").classList.toggle("hidden", sessions.length < 2);
+
+      if (!sessions.length) {
+        container.innerHTML = '<div class="rounded-2xl border border-line bg-white p-5 text-sm text-muted">Select a time above to customize its details.</div>';
+        return;
+      }
+
+      container.innerHTML = [...groups.entries()].map(([date, dateSessions]) => {
+        const groupLabel = flowMode === "weekly" ? `WEEKLY SLOTS · ${dateSessions[0].weekday.toUpperCase()}` : date.toUpperCase();
+        const occurrenceText = flowMode === "weekly" ? `${recurrenceWeeks} occurrences each` : `${dateSessions.length} ${dateSessions.length === 1 ? "session" : "sessions"}`;
+        const cards = dateSessions.map(session => {
+          const key = sessionKey(session);
+          const isOpen = expandedSessionKey === key;
+          const hasIssue = conflicts.has(key) || incomplete.has(key);
+          const sessionIndex = sessions.findIndex(item => sessionKey(item) === key);
+          const previous = sessionIndex > 0 ? sessions[sessionIndex - 1] : null;
+          const locationField = needsLocation(session)
+            ? `<div class="mt-5"><label class="text-xs font-semibold">${session.format === "At your location" ? "Address or area" : "Meeting place"}</label><input class="session-location-input mt-2 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-ink" data-session-key="${escapeHtml(key)}" value="${escapeHtml(session.location)}" placeholder="${session.format === "At your location" ? "Enter the address for this session" : "Enter a café, studio, or area"}" /></div>`
+            : `<div class="mt-5 rounded-xl bg-canvas p-3"><p class="text-xs text-muted">Location</p><p class="mt-1 text-sm font-semibold">${escapeHtml(locationText(session))}</p></div>`;
+
+          const occurrenceOverride = flowMode === "weekly" ? `<div class="mt-5 border-t border-line pt-5">
+            <button class="toggle-occurrence flex items-center gap-2 text-xs font-semibold text-muted transition hover:text-ink" data-session-key="${escapeHtml(key)}"><i data-lucide="calendar-clock" class="h-4 w-4"></i>${session.override ? "Edit occurrence change" : "Change one occurrence"}</button>
+            ${session.override ? `<p class="mt-2 text-xs text-muted">Week ${session.override.week} · ${session.override.skip ? "Skipped" : `${escapeHtml(timeRange(session.override.time, session.override.duration))} · ${escapeHtml(session.override.duration)}`}</p>` : ""}
+            <div class="occurrence-editor ${session.overrideOpen ? "" : "hidden"} mt-4 rounded-xl bg-canvas p-4">
+              <div class="grid gap-3 sm:grid-cols-3">
+                <label class="text-xs font-semibold">Occurrence<select class="occurrence-week mt-2 w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm" data-session-key="${escapeHtml(key)}">${Array.from({ length: recurrenceWeeks }, (_, weekIndex) => `<option value="${weekIndex + 1}" ${(session.override?.week || 1) === weekIndex + 1 ? "selected" : ""}>Week ${weekIndex + 1}</option>`).join("")}</select></label>
+                <label class="text-xs font-semibold">New start<input class="occurrence-time mt-2 w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm" data-session-key="${escapeHtml(key)}" type="time" value="${escapeHtml(session.override?.time || session.time)}" /></label>
+                <label class="text-xs font-semibold">Duration<select class="occurrence-duration mt-2 w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm" data-session-key="${escapeHtml(key)}">${durationOptions.map(duration => `<option ${duration === (session.override?.duration || session.duration) ? "selected" : ""}>${escapeHtml(duration)}</option>`).join("")}</select></label>
+              </div>
+              <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <label class="flex items-center gap-2 text-xs text-muted"><input class="occurrence-skip" data-session-key="${escapeHtml(key)}" type="checkbox" ${session.override?.skip ? "checked" : ""} /> Skip this occurrence</label>
+                <div class="flex items-center gap-2">${session.override ? `<button class="clear-occurrence rounded-lg border border-line px-3 py-2 text-xs font-semibold" data-session-key="${escapeHtml(key)}">Remove change</button>` : ""}<button class="save-occurrence primary-action rounded-lg px-3 py-2 text-xs font-semibold" data-session-key="${escapeHtml(key)}">Save change</button></div>
+              </div>
+            </div>
+          </div>` : "";
+
+          return `<article class="session-editor-card ${isOpen ? "open" : ""} ${hasIssue ? "has-issue" : ""} rounded-2xl border border-line bg-white" data-session-key="${escapeHtml(key)}">
+            <button class="session-editor-toggle flex w-full items-center justify-between gap-4 p-4 text-left sm:p-5" data-session-key="${escapeHtml(key)}">
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold">${escapeHtml(scheduleLabel(session))}</p>
+                <p class="mt-1 truncate text-xs text-muted">${escapeHtml(session.duration)} · ${escapeHtml(session.format)} · ${escapeHtml(session.price)}</p>
+              </div>
+              <div class="flex shrink-0 items-center gap-3"><span class="text-[11px] font-semibold ${hasIssue ? "text-ink" : "text-muted"}">${hasIssue ? "Needs attention" : "Complete"}</span><i data-lucide="chevron-down" class="session-editor-chevron h-4 w-4 text-muted"></i></div>
+            </button>
+
+            <div class="session-editor-body border-t border-line p-4 sm:p-5">
+              ${conflicts.has(key) ? '<div class="mb-5 rounded-xl border border-line bg-canvas p-3 text-xs leading-5">This duration overlaps another selected session on the same date.</div>' : ""}
+
+              <div>
+                <div class="flex items-center justify-between gap-3"><p class="text-xs font-semibold">Duration</p><span class="text-xs text-muted">${escapeHtml(session.price)}</span></div>
+                <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  ${(flowKind === "Consultation" ? ["20 minutes"] : durationOptions).map(duration => `<button class="session-duration-option ${session.duration === duration ? "selected" : ""} rounded-xl border border-line px-3 py-3 text-left" data-session-key="${escapeHtml(key)}" data-duration="${escapeHtml(duration)}"><span class="block text-sm font-semibold">${escapeHtml(duration.replace(" minutes", " min"))}</span><span class="mt-1 block text-xs text-muted">${escapeHtml(durationPrices[duration])}</span></button>`).join("")}
+                </div>
+              </div>
+
+              <div class="mt-5">
+                <p class="text-xs font-semibold">Format</p>
+                <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                  ${formatOptions.map(option => `<button class="session-format-option ${session.format === option.value ? "selected" : ""} flex items-center gap-3 rounded-xl border border-line p-3 text-left" data-session-key="${escapeHtml(key)}" data-format="${escapeHtml(option.value)}"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-canvas"><i data-lucide="${escapeHtml(option.icon)}" class="h-4 w-4"></i></span><span><span class="block text-sm font-semibold">${escapeHtml(option.label)}</span><span class="mt-1 block text-xs text-muted">${escapeHtml(option.detail)}</span></span></button>`).join("")}
+                </div>
+              </div>
+
+              ${locationField}
+
+              <div class="mt-5"><label class="text-xs font-semibold">Note for Thu <span class="font-normal text-muted">Optional</span></label><textarea class="session-note-input mt-2 min-h-[88px] w-full resize-none rounded-xl border border-line bg-canvas px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-ink" data-session-key="${escapeHtml(key)}" placeholder="Share a goal, recipe, or preparation detail">${escapeHtml(session.note)}</textarea></div>
+
+              ${occurrenceOverride}
+
+              <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+                <div>${previous ? `<button class="copy-previous-session text-xs font-semibold underline decoration-line underline-offset-4" data-source-key="${escapeHtml(sessionKey(previous))}" data-target-key="${escapeHtml(key)}">Copy previous session</button>` : ""}</div>
+                <button class="save-session primary-action rounded-xl px-4 py-2.5 text-xs font-semibold" data-session-key="${escapeHtml(key)}">Save session</button>
+              </div>
+            </div>
+          </article>`;
+        }).join("");
+
+        return `<section><div class="mb-3 flex items-center justify-between gap-4"><p class="text-xs font-semibold uppercase tracking-[0.13em] text-muted">${escapeHtml(groupLabel)}</p><span class="text-xs text-muted">${escapeHtml(occurrenceText)}</span></div><div class="space-y-3">${cards}</div></section>`;
+      }).join("");
+
+      bindDynamicControls();
+      lucide.createIcons();
+    }
+
+    function renderReview() {
+      const scheduleContainer = document.getElementById("reviewSchedule");
+      const detailsContainer = document.getElementById("reviewLessonDetails");
+      const groups = groupedSessions();
+      document.getElementById("reviewScheduleCount").textContent = `${lessonQuantity()} ${lessonQuantity() === 1 ? "lesson" : "lessons"}`;
+
+      scheduleContainer.innerHTML = [...groups.entries()].map(([date, sessions]) => {
+        const title = flowMode === "weekly" ? `Every ${sessions[0].weekday}` : date;
+        return `<div><p class="text-sm font-semibold">${escapeHtml(title)}</p><div class="mt-2 space-y-2">${sessions.map(session => `<div><div class="flex items-center justify-between gap-4 text-sm"><span class="text-muted">${escapeHtml(timeRange(session.time, session.duration))} · ${escapeHtml(session.format)}</span><span class="shrink-0 font-semibold">${escapeHtml(session.price)}</span></div>${session.override ? `<p class="mt-1 text-xs text-muted">Week ${session.override.week}: ${session.override.skip ? "Skipped" : `${escapeHtml(timeRange(session.override.time, session.override.duration))} · ${escapeHtml(session.override.duration)}`}</p>` : ""}</div>`).join("")}</div>${flowMode === "weekly" ? `<p class="mt-2 text-xs text-muted">Repeats for ${recurrenceWeeks} weeks</p>` : ""}</div>`;
+      }).join("");
+
+      detailsContainer.innerHTML = sortedSessions().map(session => `<div class="flex items-start justify-between gap-4"><div><p class="text-sm font-semibold">${escapeHtml(scheduleLabel(session))}</p><p class="mt-1 text-xs text-muted">${escapeHtml(session.duration)} · ${escapeHtml(locationText(session))}${session.override ? " · 1 occurrence changed" : ""}</p>${session.note ? `<p class="mt-1 text-xs text-muted">${escapeHtml(session.note)}</p>` : ""}</div></div>`).join("");
+
+      document.getElementById("reviewLessonQuantity").textContent = lessonQuantity();
+      document.getElementById("reviewTotal").textContent = formatVnd(totalBookingValue());
+      const tutorName = activeTutorProfile?.name || "the tutor";
+      document.getElementById("reviewChargeNote").textContent = `You won't be charged yet. Payment becomes available after ${tutorName} accepts your request.`;
+    }
+
+    function renderAll() {
+      updateStartingSetup();
+      updateModeUI();
+      updateDateAndTimeUI();
+
+      document.getElementById("sessionCustomization").classList.add("hidden");
+      renderCompactSessionList(document.getElementById("summarySessionList"), true);
+      renderCompactSessionList(document.getElementById("mobileSessionList"), false);
+      document.getElementById("summarySessionCount").textContent = `${selectedSessions.length} ${selectedSessions.length === 1 ? "session" : "sessions"}`;
+      document.getElementById("mobileSelectedCount").textContent = `${selectedSessions.length} ${selectedSessions.length === 1 ? "session" : "sessions"}`;
+      document.getElementById("summaryFrequency").textContent = planLabel();
+      document.getElementById("summarySubtotal").textContent = formatVnd(weeklySubtotal());
+      document.getElementById("summaryLessonQuantity").textContent = lessonQuantity();
+      document.getElementById("summaryTotal").textContent = formatVnd(totalBookingValue());
+      document.getElementById("summaryChargeNote").textContent = "No payment is due yet.";
+      document.getElementById("mobileCustomizeTotal").textContent = formatVnd(totalBookingValue());
+      document.getElementById("mobileCustomizePlan").textContent = planLabel();
+
+      if (currentBookingStep === 1) renderSessionEditors();
+      if (currentBookingStep === 2) renderReview();
+
+      updateFooter();
+      bindDynamicControls();
+      lucide.createIcons();
+    }
+
+    function updateFooter() {
+      const conflicts = conflictKeys();
+      const incomplete = incompleteLocationKeys();
+      backButton.classList.toggle("invisible", currentBookingStep === 1);
+
+      if (currentBookingStep === 1) {
+        nextButton.textContent = "Review request";
+        nextButton.disabled = !(isStepOneComplete() && isStepTwoComplete());
+        if (!selectedSessions.length) footerSelection.textContent = "Select a time to continue";
+        else if (flowMode === "weekly" && selectedSessions.length < sessionsPerWeek) footerSelection.textContent = `${selectedSessions.length} of ${sessionsPerWeek} weekly sessions selected`;
+        else if (conflicts.size) footerSelection.textContent = "Resolve overlapping sessions";
+        else if (incomplete.size) footerSelection.textContent = `Add ${incomplete.size} required ${incomplete.size === 1 ? "location" : "locations"}`;
+        else footerSelection.textContent = `${lessonQuantity()} ${lessonQuantity() === 1 ? "lesson" : "lessons"} · ${formatVnd(totalBookingValue())}`;
+      }
+
+      if (currentBookingStep === 2) {
+        nextButton.textContent = bookingAuthenticated ? "Send booking request" : "Sign in to send request";
+        nextButton.disabled = bookingSubmitting || selectedSessions.length !== 1;
+        footerSelection.textContent = `${lessonQuantity()} ${lessonQuantity() === 1 ? "lesson" : "lessons"}`;
+      }
+    }
+
+    function goToBookingStep(step) {
+      currentBookingStep = step;
+      document.querySelectorAll(".booking-panel").forEach(panel => panel.classList.remove("active"));
+      document.getElementById(`bookingStep${step}`).classList.add("active");
+      bookingFooter.classList.remove("hidden");
+      bookingSummary.style.display = "";
+
+      document.querySelectorAll(".booking-progress").forEach(button => {
+        const buttonStep = Number(button.dataset.step);
+        button.classList.toggle("active", buttonStep === step);
+        button.classList.toggle("complete", buttonStep < step);
+      });
+
+      renderAll();
+      document.querySelector(".booking-drawer main").scrollTop = 0;
+    }
+
+    function showBookingSuccess(booking) {
+      document.querySelectorAll(".booking-panel").forEach(panel => panel.classList.remove("active"));
+      document.getElementById("bookingSuccess").classList.add("active");
+      bookingFooter.classList.add("hidden");
+      bookingSummary.style.display = "none";
+      document.getElementById("successDateTime").textContent = `${lessonQuantity()} ${lessonQuantity() === 1 ? "lesson" : "lessons"} · ${planLabel()}`;
+      document.getElementById("successLesson").textContent = planLabel();
+      document.getElementById("successPrice").textContent = booking?.pricing?.amountVnd ? formatVnd(booking.pricing.amountVnd) : formatVnd(totalBookingValue());
+      document.querySelectorAll(".booking-progress").forEach(button => button.classList.add("complete"));
+      lucide.createIcons();
+    }
+
+    function switchFlowMode(mode, force = false) {
+      if (!force && selectedSessions.length && mode !== flowMode) {
+        const confirmed = window.confirm("Changing the schedule type will clear your selected sessions. Continue?");
+        if (!confirmed) return;
+      }
+      flowMode = mode;
+      selectedSessions = [];
+      expandedSessionKey = null;
+      renderAll();
+    }
+
+    function toggleSession(time) {
+      const candidate = currentSessionFor(time);
+      if (!candidate) return;
+      const key = sessionKey(candidate);
+      const existingIndex = selectedSessions.findIndex(session => sessionKey(session) === key);
+
+      if (existingIndex >= 0) {
+        selectedSessions.splice(existingIndex, 1);
+      } else if (flowMode === "single") {
+        selectedSessions = [candidate];
+      } else if (flowMode === "weekly" && selectedSessions.length >= sessionsPerWeek) {
+        footerSelection.textContent = `Remove a session before choosing another`;
+        return;
+      } else if (flowMode === "dates" && selectedSessions.length >= 12) {
+        footerSelection.textContent = "Maximum 12 sessions per booking";
+        return;
+      } else {
+        selectedSessions.push(candidate);
+      }
+      renderAll();
+    }
+
+    function removeSession(key) {
+      selectedSessions = selectedSessions.filter(session => sessionKey(session) !== key);
+      if (expandedSessionKey === key) expandedSessionKey = selectedSessions.length ? sessionKey(sortedSessions()[0]) : null;
+      renderAll();
+    }
+
+    function updateSession(key, updates) {
+      const session = selectedSessions.find(item => sessionKey(item) === key);
+      if (!session) return;
+      Object.assign(session, updates);
+      if (updates.duration) session.price = durationPrices[updates.duration];
+      if (updates.format && !needsLocation(session)) session.location = "";
+      renderAll();
+    }
+
+    function bindDynamicControls() {
+      document.querySelectorAll(".remove-session").forEach(button => {
+        button.onclick = () => removeSession(button.dataset.sessionKey);
+      });
+
+      document.querySelectorAll(".edit-session").forEach(button => {
+        button.onclick = () => {
+          expandedSessionKey = button.dataset.sessionKey;
+          currentBookingStep = 1;
+          document.querySelectorAll(".booking-panel").forEach(panel => panel.classList.remove("active"));
+          document.getElementById("bookingStep1").classList.add("active");
+          renderAll();
+          requestAnimationFrame(() => document.getElementById("sessionCustomization").scrollIntoView({ behavior: "smooth", block: "start" }));
+        };
+      });
+
+      document.querySelectorAll(".session-editor-toggle").forEach(button => {
+        button.onclick = () => {
+          expandedSessionKey = expandedSessionKey === button.dataset.sessionKey ? null : button.dataset.sessionKey;
+          renderSessionEditors();
+        };
+      });
+
+      document.querySelectorAll(".session-duration-option").forEach(button => {
+        button.onclick = () => updateSession(button.dataset.sessionKey, { duration: button.dataset.duration });
+      });
+
+      document.querySelectorAll(".session-format-option").forEach(button => {
+        button.onclick = () => updateSession(button.dataset.sessionKey, { format: button.dataset.format });
+      });
+
+      document.querySelectorAll(".session-location-input").forEach(input => {
+        input.oninput = () => {
+          const session = selectedSessions.find(item => sessionKey(item) === input.dataset.sessionKey);
+          if (session) session.location = input.value;
+          updateFooter();
+        };
+        input.onblur = () => renderAll();
+      });
+
+      document.querySelectorAll(".session-note-input").forEach(input => {
+        input.oninput = () => {
+          const session = selectedSessions.find(item => sessionKey(item) === input.dataset.sessionKey);
+          if (session) session.note = input.value;
+        };
+        input.onblur = () => renderAll();
+      });
+
+      document.querySelectorAll(".save-session").forEach(button => {
+        button.onclick = () => {
+          const session = selectedSessions.find(item => sessionKey(item) === button.dataset.sessionKey);
+          if (!session) return;
+          if (needsLocation(session) && !session.location.trim()) {
+            renderAll();
+            return;
+          }
+          expandedSessionKey = null;
+          renderAll();
+        };
+      });
+
+      document.querySelectorAll(".copy-previous-session").forEach(button => {
+        button.onclick = () => {
+          const source = selectedSessions.find(item => sessionKey(item) === button.dataset.sourceKey);
+          const target = selectedSessions.find(item => sessionKey(item) === button.dataset.targetKey);
+          if (!source || !target) return;
+          target.duration = source.duration;
+          target.price = source.price;
+          target.format = source.format;
+          target.location = source.location;
+          target.note = source.note;
+          renderAll();
+        };
+      });
+
+      document.querySelectorAll(".toggle-occurrence").forEach(button => {
+        button.onclick = () => {
+          const session = selectedSessions.find(item => sessionKey(item) === button.dataset.sessionKey);
+          if (!session) return;
+          session.overrideOpen = !session.overrideOpen;
+          expandedSessionKey = sessionKey(session);
+          renderAll();
+        };
+      });
+
+      document.querySelectorAll(".save-occurrence").forEach(button => {
+        button.onclick = () => {
+          const session = selectedSessions.find(item => sessionKey(item) === button.dataset.sessionKey);
+          const editor = button.closest(".occurrence-editor");
+          if (!session || !editor) return;
+          session.override = {
+            week: Number(editor.querySelector(".occurrence-week").value),
+            time: editor.querySelector(".occurrence-time").value || session.time,
+            duration: editor.querySelector(".occurrence-duration").value,
+            skip: editor.querySelector(".occurrence-skip").checked
+          };
+          session.overrideOpen = false;
+          renderAll();
+        };
+      });
+
+      document.querySelectorAll(".clear-occurrence").forEach(button => {
+        button.onclick = () => {
+          const session = selectedSessions.find(item => sessionKey(item) === button.dataset.sessionKey);
+          if (!session) return;
+          session.override = null;
+          session.overrideOpen = false;
+          renderAll();
+        };
+      });
+    }
+
+    function openBookingFlow(kind = "Lesson", duration = selectedDuration, price = selectedPrice) {
+      flowKind = kind;
+      flowDuration = duration;
+      flowPrice = price;
+      flowFormat = selectedFormat;
+      flowMode = "single";
+      document.getElementById("bookingModeSection")?.classList.remove("sm:grid-cols-1");
+      flowFormat = "Online";
+      const formatSelect = document.getElementById("startingFormat");
+      if (formatSelect) { formatSelect.value = "Online"; formatSelect.disabled = true; }
+      activeDate = { date: "Monday, July 27", short: "Mon, Jul 27", weekday: "Monday" };
+      selectedSessions = [];
+      sessionsPerWeek = 2;
+      recurrenceWeeks = 4;
+      expandedSessionKey = null;
+      bulkSourceKey = null;
+
+      document.getElementById("bookingKindLabel").textContent = kind === "Consultation" ? "Book a consultation" : "Book a lesson";
+      document.getElementById("bookingModeSection").classList.toggle("hidden", kind === "Consultation");
+      document.querySelectorAll(".booking-date").forEach((button, index) => button.classList.toggle("active", index === 0));
+      document.getElementById("activeDateLabel").textContent = activeDate.date;
+      document.querySelectorAll(".recurrence-option").forEach(button => button.classList.toggle("selected", button.dataset.weeks === "4"));
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      document.body.style.overflow = "hidden";
+      goToBookingStep(1);
+      requestAuthoritativeSessions();
+    }
+
+    function closeBookingModal() {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      document.body.style.overflow = "";
+    }
+
+    let expandedSessionKey = null;
+    let bulkSourceKey = null;
+
+    document.getElementById("bookLessonButton")?.addEventListener("click", () => openBookingFlow());
+    document.getElementById("mobileBookButton")?.addEventListener("click", () => openBookingFlow());
+    document.getElementById("consultationBookButton")?.addEventListener("click", () => openBookingFlow("Consultation", "20 minutes", "120.000 đ"));
+    document.getElementById("closeModal").addEventListener("click", closeBookingModal);
+    document.getElementById("doneBooking").addEventListener("click", closeBookingModal);
+    modal.addEventListener("click", event => { if (event.target === modal) closeBookingModal(); });
+    document.addEventListener("keydown", event => { if (event.key === "Escape" && !modal.classList.contains("hidden")) closeBookingModal(); });
+
+    document.querySelectorAll(".booking-mode-option").forEach(button => button.addEventListener("click", () => switchFlowMode(button.dataset.mode)));
+
+    document.querySelectorAll(".starting-duration").forEach(button => button.addEventListener("click", () => {
+      flowDuration = button.dataset.duration;
+      flowPrice = durationPrices[flowDuration];
+      updateStartingSetup();
+      updateFooter();
+    }));
+
+    document.getElementById("startingFormat").addEventListener("change", event => {
+      flowFormat = event.target.value;
+      updateStartingSetup();
+    });
+
+
+    document.getElementById("decreaseSessions").addEventListener("click", () => {
+      if (sessionsPerWeek <= 1) return;
+      sessionsPerWeek -= 1;
+      if (selectedSessions.length > sessionsPerWeek) selectedSessions = selectedSessions.slice(0, sessionsPerWeek);
+      renderAll();
+    });
+
+    document.getElementById("increaseSessions").addEventListener("click", () => {
+      if (sessionsPerWeek >= 5) return;
+      sessionsPerWeek += 1;
+      renderAll();
+    });
+
+    document.getElementById("bookingDates").addEventListener("click", event => {
+      const button = event.target.closest(".booking-date");
+      if (!button) return;
+      document.querySelectorAll(".booking-date").forEach(item => item.classList.remove("active"));
+      button.classList.add("active");
+      activeDate = { date: button.dataset.date, short: button.dataset.short, weekday: button.dataset.weekday };
+      document.getElementById("activeDateLabel").textContent = activeDate.date;
+      renderAuthoritativeAvailability();
+    });
+
+    document.getElementById("bookingTimeGrid").addEventListener("click", event => {
+      const button = event.target.closest(".booking-time");
+      if (button && !button.disabled) toggleSession(button.dataset.time);
+    });
+
+    document.querySelectorAll(".booking-time[data-time]:not(:disabled)").forEach(button => button.addEventListener("click", () => toggleSession(button.dataset.time)));
+
+    document.querySelectorAll(".recurrence-option").forEach(button => button.addEventListener("click", () => {
+      const weeks = button.dataset.weeks;
+      recurrenceWeeks = weeks === "custom" ? 6 : Number(weeks);
+      selectedSessions.forEach(session => {
+        if (session.override && session.override.week > recurrenceWeeks) session.override = null;
+      });
+      document.querySelectorAll(".recurrence-option").forEach(item => item.classList.toggle("selected", item === button));
+      if (weeks === "custom") button.textContent = "6 weeks";
+      renderAll();
+    }));
+
+    document.getElementById("toggleBulkSettings").addEventListener("click", () => {
+      const source = selectedSessions.find(session => sessionKey(session) === expandedSessionKey) || sortedSessions()[0];
+      bulkSourceKey = source ? sessionKey(source) : null;
+      document.getElementById("bulkSourceLabel").textContent = source ? scheduleLabel(source) : "the first session";
+      document.getElementById("bulkSettingsPanel").classList.remove("hidden");
+    });
+
+    document.getElementById("closeBulkSettings").addEventListener("click", () => document.getElementById("bulkSettingsPanel").classList.add("hidden"));
+
+    document.getElementById("applyBulkSettings").addEventListener("click", () => {
+      const source = selectedSessions.find(session => sessionKey(session) === bulkSourceKey) || sortedSessions()[0];
+      if (!source) return;
+      const copyDuration = document.getElementById("bulkDuration").checked;
+      const copyFormat = document.getElementById("bulkFormat").checked;
+      const copyLocation = document.getElementById("bulkLocation").checked;
+      const copyNote = document.getElementById("bulkNote").checked;
+      selectedSessions.forEach(session => {
+        if (sessionKey(session) === sessionKey(source)) return;
+        if (copyDuration) { session.duration = source.duration; session.price = source.price; }
+        if (copyFormat) session.format = source.format;
+        if (copyLocation) session.location = source.location;
+        if (copyNote) session.note = source.note;
+        if (copyFormat && !needsLocation(session)) session.location = "";
+      });
+      document.getElementById("bulkSettingsPanel").classList.add("hidden");
+      renderAll();
+    });
+
+    nextButton.addEventListener("click", () => {
+      if (currentBookingStep === 1 && isStepOneComplete() && isStepTwoComplete()) goToBookingStep(2);
+      else if (currentBookingStep === 2) submitBookingRequest();
+    });
+
+    backButton.addEventListener("click", () => { if (currentBookingStep > 1) goToBookingStep(currentBookingStep - 1); });
+
+    document.querySelectorAll(".booking-progress").forEach(button => button.addEventListener("click", () => {
+      const target = Number(button.dataset.step);
+      if (target < currentBookingStep) goToBookingStep(target);
+      else if (target === 2 && isStepOneComplete() && isStepTwoComplete()) goToBookingStep(2);
+    }));
+
+    document.querySelectorAll(".edit-booking-step").forEach(button => button.addEventListener("click", () => goToBookingStep(Number(button.dataset.editStep))));
+    document.querySelectorAll(".availability-cell button, button.availability-cell").forEach(button => button.addEventListener("click", () => openBookingFlow()));
+
+    if (resumeSessionId) requestAuthoritativeSessions();
+
+  </script>
+</body>
+</html>

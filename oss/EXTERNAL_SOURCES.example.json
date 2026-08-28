@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "id": "example-tiptap-core",
+      "name": "Tiptap core example only",
+      "source": "https://github.com/ueberdosis/tiptap",
+      "ref": "3.23.6",
+      "license": "MIT",
+      "status": "PASS",
+      "scope": ["packages/core"],
+      "planned_use": "dependency",
+      "checked_on": "2026-08-11",
+      "evidence": ["Example only: replace with actual LICENSE/file evidence from the exact version used"],
+      "required_actions": ["Preserve required MIT copyright/license notice"],
+      "excluded_material": ["Pro/cloud/services/docs/fonts/assets not independently verified"]
+    }
+  ]
+}

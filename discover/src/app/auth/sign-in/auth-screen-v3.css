@@ -1,0 +1,48 @@
+@import "./sign-in.css";
+
+/* A versioned route entry prevents Safari from reusing an obsolete dev CSS bundle. */
+body.tutoria-cosmos:has(.auth-page) {
+  background: #101010 !important;
+  background-image: none !important;
+}
+
+body.tutoria-cosmos .auth-page {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  width: 100%;
+  min-height: 100dvh;
+  place-items: center;
+  overflow: auto;
+  background: #101010;
+}
+
+body.tutoria-cosmos .auth-page .auth-form-panel {
+  display: grid;
+  width: 100%;
+  min-height: 100dvh;
+  place-items: center;
+}
+
+body.tutoria-cosmos .auth-page .auth-form-shell {
+  width: min(calc(100% - 3rem), 25rem);
+  margin-inline: auto;
+}
+
+body.tutoria-cosmos .auth-page .auth-heading h1 {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+body.tutoria-cosmos .auth-page .auth-submit,
+body.tutoria-cosmos .auth-page .auth-social-button {
+  width: 100%;
+}
+
+body.tutoria-cosmos .auth-page .auth-social-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+}

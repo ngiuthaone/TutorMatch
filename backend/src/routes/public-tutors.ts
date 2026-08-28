@@ -1,0 +1,10 @@
+import type { FastifyPluginAsync } from "fastify";
+import { z } from "zod";
+import { ApiError } from "../errors/api-error.js";
+import { publicTutorQuerySchema } from "../schemas/tutor-cv.js";
+import { PUBLIC_DISCLOSURE, type TutorCvService } from "../types/tutor-cv.js";
+export const publicTutorRoutes: FastifyPluginAsync<{ tutorCvService: TutorCvService; listMax: number; detailMax: number; windowMs: number }> = async (app, options) => {
+  const noStore = async (_request: unknown, reply: any, payload: unknown) => { reply.header("Cache-Control", "no-store"); return payload; };
+  app.get("/api/v1/tutors", { config: { rateLimit: { max: options.listMax, timeWindow: options.windowMs } }, onSend: noStore }, async (request) => { const parsed = publicTutorQuerySchema.safeParse(request.query); if (!parsed.success) throw new ApiError(400, "INVALID_FILTER", "Tutor filters are invalid."); const result = await options.tutorCvService.listPublic(parsed.data); if (result.status === "invalid") throw new ApiError(400, parsed.data.cursor ? "INVALID_CURSOR" : "INVALID_FILTER", "Tutor filters are invalid."); if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Tutor discovery is temporarily unavailable."); return { ok: true, ...(result.data as object) }; });
+  app.get("/api/v1/tutors/:tutorProfileId", { config: { rateLimit: { max: options.detailMax, timeWindow: options.windowMs } }, onSend: noStore }, async (request) => { const id = (request.params as any).tutorProfileId; if (!z.string().uuid().safeParse(id).success) throw new ApiError(400, "INVALID_FILTER", "Tutor profile ID is invalid."); const result = await options.tutorCvService.getPublic(id); if (result.status === "not_found") throw new ApiError(404, "PUBLIC_TUTOR_NOT_FOUND", "Tutor profile was not found."); if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Tutor discovery is temporarily unavailable."); return { ok: true, profile: { ...(result.data as object), disclosure: PUBLIC_DISCLOSURE } }; });
+};

@@ -1,0 +1,21 @@
+// Tutoria runtime configuration, served from the Discover app root with `Cache-Control: no-store`.
+// Generate this file at deploy time from environment variables, for example:
+//
+//   sed -e "s|__API_BASE_URL__|$TUTORIA_API_BASE_URL|" \
+//       -e "s|__SUPABASE_URL__|$SUPABASE_URL|" \
+//       -e "s|__SUPABASE_PUBLISHABLE_KEY__|$SUPABASE_PUBLISHABLE_KEY|" \
+//       -e "s|__AUTH_CALLBACK_URL__|$AUTH_CALLBACK_URL|" \
+//       -e "s|__ENVIRONMENT__|$TUTORIA_ENVIRONMENT|" \
+//       -e "s|__DEMO_MODE__|$TUTORIA_DEMO_MODE|" \
+//       public/config.js.template > public/config.js
+//
+// The publishable key is public by design and cannot bypass Row Level Security.
+// Never place a service-role/secret key in this file.
+window.TUTORIA_CONFIG = Object.freeze({
+  apiBaseUrl: "__API_BASE_URL__",
+  supabaseUrl: "__SUPABASE_URL__",
+  supabasePublishableKey: "__SUPABASE_PUBLISHABLE_KEY__",
+  authCallbackUrl: "__AUTH_CALLBACK_URL__",
+  demoMode: __DEMO_MODE__,
+  environment: "__ENVIRONMENT__"
+});

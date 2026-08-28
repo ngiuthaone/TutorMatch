@@ -1501,3 +1501,128 @@
     gap: .6rem;
   }
 }
+
+.page.page {
+  --browse-font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-family: var(--browse-font);
+}
+
+.page.page :where(h1, h2, h3, h4, p, a, button, span, strong, small, summary, li, label, input, select, textarea) {
+  font-family: var(--browse-font) !important;
+}
+
+.page.page .outcomesPanel .checkList li::before {
+  font-family: var(--browse-font) !important;
+}
+
+/* Keep tutor profiles in the same compact system-sans language as tutor browsing. */
+.page.page {
+  --profile-display: clamp(2.125rem, 3.5vw, 2.75rem);
+  --profile-heading: clamp(1.25rem, 2vw, 1.5rem);
+  --profile-title: 1rem;
+  --profile-body: 0.9375rem;
+  --profile-meta: 0.8125rem;
+  --profile-label: 0.6875rem;
+  padding: 1rem clamp(1rem, 3vw, 2rem) 4rem;
+  background: #111111;
+  font-size: var(--profile-body);
+  line-height: 1.55;
+}
+
+.page.page .layout {
+  width: min(100%, 80rem);
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.page.page .hero,
+.page.page .panel,
+.page.page .sectionNav,
+.page.page .bookingCard {
+  border-radius: 16px;
+}
+
+.page.page .identity { padding: 1.25rem; }
+
+.page.page .nameRow { margin-top: 0.75rem; gap: 0.5rem 1rem; }
+
+.page.page .nameRow h1 {
+  font-family: var(--browse-font) !important;
+  font-size: var(--profile-display);
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.1;
+}
+
+.page.page .panel h2,
+.page.page .trioGrid .panel h2,
+.page.page .formatsPanel h2,
+.page.page .schedulePanel h2,
+.page.page .offerBanner h3,
+.page.page .bookingPrice strong,
+.page.page .rateOption strong,
+.page.page .offerPrice > strong {
+  font-family: var(--browse-font) !important;
+  font-weight: 650 !important;
+  letter-spacing: 0;
+}
+
+.page.page .panel h2,
+.page.page .trioGrid .panel h2,
+.page.page .formatsPanel h2,
+.page.page .schedulePanel h2 {
+  font-size: var(--profile-heading);
+  line-height: 1.3;
+}
+
+.page.page .tagline,
+.page.page .panel p {
+  font-size: var(--profile-body);
+  line-height: 1.6;
+}
+
+.page.page .keyFacts { margin-top: 1rem; padding-top: 0.875rem; }
+.page.page .attributeGroup { margin-top: 1rem; }
+
+.page.page .sectionNav { margin: 0.875rem 0; padding: 0.25rem; }
+.page.page .sectionNav a { min-height: 40px; padding-inline: 0.75rem; font-size: var(--profile-meta); }
+
+.page.page .panel,
+.page.page .aboutPanel,
+.page.page .trioGrid .panel,
+.page.page .outcomeGrid .panel,
+.page.page .availabilityGrid .panel,
+.page.page .ratesPanel,
+.page.page .policyGrid .panel {
+  padding: clamp(1.25rem, 2.5vw, 1.5rem);
+}
+
+.page.page .trioGrid,
+.page.page .teachingPanel,
+.page.page .formatsPanel,
+.page.page .reviewsPanel,
+.page.page .outcomeGrid,
+.page.page .availabilityGrid,
+.page.page .ratesPanel,
+.page.page .policyGrid { margin-bottom: 0.875rem; }
+
+.page.page .bookingCard { padding: 1.25rem; top: 5.25rem; }
+.page.page .bookingPrice strong { font-size: 1.75rem; }
+
+@media (max-width: 980px) {
+  .page.page { padding-top: 1rem; }
+  .page.page .layout { width: min(100%, 44rem); }
+}
+
+@media (max-width: 700px) {
+  .page.page { padding: 0.75rem 0 5.5rem; }
+  .page.page .identity { padding: 1rem; }
+  .page.page .nameRow h1 { font-size: 2rem; }
+  .page.page .panel,
+  .page.page .aboutPanel,
+  .page.page .trioGrid .panel,
+  .page.page .outcomeGrid .panel,
+  .page.page .availabilityGrid .panel,
+  .page.page .ratesPanel,
+  .page.page .policyGrid .panel { padding: 1.25rem; }
+}

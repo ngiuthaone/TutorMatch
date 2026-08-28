@@ -3,6 +3,15 @@ dist/
 *.mp4
 *.gif
 node_modules/
+.pnpm-store/
 discover/node_modules/
 discover/.next/
 discover/tsconfig.tsbuildinfo
+
+# Supabase CLI transient state (contains project ref / pooler connection URLs —
+# MANDATORY to keep out of the public repo, do not commit)
+supabase/.temp/
+
+# Local test-run artifacts
+test-results/.last-run.json
+discover/test-results/.last-run.json

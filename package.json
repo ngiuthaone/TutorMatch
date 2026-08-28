@@ -7,14 +7,22 @@
     "start": "node scripts/start-local.js",
     "serve": "node server.js",
     "test": "node tests/state-machine.test.js",
-    "build:profile": "esbuild components/profile-preview.jsx --bundle --outfile=components/profile-preview.js --format=iife"
+    "test:auth": "vitest run --config vitest.auth.config.js",
+    "test:auth:watch": "vitest --config vitest.auth.config.js",
+    "build:auth": "esbuild src/auth/index.js --bundle --outfile=auth.bundle.js --format=iife --platform=browser --target=es2020 --minify",
+    "build:profile": "esbuild components/profile-preview.jsx --bundle --outfile=components/profile-preview.js --format=iife",
+    "build": "pnpm build:auth",
+    "check": "pnpm test && pnpm test:auth && pnpm build && cd backend && pnpm check"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.7",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "esbuild": "^0.24.2"
+    "esbuild": "^0.24.2",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.10"
   }
 }
