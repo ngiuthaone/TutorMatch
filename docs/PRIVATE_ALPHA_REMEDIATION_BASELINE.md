@@ -98,21 +98,83 @@ The local DB is **missing `20260819120000`**, so its `offerings` table has a dif
 - Vercel host `discover-gules-xi.vercel.app` runs demo mode (no env). Backend Render deployment **UNVERIFIED**. Production Supabase state **UNKNOWN**.
 - This run: repository code, forward corrective migrations (local-applied), tests, config templates, deployment-readiness docs. **No production mutation.**
 
-## 8. Implementation plan (ordered)
+## 8. Migration Reconciliation Phase (NEW — resolved during read-only prod inspection)
 
-> **Phase 1/2/6 coupling:** the corrective migration (`20260820130000_alpha_contract_cleanup.sql`) can only be fully verified on a local DB rebuilt to migration head, so Phases 1+2+6 are executed together against the disposable local stack (see D8). Phases 3–11 proceed on top.
+Decisive findings (read-only `supabase migration list --project-ref sufjrstewzvzjzvzekry` + repo scan; **production untouched**):
 
-1. **Phase 1** — forward corrective migration `20260820130000_alpha_contract_cleanup.sql`: drop obsolete `create_booking(uuid,integer)` (guarded + assert 3-arg only stays); reconcile `resolve_booking_pricing` off `fixed_v1`; fix `create_offering` (param `p_kind`→`p_offering_type` + `slug = slug` ambiguity); overlay `list_bookable_sessions`/`get_bookable_session` off `fixed_v1`; merge `booking_read_json` head+workshop; close PUBLIC-exec ACL holes (esp. `expire_stale_workshop_bookings`→service_role); strip `creatorId` from `get_offering`; add published-filter to `list_sessions_by_offering_id`; fix `get_my_workshop_bookings` co-host read. Regression test proving no PGRST203.
-2. **Phase 2** — reconcile `fixed_v1` out of the live contract (covered by the corrective migration); remove ``.bak` from being a migration (delete the stray `20260820100001_workshop_booking_v1_rpcs.sql.bak`, ignored by CLI anyway); pricing regression tests.
-3. **Phase 3** — rewire workshop creator (`event-creator.tsx`) to call `create_offering` + `create_session` via the real API client; remove production dependency on `tutoria-published-events`. (The `p_offering_type` param fix is now in the corrective migration.)
-4. **Phase 4** — add `sweepExpiredWorkshopBookings` to worker loop + worker test.
-5. **Phase 5** — add `/bookings/[id]` dynamic route + redirect + auth + tests.
-6. **Phase 6** — bring local Supabase to migration head (rebuild disposable local DB applying all 27 tracked migrations in order); rerun integration tests.
-7. **Phase 7** — auth production-mode hardening (fail-closed, explicit demo).
-8. **Phase 8** — `/api/v1` deployment-readiness config + docs (no live deploy).
-9. **Phase 9** — `/center` auth gate.
-10. **Phase 10** — regression + full test runs.
-11. **Phase 11** — final remediation report + `docs/MIGRATION_CONTRACT.md`.
+| Migration | Applied on prod? | In repo? |
+|---|---|---|
+| 0001–0013, 20260814073312, 20260814153000, 20260815090000/01/02, 20260815124228, 20260815150540 | YES | YES |
+| **20260817160000, 20260817160001** | **YES (remote-only)** | **NO — absent from repo entirely** |
+| 20260819120000 (shared engine), 20260820000000, **20260820100000**, 20260820100001, 20260820100002, 20260820120000, 20260820130000 (corrective) | **NO** | YES (except 130000 = this run) |
+
+Confirmed answers:
+- **`20260820100000` is NOT applied in production.** → repair-branch applies.
+- **Production has exactly ONE `create_booking` overload: `(uuid, integer)`** (2-arg; 0005:163→…→20260815090001:3). The 3-arg `(uuid,int,text)` exists ONLY in `20260820100001:9` (unapplied). **No PGRST203 on production today.**
+- Production never applied any of the shared-engine/workshop-v1 chain; its `offerings` table is the pre-shared-engine schema (from `0004`) and has **no** workshop pricing constraints.
+- `20260817160000`/`20260817160001` exist only in production history and are not in the repository.
+
+Actions required in this phase (planning; execute later):
+0. **Preserve production-only history**: record `20260817160000`/`20260817160001` (names + remote applied times) in `docs/MIGRATION_CONTRACT.md`; do NOT delete from prod.
+- **Determine whether those two remote-only migrations need recovery/documentation before production promotion** — they applied to prod but their SQL is unknown; decide: recover (obtain remote DDL) or document as out-of-band prod fixes. This gates the production migration strategy (Phase 12).
+- **Repair the historical `20260820100000` replay defect** (constraint-name collision) — SAFE because it has NOT reached production.
+- **Rebuild local DB from scratch** (already attempted; failed at `20260820100000` — now repairable).
+- **Verify all migrations**, run integration tests.
+- **Only after local verification** prepare the production migration strategy (Phase 12, explicit prod gate).
+
+## 9. Final Execution Plan (Private Alpha)
+
+DO NOT TOUCH boundaries: production Supabase (ref `sufjrstewzvzjzvzekry`), production Render/Vercel deployments, VNPay creds, DNS, production config. All DB work is the disposable LOCAL stack (`backend/supabase`, not remote-linked). Every migration edit / local reset / test is local-only; production is touched only by the read-only inspection already done.
+
+### Phases, dependencies, files, acceptance, tests
+
+**Phase A — Migration Reconciliation & Contract (gate: planning done)**
+- Files: `docs/MIGRATION_CONTRACT.md` (record remote-only `20260817160000/01`, migration map, repair decision), `docs/PRIVATE_ALPHA_REMEDIATION_BASELINE.md`.
+- Repair `20260820100000_workshop_booking_v1_schema.sql` (this plan): add `DROP CONSTRAINT IF EXISTS offerings_pricing_model_check;` before line 24's `ADD CONSTRAINT`. Dependency: prod-inspection confirmed NOT-applied → safe to edit.
+- Acceptance: historical migration replays from scratch; decision recorded for `20260817160000/01` (recover vs document).
+- Test: `supabase db reset --local` replays 27/27.
+
+**Phase 1 — Corrective migration continues**
+- Files: `backend/supabase/migrations/20260820130000_alpha_contract_cleanup.sql` (already written, committed `ca0c5e2`).
+- After Phase A fix, `supabase db reset --local` applies full chain → verify. Acceptance: `create_booking` overload = exactly 1 (3-arg); `resolve_booking_pricing` = flat_per_participant_v1/hourly_v1 only; `create_offering` accepts `p_offering_type`; ACL holes closed; `get_offering` strips creatorId. Test: regression (no PGRST203), workshop-capacity-idempotency.
+
+**Phase 2 — fixed_v1 removal + pricing tests** (covered by Phase 1 migration; add pricing regression tests).
+**Phase 3 — workshop creator rewire** (`discover/src/.../event-creator.tsx` → real `create_offering`+`create_session`; remove `tutoria-published-events` dependency).
+**Phase 4 — worker TTL sweep** (`backend/src/workers/financial-worker-runtime.ts:25-29` add `sweepExpiredWorkshopBookings`).
+**Phase 5 — `/bookings/[id]` route** (`discover/src/lib/booking-api.ts`, new `discover/src/app/bookings/[id]/page.tsx`, redirect fix).
+**Phase 6 — local DB at head + integration tests** (local `db reset`; run backend integration suite).
+**Phase 7 — auth production-mode hardening** (fail-closed, explicit demo).
+**Phase 8 — `/api/v1` deployment-readiness config + docs** (no live deploy).
+**Phase 9 — `/center` auth gate**.
+**Phase 10 — regression + full test runs** (backend 337, discover 165, auth 100, integration).
+**Phase 11 — final remediation report + `docs/MIGRATION_CONTRACT.md`**.
+**Phase 12 — PRODUCTION MIGRATION STRATEGY (explicit prod gate; after local verification only).** Requires resolving the `20260817160000/01` recovery question first. Not executed this cycle.
+
+### Commit checkpoints (atomic)
+1. `docs/: migration reconciliation findings + execution plan` (this response's planning).
+2. `fix(db): repair 20260820100000 replay defect (DROP CONSTRAINT before ADD)` (Phase A).
+3. `test(db): local rebuild verified — 27/27 migrations, overload/pricing/acl checks` (Phase A+1+6 evidence) — or report failures.
+4. Per-phase commits for Phases 1–11 (already committed Phase 1 `ca0c5e2`).
+
+### Production gates (hard stop; do not cross)
+- No `supabase db push` / remote `db reset` / production SQL mutation.
+- No `supabase link` that could re-point the local project away from local; inspect read-only only via `--project-ref`.
+- No deploy to prod Render/Vercel; no VNPay/DNS/config changes.
+- Phase 12 prepared but NOT run until local verification passes AND `20260817160000/01` recovery is resolved.
+
+### Critical path
+1. Repair `20260820100000` (Phase A) → 2. local reset 27/27 (Phase A+1+6) → 3. corrective migration verified (overload/pricing/ACL) → 4. integration suite green → 5. remaining phases (creator/worker/route/auth) → 6. Phase 12 planning (gated).
+
+### Definition of Done — Private Alpha
+- `supabase db reset --local` replays 27/27 migrations (incl. repaired `20260820100000` + corrective `20260820130000`).
+- `create_booking(uuid,int,text)` is the sole overload; no PGRST203 anywhere.
+- Workshop pricing = `flat_per_participant_v1`, tutor = `hourly_v1`; `fixed_v1` gone from every live RPC.
+- `create_offering`/`create_session` work via real API client (creator flow), `p_offering_type` contract verified by integration test.
+- Worker sweeps expired workshop bookings; `/bookings/[id]` route live and authed.
+- Security: no PUBLIC-exec RPC; `creatorId`/auth UUIDs absent from public payloads; workshop co-hosts can read their bookings.
+- Tests: backend unit 337, discover 165, auth 100, integration suite green, new regression tests.
+- Production migration strategy documented and gated; production untouched (`PRODUCTION_DB_TOUCHED = NO`).
+- `docs/MIGRATION_CONTRACT.md` + `docs/PRIVATE_ALPHA_REMEDIATION_BASELINE.md` record the full migration map incl. remote-only `20260817160000/01` and the repair decision.
 
 ## 9. Baseline verdict
 

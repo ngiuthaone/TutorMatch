@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "run_id": "20260828-001113-master-feature-technical-inventory-a",
+  "task": "Master Feature Technical Inventory AUDIT (read-only) -> docs/TUTORIA_MASTER_TECHNICAL_INVENTORY.md",
+  "started_at": "2026-08-27T17:11:13Z",
+  "completed_at": "2026-08-27T17:44:28Z",
+  "final_status": "PASS",
+  "summary": "Read-only master feature/technical inventory delivered to docs/TUTORIA_MASTER_TECHNICAL_INVENTORY.md from 6 code_explorer passes + prior DB/security findings + read-only prod migration reconcile (24/27 applied, 1x 2-arg create_booking, 2 remote-only migrations absent from repo). Audit-only; no code/DB/prod changes.",
+  "contract_path": null,
+  "contract_changes": [],
+  "activities": [
+    {
+      "id": "code_explorer-1",
+      "agent": "code_explorer",
+      "reason": "Audit evidence gathering (discover_surface)",
+      "assignment": "Map UI/page/components/API/backend/RPC/data-source for the discover_surface domain; read-only",
+      "model": null,
+      "started_at": "2026-08-27T17:11:21Z",
+      "completed_at": "2026-08-27T17:19:34Z",
+      "duration_seconds": 493,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [
+        "batch1 domain inventory table"
+      ],
+      "files_changed": [],
+      "checks": [],
+      "useful_findings": 6,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": [
+        "read-only"
+      ]
+    },
+    {
+      "id": "code_explorer-2",
+      "agent": "code_explorer",
+      "reason": "Audit evidence gathering (tutor_system)",
+      "assignment": "Map UI/page/components/API/backend/RPC/data-source for the tutor_system domain; read-only",
+      "model": null,
+      "started_at": "2026-08-27T17:11:21Z",
+      "completed_at": "2026-08-27T17:19:34Z",
+      "duration_seconds": 493,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [
+        "batch1 domain inventory table"
+      ],
+      "files_changed": [],
+      "checks": [],
+      "useful_findings": 6,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": [
+        "read-only"
+      ]
+    },
+    {
+      "id": "code_explorer-3",
+      "agent": "code_explorer",
+      "reason": "Audit evidence gathering (workshop_creator)",
+      "assignment": "Map UI/page/components/API/backend/RPC/data-source for the workshop_creator domain; read-only",
+      "model": null,
+      "started_at": "2026-08-27T17:11:21Z",
+      "completed_at": "2026-08-27T17:19:34Z",
+      "duration_seconds": 493,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [
+        "batch1 domain inventory table"
+      ],
+      "files_changed": [],
+      "checks": [],
+      "useful_findings": 6,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": [
+        "read-only"
+      ]
+    },
+    {
+      "id": "code_explorer-4",
+      "agent": "code_explorer",
+      "reason": "Audit evidence (backend_payments)",
+      "assignment": "Map domain backend_payments; read-only",
+      "model": null,
+      "started_at": "2026-08-27T17:19:34Z",
+      "completed_at": "2026-08-27T17:39:58Z",
+      "duration_seconds": 1224,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [
+        "batch2 domain inventory"
+      ],
+      "files_changed": [],
+      "checks": [],
+      "useful_findings": 6,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": [
+        "read-only"
+      ]
+    },
+    {
+      "id": "code_explorer-5",
+      "agent": "code_explorer",
+      "reason": "Audit evidence (db_security_tests)",
+      "assignment": "Map domain db_security_tests; read-only",
+      "model": null,
+      "started_at": "2026-08-27T17:19:34Z",
+      "completed_at": "2026-08-27T17:39:58Z",
+      "duration_seconds": 1224,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [
+        "batch2 domain inventory"
+      ],
+      "files_changed": [],
+      "checks": [],
+      "useful_findings": 6,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": [
+        "read-only"
+      ]
+    },
+    {
+      "id": "code_explorer-6",
+      "agent": "code_explorer",
+      "reason": "Audit evidence (content_centers)",
+      "assignment": "Map domain content_centers; read-only",
+      "model": null,
+      "started_at": "2026-08-27T17:19:34Z",
+      "completed_at": "2026-08-27T17:39:58Z",
+      "duration_seconds": 1224,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [
+        "batch2 domain inventory"
+      ],
+      "files_changed": [],
+      "checks": [],
+      "useful_findings": 6,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": [
+        "read-only"
+      ]
+    }
+  ],
+  "tests": [
+    "N/A (audit; local integration blocked by 20260820100000 replay defect, documented UNVERIFIED)"
+  ],
+  "qa_verdict": "no browser QA this audit (documented UNVERIFIED)",
+  "security_verdict": "prior security_reviewer findings incorporated; corrective 20260820130000 NOT applied (user-gated)",
+  "license_verdict": "no new external material",
+  "notes": [
+    "synthesis done by orchestrator on main thread; not a delegated subagent so not recorded as an activity"
+  ],
+  "routing_assessment": {
+    "unnecessary_invocations": [],
+    "missing_specialists": [],
+    "recommendation": null
+  }
+}

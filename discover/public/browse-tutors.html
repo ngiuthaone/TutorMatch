@@ -402,7 +402,7 @@ function normalizeLessonFormat(value) {
 }
 
 function submittedTutorToBrowseTutor(submission) {
-  if (!submission || submission.status !== 'pending_review' || !String(submission.displayName || '').trim()) return null;
+  if (!submission || !['pending_review', 'published'].includes(submission.status) || !String(submission.displayName || '').trim()) return null;
   const name = submission.displayName.trim();
   const skills = Array.isArray(submission.skills) ? submission.skills.filter(Boolean) : [];
   const lessonFormats = normalizeLessonFormat(submission.lessonFormat);
@@ -449,8 +449,12 @@ function submittedTutorToBrowseTutor(submission) {
 
 function getBrowseTutors() {
   let list = tutors.map(tutor => ({ ...tutor, photoUrl: tutor.photoUrl || PROFILE_IMAGES_BY_NAME[tutor.name] || '' }));
-  serverPublishedTutors.forEach(submission => {
-    const submittedTutor = submittedTutorToBrowseTutor(submission);
+  serverPublishedTutors.forEach(item => {
+    if (item && item.source === 'live') {
+      list = [{ ...item, photoUrl: item.photoUrl || PROFILE_IMAGES_BY_NAME[item.name] || '' }, ...list.filter(tutor => tutor.name !== item.name)];
+      return;
+    }
+    const submittedTutor = submittedTutorToBrowseTutor(item);
     if (submittedTutor) list = [submittedTutor, ...list.filter(tutor => tutor.name !== submittedTutor.name)];
   });
   try {

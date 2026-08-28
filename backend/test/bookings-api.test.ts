@@ -45,6 +45,12 @@ function setup(overrides: Partial<BookingService> = {}, authenticated = false) {
 }
 
 describe("1:1 booking API boundary", () => {
+  const contactBody = {
+    learnerName: "Linh Tran",
+    learnerEmail: "learner@example.test",
+    learnerPhone: "0912345678",
+  };
+
   it("exposes public availability without allowing anonymous booking", async () => {
     const { app, calls } = setup();
     expect((await app.inject({ method: "GET", url: "/api/v1/sessions" })).statusCode).toBe(200);
@@ -55,21 +61,21 @@ describe("1:1 booking API boundary", () => {
   it("returns server-authoritative booking state and routes learner reads", async () => {
     const { app, calls } = setup({}, true);
     const auth = { authorization: "Bearer test-token" };
-    const created = await app.inject({ method: "POST", url: "/api/v1/bookings", headers: auth, payload: { sessionId: "11111111-1111-4111-8111-111111111111", participantCount: 2 } });
+    const created = await app.inject({ method: "POST", url: "/api/v1/bookings", headers: auth, payload: { sessionId: "11111111-1111-4111-8111-111111111111", participantCount: 2, ...contactBody } });
     expect(created.statusCode).toBe(200);
     expect(created.json().booking.paymentReady).toBe(true);
-    expect(calls.find((call) => call.name === "createBooking")?.args.slice(1)).toEqual(["11111111-1111-4111-8111-111111111111", 2, undefined]);
+    expect(calls.find((call) => call.name === "createBooking")?.args.slice(1)).toEqual(["11111111-1111-4111-8111-111111111111", 2, undefined, "Linh Tran", "learner@example.test", "0912345678", undefined]);
     expect((await app.inject({ method: "GET", url: "/api/v1/bookings", headers: auth })).statusCode).toBe(200);
   });
 
   it("keeps verification-required and rate-limited outcomes distinct", async () => {
     const verification = setup({ createBooking: async () => ({ data: null, error: { code: "P0001", message: "EMAIL_VERIFICATION_REQUIRED" } }) }, true);
-    const verifiedResponse = await verification.app.inject({ method: "POST", url: "/api/v1/bookings", headers: { authorization: "Bearer test-token" }, payload: { sessionId: "11111111-1111-4111-8111-111111111111" } });
+    const verifiedResponse = await verification.app.inject({ method: "POST", url: "/api/v1/bookings", headers: { authorization: "Bearer test-token" }, payload: { sessionId: "11111111-1111-4111-8111-111111111111", ...contactBody } });
     expect(verifiedResponse.statusCode).toBe(403);
     expect(verifiedResponse.json().error.code).toBe("EMAIL_VERIFICATION_REQUIRED");
 
     const limited = setup({ createBooking: async () => ({ data: null, error: { code: "P0001", message: "RATE_LIMITED" } }) }, true);
-    const limitedResponse = await limited.app.inject({ method: "POST", url: "/api/v1/bookings", headers: { authorization: "Bearer test-token" }, payload: { sessionId: "11111111-1111-4111-8111-111111111111" } });
+    const limitedResponse = await limited.app.inject({ method: "POST", url: "/api/v1/bookings", headers: { authorization: "Bearer test-token" }, payload: { sessionId: "11111111-1111-4111-8111-111111111111", ...contactBody } });
     expect(limitedResponse.statusCode).toBe(429);
     expect(limitedResponse.json().error.code).toBe("RATE_LIMITED");
   });

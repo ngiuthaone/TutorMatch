@@ -17,8 +17,137 @@ type StoredTutor = {
   publishedAt: string;
 } & Record<string, unknown>;
 
+type LiveTutorCard = {
+  source: "live";
+  id: string;
+  name: string;
+  headline: string;
+  category: string;
+  skills: string[];
+  format: string;
+  city: string;
+  location: string;
+  price: number;
+  rating: number;
+  reviews: number;
+  expYears: number;
+  sessions: number;
+  verified: boolean;
+  languages: string[];
+  sessionTypes: string[];
+  availability: string[];
+  bio: string;
+  initials: string;
+  photoUrl: string;
+  bg: string;
+  tc: string;
+};
+
 const storagePath = path.join(process.cwd(), "data", "published-tutors.json");
 const createLimiter = new InMemoryRateLimiter(10, 60_000);
+
+function initialsFromName(displayName: string): string {
+  const initials = displayName
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .filter(Boolean)
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+  return initials || "T";
+}
+
+function capitalizeProficiency(value: string): string {
+  if (!value) return value;
+  return `${value[0].toUpperCase()}${value.slice(1)}`;
+}
+
+function lessonFormatLabels(value: unknown): string[] {
+  if (value === "in_person") return ["In person"];
+  if (value === "both") return ["Online", "In person"];
+  return ["Online"];
+}
+
+type BackendTutorList = {
+  ok?: unknown;
+  items?: Array<{
+    id?: unknown;
+    displayName?: unknown;
+    headline?: unknown;
+    hourlyRateVnd?: unknown;
+    subjects?: unknown;
+    regions?: unknown;
+    languages?: unknown;
+    teachingFormat?: unknown;
+  }>;
+};
+
+async function fetchLiveTutorCards(): Promise<LiveTutorCard[]> {
+  const apiBaseUrl = String(process.env.NEXT_PUBLIC_TUTORIA_API_BASE_URL || "").trim().replace(/\/$/, "");
+  if (!apiBaseUrl) return [];
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/v1/tutors?limit=200`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) return [];
+    const payload = (await response.json()) as BackendTutorList | null;
+    if (!payload || payload.ok !== true || !Array.isArray(payload.items)) return [];
+    return payload.items.flatMap((item) => {
+      if (!item || typeof item.displayName !== "string" || !item.displayName.trim()) return [];
+      const subjects = Array.isArray(item.subjects)
+        ? item.subjects.filter((subject): subject is string => typeof subject === "string")
+        : [];
+      const formats = lessonFormatLabels(item.teachingFormat);
+      const teachesOnline = formats.includes("Online");
+      const teachesInPerson = formats.some((format) => format !== "Online");
+      const format = teachesOnline && teachesInPerson ? "Either" : teachesInPerson ? "In person" : "Online";
+      const languages = Array.isArray(item.languages)
+        ? item.languages
+            .map((language) => {
+              const lang = language as { displayName?: unknown; proficiency?: unknown } | null;
+              if (!lang || typeof lang.displayName !== "string" || !lang.displayName) return "";
+              const proficiency = typeof lang.proficiency === "string" && lang.proficiency !== "basic"
+                ? ` (${capitalizeProficiency(lang.proficiency)})`
+                : "";
+              return `${lang.displayName}${proficiency}`;
+            })
+            .filter(Boolean)
+        : [];
+      const regions = Array.isArray(item.regions)
+        ? item.regions.filter((region): region is string => typeof region === "string")
+        : [];
+      return [{
+        source: "live",
+        id: typeof item.id === "string" ? item.id : "",
+        name: item.displayName,
+        headline: subjects[0] ? `${subjects[0]} Tutor` : "Independent Tutor",
+        category: "lifestyle",
+        skills: subjects.length ? subjects : ["Tutoring"],
+        format,
+        city: "hanoi",
+        location: regions[0] || "",
+        price: typeof item.hourlyRateVnd === "number" ? item.hourlyRateVnd : 0,
+        rating: 0,
+        reviews: 0,
+        expYears: 0,
+        sessions: 0,
+        verified: false,
+        languages: languages.length ? languages : ["Vietnamese"],
+        sessionTypes: ["One-to-one"],
+        availability: ["Available this week"],
+        bio: typeof item.headline === "string" && item.headline.trim() ? item.headline : "A tutor on Tutoria.",
+        initials: initialsFromName(item.displayName),
+        photoUrl: "",
+        bg: "bg-gray-800",
+        tc: "text-gray-300",
+      }];
+    });
+  } catch {
+    return [];
+  }
+}
 
 const tutorPostSchema = z.object({
   displayName: z.string().trim().min(1, "A tutor display name is required.").max(60),
@@ -83,7 +212,14 @@ async function saveTutors(tutors: StoredTutor[]) {
 }
 
 export async function GET() {
-  return NextResponse.json({ tutors: await readTutors() });
+  const stored = await readTutors();
+  const liveCards = isServerLiveMode() ? await fetchLiveTutorCards() : [];
+  const liveNames = new Set(liveCards.map((card) => card.name.toLocaleLowerCase().trim()));
+  const merged = [
+    ...liveCards,
+    ...stored.filter((item) => !liveNames.has(String(item.displayName || "").toLocaleLowerCase().trim())),
+  ];
+  return NextResponse.json({ tutors: merged });
 }
 
 export async function POST(request: Request) {

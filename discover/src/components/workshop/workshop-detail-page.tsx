@@ -14,15 +14,16 @@ import {
   IconStarFilled,
   IconWorld,
 } from "@tabler/icons-react";
-import { BookingApiError, createBooking, type BookableSession, type BookingRecord } from "@/lib/booking-api";
+import { type BookableSession, type BookingRecord } from "@/lib/booking-api";
 import { getMarketplaceListing, type MarketplaceListing } from "@/lib/marketplace-api";
-import { useSession, ensureSession } from "@/lib/auth/session";
+import { useSession } from "@/lib/auth/session";
 import { SessionDatePicker } from "@/components/shared/session-date-picker";
 import { ParticipantQuantity } from "@/components/shared/participant-quantity";
 import { PriceSummary } from "@/components/shared/price-summary";
 import { BookingCTA, MobileBookingBar } from "@/components/shared/booking-cta";
 import { HostSummaryCard } from "@/components/shared/host-summary-card";
 import { WorkshopFactsCard } from "@/components/shared/workshop-facts-card";
+import { WorkshopBookingSheet } from "./workshop-booking-sheet";
 import styles from "./workshop-detail-page.module.css";
 
 /* ── Types ── */
@@ -64,22 +65,6 @@ function formatVnd(amount: number): string {
   return `${new Intl.NumberFormat("vi-VN").format(amount)} \u0111`;
 }
 
-function mapBookingError(error: unknown): string {
-  if (!(error instanceof BookingApiError)) return "Something went wrong. Please try again.";
-  switch (error.code) {
-    case "SESSION_CAPACITY_EXHAUSTED":
-      return "That session is full. Choose another.";
-    case "BOOKING_CONFLICT":
-      return "This conflicts with another booking.";
-    case "UNAUTHORIZED":
-      return "AUTH_REDIRECT_SIGN_IN";
-    case "EMAIL_VERIFICATION_REQUIRED":
-      return "AUTH_REDIRECT_VERIFY";
-    default:
-      return "Something went wrong. Please try again.";
-  }
-}
-
 /* ── Component ── */
 
 interface WorkshopDetailPageProps {
@@ -92,8 +77,7 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
   const [selectedSession, setSelectedSession] = useState<BookableSession | null>(null);
   const [participants, setParticipants] = useState(1);
   const [saved, setSaved] = useState(false);
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<string | null>(null);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,7 +124,6 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
   useEffect(() => {
     setSelectedSession(null);
     setParticipants(1);
-    setBookingError(null);
   }, [page]);
 
   /* Derived data */
@@ -169,12 +152,7 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
     return fmt(start);
   }, [selectedSession]);
 
-  const ctaDisabled = !selectedSession || isUnknownPrice || bookingLoading;
-  const ctaLabel = !selectedSession
-    ? "Choose a session"
-    : isUnknownPrice
-      ? "Price to be confirmed"
-      : "Continue";
+  const ctaLabel = "Book this workshop";
 
   const cancellationPolicy = payload?.cancellation?.[0] ?? null;
 
@@ -182,50 +160,30 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
   const isAuthenticated = session.status === "authenticated";
   const currentPath = typeof window !== "undefined" ? window.location.pathname : `/workshops/${slug}`;
 
-  /* Booking handler */
-  const handleBooking = useCallback(async () => {
-    if (!selectedSession) return;
-
-    /* Auth gate check */
+  /* Booking flow */
+  const openBookingFlow = useCallback(() => {
+    /* Auth gate: keep the existing sign-in / verify redirect behavior. */
     if (!isAuthenticated) {
       window.location.assign(`/auth/sign-in?next=${encodeURIComponent(currentPath)}`);
       return;
     }
-
-    /* Email verification check */
     if (session.status === "authenticated" && session.profileErrorCode === "EMAIL_NOT_CONFIRMED") {
       window.location.assign(`/auth/verify-email?next=${encodeURIComponent(currentPath)}`);
       return;
     }
+    setBookingOpen(true);
+  }, [isAuthenticated, session, currentPath]);
 
-    setBookingLoading(true);
-    setBookingError(null);
-
-    try {
-      await ensureSession();
-      const booking: BookingRecord = await createBooking(selectedSession.id, participants);
+  const handleBooked = useCallback(
+    (booking: BookingRecord) => {
       const serverTotal = booking.pricing?.amountVnd;
       showToast(
-        serverTotal != null
-          ? `Booking created \u00B7 ${formatVnd(serverTotal)}`
-          : "Booking created",
+        serverTotal != null ? `Booking created \u00B7 ${formatVnd(serverTotal)}` : "Booking created",
       );
-      /* Redirect to booking detail */
       window.location.assign(`/bookings/${booking.id}`);
-    } catch (error) {
-      const message = mapBookingError(error);
-      if (message === "AUTH_REDIRECT_SIGN_IN") {
-        window.location.assign(`/auth/sign-in?next=${encodeURIComponent(currentPath)}`);
-        return;
-      }
-      if (message === "AUTH_REDIRECT_VERIFY") {
-        window.location.assign(`/auth/verify-email?next=${encodeURIComponent(currentPath)}`);
-        return;
-      }
-      setBookingError(message);
-      setBookingLoading(false);
-    }
-  }, [selectedSession, isAuthenticated, session, participants, currentPath, showToast]);
+    },
+    [showToast],
+  );
 
   /* Share handler */
   const handleShare = async () => {
@@ -435,10 +393,10 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
                 {/* Desktop CTA */}
                 <div className="p-5">
                   <BookingCTA
-                    onClick={handleBooking}
-                    loading={bookingLoading}
-                    error={bookingError}
-                    disabled={ctaDisabled}
+                    onClick={openBookingFlow}
+                    loading={false}
+                    error={null}
+                    disabled={false}
                     label={ctaLabel}
                   />
                 </div>
@@ -581,12 +539,29 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
 
       {/* ── Mobile bottom bar ── */}
       <MobileBookingBar
-        onClick={handleBooking}
-        loading={bookingLoading}
-        disabled={ctaDisabled}
+        onClick={openBookingFlow}
+        loading={false}
+        disabled={false}
         priceLabel={priceLabel}
         sessionLabel={sessionLabel}
+        label="Book this workshop"
       />
+
+      {/* ── Stepped booking sheet (mounted per open so state resets) ── */}
+      {bookingOpen && (
+        <WorkshopBookingSheet
+          open
+          onClose={() => setBookingOpen(false)}
+          offeringId={listing.id}
+          kind="event"
+          listingTitle={listing.title}
+          selectedSession={selectedSession}
+          onSelectSession={setSelectedSession}
+          participants={participants}
+          onParticipants={setParticipants}
+          onBooked={handleBooked}
+        />
+      )}
 
       {/* ── Status toast ── */}
       <p className={styles.status} role="status" aria-live="polite">

@@ -7,7 +7,7 @@ export type BookingServiceResult = { data: unknown; error: { code?: string; mess
 export type BookingService = {
   listSessions(tutorProfileId?: string, offeringId?: string, kind?: string): Promise<BookingServiceResult>;
   getSession(sessionId: string): Promise<BookingServiceResult>;
-  createBooking(token: string, sessionId: string, participantCount: number, idempotencyKey?: string): Promise<BookingServiceResult>;
+  createBooking(token: string, sessionId: string, participantCount: number, idempotencyKey?: string, learnerName?: string, learnerEmail?: string, learnerPhone?: string, learnerNote?: string): Promise<BookingServiceResult>;
   listLearnerBookings(token: string): Promise<BookingServiceResult>;
   listHostBookings(token: string): Promise<BookingServiceResult>;
   listTutorBookings(token: string): Promise<BookingServiceResult>;
@@ -53,7 +53,7 @@ export function createSupabaseBookingService(url: string, publishableKey: string
       p_kind: kind ?? null
     }),
     getSession: (sessionId) => rpc("get_bookable_session", { p_session_id: sessionId }),
-    createBooking: (token, sessionId, participantCount, idempotencyKey) => rpc("create_booking", { session_id: sessionId, participant_count: participantCount, p_idempotency_key: idempotencyKey ?? null }, token),
+    createBooking: (token, sessionId, participantCount, idempotencyKey, learnerName, learnerEmail, learnerPhone, learnerNote) => rpc("create_booking", { session_id: sessionId, participant_count: participantCount, p_idempotency_key: idempotencyKey ?? null, p_learner_name: learnerName ?? null, p_learner_email: learnerEmail ?? null, p_learner_phone: learnerPhone ?? null, p_learner_note: learnerNote ?? null }, token),
     listLearnerBookings: (token) => rpc("get_my_bookings", {}, token),
     listHostBookings: (token) => rpc("get_my_host_bookings", {}, token),
     listTutorBookings: (token) => rpc("get_my_tutor_bookings", {}, token),

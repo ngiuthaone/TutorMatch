@@ -5,7 +5,15 @@ import type { BookingService, BookingServiceResult } from "../services/booking-s
 
 const id = z.string().uuid();
 const version = z.number().int().positive();
-const createBookingSchema = z.object({ sessionId: id, participantCount: z.number().int().positive().max(100).default(1), idempotencyKey: z.string().min(8).max(128).optional() });
+const createBookingSchema = z.object({
+  sessionId: id,
+  participantCount: z.number().int().positive().max(100).default(1),
+  idempotencyKey: z.string().min(8).max(128).optional(),
+  learnerName: z.string().trim().min(1).max(200),
+  learnerEmail: z.string().trim().email().max(254),
+  learnerPhone: z.string().trim().regex(/^(\+84|0)\d{9}$/).max(15),
+  learnerNote: z.string().trim().max(500).optional()
+});
 const createOfferingSchema = z.object({
   offeringType: z.enum(["tutor", "workshop", "class", "event"]),
   title: z.string().trim().min(1).max(200),
@@ -73,7 +81,7 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = as
   app.post("/api/v1/bookings", { preHandler: app.authenticate }, async (request) => {
     const body = createBookingSchema.safeParse(request.body);
     if (!body.success) throw new ApiError(400, "BOOKING_INVALID", "Booking details are invalid.");
-    const result = await options.service.createBooking(request.auth.accessToken, body.data.sessionId, body.data.participantCount, body.data.idempotencyKey);
+    const result = await options.service.createBooking(request.auth.accessToken, body.data.sessionId, body.data.participantCount, body.data.idempotencyKey, body.data.learnerName, body.data.learnerEmail, body.data.learnerPhone, body.data.learnerNote);
     if (result.error) fail(result);
     return { ok: true, booking: await readAfterMutation(options.service, request.auth.accessToken, (result.data as { id: string }).id, result.data) };
   });

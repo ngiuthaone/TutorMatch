@@ -174,10 +174,17 @@ export async function listBookableSessions(params: { tutorProfileId?: string; of
   return payload.sessions.map(sessionFrom);
 }
 
-export async function createBooking(sessionId: string, participantCount = 1): Promise<BookingRecord> {
+export interface LearnerContact {
+  name: string;
+  email: string;
+  phone: string;
+  note?: string;
+}
+
+export async function createBooking(sessionId: string, participantCount = 1, contact?: LearnerContact): Promise<BookingRecord> {
   const payload = await request("/api/v1/bookings", {
     method: "POST",
-    body: { sessionId, participantCount },
+    body: { sessionId, participantCount, ...(contact ? { learnerName: contact.name, learnerEmail: contact.email, learnerPhone: contact.phone, learnerNote: contact.note } : {}) },
     authenticated: true,
   }) as { ok?: unknown; booking?: unknown };
   if (payload.ok !== true) throw new BookingApiError("INVALID_RESPONSE", 500);
