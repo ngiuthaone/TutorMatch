@@ -548,6 +548,18 @@
                     <input id="price" type="number" min="0" class="field rounded-l-none px-3 py-2.5 text-sm" placeholder="350000">
                   </div>
                 </label>
+
+                <!-- Optional packages (choose different price options) -->
+                <div class="mt-5 rounded-xl border border-line bg-raised/40 p-4">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <span class="block text-xs font-semibold text-soft">Packages (optional)</span>
+                      <p class="mt-1 text-xs text-muted">Offer multiple tiers, like the pizza workshop. If you add 2+ packages, guests can choose between them.</p>
+                    </div>
+                    <button type="button" id="addPackageBtn" class="shrink-0 rounded-full border border-line bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white transition hover:border-white/25 hover:bg-white/[0.07]">+ Add package</button>
+                  </div>
+                  <div id="packageList" class="mt-4 space-y-3"></div>
+                </div>
               </div>
 
               <div class="grid gap-4 md:grid-cols-2">
@@ -715,10 +727,63 @@
       bring: [],
       dates: [],
       scheduleWeekStart: "",
-      scheduleIntervals: []
+      scheduleIntervals: [],
+      packages: []
     };
     const $ = (id) => document.getElementById(id);
     const makeId = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const escapeHtml = (value) => String(value == null ? "" : value)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+    function renderPackages() {
+      const list = $("packageList");
+      if (!list) return;
+      if (!state.packages.length) {
+        list.innerHTML = '<p class="text-xs text-muted">No packages yet. Guests will pay the single price above.</p>';
+        return;
+      }
+      list.innerHTML = state.packages.map((pkg) => `
+        <div class="rounded-lg border border-line bg-white/[0.02] p-3" data-pkg-row="${escapeHtml(pkg.id)}">
+          <div class="flex items-center gap-2">
+            <input data-pkg-name="${escapeHtml(pkg.id)}" class="field flex-1 px-3 py-2 text-sm" placeholder="Package name (e.g. Classic)" value="${escapeHtml(pkg.name)}">
+            <span class="grid w-10 place-items-center text-sm text-muted">₫</span>
+            <input data-pkg-price="${escapeHtml(pkg.id)}" type="number" min="0" class="field w-28 px-3 py-2 text-sm" placeholder="650000" value="${pkg.price || ''}">
+            <button type="button" data-pkg-remove="${escapeHtml(pkg.id)}" class="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-line text-muted transition hover:border-red-500/40 hover:text-red-400" aria-label="Remove package">✕</button>
+          </div>
+          <input data-pkg-includes="${escapeHtml(pkg.id)}" class="field mt-2 w-full px-3 py-2 text-sm" placeholder="What's included, comma separated (e.g. Full workshop, Recipe card)" value="${escapeHtml((pkg.includes || []).join(", "))}">
+        </div>`).join("");
+      list.querySelectorAll("[data-pkg-remove]").forEach((btn) => {
+        btn.onclick = () => {
+          const id = btn.getAttribute("data-pkg-remove");
+          state.packages = state.packages.filter((p) => p.id !== id);
+          renderPackages();
+          updateReview();
+          updatePreview();
+        };
+      });
+      list.querySelectorAll("input[data-pkg-name], input[data-pkg-price], input[data-pkg-includes]").forEach((input) => {
+        input.oninput = () => {
+          const id = input.dataset.pkgName || input.dataset.pkgPrice || input.dataset.pkgIncludes;
+          const pkg = state.packages.find((p) => p.id === id);
+          if (!pkg) return;
+          if (input.dataset.pkgName !== undefined) pkg.name = input.value.trim();
+          if (input.dataset.pkgPrice !== undefined) pkg.price = Number(input.value) || 0;
+          if (input.dataset.pkgIncludes !== undefined) pkg.includes = input.value.split(",").map((s) => s.trim()).filter(Boolean);
+          updateReview();
+          updatePreview();
+        };
+      });
+    }
+
+    function addPackage() {
+      state.packages.push({ id: makeId("pkg"), name: "Package " + (state.packages.length + 1), price: Number($("price").value) || 0, includes: [] });
+      renderPackages();
+      updateReview();
+      updatePreview();
+    }
+
+    if ($("addPackageBtn")) $("addPackageBtn").addEventListener("click", addPackage);
+    renderPackages();
 
     function stepMarkup() {
       return steps.map((step, index) => `
@@ -1339,6 +1404,11 @@
     function priceText() {
       const access = selected("access") || "Free";
       if (access !== "Paid") return access;
+      const validPackages = (state.packages || []).filter((p) => p.name && Number(p.price) >= 0);
+      if (validPackages.length >= 2) {
+        const lowest = Math.min(...validPackages.map((p) => Number(p.price) || 0));
+        return `${new Intl.NumberFormat("vi-VN").format(lowest)}₫ / package`;
+      }
       const amount = Number($("price").value || 0);
       return amount ? `${new Intl.NumberFormat("vi-VN").format(amount)}₫` : "Price not set";
     }
@@ -1387,7 +1457,13 @@
       { label: "Essential details", target: "idea", test: () => $("title").value.trim() && $("promise").value.trim() && $("category").value },
       { label: "Experience and FAQs", target: "experience", test: () => state.outcomes.length > 0 },
       { label: "Time and location", target: "time-place", test: () => scheduleIsReady() && ($("venueFormat").value === "Online" || ($("venueName").value.trim() && $("address").value.trim())) },
-      { label: "Capacity and price", target: "access-pricing", test: () => $("capacity").value && (selected("access") !== "Paid" || $("price").value) },
+      { label: "Capacity and price", target: "access-pricing", test: () => {
+        const hasCapacity = $("capacity").value;
+        if (selected("access") !== "Paid") return hasCapacity;
+        const validPackages = (state.packages || []).filter((p) => p.name && Number(p.price) >= 0);
+        if (validPackages.length >= 2) return hasCapacity && validPackages.every((p) => Number(p.price) >= 0);
+        return hasCapacity && $("price").value;
+      } },
       { label: "Cover image", target: "idea", test: () => state.images.length > 0 },
       { label: "Cancellation policy", target: "access-pricing", test: () => $("cancellation").value && $("refund").value }
     ];
@@ -1534,7 +1610,18 @@
         items: splitList(card.querySelector("textarea")?.value || ""),
       })).filter(group => group.items.length);
       const dateLabel = firstDate ? new Intl.DateTimeFormat("en", { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${firstDate.date}T00:00:00`)) : "Date TBA";
-      const price = access === "Paid" ? `${new Intl.NumberFormat("vi-VN").format(amount)} đ` : access;
+      const hostPackages = (state.packages || []).filter((p) => p.name && !Number.isNaN(Number(p.price)) && Number(p.price) >= 0);
+      const pricingMode = hostPackages.length >= 2 ? "multiple" : "single";
+      const effectiveAmount = pricingMode === "multiple"
+        ? Math.min(...hostPackages.map((p) => Number(p.price) || 0))
+        : amount;
+      const price = access === "Paid" ? `${new Intl.NumberFormat("vi-VN").format(effectiveAmount)} đ` : access;
+      const packages = pricingMode === "multiple" ? hostPackages.map((p) => ({
+        id: p.id,
+        name: p.name,
+        price: Number(p.price) || 0,
+        includes: Array.isArray(p.includes) && p.includes.length ? p.includes : ["Full workshop experience"],
+      })) : undefined;
       const location = format === "Online" ? "Online" : ($("address").value.trim() || $("venueName").value.trim());
       const cancellation = $("cancellation").value || "Cancellation deadline not set";
       const refund = $("refund").value || "Refund policy not set";
@@ -1563,6 +1650,7 @@
         hostRecommendation: "New host", beforeYouAttend,
         cancellation: [`${cancellation}. ${refund}.`, "If the host cancels, guests can choose another session or receive a full refund."],
         reviews: [], visibility: selected("visibility") || "Public", experienceType: type,
+        packages, pricingMode: access === "Paid" ? pricingMode : "single",
       };
     }
 

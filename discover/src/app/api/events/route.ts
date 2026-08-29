@@ -37,6 +37,14 @@ const eventFaqSchema = z.object({
   question: z.string().max(500),
   answer: z.string().max(5_000),
 });
+const eventPackageSchema = z.object({
+  id: z.string().min(1).max(80),
+  name: z.string().min(1).max(200),
+  price: z.number().min(0),
+  description: z.string().max(2_000).optional(),
+  badge: z.string().max(200).optional(),
+  includes: z.array(z.string().max(500)).max(100),
+});
 
 const eventPostSchema = z.object({
   slug: z.string().min(1).max(120).regex(/^[\w-]+$/, "Slug may only contain letters, numbers, dashes, and underscores."),
@@ -77,6 +85,8 @@ const eventPostSchema = z.object({
   beforeYouAttend: z.array(z.object({ title: z.string().max(200), items: z.array(z.string().max(500)).max(50) })).max(30),
   cancellation: z.array(z.string().max(500)).max(30),
   reviews: z.array(eventReviewSchema).max(100),
+  packages: z.array(eventPackageSchema).max(40).optional(),
+  pricingMode: z.enum(["single", "multiple"]).optional(),
   creatorId: z.string().optional(),
   creatorName: z.string().max(120).optional(),
   publishedAt: z.string().max(60).optional(),

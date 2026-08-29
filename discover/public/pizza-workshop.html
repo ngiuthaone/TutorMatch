@@ -5629,6 +5629,11 @@
         window.parent?.postMessage({ type: 'tutoria-booking-auth-required' }, window.location.origin);
         return;
       }
+      if (data.type === 'tutoria-workshop-data' && data.payload) {
+        window.__tutoriaWorkshopDataReceived = true;
+        try { applyWorkshopData(data.payload); } catch (err) { console.error('tutoria-workshop-data failed', err); }
+        return;
+      }
     });
 
 
@@ -7521,6 +7526,252 @@
       renderAdvancedHost();
       renderAdvancedFAQ();
       setInlineScheduleButtonState();
+      lucide.createIcons();
+    }
+
+    // --------------------------------------------------------------
+    // Data-driven injection (tutoria-workshop-data)
+    // Accepts a WorkshopData payload and renders the host's own content.
+    // --------------------------------------------------------------
+    function applyWorkshopData(payload) {
+      if (!payload || typeof payload !== 'object') return;
+
+      const clone = (value) => JSON.parse(JSON.stringify(value));
+
+      // --- Hero ---
+      const heroPhotos = (payload.hero?.photos || []).map((src, index) => ({
+        id: 'photo-' + index,
+        src,
+        alt: `${payload.hero?.title || 'Workshop'} photo ${index + 1}`,
+      }));
+      const coverFirst = [payload.hero?.coverImage, ...(payload.hero?.photos || [])]
+        .filter((src) => src && typeof src === 'string');
+      const photos = coverFirst.map((src, index) => ({
+        id: 'photo-' + index,
+        src,
+        alt: `${payload.hero?.title || 'Workshop'} photo ${index + 1}`,
+      }));
+      advancedState.hero = {
+        title: payload.hero?.title || advancedState.hero.title,
+        subtitle: payload.hero?.subtitle || advancedState.hero.subtitle,
+        duration: payload.hero?.duration || advancedState.hero.duration,
+        media: {
+          coverPhotoId: photos[0]?.id || 'photo-0',
+          photos: photos.length ? photos : heroPhotos,
+          video: null,
+        },
+      };
+
+      // --- Overview ---
+      advancedState.overview = {
+        heading: payload.overview?.heading || advancedState.overview.heading,
+        paragraphs: (payload.overview?.paragraphs || []).slice(0, 6),
+      };
+      if (!advancedState.overview.paragraphs.length) advancedState.overview.paragraphs = [advancedState.overview.heading];
+
+      // --- Booking / packages ---
+      const packages = (payload.booking?.packages || []).map((p, index) => ({
+        id: p.id || 'pkg-' + index,
+        name: p.name || 'Standard',
+        price: Number(p.price) || 0,
+        description: p.description || '',
+        badge: p.badge || '',
+        includes: (p.includes || []).slice(0, 40),
+      }));
+      const pricingMode = (packages.length > 1 && payload.booking?.pricingMode === 'multiple') ? 'multiple' : 'single';
+      advancedState.booking = {
+        cancellation: payload.booking?.cancellation || advancedState.booking.cancellation,
+        pricingMode,
+        defaultPackageId: (payload.booking?.defaultPackageId && packages.some((p) => p.id === payload.booking.defaultPackageId))
+          ? payload.booking.defaultPackageId : packages[0]?.id,
+        fees: payload.booking?.fees || [],
+        packages: packages.slice(0, 40),
+      };
+      selectedPackageId = advancedState.booking.defaultPackageId || null;
+
+      // --- Location ---
+      const loc = payload.location || {};
+      advancedState.locations = [{
+        id: 'main',
+        name: loc.name || advancedState.hero.title,
+        area: loc.area || '',
+        note: loc.note || 'Exact arrival instructions are provided after booking.',
+        mapQuery: loc.mapQuery || loc.name || '',
+        mapUrl: loc.mapUrl || '',
+      }];
+      advancedState.activeLocationId = 'main';
+
+      // --- Host ---
+      const host = payload.host || {};
+      advancedState.host = {
+        name: host.name || advancedState.host.name,
+        role: host.role || advancedState.host.role,
+        bio: host.bio || advancedState.host.bio,
+        avatar: host.avatar || advancedState.host.avatar || '',
+      };
+
+      // --- Plan ---
+      advancedState.plan = {
+        heading: payload.plan?.heading || advancedState.plan.heading,
+        intro: payload.plan?.intro || advancedState.plan.intro,
+        steps: (payload.plan?.steps || []).map((s, index) => ({
+          id: s.id || 'plan-' + index,
+          title: s.title,
+          time: s.time || '',
+          description: s.description || '',
+          image: s.image || '',
+        })).slice(0, 20),
+      };
+
+      // --- Schedule ---
+      const sessions = (payload.schedule?.sessions || []).map((s, index) => ({
+        id: s.id || 'session-' + index,
+        start: s.start || '09:00',
+        end: s.end || '18:00',
+        label: s.label || '',
+        minParticipants: s.minParticipants != null ? Number(s.minParticipants) : undefined,
+        maxParticipants: s.maxParticipants != null ? Number(s.maxParticipants) : undefined,
+        bookedParticipants: s.bookedParticipants != null ? Number(s.bookedParticipants) : undefined,
+        capacity: s.capacity != null ? Number(s.capacity) : undefined,
+        days: s.days,
+      })).slice(0, 60);
+      advancedState.schedule = {
+        heading: payload.schedule?.heading || advancedState.schedule.heading,
+        intro: payload.schedule?.intro || advancedState.schedule.intro,
+        editorLocationId: advancedState.schedule.editorLocationId || advancedState.activeLocationId || 'main',
+        builders: {},
+        exceptions: [],
+        sessions,
+      };
+
+      // --- FAQ ---
+      advancedState.faq = {
+        heading: payload.faq?.heading || advancedState.faq.heading,
+        items: (payload.faq?.items || []).map((f, index) => ({
+          id: f.id || 'faq-' + index,
+          question: f.question,
+          answer: f.answer,
+        })).slice(0, 30),
+      };
+
+      // --- Details lists (learn / included / bring) ---
+      const details = payload.details || {};
+      const setList = (listEl, items, tag) => {
+        if (!listEl) return;
+        listEl.innerHTML = (items || []).map((item) =>
+          tag === 'li'
+            ? `<li>${advancedEscape(item)}</li>`
+            : `<span>${advancedEscape(item)}</span>`
+        ).join('');
+      };
+      setList(document.getElementById('learnList'), details.learn, 'li');
+      setList(document.getElementById('includedList'), details.included, 'li');
+      setList(document.getElementById('bringList'), details.bring, 'span');
+
+      // --- Reviews (preview cards + heading + drawer) ---
+      const reviewElems = [
+        { text: 'review1Text', name: 'review1Name', date: 'review1Date' },
+        { text: 'review2Text', name: 'review2Name', date: 'review2Date' },
+        { text: 'review3Text', name: 'review3Name', date: 'review3Date' },
+      ];
+      const reviews = payload.reviews?.items || [];
+      const heading = document.getElementById('reviewsHeading');
+      const browseBtn = document.getElementById('openAllReviewsBottom');
+      const viewAllBtn = document.getElementById('openAllReviews');
+
+      reviewElems.forEach((ids, index) => {
+        const card = document.querySelector(`[data-open-review-photo="${index}"]`)?.closest('article');
+        const r = reviews[index];
+        if (!card) return;
+        const textEl = document.getElementById(ids.text);
+        const nameEl = document.getElementById(ids.name);
+        const dateEl = document.getElementById(ids.date);
+        if (r) {
+          if (textEl) textEl.textContent = r.text;
+          if (nameEl) nameEl.textContent = r.name;
+          if (dateEl) dateEl.textContent = r.date;
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      const rating = payload.reviews?.rating != null ? payload.reviews.rating : 0;
+      const reviewCount = payload.reviews?.reviewCount != null ? payload.reviews.reviewCount : 0;
+      if (heading) heading.textContent = reviewCount > 0 ? `${rating} from ${reviewCount} reviews` : 'Be the first to review';
+      if (browseBtn) {
+        browseBtn.hidden = reviewCount === 0;
+        browseBtn.innerHTML = (reviewCount === 1 ? 'Read the review' : `Browse all ${reviewCount} reviews`) + ' <i data-lucide="chevron-right" class="h-3.5 w-3.5"></i>';
+      }
+      if (viewAllBtn) viewAllBtn.hidden = reviewCount === 0;
+
+      // Feed the drawer's shared reviews array with this event's reviews.
+      const drawerReviews = reviews.map((r, index) => ({
+        name: r.name,
+        initials: r.initials || (r.name || '').slice(0, 2).toUpperCase(),
+        rating: r.rating,
+        date: r.date,
+        package: r.package,
+        text: r.text,
+        photos: r.photos || [],
+      }));
+      workshopReviews.splice(0, workshopReviews.length, ...drawerReviews);
+
+      // --- Recommendations ("You may also like") ---
+      applyWorkshopRecommendations(payload.recommendations || []);
+
+      // Re-render all state-driven sections with the injected content.
+      renderAllAdvancedSections();
+    }
+
+    function applyWorkshopRecommendations(recommendations) {
+      const rail = document.querySelector('[data-recommendation-rail="all"]');
+      const group = document.querySelector('[data-recommendation-group="all"]');
+      const controls = document.querySelector('.recommendation-desktop-controls');
+      if (!rail) return;
+      if (!recommendations || !recommendations.length) {
+        if (group) group.style.display = 'none';
+        if (controls) controls.style.display = 'none';
+        const wrap = rail.closest('.recommendation-inner');
+        if (wrap) wrap.style.display = 'none';
+        return;
+      }
+      if (group) group.style.display = '';
+      if (controls) controls.style.display = '';
+      const wrap = rail.closest('.recommendation-inner');
+      if (wrap) wrap.style.display = '';
+      const fmt = (value) => new Intl.NumberFormat('vi-VN').format(value) + '\u20ab';
+      rail.innerHTML = recommendations.map((rec, index) => {
+        const badge = rec.priority === 'host' ? 'Same host' : (rec.category || '');
+        const img = rec.image || 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=900&q=86';
+        const title = advancedEscape(rec.title);
+        const host = advancedEscape(rec.host || 'Tutoria');
+        const location = advancedEscape(rec.location || '');
+        return `
+          <article class="recommendation-card">
+            <div class="recommendation-card-media">
+              <img src="${advancedEscape(img)}" alt="${title}" loading="lazy" />
+              ${badge ? `<span class="absolute bottom-3 left-3 z-[2] rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur-md">${advancedEscape(badge)}</span>` : ''}
+            </div>
+            <div class="p-5">
+              <div class="flex items-center justify-between gap-3 text-[10px] text-muted">
+                <span>${advancedEscape(rec.category || 'Workshop')}</span>
+                <span class="text-accent">${rec.reviewCount > 0 ? `\u2605 ${rec.rating || '—'}${rec.reviewCount != null ? ` <span class="text-muted">(${rec.reviewCount})</span>` : ''}` : ''}</span>
+              </div>
+              <h3 class="mt-3 text-[17px] font-semibold leading-6 tracking-[-0.025em] text-white">${title}</h3>
+              <p class="mt-1.5 text-xs text-muted">${host}</p>
+              <div class="mt-4 flex flex-wrap gap-x-3 gap-y-2 text-[10px] text-muted">
+                ${rec.duration ? `<span class="inline-flex items-center gap-1.5"><i data-lucide="clock-3" class="h-3 w-3"></i>${advancedEscape(rec.duration)}</span>` : ''}
+                ${location ? `<span class="inline-flex items-center gap-1.5"><i data-lucide="map-pin" class="h-3 w-3"></i>${location}</span>` : ''}
+              </div>
+              <div class="mt-5 flex items-end justify-between gap-3 border-t border-line pt-4">
+                <p class="text-xs text-muted">From <span class="ml-1 text-sm font-semibold text-white">${fmt(rec.priceFrom || 0)}</span></p>
+                <span class="text-[10px] text-quiet">per guest</span>
+              </div>
+            </div>
+          </article>`;
+      }).join('');
+      if (window.updateRecommendationControls) updateRecommendationControls();
       lucide.createIcons();
     }
 

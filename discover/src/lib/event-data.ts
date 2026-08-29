@@ -40,6 +40,15 @@ export interface EventFaq {
   answer: string;
 }
 
+export interface EventPackage {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  badge?: string;
+  includes: string[];
+}
+
 export interface EventDetail extends EventListing {
   creatorId?: string;
   creatorName?: string;
@@ -72,6 +81,8 @@ export interface EventDetail extends EventListing {
   beforeYouAttend: { title: string; items: string[] }[];
   cancellation: string[];
   reviews: EventReview[];
+  packages?: EventPackage[];
+  pricingMode?: "single" | "multiple";
 }
 
 export const PUBLISHED_EVENTS_KEY = "tutoria-published-events";
