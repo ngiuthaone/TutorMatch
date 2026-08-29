@@ -90,54 +90,64 @@ const revealTutorProfile = () => {
       return null;
     }
   })();
-  const serverProfile = (liveProfile || storedProfile) ? null : await fetch("/api/tutors?source=store")
-    .then((response) => response.ok ? response.json() : { tutors: [] })
-    .then((payload) => {
-      const submission = Array.isArray(payload.tutors)
-        ? payload.tutors.find((item) => ["pending_review", "published"].includes(String(item?.status)) && item?.displayName?.trim() === profileName)
-        : null;
-      if (!submission) return null;
-      const sessionLength = submission.displayDuration || submission.sessionLengths?.[0] || 60;
-      return {
-        name: submission.displayName.trim(),
-        role: submission.role?.trim() || "Independent tutor",
-        tagline: submission.headline?.trim() || "A new tutor on Tutoria.",
-        image: submission.photoUrl || "/images/tutor-profile-thu-ha.png",
-        rating: 0,
-        reviewCount: 0,
-        lessons: 0,
-        responseTime: "—",
-        location: submission.location?.trim() || "Location not set",
-        price: Number(submission.rates?.[String(sessionLength)] || 0),
-        languages: submission.languages?.filter(Boolean) || [],
-        subjects: submission.skills?.filter(Boolean) || [],
-        about: [submission.about?.trim(), submission.professionalBackground?.trim()].filter(Boolean),
-        learnerLevels: submission.learnerLevels?.filter(Boolean) || [],
-        ageGroups: submission.ageGroups?.filter(Boolean) || [],
-        teachingStyles: submission.teachingStyles?.filter(Boolean) || [],
-        outcomes: submission.goals?.filter(Boolean) || [],
-        typicalLesson: submission.lessonDescription?.trim() || "Each lesson is tailored to the learner’s goal, pace, and experience.",
-        credentials: submission.credentials?.filter(Boolean) || [],
-        portfolioUrl: submission.portfolioUrl?.trim() || "",
-        sessionLengths: submission.sessionLengths?.filter((value) => Number.isFinite(Number(value))) || [],
-        rates: submission.rates || {},
-        displayDuration: submission.displayDuration,
-        lessonFormat: submission.lessonFormat?.filter(Boolean) || [],
-        availability: submission.availability?.filter(Boolean) || [],
-        timeZone: submission.timeZone?.trim() || "",
-        sameDayBooking: Boolean(submission.sameDayBooking),
-        learnerCancellation: submission.learnerCancellation?.trim() || "",
-        lateCancellation: submission.lateCancellation?.trim() || "",
-        noShowPolicy: submission.noShowPolicy?.trim() || "",
-        consultationEnabled: Boolean(submission.consultationEnabled),
-        consultationDuration: submission.consultationDuration?.trim() || "",
-        consultationPrice: submission.consultationPrice?.trim() || "",
-        consultationPurpose: submission.consultationPurpose?.trim() || "",
-        faqs: submission.faqs?.filter((faq) => faq?.question && faq?.answer) || [],
-        introVideoName: submission.introVideoName?.trim() || "",
-      };
-    })
-    .catch(() => null);
+  const buildServerProfile = (submission) => {
+    const sessionLength = submission.displayDuration || submission.sessionLengths?.[0] || 60;
+    return {
+      name: submission.displayName.trim(),
+      role: submission.role?.trim() || "Independent tutor",
+      tagline: submission.headline?.trim() || "A new tutor on Tutoria.",
+      image: submission.photoUrl || "/images/tutor-profile-thu-ha.png",
+      rating: 0,
+      reviewCount: 0,
+      lessons: 0,
+      responseTime: "—",
+      location: submission.location?.trim() || "Location not set",
+      price: Number(submission.rates?.[String(sessionLength)] || 0),
+      languages: submission.languages?.filter(Boolean) || [],
+      subjects: submission.skills?.filter(Boolean) || [],
+      about: [submission.about?.trim(), submission.professionalBackground?.trim()].filter(Boolean),
+      learnerLevels: submission.learnerLevels?.filter(Boolean) || [],
+      ageGroups: submission.ageGroups?.filter(Boolean) || [],
+      teachingStyles: submission.teachingStyles?.filter(Boolean) || [],
+      outcomes: submission.goals?.filter(Boolean) || [],
+      typicalLesson: submission.lessonDescription?.trim() || "Each lesson is tailored to the learner’s goal, pace, and experience.",
+      credentials: submission.credentials?.filter(Boolean) || [],
+      portfolioUrl: submission.portfolioUrl?.trim() || "",
+      sessionLengths: submission.sessionLengths?.filter((value) => Number.isFinite(Number(value))) || [],
+      rates: submission.rates || {},
+      displayDuration: submission.displayDuration,
+      lessonFormat: submission.lessonFormat?.filter(Boolean) || [],
+      availability: submission.availability?.filter(Boolean) || [],
+      timeZone: submission.timeZone?.trim() || "",
+      sameDayBooking: Boolean(submission.sameDayBooking),
+      learnerCancellation: submission.learnerCancellation?.trim() || "",
+      lateCancellation: submission.lateCancellation?.trim() || "",
+      noShowPolicy: submission.noShowPolicy?.trim() || "",
+      consultationEnabled: Boolean(submission.consultationEnabled),
+      consultationDuration: submission.consultationDuration?.trim() || "",
+      consultationPrice: submission.consultationPrice?.trim() || "",
+      consultationPurpose: submission.consultationPurpose?.trim() || "",
+      faqs: submission.faqs?.filter((faq) => faq?.question && faq?.answer) || [],
+      introVideoName: submission.introVideoName?.trim() || "",
+    };
+  };
+  let serverProfile = null;
+  {
+    const embedded = (Array.isArray(window?.TUTORIA_STORE) ? window.TUTORIA_STORE : [])
+      .find((item) => ["pending_review", "published"].includes(String(item?.status)) && item?.displayName?.trim() === profileName);
+    if (embedded) serverProfile = buildServerProfile(embedded);
+  }
+  if (!serverProfile && !liveProfile && !storedProfile && !submittedProfile) {
+    serverProfile = await fetch("/api/tutors?source=store")
+      .then((response) => response.ok ? response.json() : { tutors: [] })
+      .then((payload) => {
+        const submission = Array.isArray(payload.tutors)
+          ? payload.tutors.find((item) => ["pending_review", "published"].includes(String(item?.status)) && item?.displayName?.trim() === profileName)
+          : null;
+        return submission ? buildServerProfile(submission) : null;
+      })
+      .catch(() => null);
+  }
   const profile = liveProfile || storedProfile || submittedProfile || serverProfile || profiles.find((item) => item.name === profileName) || window.TUTORIA_GET_TUTOR_PROFILE?.(params.get("name")) || profiles[0];
   if (!profile) {
     revealTutorProfile();

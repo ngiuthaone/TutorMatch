@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Browse Tutors — Tutoria</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/tutor-store-data.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     .fade-in { animation: fadeIn .25s ease both; }
@@ -380,6 +381,7 @@ const TUTOR_SUBMISSION_KEY = 'tutoria_tutor_profile_submission';
 let serverPublishedTutors = [];
 let serverLive = false;
 let tutorsLoaded = false;
+const embeddedStore = Array.isArray(window.TUTORIA_STORE) ? window.TUTORIA_STORE : [];
 function tutorSkeletonCards() {
   let html = '';
   for (let i = 0; i < 6; i += 1) {
@@ -457,7 +459,11 @@ function submittedTutorToBrowseTutor(submission) {
 }
 
 function getBrowseTutors() {
-  let list = (serverLive ? [] : tutors).map(tutor => ({ ...tutor, photoUrl: tutor.photoUrl || PROFILE_IMAGES_BY_NAME[tutor.name] || '' }));
+  let list = embeddedStore.map(submittedTutorToBrowseTutor).filter(Boolean);
+  if (tutorsLoaded && !serverLive) {
+    const mocks = tutors.map(tutor => ({ ...tutor, photoUrl: tutor.photoUrl || PROFILE_IMAGES_BY_NAME[tutor.name] || '' }));
+    mocks.forEach(tutor => { if (!list.some(item => item.name === tutor.name)) list.push(tutor); });
+  }
   serverPublishedTutors.forEach(item => {
     if (item && item.source === 'live') {
       list = [{ ...item, photoUrl: item.photoUrl || PROFILE_IMAGES_BY_NAME[item.name] || '' }, ...list.filter(tutor => tutor.name !== item.name)];
@@ -629,7 +635,7 @@ function writeURL() {
 }
 
 function render() {
-  if (!tutorsLoaded) {
+  if (!tutorsLoaded && embeddedStore.length === 0) {
     const grid = $('tutorGrid');
     if (grid && !grid.dataset.failed) grid.innerHTML = tutorSkeletonCards();
     return;

@@ -7,6 +7,7 @@ import { getTutor, isPublicTutorUuid, listTutors, type PublicTutorDetail } from 
 import { BookingApiError, createBooking, listBookableSessions, type BookableSession } from "@/lib/booking-api";
 import { sortFutureBookableSessions } from "@/lib/bookable-session-projection";
 import { ensureSession, signOutLive, useSession } from "@/lib/auth/session";
+import storeTutors from "../../../data/published-tutors.json";
 
 interface TutorProfileFrameProps {
   name: string;
@@ -115,6 +116,16 @@ async function findStoredProfile(displayName: string): Promise<boolean> {
   });
 }
 
+const EMBEDDED_STORE_NAMES = new Set(
+  (storeTutors as Array<{ displayName?: unknown; name?: unknown }>)
+    .map((entry) => String(entry.displayName ?? entry.name ?? "").toLocaleLowerCase().trim())
+    .filter(Boolean),
+);
+
+function embeddedStoreHas(displayName: string): boolean {
+  return EMBEDDED_STORE_NAMES.has(displayName.toLocaleLowerCase().trim());
+}
+
 export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const fallbackTimerRef = useRef<number | null>(null);
@@ -147,7 +158,14 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
       setState({ status: "ready", frameName: displayName, src: `/tutor-profile-exact.html?name=${encodeURIComponent(displayName)}${resumeQuery}` });
     };
     const resolve = async () => {
-      const storePromise = findStoredProfile(decodedName);
+      const storePromise = (async () => {
+        if (embeddedStoreHas(decodedName)) return true;
+        try {
+          return await findStoredProfile(decodedName);
+        } catch {
+          return false;
+        }
+      })();
       const backendPromise = Promise.race([
         (async () => {
           try {
