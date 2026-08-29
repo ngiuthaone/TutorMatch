@@ -18,13 +18,14 @@ const eventImageUrl = (value: string) => isSafeHttpUrl(value) || (/^data:image\/
 const eventSessionSchema = z.object({
   id: z.string().min(1).max(80),
   date: z.string().max(60),
+  dateKey: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   times: z.array(z.string().max(30)).max(20),
 });
 const eventPlanItemSchema = z.object({
   title: z.string().max(300),
   duration: z.string().max(100),
   description: z.string().max(5_000),
-  image: z.string().max(2_000).refine(safeHttpUrl, "Unsafe plan image URL.").optional(),
+  image: z.string().min(1).max(350_000).refine(eventImageUrl, "Unsafe plan image URL.").optional(),
 });
 const eventReviewSchema = z.object({
   name: z.string().max(60),
@@ -54,6 +55,7 @@ const eventPostSchema = z.object({
   time: z.string().max(60),
   duration: z.string().max(100),
   location: z.string().max(300),
+  timezone: z.string().max(80).optional(),
   type: z.enum(["In person", "Online"]),
   price: z.string().max(60),
   attending: z.number().int().min(0).optional(),
@@ -76,7 +78,7 @@ const eventPostSchema = z.object({
   bring: z.array(z.string().max(500)).max(100),
   plan: z.array(eventPlanItemSchema).max(100),
   faqs: z.array(eventFaqSchema).max(30),
-  galleryImage: z.string().max(2_000).refine(safeHttpUrl, "Unsafe gallery URL.").optional(),
+  galleryImage: z.string().min(1).max(350_000).refine(eventImageUrl, "Unsafe gallery URL.").optional(),
   hostRole: z.string().max(120),
   hostExperience: z.string().max(5_000),
   hostBio: z.string().max(5_000),

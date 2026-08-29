@@ -4681,10 +4681,10 @@
         <div class="self-start rounded-[32px] border border-line bg-white/[0.03] p-8">
           <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">Workshop facts</p>
           <div class="mt-8 space-y-6">
-            <div><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Format</p><p class="mt-2 text-[15px] font-medium">In person</p><p id="detailsVenueName" class="mt-1 text-sm text-muted">Pizza 4P’s Bao Khanh</p></div>
-            <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Duration</p><p class="mt-2 text-[15px] font-medium">2.5 hours</p><p class="mt-1 text-sm text-muted">Tasting break included</p></div>
-            <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Languages</p><p class="mt-2 text-[15px] font-medium">Vietnamese and English</p></div>
-            <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Minimum age</p><p class="mt-2 text-[15px] font-medium">10+</p><p class="mt-1 text-sm text-muted">Ages 10–15 attend with an adult.</p></div>
+            <div><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Format</p><p id="factsFormat" class="mt-2 text-[15px] font-medium">In person</p><p id="detailsVenueName" class="mt-1 text-sm text-muted">Pizza 4P’s Bao Khanh</p></div>
+            <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Duration</p><p id="factsDuration" class="mt-2 text-[15px] font-medium">2.5 hours</p><p id="factsDurationNote" class="mt-1 text-sm text-muted">Tasting break included</p></div>
+            <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Languages</p><p id="factsLanguages" class="mt-2 text-[15px] font-medium">Vietnamese and English</p></div>
+            <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Minimum age</p><p id="factsMinAge" class="mt-2 text-[15px] font-medium">10+</p><p id="factsMinAgeNote" class="mt-1 text-sm text-muted">Ages 10–15 attend with an adult.</p></div>
           </div>
         </div>
 
@@ -4692,6 +4692,7 @@
           <div class="fixed-info-card fixed-info-card--list rounded-[32px] border border-line bg-white/[0.03] p-8"><h3 id="learnHeading" class="shrink-0 text-[22px] font-medium">What you will learn</h3><ul id="learnList" class="fixed-info-card-body mt-6 space-y-4 text-sm leading-6 text-muted"><li>✓ Understand dough fermentation</li><li>✓ Stretch pizza dough by hand</li><li>✓ Balance sauce, cheese, and toppings</li><li>✓ Understand high-heat baking</li></ul></div>
           <div class="fixed-info-card fixed-info-card--list rounded-[32px] border border-line bg-white/[0.03] p-8"><h3 id="includedHeading" class="shrink-0 text-[22px] font-medium">What is included</h3><ul id="includedList" class="fixed-info-card-body mt-6 space-y-4 text-sm leading-6 text-muted"><li>✓ Dough and kitchen tools</li><li>✓ Sauce, cheese, and toppings</li><li>✓ Apron and recipe card</li><li>✓ Welcome drink</li><li>✓ One pizza per participant</li></ul></div>
           <div class="fixed-info-card fixed-info-card--bring rounded-[32px] border border-line bg-white/[0.03] p-8 md:col-span-2"><h3 id="bringHeading" class="shrink-0 text-[22px] font-medium">What to bring</h3><div id="bringList" class="fixed-info-card-body mt-6 grid content-start gap-3 text-sm text-muted sm:grid-cols-3"><span>Comfortable clothes</span><span>Closed-toe shoes</span><span>Hair tie for long hair</span></div></div>
+          <div id="attendCard" class="fixed-info-card fixed-info-card--bring rounded-[32px] border border-line bg-white/[0.03] p-8 md:col-span-2" style="display:none"><h3 class="shrink-0 text-[22px] font-medium">Before you attend</h3><div id="attendList" class="fixed-info-card-body mt-6 space-y-5 text-sm leading-6 text-muted"></div></div>
         </div>
       </div>
     </section>
@@ -5414,6 +5415,8 @@
       ['13:30','16:00','Early afternoon'],['15:00','17:30','Afternoon'],['16:30','19:00','Early evening'],['18:00','20:30','Evening']
     ];
 
+    let weekDaysCount = function() { return '7 sessions'; };
+
     const initialDate = new Date(2026, 6, 26);
     let selectedDate = new Date(initialDate);
     let selectedSession = 0;
@@ -5471,7 +5474,7 @@
       document.getElementById('weekRangeLabel').textContent = `${new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short'}).format(weekStart)} – ${new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',year:'numeric'}).format(end)}`;
       document.getElementById('weekDayStrip').innerHTML = Array.from({length:7},(_,i)=>addDays(weekStart,i)).map(d => `
         <button class="week-day-choice min-w-[92px] rounded-xl border border-line bg-white/[0.02] px-3 py-4 text-center text-muted" data-date="${key(d)}" data-selected="${sameDate(d,selectedDate)}">
-          <span class="block text-[10px] uppercase tracking-[0.14em] text-quiet">${new Intl.DateTimeFormat('en-GB',{weekday:'short'}).format(d)}</span><span class="mt-2 block text-xl font-medium">${d.getDate()}</span><span class="mt-1 block text-xs">7 sessions</span>
+          <span class="block text-[10px] uppercase tracking-[0.14em] text-quiet">${new Intl.DateTimeFormat('en-GB',{weekday:'short'}).format(d)}</span><span class="mt-2 block text-xl font-medium">${d.getDate()}</span><span class="mt-1 block text-xs">${weekDaysCount(d)}</span>
         </button>`).join('');
       document.querySelectorAll('.week-day-choice').forEach(btn => btn.onclick = () => { selectedDate = new Date(btn.dataset.date+'T12:00:00'); selectedSession=0; renderWeek(); renderMonth(); renderSessions(); updateSessionSummary(); });
       document.getElementById('weeklySelectedDateLabel').textContent = longDate(selectedDate);
@@ -7232,6 +7235,10 @@
     }
 
     function installAdvancedScheduleRenderer() {
+      weekDaysCount = function(date) {
+        const count = sessionsForLocation(advancedState, advancedState.activeLocationId, date).length;
+        return count ? `${count} ${count === 1 ? 'session' : 'sessions'}` : 'No sessions';
+      };
       updateSessionSummary = updateAdvancedSessionSummary;
       renderSessions = function() {
         const sessions = currentPublicSessions();
@@ -7591,11 +7598,15 @@
 
       // --- Location ---
       const loc = payload.location || {};
+      const locationNote = [loc.note, loc.timezone ? `Time zone: ${loc.timezone}` : '']
+        .map((line) => (typeof line === 'string' ? line.trim() : ''))
+        .filter(Boolean)
+        .join('\n') || 'Exact arrival instructions are provided after booking.';
       advancedState.locations = [{
         id: 'main',
         name: loc.name || advancedState.hero.title,
         area: loc.area || '',
-        note: loc.note || 'Exact arrival instructions are provided after booking.',
+        note: locationNote,
         mapQuery: loc.mapQuery || loc.name || '',
         mapUrl: loc.mapUrl || '',
       }];
@@ -7624,7 +7635,7 @@
       };
 
       // --- Schedule ---
-      const sessions = (payload.schedule?.sessions || []).map((s, index) => ({
+      const baseSession = (s, index) => ({
         id: s.id || 'session-' + index,
         start: s.start || '09:00',
         end: s.end || '18:00',
@@ -7633,16 +7644,38 @@
         maxParticipants: s.maxParticipants != null ? Number(s.maxParticipants) : undefined,
         bookedParticipants: s.bookedParticipants != null ? Number(s.bookedParticipants) : undefined,
         capacity: s.capacity != null ? Number(s.capacity) : undefined,
-        days: s.days,
-      })).slice(0, 60);
+        days: Array.isArray(s.days) && s.days.length ? s.days.map(Number) : [],
+        locationId: 'main',
+      });
+      const sessionsByDate = {};
+      const recurringSessions = [];
+      (payload.schedule?.sessions || []).slice(0, 60).forEach((s, index) => {
+        const session = baseSession(s, index);
+        const dateKey = typeof s.dateKey === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s.dateKey) ? s.dateKey : '';
+        if (dateKey) (sessionsByDate[dateKey] = sessionsByDate[dateKey] || []).push(session);
+        else recurringSessions.push(session);
+      });
+      const scheduleExceptions = Object.keys(sessionsByDate).sort().map((date) => ({
+        id: 'exception-' + date,
+        locationId: 'main',
+        date,
+        mode: 'custom',
+        sessions: sessionsByDate[date],
+      }));
       advancedState.schedule = {
         heading: payload.schedule?.heading || advancedState.schedule.heading,
         intro: payload.schedule?.intro || advancedState.schedule.intro,
         editorLocationId: advancedState.schedule.editorLocationId || advancedState.activeLocationId || 'main',
         builders: {},
-        exceptions: [],
-        sessions,
+        exceptions: scheduleExceptions,
+        sessions: recurringSessions,
       };
+      if (scheduleExceptions.length) {
+        const firstDate = new Date(scheduleExceptions[0].date + 'T12:00:00');
+        selectedDate = firstDate;
+        weekStart = startOfWeek(firstDate);
+        visibleMonth = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+      }
 
       // --- FAQ ---
       advancedState.faq = {
@@ -7667,6 +7700,33 @@
       setList(document.getElementById('learnList'), details.learn, 'li');
       setList(document.getElementById('includedList'), details.included, 'li');
       setList(document.getElementById('bringList'), details.bring, 'span');
+
+      // --- Before you attend checklists ---
+      const attendCard = document.getElementById('attendCard');
+      const attendList = document.getElementById('attendList');
+      if (attendCard) {
+        const groups = (details.checklists || []).filter((g) => g && g.title && Array.isArray(g.items) && g.items.length);
+        if (groups.length && attendList) {
+          attendList.innerHTML = groups.map((g) => `<div><p class="text-sm font-medium text-white">${advancedEscape(g.title)}</p><ul class="mt-2 space-y-2 text-sm text-muted">${g.items.map((item) => `<li>✓ ${advancedEscape(item)}</li>`).join('')}</ul></div>`).join('');
+          attendCard.style.display = '';
+          attendCard.classList.remove('hidden');
+        } else {
+          attendCard.style.display = 'none';
+          attendCard.classList.add('hidden');
+        }
+      }
+
+      // --- Workshop facts card ---
+      const facts = payload.facts || {};
+      const setFactsText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+      if (facts.format) setFactsText('factsFormat', facts.format);
+      if (facts.duration) { setFactsText('factsDuration', facts.duration); setFactsText('factsDurationNote', ''); }
+      if (Array.isArray(facts.languages) && facts.languages.length) setFactsText('factsLanguages', facts.languages.join(', '));
+      if (facts.minimumAge) {
+        setFactsText('factsMinAge', facts.minimumAge);
+        const noteEl = document.getElementById('factsMinAgeNote');
+        if (noteEl) { noteEl.textContent = facts.minimumAgeNote || ''; noteEl.hidden = !facts.minimumAgeNote; }
+      }
 
       // --- Reviews (preview cards + heading + drawer) ---
       const reviewElems = [

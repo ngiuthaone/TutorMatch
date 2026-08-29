@@ -23,6 +23,7 @@ export interface WorkshopDataLocation {
   note: string;
   mapQuery: string;
   mapUrl?: string;
+  timezone?: string;
 }
 
 export interface WorkshopDataHost {
@@ -51,6 +52,7 @@ export interface WorkshopDataSession {
   capacity?: number;
   bookedParticipants?: number;
   days?: string[];
+  dateKey?: string;
 }
 
 export interface WorkshopDataFaq {
@@ -83,11 +85,20 @@ export interface WorkshopDataRecommendation {
   priority?: "host" | "other-hosts" | "default";
 }
 
+export interface WorkshopDataFacts {
+  format?: string;
+  duration?: string;
+  languages?: string[];
+  minimumAge?: string;
+  minimumAgeNote?: string;
+}
+
 export interface WorkshopData {
   slug: string;
   hero: WorkshopDataHero;
   overview: { heading: string; paragraphs: string[] };
-  details: { learn: string[]; included: string[]; bring: string[] };
+  details: { learn: string[]; included: string[]; bring: string[]; checklists?: Array<{ title: string; items: string[] }> };
+  facts: WorkshopDataFacts;
   booking: {
     pricingMode: "single" | "multiple";
     defaultPackageId?: string;
@@ -118,6 +129,43 @@ const asDateLabel = (isoOrLabel: string): string => {
     return d.toLocaleDateString("en", { weekday: "short", day: "numeric", month: "short" });
   }
   return isoOrLabel;
+};
+
+const MONTH_INDEX: Record<string, number> = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+  jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+};
+
+const VIETNAMESE_MONTHS: Record<string, number> = {
+  "1": 0, "2": 1, "3": 2, "4": 3, "5": 4, "6": 5,
+  "7": 6, "8": 7, "9": 8, "10": 9, "11": 10, "12": 11,
+};
+
+const toDateKey = (label?: string): string | undefined => {
+  if (!label) return undefined;
+  const raw = String(label).trim();
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const cleaned = raw.replace(/^(mon|tue|wed|thu|fri|sat|sun)[a-z]*,\s*/i, "");
+  const vietnamese = cleaned.match(/^(\d{1,2})\s+thg\s+(\d{1,2})\s*,?\s*(\d{4})$/i);
+  if (vietnamese) {
+    const month = VIETNAMESE_MONTHS[vietnamese[2]];
+    if (month === undefined) return undefined;
+    return `${vietnamese[3]}-${String(month + 1).padStart(2, "0")}-${String(vietnamese[1]).padStart(2, "0")}`;
+  }
+  const dayFirst = cleaned.match(/^(\d{1,2})\s+([a-z]{3})\s+(\d{4})$/i);
+  if (dayFirst) {
+    const month = MONTH_INDEX[dayFirst[2].toLowerCase()];
+    if (month === undefined) return undefined;
+    return `${dayFirst[3]}-${String(month + 1).padStart(2, "0")}-${String(dayFirst[1]).padStart(2, "0")}`;
+  }
+  const monthFirst = cleaned.match(/^([a-z]{3})\s+(\d{1,2})(?:,)?\s+(\d{4})$/i);
+  if (monthFirst) {
+    const month = MONTH_INDEX[monthFirst[1].toLowerCase()];
+    if (month === undefined) return undefined;
+    return `${monthFirst[3]}-${String(month + 1).padStart(2, "0")}-${String(monthFirst[2]).padStart(2, "0")}`;
+  }
+  return undefined;
 };
 
 export function toWorkshopData(event: EventDetail, recommendations?: WorkshopDataRecommendation[]): WorkshopData {
@@ -152,13 +200,17 @@ export function toWorkshopData(event: EventDetail, recommendations?: WorkshopDat
     capacity: event.capacity || 1,
     bookedParticipants: event.attending || 0,
     days: [],
+    dateKey: s.dateKey || toDateKey(s.date),
   }));
 
   const location = {
     name: event.studioName || event.location || "Tutoria venue",
     area: asDateLabel(event.location) === event.location ? "" : event.location,
-    note: event.accessibility || "Exact arrival instructions are provided after booking.",
+    note: event.note && event.note !== "Accessibility: No requirements specified."
+      ? event.note
+      : event.accessibility || "Exact arrival instructions are provided after booking.",
     mapQuery: event.address || event.location || event.studioName || "",
+    timezone: event.timezone,
   };
 
   const coverImage = event.image || event.galleryImage || undefined;
@@ -182,6 +234,16 @@ export function toWorkshopData(event: EventDetail, recommendations?: WorkshopDat
       learn: event.learn,
       included: event.included,
       bring: event.bring,
+      checklists: (event.beforeYouAttend || [])
+        .filter((g) => g.title && g.items?.length)
+        .map((g) => ({ title: g.title, items: g.items })),
+    },
+    facts: {
+      format: (event.type as string) || event.location,
+      duration: event.duration,
+      languages: event.languages,
+      minimumAge: event.minimumAge,
+      minimumAgeNote: "",
     },
     booking: {
       pricingMode: event.pricingMode === "single" || packages.length <= 1 ? "single" : "multiple",

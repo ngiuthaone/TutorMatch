@@ -1372,7 +1372,7 @@
     function formatDate(value) {
       if (!value) return "Not set";
       const date = new Date(`${value}T00:00:00`);
-      return date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+      return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
     }
 
     function selectedSessions() {
@@ -1594,6 +1594,7 @@
         return {
           id: `session-${index + 1}`,
           date: formatDate(dateBlock.date),
+          dateKey: /^\d{4}-\d{2}-\d{2}$/.test(dateBlock.date) ? dateBlock.date : undefined,
           times: dateBlock.intervals.map(interval => `${interval.start} - ${interval.end}`),
         };
       });
@@ -1630,6 +1631,7 @@
         creatorId: creator.id,
         creatorName: creator.host,
         slug: createSlug(title), title, host: creator.host, date: dateLabel, time: firstInterval ? `${firstInterval.start} - ${firstInterval.end}` : "Time TBA", location,
+        timezone: $("timezone").value || undefined,
         type: format, price, attending: 0, capacity, image: cover, topic: category, level,
         subtitle: promise, rating: 0, reviewCount: 0, duration: totalMinutes ? `${totalMinutes} minutes` : "Flexible",
         languages: splitList($("languages").value), minimumAge: "All ages",

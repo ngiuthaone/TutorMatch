@@ -17,6 +17,7 @@ export interface EventListing {
 export interface EventSession {
   id: string;
   date: string;
+  dateKey?: string;
   times: string[];
 }
 
@@ -53,6 +54,7 @@ export interface EventDetail extends EventListing {
   creatorId?: string;
   creatorName?: string;
   publishedAt?: string;
+  timezone?: string;
   subtitle: string;
   rating: number;
   reviewCount: number;
