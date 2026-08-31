@@ -24,7 +24,7 @@ select jsonb_build_object(
     'hourlyRateVnd', b.pricing_hourly_rate_vnd,
     'durationMinutes', b.pricing_duration_minutes,
     'model', b.pricing_model,
-    'pricePerParticipantVnd', b.pricing_price_per_participant_vnd,
+    'pricePerParticipantVnd', b.pricing_unit_price_vnd,
     'snapshottedAt', b.pricing_snapshotted_at
   ) end,
   'session', public.session_json(b.session_id),

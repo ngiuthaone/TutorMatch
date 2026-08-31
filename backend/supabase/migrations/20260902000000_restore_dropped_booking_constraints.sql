@@ -20,6 +20,13 @@
 --   bookings_pricing_snapshot_check  : 20260819120000_shared_booking_engine.sql
 --   bookings_cancelled_by_check     : 20260820000000_extend_cancelled_by_check.sql
 --   booking_history_actor_check     : 20260820000000_extend_cancelled_by_check.sql
+--
+-- NOTE: the pricing snapshot CHECK below is reconciled to include
+-- flat_per_participant_v1 (authoritative pricing model per DEC-101) so it
+-- matches 20260820100000. It uses production column names
+-- (pricing_unit_price_vnd + pricing_participant_count) and keeps fixed_v1
+-- valid because production still holds existing fixed_v1 rows until the
+-- booking wave migrates them.
 set search_path = '';
 
 -- ─────────────────────────────────────────────────────────────────────
@@ -39,6 +46,10 @@ alter table public.bookings
         and pricing_snapshotted_at is not null)
     or (pricing_model = 'fixed_v1' and pricing_amount_vnd >= 0 and pricing_currency = 'VND'
         and pricing_unit_price_vnd >= 0 and pricing_participant_count >= 1
+        and pricing_hourly_rate_vnd is null and pricing_duration_minutes is null
+        and pricing_snapshotted_at is not null)
+    or (pricing_model = 'flat_per_participant_v1' and pricing_amount_vnd > 0 and pricing_currency = 'VND'
+        and pricing_unit_price_vnd > 0 and pricing_participant_count >= 1
         and pricing_hourly_rate_vnd is null and pricing_duration_minutes is null
         and pricing_snapshotted_at is not null)
   );

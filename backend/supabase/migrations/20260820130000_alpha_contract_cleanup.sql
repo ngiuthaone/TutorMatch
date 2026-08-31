@@ -227,7 +227,7 @@ select jsonb_build_object(
     'durationMinutes', b.pricing_duration_minutes,
     'unitPriceVnd', b.pricing_unit_price_vnd,
     'participantCountPricing', b.pricing_participant_count,
-    'pricePerParticipantVnd', b.pricing_price_per_participant_vnd,
+    'pricePerParticipantVnd', b.pricing_unit_price_vnd,
     'model', b.pricing_model,
     'snapshottedAt', b.pricing_snapshotted_at
   ) end,
@@ -315,6 +315,9 @@ revoke all on function public.booking_read_json(uuid) from public, anon, authent
 -- ─────────────────────────────────────────────────────────────────────────
 -- 5. create_offering: fix param contract + slug ambiguity + ACL
 -- ─────────────────────────────────────────────────────────────────────────
+-- Postgres cannot rename input parameters via CREATE OR REPLACE; drop the
+-- existing signature first to allow the new parameter names to bind cleanly.
+drop function if exists public.create_offering(text, text, text, bigint, bigint, text, text);
 create or replace function public.create_offering(
   p_offering_type text,
   p_title text,
