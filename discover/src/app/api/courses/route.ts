@@ -79,12 +79,14 @@ export async function POST(request: NextRequest) {
       return liveModeGone();
     }
 
-    console.log("[api/courses POST]", {
+    if (process.env.NODE_ENV === "development") {
+      console.log("[api/courses POST]", {
       method: request.method,
       url: request.url,
       contentLength: request.headers.get("content-length"),
       userAgent: request.headers.get("user-agent"),
-    });
+      });
+    }
 
     const contentLengthHeader = request.headers.get("content-length");
     const contentLength = contentLengthHeader ? Number(contentLengthHeader) : 0;

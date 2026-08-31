@@ -96,7 +96,7 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
     abortRef.current = controller;
 
     const cancelled = { current: false };
-    setPage({ status: "loading" });
+    queueMicrotask(() => setPage({ status: "loading" }));
 
     (async () => {
       try {
@@ -122,8 +122,10 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
 
   /* Reset session selection when listing changes */
   useEffect(() => {
-    setSelectedSession(null);
-    setParticipants(1);
+    queueMicrotask(() => {
+      setSelectedSession(null);
+      setParticipants(1);
+    });
   }, [page]);
 
   /* Derived data */

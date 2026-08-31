@@ -22,8 +22,11 @@ begin
   v := regexp_replace(v, '<\s*/?(?:script|iframe|object|embed|frame|meta|link|base|form)\b[^>]*>', '', 'gi');
   -- Remove on* event-handler attributes.
   v := regexp_replace(v, '\s+on[a-z][a-z0-9_-]*\s*=\s*("[^"]*"|''[^'']*''|[^\s>]+)', '', 'gi');
-  -- Neutralize dangerous URL protocols.
-  v := regexp_replace(v, '\b(javascript|vbscript|data):', '', 'gi');
+  -- Neutralize dangerous URL protocols (incl. whitespace-in-protocol variants
+  -- like "java\tscript:"). NOTE: HTML-entity-encoded protocols (&#x6a;avascript:)
+  -- are decoded by the client-side DOMParser sanitizer at render time; this
+  -- server layer is defense-in-depth for stored data, not the sole sanitizer.
+  v := regexp_replace(v, '\b(j\s*a\s*v\s*a\s*s\s*c\s*r\s*i\s*p\s*t|v\s*b\s*s\s*c\s*r\s*i\s*p\s*t|d\s*a\s*t\s*a)\s*:', '', 'gi');
   return v;
 end $$;
 
@@ -332,6 +335,7 @@ begin
     select a.published_at
     from public.articles a
     where a.status = 'published'
+      and (p_cursor is null or a.published_at < to_timestamp(p_cursor::double precision / 1000.0))
       and (p_tag is null or p_tag = any(a.tags))
     order by a.published_at desc
     limit 1 offset v_limit

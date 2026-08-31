@@ -91,7 +91,9 @@ export function ClassDetailPage({ slug }: ClassDetailPageProps) {
     abortRef.current = controller;
 
     let active = true;
-    setPage({ status: "loading" });
+    queueMicrotask(() => {
+      if (active) setPage({ status: "loading" });
+    });
 
     (async () => {
       try {
@@ -125,9 +127,11 @@ export function ClassDetailPage({ slug }: ClassDetailPageProps) {
 
   /* Reset session selection when data changes */
   useEffect(() => {
-    setSelectedSession(null);
-    setParticipants(1);
-    setBookingError(null);
+    queueMicrotask(() => {
+      setSelectedSession(null);
+      setParticipants(1);
+      setBookingError(null);
+    });
   }, [page]);
 
   /* Derived data */

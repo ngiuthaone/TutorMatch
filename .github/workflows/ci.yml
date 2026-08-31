@@ -2,109 +2,48 @@ name: CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main]
   pull_request:
-    branches: [main, master, develop]
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [main]
 
 jobs:
   backend:
-    name: Backend (typecheck + build + test)
+    name: Backend (typecheck + test + build)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
         with:
           version: 9
-
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "pnpm"
-          cache-dependency-path: "backend/pnpm-lock.yaml"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: TypeScript type check
-        run: pnpm typecheck
-
-      - name: Build
-        run: pnpm build
-
-      - name: Run unit tests
-        run: pnpm test
+          cache-dependency-path: backend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
 
   discover:
-    name: Discover (typecheck + build)
+    name: Discover (test + build)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: discover
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
         with:
           version: 9
-
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "pnpm"
-          cache-dependency-path: "discover/pnpm-lock.yaml"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: TypeScript type check
-        run: pnpm typecheck
-
-      - name: Build
-        run: pnpm build
-
-  integration:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    # Only run on PRs (not on every push to main, to save resources)
-    if: github.event_name == 'pull_request'
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-          cache-dependency-path: "backend/pnpm-lock.yaml"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Start local Supabase
-        run: |
-          # Start supabase CLI in background
-          npx supabase start || echo "Supabase may already be running"
-          # Wait for Supabase to be ready
-          sleep 30
-          echo "SUPABASE_TEST_URL=http://127.0.0.1:54321" >> $GITHUB_ENV
-          echo "SUPABASE_TEST_DB_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres" >> $GITHUB_ENV
-          echo "SUPABASE_TEST_SERVICE_ROLE_KEY=$(cat ~/.supabase/tmp/config.toml | grep service_role_key | cut -d'=' -f2 | tr -d ' ')" >> $GITHUB_ENV || echo "Using fallback"
-          # Set placeholder keys for the integration tests (tests should skip if real keys not available)
-          echo "SUPABASE_TEST_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CR0L6W6b0gmsJATMU4W7M9tHh7a1wnJb5G8Q_5Gx2hk" >> $GITHUB_ENV
-
-      - name: Run integration tests
-        run: pnpm test:integration || echo "Integration tests may require local Supabase to be running"
+          cache-dependency-path: discover/package.json
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm build

@@ -13,15 +13,20 @@ interface PageProps {
 
 export default async function ThreadsPage({ searchParams }: PageProps) {
   const sp = await searchParams;
-  const result = await listThreads({
-    tag: sp.tag ?? null,
-    level: sp.level ?? null,
-    anchorType: sp.anchorType ?? null,
-    cursor: sp.cursor ?? null,
-    limit: 20,
-  });
-
-  const threads = result.threads ?? [];
+  let threads: { id: string; title: string; body: string | null; anchor_type: string; anchor_id: string | null; anchor_url: string | null; anchor_title: string | null; anchor_domain: string | null; tags: string[]; level: string | null; visibility: string; reply_permission: string; appreciated_count: number; reply_count: number; created_at: string; is_creator?: boolean; appreciated_by_me?: boolean }[] = [];
+  let loadError = false;
+  try {
+    const result = await listThreads({
+      tag: sp.tag ?? null,
+      level: sp.level ?? null,
+      anchorType: sp.anchorType ?? null,
+      cursor: sp.cursor ?? null,
+      limit: 20,
+    });
+    threads = result.threads ?? [];
+  } catch {
+    loadError = true;
+  }
 
   return (
     <div className="tutoria-page-shell flex flex-col min-h-[100dvh]">
@@ -41,7 +46,13 @@ export default async function ThreadsPage({ searchParams }: PageProps) {
 
           <ThreadFilters />
 
-          {threads.length === 0 ? (
+          {loadError && (
+            <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+              Threads are temporarily unavailable. Please reload to try again.
+            </div>
+          )}
+
+          {threads.length === 0 && !loadError ? (
             <div className="rounded-2xl border border-[#1f2228] bg-[#0e1014] p-10 text-center">
               <p className="text-sm text-[#9ca3af]">No threads yet. Start the first conversation.</p>
             </div>

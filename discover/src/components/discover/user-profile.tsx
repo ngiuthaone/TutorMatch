@@ -79,10 +79,10 @@ export function UserProfile({ name }: { name: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    if (!cancelled) setMounted(true);
+    if (!cancelled) queueMicrotask(() => setMounted(true));
     try {
       const stored = JSON.parse(localStorage.getItem("tutoria_following") || "[]");
-      if (!cancelled) setFollowing(stored);
+      if (!cancelled) queueMicrotask(() => setFollowing(stored));
     } catch {}
     return () => { cancelled = true; };
   }, []);

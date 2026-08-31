@@ -27,6 +27,7 @@ declare
   v_depth int := 1;
   v_parent_depth int := 0;
   v_parent_owner_id uuid;
+  v_parent_status text;
   v_id uuid;
 begin
   if btrim(coalesce(p_body, '')) = '' or char_length(p_body) > 2000 then
@@ -48,15 +49,17 @@ begin
   end if;
 
   if p_parent_id is not null then
-    select c.owner_id, c.status into v_parent_owner_id, v_owner_status from public.comments c where c.id = p_parent_id;
+    select c.owner_id, c.status into v_parent_owner_id, v_parent_status from public.comments c where c.id = p_parent_id;
     if v_parent_owner_id is null or v_parent_owner_id != p_owner_id then
       raise exception 'PARENT_NOT_FOUND' using errcode = 'P0001';
     end if;
-    if v_owner_status != 'published' then raise exception 'PARENT_DELETED' using errcode = 'P0001'; end if;
+    if v_parent_status != 'published' then raise exception 'PARENT_DELETED' using errcode = 'P0001'; end if;
+    -- Compute parent depth by walking ancestors (published-only so a deleted
+    -- ancestor can't inflate depth or orphan the new comment).
     with recursive ancestors as (
-      select c.id, c.parent_id, 1 as depth from public.comments c where c.id = p_parent_id
+      select c.id, c.parent_id, 1 as depth from public.comments c where c.id = p_parent_id and c.status = 'published'
       union all
-      select c2.id, c2.parent_id, a.depth + 1 from public.comments c2 join ancestors a on c2.id = a.parent_id
+      select c2.id, c2.parent_id, a.depth + 1 from public.comments c2 join ancestors a on c2.id = a.parent_id where c2.status = 'published'
     )
     select max(depth) into v_parent_depth from ancestors;
     v_depth := v_parent_depth + 1;

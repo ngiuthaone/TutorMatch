@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": "22.x" },
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "worker": "tsx src/workers/financial-recovery-worker.ts",
@@ -17,9 +19,12 @@
     "check": "pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.1.2",
     "@fastify/cors": "^11.0.0",
     "@fastify/helmet": "^13.0.0",
     "@fastify/rate-limit": "^10.0.0",
+    "@sentry/node": "^10.72.0",
+    "@sentry/profiling-node": "^10.72.0",
     "@supabase/supabase-js": "^2.50.0",
     "dotenv": "^17.0.0",
     "fastify": "^5.4.0",

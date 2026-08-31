@@ -1,4 +1,6 @@
 import "dotenv/config";
+import * as Sentry from "@sentry/node";
+import "@sentry/profiling-node";
 import { createApp } from "./app.js";
 import { parseEnvironment } from "./config/env.js";
 import { createSupabaseAuthService } from "./lib/supabase.js";
@@ -13,6 +15,21 @@ import { createRequireAdmin } from "./plugins/admin-role.js";
 import { requireFinancialWorkerConfig } from "./workers/financial-worker-config.js";
 import { createFinancialWorkerRuntime } from "./workers/financial-worker-runtime.js";
 import { hostname } from "node:os";
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.TUTORIA_ENVIRONMENT ?? process.env.NODE_ENV ?? "development",
+  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+  profilesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+  tracesSampler: (samplingContext) => {
+    if (samplingContext.request?.url?.includes("/health")) return 0;
+    return process.env.NODE_ENV === "production" ? 0.1 : 1.0;
+  },
+  beforeSendTransaction(event) {
+    if (event.transaction === "/health" || event.transaction === "/api/v1/health") return null;
+    return event;
+  },
+});
 
 async function main() {
   const config = parseEnvironment(process.env);
@@ -33,11 +50,25 @@ async function main() {
   const requireAdmin = createRequireAdmin(config.SUPABASE_URL, config.SUPABASE_PUBLISHABLE_KEY);
   const app = createApp({ config, authService, tutorCvService, bookingService, policyService, complianceService, payoutService, adminService, requireAdmin, logger: {
     level: config.NODE_ENV === "production" ? "info" : "debug",
-    redact: { paths: ["req.headers.authorization", "req.headers.cookie", "res.headers.set-cookie", "*.accessToken", "*.refreshToken", "*.password", "*.secretKey"], censor: "[REDACTED]" }
+    redact: { paths: ["req.headers.authorization", "req.headers.cookie", "res.headers.set-cookie", "*.accessToken", "*.refreshToken", "*.password", "*.secretKey", "*.email"], censor: "[REDACTED]" }
   } });
-  const shutdown = async (signal: string) => { app.log.info({ signal }, "Shutting down"); await app.close(); };
-  process.once("SIGINT", () => void shutdown("SIGINT"));
-  process.once("SIGTERM", () => void shutdown("SIGTERM"));
+
+  app.addHook("onError", async (request, _reply, error) => {
+    if (error && typeof error === "object" && "statusCode" in error) return;
+    Sentry.captureException(error, {
+      extra: { requestId: request.id, method: request.method, url: request.url },
+    });
+  });
+
+  const gracefulShutdown = async (signal: string) => {
+    app.log.info({ signal }, "Shutting down");
+    await app.close();
+    await Sentry.close(2000);
+    process.exit(0);
+  };
+  process.on("SIGINT", () => void gracefulShutdown("SIGINT"));
+  process.on("SIGTERM", () => void gracefulShutdown("SIGTERM"));
+
   await app.listen({ host: config.HOST, port: config.PORT });
   app.log.info({ host: config.HOST, port: config.PORT }, "Tutoria API started");
 

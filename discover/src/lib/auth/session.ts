@@ -3,10 +3,11 @@
 import { useSyncExternalStore } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { ApiClientError, getApiClient } from "./api-client";
-import { getAuthCallbackUrl, isLiveMode } from "./config";
+import { getAuthCallbackUrl, getRuntimeConfig, isLiveMode } from "./config";
 import { setLiveIdentity, type LiveIdentity } from "./identity";
 import { getSupabaseClient } from "./supabase-client";
 import { safeRedirectPath } from "./redirect";
+import { bffSignIn as bffSignInRaw, bffRefresh as bffRefreshRaw, bffSignOut as bffSignOutRaw } from "./bff-auth";
 
 export type LiveUser = LiveIdentity;
 
@@ -68,9 +69,17 @@ async function synchronize(session: Session | null, attempt = 0): Promise<void> 
           if (current === generation) emit({ status: "unavailable", errorCode: "CONFIGURATION_ERROR" });
           return;
         }
-        const refreshed = await client.auth.refreshSession();
-        if (refreshed.data?.session) return synchronize(refreshed.data.session, 1);
-        await client.auth.signOut();
+        if (getRuntimeConfig().useBffAuth) {
+          const result = await bffRefreshRaw();
+          if (result.ok && result.session) {
+            return synchronize(result.session, 1);
+          }
+          await bffSignOutRaw().catch(() => {});
+        } else {
+          const refreshed = await client.auth.refreshSession();
+          if (refreshed.data?.session) return synchronize(refreshed.data.session, 1);
+          await client.auth.signOut();
+        }
       } catch {
         // Fail closed below without exposing provider details.
       }
@@ -157,11 +166,23 @@ export async function resendSignupConfirmation(nextPath: string, emailHint?: str
 }
 
 export async function signInWithPassword(email: string, password: string): Promise<void> {
-  const client = getSupabaseClient();
-  if (!client) throw new Error("CONFIGURATION_ERROR");
-  const { error } = await client.auth.signInWithPassword({ email, password });
-  if (error) throw mapAuthError(error);
-  await synchronize((await client.auth.getSession()).data.session, 0);
+  const useBff = getRuntimeConfig().useBffAuth;
+  if (useBff) {
+    const result = await bffSignInRaw(email, password);
+    if (!result.ok) {
+      throw mapBffError(result.error?.code ?? "AUTH_FAILED", result.error?.message);
+    }
+    const client = getSupabaseClient();
+    if (!client) throw new Error("CONFIGURATION_ERROR");
+    const sessionResult = await client.auth.getSession();
+    await synchronize(sessionResult.data.session || null, 0);
+  } else {
+    const client = getSupabaseClient();
+    if (!client) throw new Error("CONFIGURATION_ERROR");
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw mapAuthError(error);
+    await synchronize((await client.auth.getSession()).data.session, 0);
+  }
 }
 
 export async function signUpWithPassword(email: string, password: string, name: string): Promise<{ needsConfirmation: boolean }> {
@@ -171,8 +192,6 @@ export async function signUpWithPassword(email: string, password: string, name: 
     email,
     password,
     options: {
-      // `name` satisfies the frozen profiles trigger (0001 reads raw_user_meta_data->>'name');
-      // `display_name` is retained for Discover vocabulary. Neither is authorization authority.
       data: { name: name.trim(), display_name: name.trim() },
       emailRedirectTo: getAuthCallbackUrl() || undefined,
     },
@@ -208,14 +227,23 @@ export async function updatePasswordWithSession(newPassword: string): Promise<vo
 }
 
 export async function signOutLive(): Promise<void> {
-  const client = getSupabaseClient();
   generation++;
-  try {
-    await client?.auth.signOut();
-  } catch {
-    // Fail closed: the local session is invalidated regardless of provider result.
+  if (getRuntimeConfig().useBffAuth) {
+    try { await bffSignOutRaw(); } catch { /* proceed to clear local state */ }
   }
+  const client = getSupabaseClient();
+  try { await client?.auth.signOut(); } catch { /* fail closed: local state is cleared */ }
   emit({ status: "anonymous" });
+}
+
+function mapBffError(code: string, message?: string): { code: string; message: string } {
+  if (code === "AUTH_FAILED") {
+    const lowered = (message ?? "").toLowerCase();
+    if (lowered.includes("invalid login credentials")) return { code: "INVALID_CREDENTIALS", message: "Incorrect email or password." };
+    if (lowered.includes("email not confirmed")) return { code: "EMAIL_NOT_CONFIRMED", message: "Confirm your email address using the link we sent before signing in." };
+  }
+  if (code === "RATE_LIMITED") return { code: "RATE_LIMITED", message: "Too many attempts. Wait a moment and try again." };
+  return { code, message: message ?? "Authentication failed. Try again." };
 }
 
 function mapAuthError(error: { code?: string; message?: string; status?: string | number }): { code: string; message: string } {

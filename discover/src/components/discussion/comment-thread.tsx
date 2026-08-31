@@ -25,7 +25,7 @@ export function CommentThread({ contentId, contentType, onUpdate }: CommentThrea
 
   useEffect(() => {
     let cancelled = false;
-    if (!cancelled) loadComments();
+    queueMicrotask(() => loadComments());
     return () => { cancelled = true; };
   }, [loadComments]);
 

@@ -33,8 +33,7 @@ export type ThreadMutationResult =
 
 export type AppreciateResult =
   | { status: "ok"; data: Record<string, unknown> }
-  | { status: "invalid" }
-  | { status: "unavailable" };
+  | { status: "invalid" | "not_found" | "unavailable" };
 
 export type ReportResult =
   | { status: "ok"; data: { id: string; status: string } }
@@ -198,6 +197,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
         if (error) {
           const code = error.code ?? "";
           if (code === "22023") return { status: "invalid" };
+          if (code === "P0001") return { status: "not_found" };
           return { status: "unavailable" };
         }
         return { status: "ok", data: data as Record<string, unknown> };

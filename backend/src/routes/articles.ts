@@ -15,6 +15,14 @@ const safeHttpUrl = (value: string) => {
   return url.protocol === "https:";
 };
 
+function isAllowedImageHost(value: string, allowedHosts: string[]): boolean {
+  if (allowedHosts.length === 0) return true;
+  const trimmed = String(value || "").trim();
+  let url: URL;
+  try { url = new URL(trimmed); } catch { return false; }
+  return allowedHosts.includes(url.hostname.toLowerCase());
+}
+
 const articleContentSchema = z.object({
   title: z.string().min(1).max(200),
   subtitle: z.string().max(500).nullable().optional(),
@@ -57,6 +65,7 @@ export const articleRoutes: FastifyPluginAsync<{
   publishMax: number;
   readMax: number;
   windowMs: number;
+  allowedImageHosts: string[];
 }> = async (app, options) => {
   // Public article list (paginated by published_at desc).
   app.get("/api/v1/articles", { config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } }, onSend: noStore }, async (request) => {
@@ -84,6 +93,9 @@ export const articleRoutes: FastifyPluginAsync<{
     if (!parsed.success) throw new ApiError(400, "ARTICLE_INVALID", "Article details are invalid.");
     const body = parsed.data;
     if (body.coverImageUrl && !safeHttpUrl(body.coverImageUrl)) throw new ApiError(400, "ARTICLE_INVALID", "Cover image URL must be an https:// URL.");
+    if (body.coverImageUrl && !isAllowedImageHost(body.coverImageUrl, options.allowedImageHosts)) {
+      throw new ApiError(400, "ARTICLE_INVALID", "Cover image host is not allowed.");
+    }
     request.log.info({ event: "articles.create.attempt", userId: request.auth?.userId }, "article draft create attempted");
     const result = await options.articleService.createDraft(request.auth.accessToken, {
       title: body.title,
@@ -118,6 +130,9 @@ export const articleRoutes: FastifyPluginAsync<{
     if (!bodyParsed.success) throw new ApiError(400, "ARTICLE_INVALID", "Article details are invalid.");
     const body = bodyParsed.data;
     if (body.coverImageUrl && !safeHttpUrl(body.coverImageUrl)) throw new ApiError(400, "ARTICLE_INVALID", "Cover image URL must be an https:// URL.");
+    if (body.coverImageUrl && !isAllowedImageHost(body.coverImageUrl, options.allowedImageHosts)) {
+      throw new ApiError(400, "ARTICLE_INVALID", "Cover image host is not allowed.");
+    }
     const result = await options.articleService.updateDraft(request.auth.accessToken, idParsed.data, {
       title: body.title,
       subtitle: body.subtitle,

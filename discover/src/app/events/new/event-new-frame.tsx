@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { isLiveMode, getApiBaseUrl } from "@/lib/auth/config";
+import { getSessionAccessToken } from "@/lib/auth/session";
 import { getUserFromStorage } from "@/lib/types";
 
 type PublishedEventMessage = {
@@ -124,6 +125,7 @@ export function EventNewFrame() {
               type: "tutoria-creator-identity",
               requestId: data.requestId,
               identity,
+              accessToken: getSessionAccessToken() || null,
             },
             "*"
           );

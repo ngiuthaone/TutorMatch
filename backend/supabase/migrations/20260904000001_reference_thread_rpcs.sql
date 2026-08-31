@@ -144,6 +144,7 @@ begin
     select rt.created_at
     from public.reference_threads rt
     where rt.status = 'published' and rt.visibility = 'public'
+      and (p_cursor is null or rt.created_at < to_timestamp(p_cursor::double precision / 1000.0))
       and (p_tag is null or p_tag = any(rt.tags))
       and (p_level is null or rt.level = p_level)
       and (p_anchor_type is null or rt.anchor_type = p_anchor_type)
@@ -284,6 +285,11 @@ begin
   if v_reply_perm = 'disabled' then
     raise exception 'REPLIES_DISABLED' using errcode = 'P0001';
   end if;
+  -- NOTE: reply_permission = 'community_members' requires a community_members
+  -- table to verify membership. No such table exists yet (community_id is an
+  -- unconstrained UUID), so this falls back to any authenticated caller —
+  -- the same as 'everyone'. Add a community_members table and a membership
+  -- check here before enforcing community-scoped replies in production.
 
   if p_parent_id is not null then
     select rtr.status into v_parent_status
@@ -295,15 +301,17 @@ begin
     if v_parent_status != 'published' then
       raise exception 'PARENT_DELETED' using errcode = 'P0001';
     end if;
-    -- Compute parent depth by walking ancestors.
+    -- Compute parent depth by walking ancestors (published-only so a deleted
+    -- ancestor can't inflate depth or orphan the new reply).
     with recursive ancestors as (
       select rtr.id, rtr.parent_id, 1 as depth
       from public.reference_thread_replies rtr
-      where rtr.id = p_parent_id
+      where rtr.id = p_parent_id and rtr.status = 'published'
       union all
       select rtr2.id, rtr2.parent_id, a.depth + 1
       from public.reference_thread_replies rtr2
       join ancestors a on rtr2.id = a.parent_id
+      where rtr2.status = 'published'
     )
     select max(depth) into v_parent_depth from ancestors;
     v_depth := v_parent_depth + 1;
@@ -400,6 +408,16 @@ declare
   v_count int;
 begin
   if p_target_type not in ('thread','reply') then raise exception 'INVALID_TARGET' using errcode = '22023'; end if;
+  -- Validate the target exists so we never insert an orphan appreciation row.
+  if p_target_type = 'thread' then
+    if not exists(select 1 from public.reference_threads where id = p_target_id and status in ('published','closed')) then
+      raise exception 'TARGET_NOT_FOUND' using errcode = 'P0001';
+    end if;
+  else
+    if not exists(select 1 from public.reference_thread_replies where id = p_target_id and status = 'published') then
+      raise exception 'TARGET_NOT_FOUND' using errcode = 'P0001';
+    end if;
+  end if;
   insert into public.reference_thread_appreciations(user_id, target_type, target_id)
   values (uid, p_target_type, p_target_id)
   on conflict (target_type, target_id, user_id) do nothing;

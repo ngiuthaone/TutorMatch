@@ -7,8 +7,14 @@ import { formatTime } from "@/lib/community/format-time";
 export const dynamic = "force-dynamic";
 
 export default async function ArticlesIndexPage() {
-  const result = await listArticles({ limit: 20 });
-  const articles = result.articles ?? [];
+  let articles: { id: string; slug: string; title: string; subtitle?: string | null; excerpt?: string | null; cover_image_url?: string | null; tags: string[]; level?: string | null; estimated_reading_minutes: number; published_at: string; author: { name: string; avatar_url?: string | null; role?: string } }[] = [];
+  let loadError = false;
+  try {
+    const result = await listArticles({ limit: 20 });
+    articles = result.articles ?? [];
+  } catch {
+    loadError = true;
+  }
 
   return (
     <div className="tutoria-page-shell flex flex-col min-h-[100dvh]">
@@ -26,7 +32,13 @@ export default async function ArticlesIndexPage() {
             </Link>
           </div>
 
-          {articles.length === 0 ? (
+          {loadError && (
+            <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+              Articles are temporarily unavailable. Please reload to try again.
+            </div>
+          )}
+
+          {articles.length === 0 && !loadError ? (
             <div className="rounded-2xl border border-[#1f2228] bg-[#0e1014] p-10 text-center">
               <p className="text-sm text-[#9ca3af]">No articles published yet.</p>
             </div>

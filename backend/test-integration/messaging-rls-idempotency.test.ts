@@ -33,7 +33,9 @@ async function signup(role: "student" | "tutor") {
 
 const FUTURE = { startsAt: new Date(Date.now() + 2 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 3 * 3600e3).toISOString() };
 
-async function createConfirmedBooking(tutor: Awaited<Return Type<typeof signup>>, learner: Awaited<Return Type<typeof signup>>) {
+type Fixture = Awaited<ReturnType<typeof signup>>;
+
+async function createConfirmedBooking(tutor: Fixture, learner: Fixture) {
   const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop");
   const session = await tutor.client.rpc("create_session", { payload: { offeringId, ...FUTURE, maxParticipants: 2 } });
   if (session.error || !session.data) throw session.error ?? new Error("create_session failed");

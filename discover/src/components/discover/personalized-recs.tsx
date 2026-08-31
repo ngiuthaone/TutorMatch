@@ -53,7 +53,9 @@ export function PersonalizedRecs() {
         });
       }
     } catch {}
-    if (!cancelled) setLoading(false);
+    queueMicrotask(() => {
+      if (!cancelled) setLoading(false);
+    });
     return () => { cancelled = true; };
   }, []);
 

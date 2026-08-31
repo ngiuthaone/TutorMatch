@@ -32,7 +32,7 @@ export function ArticleView({ id }: { id: string }) {
   }, [id]);
 
   useEffect(() => {
-    let cancelled = false;
+    const cancelled = false;
     const a = getPublishedArticleById(id);
     if (a) {
       queueMicrotask(() => {

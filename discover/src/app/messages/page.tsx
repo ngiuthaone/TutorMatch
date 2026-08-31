@@ -307,7 +307,7 @@ function ConversationView({
   onMessageSent,
 }: {
   conversationId: string;
-  onMessageSent: (message: MessagingMessage, clientMessageId: string) => void;
+  onMessageSent?: (message: MessagingMessage) => void;
 }) {
   const [conversation, setConversation] = useState<MessagingConversation | null>(null);
   const [messages, setMessages] = useState<MessagingMessage[]>([]);
@@ -363,8 +363,9 @@ function ConversationView({
             }
           : current,
       );
+      onMessageSent?.(message);
     },
-    [],
+    [onMessageSent],
   );
 
   if (state === "loading") {

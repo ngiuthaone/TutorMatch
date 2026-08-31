@@ -37,7 +37,7 @@ export function SavedPage() {
   useEffect(() => {
     let cancelled = false;
     try {
-      if (!cancelled) setSavedIds(new Set(JSON.parse(localStorage.getItem("tutoria_saves") || "[]")));
+      if (!cancelled) queueMicrotask(() => setSavedIds(new Set(JSON.parse(localStorage.getItem("tutoria_saves") || "[]"))));
     } catch {}
     return () => { cancelled = true; };
   }, []);

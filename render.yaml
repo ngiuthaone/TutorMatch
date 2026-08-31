@@ -18,6 +18,7 @@ services:
         value: 0.0.0.0
       - key: PORT
         value: 10000
+      # IMPORTANT: Set to "production" before deploying to production
       - key: VNPAY_ENVIRONMENT
         value: sandbox
       - key: VNPAY_PAYMENT_URL
@@ -42,6 +43,9 @@ services:
         sync: false
       - key: VNPAY_IPN_URL
         sync: false
+      # ALLOWED_IMAGE_HOSTS:
+      #   sync: false
+      #   value: picsum.photos,images.unsplash.com
       - key: PAYMENT_RECONCILIATION_TOKEN
         sync: false
 
@@ -63,6 +67,7 @@ services:
         value: 127.0.0.1
       - key: PORT
         value: 10000
+      # IMPORTANT: Set to "production" before deploying to production
       - key: VNPAY_ENVIRONMENT
         value: sandbox
       - key: VNPAY_PAYMENT_URL
@@ -87,6 +92,12 @@ services:
         sync: false
       - key: VNPAY_IPN_URL
         sync: false
+      # ALLOWED_IMAGE_HOSTS:
+      #   sync: false
+      #   value: picsum.photos,images.unsplash.com
+      # PAYMENT_RECONCILIATION_TOKEN:
+      #   sync: false
+      #   value: your-reconciliation-token-min-16-chars
       - key: FINANCIAL_WORKER_INTERVAL_MS
         value: 60000
       - key: FINANCIAL_WORKER_BATCH_SIZE

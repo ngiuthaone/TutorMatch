@@ -21,6 +21,16 @@ const schema = z.object({
   SUPABASE_URL: z.string().url("must be a valid URL"),
   SUPABASE_PUBLISHABLE_KEY: z.string().min(1, "is required"),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  ALLOWED_IMAGE_HOSTS: z.string().transform((value, context) => {
+    const hosts = value.split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+    for (const host of hosts) {
+      if (host.includes("/") || host.includes(":") || host.includes("*")) {
+        context.addIssue({ code: "custom", message: "ALLOWED_IMAGE_HOSTS must be comma-separated hostnames (no paths, ports, or wildcards)" });
+        return z.NEVER;
+      }
+    }
+    return hosts;
+  }).optional(),
   VNPAY_TMN_CODE: z.string().trim().min(1).optional(),
   VNPAY_HASH_SECRET: z.string().min(1).optional(),
   VNPAY_PAYMENT_URL: z.string().url().default("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"),
@@ -59,9 +69,10 @@ const schema = z.object({
   FINANCIAL_WORKER_LEASE_SECONDS: positiveInteger("FINANCIAL_WORKER_LEASE_SECONDS", 86_400).default(300),
   FINANCIAL_WORKER_RELEASE_BACKOFF_SECONDS: positiveInteger("FINANCIAL_WORKER_RELEASE_BACKOFF_SECONDS", 86_400).default(60),
   FINANCIAL_WORKER_LOG_LEVEL: logLevel,
-  FINANCIAL_WORKER_WORKER_ID: z.string().trim().min(1).max(128).optional()
+  FINANCIAL_WORKER_WORKER_ID: z.string().trim().min(1).max(128).optional(),
+  SENTRY_DSN: z.string().url().or(z.literal("")).default(""),
 }).superRefine((value, context) => {
-  if (value.NODE_ENV !== "development") {
+  if (value.NODE_ENV !== "development" && value.TUTORIA_ENVIRONMENT !== "staging") {
     for (const [field, url] of [["SUPABASE_URL", value.SUPABASE_URL], ...value.FRONTEND_ORIGINS.map((url) => ["FRONTEND_ORIGINS", url])] as const) {
       if (new URL(url).protocol !== "https:") context.addIssue({ code: "custom", path: [field], message: "must use HTTPS outside development" });
     }
