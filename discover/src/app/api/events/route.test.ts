@@ -1,15 +1,15 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
 
 vi.mock("@/lib/auth/server-verify", () => ({
   isServerLiveMode: vi.fn(),
-  verifyRequestUser: vi.fn(),
 }));
 
-import { isServerLiveMode, verifyRequestUser } from "@/lib/auth/server-verify";
+import { isServerLiveMode } from "@/lib/auth/server-verify";
 
 function validEvent() {
   return {
@@ -74,68 +74,37 @@ describe("POST /api/events", () => {
 
   function post(body: unknown) {
     return POST(
-      new Request("http://localhost/api/events", {
+      new NextRequest("http://localhost/api/events", {
         method: "POST",
         body: JSON.stringify(body),
       }),
     );
   }
 
-  function seedEvent(event: Record<string, unknown>) {
-    writeFileSync(path.join(tmpDir, "data", "published-events.json"), JSON.stringify([event], null, 2));
-  }
-
-  it("rejects an invalid slug format", async () => {
+  it("returns 410 on POST in live mode", async () => {
     vi.mocked(isServerLiveMode).mockReturnValue(true);
-    vi.mocked(verifyRequestUser).mockResolvedValue({ id: "u1", email: null });
-    const response = await post({ ...validEvent(), slug: "bad slug!" });
-    expect(response.status).toBe(400);
-  });
-
-  it("returns 401 for unauthenticated submissions in live mode", async () => {
-    vi.mocked(isServerLiveMode).mockReturnValue(true);
-    vi.mocked(verifyRequestUser).mockResolvedValue(null);
     const response = await post(validEvent());
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(410);
+    const body = (await response.json()) as { ok: boolean; error: { message: string } };
+    expect(body.ok).toBe(false);
+    expect(body.error.message).toBe(
+      "Live mode: use POST /api/v1/events or GET /api/v1/events on the configured Tutoria API.",
+    );
   });
 
-  it("stores an event, overriding a client tampered creatorId", async () => {
+  it("returns 410 on GET in live mode", async () => {
     vi.mocked(isServerLiveMode).mockReturnValue(true);
-    vi.mocked(verifyRequestUser).mockResolvedValue({ id: "u9", email: "host@example.com" });
-    const response = await post({ ...validEvent(), creatorId: "tampered-owner" });
-    expect(response.status).toBe(201);
-    const { event } = (await response.json()) as { event: Record<string, unknown> };
-    expect(event.creatorId).toBe("u9");
-    expect(event.slug).toBe("clean-pottery");
-    const stored = JSON.parse(readFileSync(path.join(tmpDir, "data", "published-events.json"), "utf8")) as Array<Record<string, unknown>>;
-    expect((stored[0].about as string[])[0]).not.toContain("<script>");
-  });
-
-  it("rejects a slug already owned by another user", async () => {
-    vi.mocked(isServerLiveMode).mockReturnValue(true);
-    vi.mocked(verifyRequestUser).mockResolvedValue({ id: "attacker", email: null });
-    seedEvent({
-      ...validEvent(),
-      slug: "clean-pottery",
-      creatorId: "original-owner",
-    });
-    const response = await post(validEvent());
-    expect(response.status).toBe(403);
-    expect(await response.json()).toMatchObject({ error: expect.stringContaining("another user") });
-  });
-
-  it("rate limits event creation", async () => {
-    vi.mocked(isServerLiveMode).mockReturnValue(true);
-    vi.mocked(verifyRequestUser).mockResolvedValue({ id: "event-spammer", email: null });
-    for (let counter = 0; counter < 10; counter += 1) {
-      const response = await post({ ...validEvent(), slug: `event-${counter}` });
-      expect(response.status).toBe(201);
-    }
-    const response = await post({ ...validEvent(), slug: "event-overflow" });
-    expect(response.status).toBe(429);
+    const response = await GET();
+    expect(response.status).toBe(410);
+    const body = (await response.json()) as { ok: boolean; error: { message: string } };
+    expect(body.ok).toBe(false);
+    expect(body.error.message).toBe(
+      "Live mode: use POST /api/v1/events or GET /api/v1/events on the configured Tutoria API.",
+    );
   });
 
   it("serves stored events via GET", async () => {
+    vi.mocked(isServerLiveMode).mockReturnValue(false);
     const response = await GET();
     expect(response.status).toBe(200);
     const { events } = (await response.json()) as { events: unknown[] };

@@ -1,156 +1,137 @@
-import { NextResponse } from "next/server";
+// Demo-only fallback. Production publishes go through the backend at /api/v1/events.
+// In live mode this route returns 410 to prevent silent misconfiguration.
+import { NextRequest, NextResponse } from "next/server";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { isServerLiveMode } from "@/lib/auth/server-verify";
 
-import { z } from "zod";
+const LIVE_MODE_GONE_MESSAGE =
+  "Live mode: use POST /api/v1/events or GET /api/v1/events on the configured Tutoria API.";
 
-import type { EventDetail } from "@/lib/event-data";
-import { isServerLiveMode, verifyRequestUser } from "@/lib/auth/server-verify";
-import { InMemoryRateLimiter, isSafeHttpUrl, sanitizeTree } from "@/lib/api-security";
-import { readSharedEvents, saveSharedEvent } from "@/lib/published-event-store";
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-const createLimiter = new InMemoryRateLimiter(10, 60_000);
-
-const safeHttpUrl = (value: string) => isSafeHttpUrl(value);
-const eventImageUrl = (value: string) => isSafeHttpUrl(value) || (/^data:image\/(?:avif|gif|jpe?g|png|webp);base64,[a-z0-9+/=\s]+$/i.test(value) && value.length <= 300_000);
-
-const eventSessionSchema = z.object({
-  id: z.string().min(1).max(80),
-  date: z.string().max(60),
-  dateKey: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  times: z.array(z.string().max(30)).max(20),
-});
-const eventPlanItemSchema = z.object({
-  title: z.string().max(300),
-  duration: z.string().max(100),
-  description: z.string().max(5_000),
-  image: z.string().min(1).max(350_000).refine(eventImageUrl, "Unsafe plan image URL.").optional(),
-});
-const eventReviewSchema = z.object({
-  name: z.string().max(60),
-  attended: z.string().max(60),
-  rating: z.number().min(0).max(5),
-  body: z.string().max(5_000),
-  avatar: z.string().max(2_000).refine(safeHttpUrl, "Unsafe review avatar URL."),
-});
-const eventFaqSchema = z.object({
-  question: z.string().max(500),
-  answer: z.string().max(5_000),
-});
-const eventPackageSchema = z.object({
-  id: z.string().min(1).max(80),
-  name: z.string().min(1).max(200),
-  price: z.number().min(0),
-  description: z.string().max(2_000).optional(),
-  badge: z.string().max(200).optional(),
-  includes: z.array(z.string().max(500)).max(100),
-});
-
-const eventPostSchema = z.object({
-  slug: z.string().min(1).max(120).regex(/^[\w-]+$/, "Slug may only contain letters, numbers, dashes, and underscores."),
-  title: z.string().min(1).max(300),
-  subtitle: z.string().max(300).optional(),
-  date: z.string().max(60),
-  time: z.string().max(60),
-  duration: z.string().max(100),
-  location: z.string().max(300),
-  timezone: z.string().max(80).optional(),
-  type: z.enum(["In person", "Online"]),
-  price: z.string().max(60),
-  attending: z.number().int().min(0).optional(),
-  capacity: z.number().int().min(1).max(100_000),
-  image: z.string().max(2_000).refine(eventImageUrl, "Unsafe image URL.").optional(),
-  topic: z.string().max(120),
-  level: z.string().max(120),
-  languages: z.array(z.string().max(60)).max(12),
-  minimumAge: z.string().max(60),
-  accessibility: z.string().max(5_000),
-  studioName: z.string().max(200),
-  address: z.string().max(500),
-  sessions: z.array(eventSessionSchema).max(100),
-  spotsLeft: z.number().int().min(0).optional(),
-  about: z.array(z.string().max(20_000)).max(50),
-  note: z.string().max(10_000),
-  highlights: z.array(z.object({ title: z.string().max(200), description: z.string().max(2_000) })).max(30),
-  learn: z.array(z.string().max(500)).max(100),
-  included: z.array(z.string().max(500)).max(100),
-  bring: z.array(z.string().max(500)).max(100),
-  plan: z.array(eventPlanItemSchema).max(100),
-  faqs: z.array(eventFaqSchema).max(30),
-  galleryImage: z.string().min(1).max(350_000).refine(eventImageUrl, "Unsafe gallery URL.").optional(),
-  hostRole: z.string().max(120),
-  hostExperience: z.string().max(5_000),
-  hostBio: z.string().max(5_000),
-  hostImage: z.string().max(2_000).refine(safeHttpUrl, "Unsafe host image URL.").optional(),
-  hostRecommendation: z.string().max(500),
-  beforeYouAttend: z.array(z.object({ title: z.string().max(200), items: z.array(z.string().max(500)).max(50) })).max(30),
-  cancellation: z.array(z.string().max(500)).max(30),
-  reviews: z.array(eventReviewSchema).max(100),
-  packages: z.array(eventPackageSchema).max(40).optional(),
-  pricingMode: z.enum(["single", "multiple"]).optional(),
-  creatorId: z.string().optional(),
-  creatorName: z.string().max(120).optional(),
-  publishedAt: z.string().max(60).optional(),
-});
-
-export async function GET() {
+function liveModeGone(): NextResponse {
   return NextResponse.json(
-    { events: await readSharedEvents() },
-    { headers: { "Cache-Control": "no-store" } },
+    { ok: false, error: { message: LIVE_MODE_GONE_MESSAGE } },
+    { status: 410 },
   );
 }
 
-export async function POST(request: Request) {
-  let raw: unknown;
+const storagePath = path.join(process.cwd(), "data", "published-events.json");
+const MAX_BODY_BYTES = 2 * 1024 * 1024;
+
+function jsonError(message: string, status: number): NextResponse {
+  return NextResponse.json({ ok: false, error: { message } }, { status });
+}
+
+async function readEvents(): Promise<Record<string, unknown>[]> {
   try {
-    raw = await request.json();
+    const stored = JSON.parse(await readFile(storagePath, "utf8"));
+    return Array.isArray(stored) ? stored : [];
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    return [];
   }
-  const parsed = eventPostSchema.safeParse(raw);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "A published event requires a slug, title, and valid event details." },
-      { status: 400 },
-    );
+}
+
+async function writeEvents(events: Record<string, unknown>[]): Promise<void> {
+  await mkdir(path.dirname(storagePath), { recursive: true });
+  await writeFile(storagePath, JSON.stringify(events, null, 2), "utf8");
+}
+
+function sanitizeString(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value
+    .replace(/<\s*(script|iframe|object|embed|frame|meta|link|base|form)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, "")
+    .replace(/<\s*(script|iframe|object|embed|frame|meta|link|base|form)[^>]*>/gi, "")
+    .replace(/<\s*\/(script|iframe|object|embed|frame|meta|link|base|form)\s*>/gi, "")
+    .replace(/\s+on[a-z][a-z0-9_-]*\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/\b(?:javascript|vbscript|data):/gi, "")
+    .trim();
+}
+
+function sanitizeEvent(event: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(event)) {
+    if (typeof value === "string") {
+      out[key] = sanitizeString(value);
+    } else if (Array.isArray(value)) {
+      out[key] = value.map((item) => {
+        if (typeof item === "string") return sanitizeString(item);
+        if (typeof item === "object" && item) return sanitizeEvent(item as Record<string, unknown>);
+        return item;
+      });
+    } else if (value && typeof value === "object") {
+      out[key] = sanitizeEvent(value as Record<string, unknown>);
+    } else {
+      out[key] = value;
+    }
   }
+  return out;
+}
 
-  const events = await readSharedEvents();
-  const live = isServerLiveMode();
+function isValidSlug(slug: unknown): boolean {
+  return typeof slug === "string" && /^[a-z0-9][a-z0-9-]{0,63}$/.test(slug);
+}
 
-  if (live) {
-    const user = await verifyRequestUser(request);
-    if (!user) {
-      return NextResponse.json({ error: "Sign in to publish an event." }, { status: 401 });
+export async function POST(request: NextRequest) {
+  try {
+    if (isServerLiveMode()) {
+      return liveModeGone();
     }
-    if (!createLimiter.isAllowed(user.id)) {
-      return NextResponse.json({ error: "Too many event submissions. Try again shortly." }, { status: 429 });
+
+    console.log("[api/events POST]", {
+      method: request.method,
+      url: request.url,
+      contentLength: request.headers.get("content-length"),
+      userAgent: request.headers.get("user-agent"),
+    });
+
+    const contentLengthHeader = request.headers.get("content-length");
+    const contentLength = contentLengthHeader ? Number(contentLengthHeader) : 0;
+    if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+      return jsonError("Event payload is too large. Try removing or replacing cover and gallery images with smaller files.", 413);
     }
-    const existing = events.find((item) => item.slug === parsed.data.slug);
-    if (existing && existing.creatorId && existing.creatorId !== user.id) {
-      return NextResponse.json(
-        { error: "An event with this slug already belongs to another user." },
-        { status: 403 },
-      );
+
+    const body = await request.json();
+    if (!body || typeof body !== "object") {
+      return jsonError("Invalid request body", 400);
     }
-    const event = {
-      ...(sanitizeTree(parsed.data) as Omit<EventDetail, "creatorId">),
-      slug: parsed.data.slug,
-      title: parsed.data.title,
-      creatorId: user.id,
-      publishedAt: new Date().toISOString(),
-    } as EventDetail;
-    await saveSharedEvent(event);
-    return NextResponse.json({ event }, { status: 201 });
+
+    const { slug, title } = body as Record<string, unknown>;
+    if (!isValidSlug(slug)) {
+      return jsonError("Invalid slug format", 400);
+    }
+    if (typeof title !== "string" || !title.trim()) {
+      return jsonError("Title is required", 400);
+    }
+
+    const sanitized = sanitizeEvent(body);
+    sanitized.slug = (slug as string).trim();
+    sanitized.title = (title as string).trim();
+    sanitized.publishedAt = new Date().toISOString();
+    sanitized.visibility = body.visibility || "Public";
+
+    const events = await readEvents();
+    const existing = events.find((item) => item.slug === slug);
+
+    const next = existing
+      ? events.map((item) => (item.slug === slug ? sanitized : item))
+      : [sanitized, ...events];
+    await writeEvents(next);
+
+    return NextResponse.json({ ok: true, slug: sanitized.slug, status: "published", event: sanitized }, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to publish event";
+    return jsonError(message, 500);
   }
+}
 
-  const event = {
-    ...(sanitizeTree(parsed.data) as Omit<EventDetail, "creatorId">),
-    slug: parsed.data.slug,
-    title: parsed.data.title,
-    publishedAt: new Date().toISOString(),
-  } as EventDetail;
-  await saveSharedEvent(event);
-  return NextResponse.json({ event }, { status: 201 });
+export async function GET() {
+  try {
+    if (isServerLiveMode()) {
+      return liveModeGone();
+    }
+    const events = await readEvents();
+    return NextResponse.json({ ok: true, events });
+  } catch {
+    return jsonError("Failed to read events", 500);
+  }
 }
