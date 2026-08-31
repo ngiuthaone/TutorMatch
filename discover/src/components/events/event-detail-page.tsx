@@ -39,7 +39,7 @@ function uniqueImages(images: Array<string | undefined>) {
 }
 
 export function EventDetailPage({ event, similarEvents }: EventDetailPageProps) {
-  const defaultSelection = `${event.sessions[0]?.id}|${event.sessions[0]?.times[0]}`;
+  const defaultSelection = `${(event.sessions ?? [])[0]?.id}|${(event.sessions ?? [])[0]?.times[0]}`;
   const [selectedSlot, setSelectedSlot] = useState(defaultSelection);
   const [participants, setParticipants] = useState(1);
   const [saved, setSaved] = useState(false);
@@ -49,12 +49,12 @@ export function EventDetailPage({ event, similarEvents }: EventDetailPageProps) 
 
   const selectedSession = useMemo(() => {
     const [sessionId, time] = selectedSlot.split("|");
-    const session = event.sessions.find((item) => item.id === sessionId);
+    const session = (event.sessions ?? []).find((item) => item.id === sessionId);
     return session ? { date: session.date, time } : null;
   }, [event.sessions, selectedSlot]);
 
-  const galleryImages = useMemo(() => uniqueImages([event.image, event.galleryImage, ...event.plan.map((item) => item.image)]), [event.galleryImage, event.image, event.plan]);
-  const activePlan = event.plan[activePlanIndex] || event.plan[0];
+  const galleryImages = useMemo(() => uniqueImages([event.image, event.galleryImage, ...(event.plan ?? []).map((item) => item.image)]), [event.galleryImage, event.image, event.plan]);
+  const activePlan = (event.plan ?? [])[activePlanIndex] || (event.plan ?? [])[0];
   const activePlanImage = activePlan?.image || event.galleryImage || event.image;
 
   const handleShare = async () => {
@@ -183,7 +183,7 @@ export function EventDetailPage({ event, similarEvents }: EventDetailPageProps) 
         <section id="overview" className={styles.overviewSection}>
           <span>About this workshop</span>
           <h2>{event.note || event.subtitle}</h2>
-          <div>{event.about.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
+          <div>{(event.about ?? []).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
         </section>
 
         <section id="details" className={styles.detailsSection}>
@@ -192,15 +192,15 @@ export function EventDetailPage({ event, similarEvents }: EventDetailPageProps) 
             <dl>
               <div><dt>Format</dt><dd>{event.type}</dd><small>{event.studioName}</small></div>
               <div><dt>Duration</dt><dd>{event.duration}</dd><small>Includes a short break</small></div>
-              <div><dt>Languages</dt><dd>{event.languages.join(", ")}</dd></div>
+              <div><dt>Languages</dt><dd>{(event.languages ?? []).join(", ")}</dd></div>
               <div><dt>Minimum age</dt><dd>{event.minimumAge}</dd><small>{event.accessibility}</small></div>
             </dl>
           </div>
 
           <div className={styles.learningCards}>
-            <section><h3>What you will learn</h3><ul>{event.learn.map((item) => <li key={item}><IconCheck size={15} />{item}</li>)}</ul></section>
-            <section><h3>What is included</h3><ul>{event.included.map((item) => <li key={item}><IconCheck size={15} />{item}</li>)}</ul></section>
-            <section><h3>What to bring</h3><ul>{event.bring.map((item) => <li key={item}>{item}</li>)}</ul></section>
+            <section><h3>What you will learn</h3><ul>{(event.learn ?? []).map((item) => <li key={item}><IconCheck size={15} />{item}</li>)}</ul></section>
+            <section><h3>What is included</h3><ul>{(event.included ?? []).map((item) => <li key={item}><IconCheck size={15} />{item}</li>)}</ul></section>
+            <section><h3>What to bring</h3><ul>{(event.bring ?? []).map((item) => <li key={item}>{item}</li>)}</ul></section>
           </div>
         </section>
 
@@ -212,7 +212,7 @@ export function EventDetailPage({ event, similarEvents }: EventDetailPageProps) 
             </header>
             <div className={styles.planGrid}>
               <div className={styles.planList}>
-                {event.plan.map((item, index) => (
+                {(event.plan ?? []).map((item, index) => (
                   <button type="button" className={index === activePlanIndex ? styles.activePlan : undefined} key={item.title} onMouseEnter={() => setActivePlanIndex(index)} onFocus={() => setActivePlanIndex(index)} onClick={() => setActivePlanIndex(index)}>
                     <span>{String(index + 1).padStart(2, "0")}</span>
                     <div><h3>{item.title}</h3><p>{item.description}</p></div>

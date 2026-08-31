@@ -4488,10 +4488,10 @@
           </p>
 
           <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted">
-            <span class="flex items-center gap-2">
+            <span id="heroRating" class="flex items-center gap-2" hidden>
               <i data-lucide="star" class="h-4 w-4 fill-current text-accent"></i>
-              <span class="font-medium text-white">4.9</span>
-              <span>(214 reviews)</span>
+              <span id="heroRatingValue" class="font-medium text-white">4.9</span>
+              <span id="heroRatingCount">(214 reviews)</span>
             </span>
             <span class="flex items-center gap-2"><i data-lucide="clock-3" class="h-4 w-4"></i><span id="heroDuration">2.5 hours</span></span>
             <span class="flex items-center gap-2"><i data-lucide="map-pin" class="h-4 w-4"></i><span id="heroLocation">Hoan Kiem, Ha Noi</span><span id="heroLocationCount" class="hidden rounded-full border border-line px-2 py-0.5 text-[10px] text-muted"></span></span>
@@ -4566,9 +4566,9 @@
               </div>
 
               <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] text-muted">
-                <span class="flex items-center gap-1.5"><i data-lucide="star" class="h-3.5 w-3.5 fill-current text-accent"></i><span class="font-medium text-white">4.9</span></span>
+                <span id="bookingRatingValue" class="flex items-center gap-1.5"><i data-lucide="star" class="h-3.5 w-3.5 fill-current text-accent"></i><span class="font-medium text-white">4.9</span></span>
                 <span class="h-1 w-1 rounded-full bg-white/20"></span>
-                <span class="flex items-center gap-1.5"><i data-lucide="badge-check" class="h-3.5 w-3.5 text-accent"></i>Instant confirmation</span>
+                <span id="instantConfirmationChip" class="flex items-center gap-1.5" hidden><i data-lucide="badge-check" class="h-3.5 w-3.5 text-accent"></i>Instant confirmation</span>
               </div>
             </div>
 
@@ -4685,6 +4685,7 @@
             <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Duration</p><p id="factsDuration" class="mt-2 text-[15px] font-medium">2.5 hours</p><p id="factsDurationNote" class="mt-1 text-sm text-muted">Tasting break included</p></div>
             <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Languages</p><p id="factsLanguages" class="mt-2 text-[15px] font-medium">Vietnamese and English</p></div>
             <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Minimum age</p><p id="factsMinAge" class="mt-2 text-[15px] font-medium">10+</p><p id="factsMinAgeNote" class="mt-1 text-sm text-muted">Ages 10–15 attend with an adult.</p></div>
+            <div class="border-t border-line pt-6"><p class="text-[10px] uppercase tracking-[0.16em] text-quiet">Accessibility</p><p id="factsAccessibility" class="mt-2 text-[15px] font-medium" hidden></p><p id="factsAccessibilityNote" class="mt-1 text-sm text-muted" hidden></p></div>
           </div>
         </div>
 
@@ -4721,9 +4722,9 @@
             </p>
           </div>
 
-          <div class="flex shrink-0 items-center gap-2 rounded-full border border-line bg-white/[0.025] px-4 py-2 text-xs text-muted">
+          <div id="planDurationBadge" class="flex shrink-0 items-center gap-2 rounded-full border border-line bg-white/[0.025] px-4 py-2 text-xs text-muted" hidden>
             <i data-lucide="clock-3" class="h-4 w-4 text-accent"></i>
-            2.5 hours
+            <span id="planDurationBadgeValue"></span>
           </div>
         </div>
 
@@ -4895,8 +4896,8 @@
         <div class="host-location-card overflow-hidden rounded-[32px] border border-line bg-white/[0.03] p-7">
           <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">Meet your host</p>
           <div class="mt-5 flex gap-4">
-            <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=420&q=88" alt="Workshop team" class="h-20 w-20 shrink-0 rounded-full object-cover grayscale" />
-            <div class="min-w-0"><h2 id="hostName" class="text-[23px] font-semibold tracking-[-0.025em]">Pizza 4P’s Workshop Team</h2><p id="hostRole" class="mt-1 text-sm text-muted">Pizza chefs and facilitators</p><div class="mt-3 flex flex-wrap gap-2"><span class="rounded-full border border-line px-3 py-1.5 text-[11px] text-muted">Chef-led</span><span class="rounded-full border border-line px-3 py-1.5 text-[11px] text-muted">4.9 (214)</span><span class="rounded-full border border-line px-3 py-1.5 text-[11px] text-muted">97% recommend</span></div><p id="hostBio" class="mt-4 line-clamp-3 text-sm leading-6 text-muted">The team guides each participant through dough stretching, topping balance, baking, and tasting.</p><div class="mt-4 flex flex-wrap gap-2"><button class="rounded-full border border-line px-4 py-2.5 text-xs">View profile</button><button class="rounded-full bg-white px-4 py-2.5 text-xs text-black">Message host</button></div></div>
+            <img id="hostAvatarImage" src="https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=420&q=88" alt="Workshop team" class="h-20 w-20 shrink-0 rounded-full object-cover grayscale" />
+            <div class="min-w-0"><h2 id="hostName" class="text-[23px] font-semibold tracking-[-0.025em]">Pizza 4P’s Workshop Team</h2><p id="hostRole" class="mt-1 text-sm text-muted">Pizza chefs and facilitators</p><div id="hostRecommendationPills" class="mt-3 flex flex-wrap gap-2" hidden><span id="hostRecommendationValue" class="rounded-full border border-line px-3 py-1.5 text-[11px] text-muted"></span></div><p id="hostBio" class="mt-4 line-clamp-3 text-sm leading-6 text-muted">The team guides each participant through dough stretching, topping balance, baking, and tasting.</p><div class="mt-4 flex flex-wrap gap-2"><button class="rounded-full border border-line px-4 py-2.5 text-xs">View profile</button><button class="rounded-full bg-white px-4 py-2.5 text-xs text-black">Message host</button></div></div>
           </div>
         </div>
 
@@ -4957,8 +4958,8 @@
       <div class="mt-5 grid gap-4 md:grid-cols-3">
         <article class="review-preview-card rounded-[24px] border border-line bg-white/[0.03]">
           <button type="button" class="review-preview-photo" data-open-review-photo="0" data-review-photo-index="0" aria-label="View An Nguyen's workshop photo">
-            <img src="https://images.unsplash.com/photo-1579751626657-72bc17010498?auto=format&fit=crop&w=900&q=88" alt="Participant shaping pizza dough at the workshop" />
-            <span class="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur-md"><i data-lucide="image" class="h-3 w-3"></i>2</span>
+            <img id="review1Photo" src="https://images.unsplash.com/photo-1579751626657-72bc17010498?auto=format&fit=crop&w=900&q=88" alt="Participant shaping pizza dough at the workshop" />
+            <span id="review1PhotoCount" class="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur-md" hidden><i data-lucide="image" class="h-3 w-3"></i><span id="review1PhotoCountValue">0</span></span>
           </button>
           <div class="flex flex-1 flex-col p-5">
             <div class="text-sm text-accent">★★★★★</div>
@@ -4969,8 +4970,8 @@
 
         <article class="review-preview-card rounded-[24px] border border-line bg-white/[0.03]">
           <button type="button" class="review-preview-photo" data-open-review-photo="1" data-review-photo-index="0" aria-label="View Minh Tran's workshop photo">
-            <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=900&q=88" alt="Fresh handmade pizza with basil" />
-            <span class="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur-md"><i data-lucide="image" class="h-3 w-3"></i>3</span>
+            <img id="review2Photo" src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=900&q=88" alt="Fresh handmade pizza with basil" />
+            <span id="review2PhotoCount" class="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur-md" hidden><i data-lucide="image" class="h-3 w-3"></i><span id="review2PhotoCountValue">0</span></span>
           </button>
           <div class="flex flex-1 flex-col p-5">
             <div class="text-sm text-accent">★★★★★</div>
@@ -4981,8 +4982,8 @@
 
         <article class="review-preview-card rounded-[24px] border border-line bg-white/[0.03]">
           <button type="button" class="review-preview-photo" data-open-review-photo="2" data-review-photo-index="0" aria-label="View Huong Pham's workshop photo">
-            <img src="https://images.unsplash.com/photo-1594007654729-407eedc4be65?auto=format&fit=crop&w=900&q=88" alt="Pizza being served after the workshop" />
-            <span class="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur-md"><i data-lucide="image" class="h-3 w-3"></i>2</span>
+            <img id="review3Photo" src="https://images.unsplash.com/photo-1594007654729-407eedc4be65?auto=format&fit=crop&w=900&q=88" alt="Pizza being served after the workshop" />
+            <span id="review3PhotoCount" class="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur-md" hidden><i data-lucide="image" class="h-3 w-3"></i><span id="review3PhotoCountValue">0</span></span>
           </button>
           <div class="flex flex-1 flex-col p-5">
             <div class="text-sm text-accent">★★★★★</div>
@@ -5638,6 +5639,8 @@
         return;
       }
     });
+
+    window.parent?.postMessage({ type: 'tutoria-iframe-ready' }, window.location.origin);
 
 
 
@@ -7559,9 +7562,9 @@
         alt: `${payload.hero?.title || 'Workshop'} photo ${index + 1}`,
       }));
       advancedState.hero = {
-        title: payload.hero?.title || advancedState.hero.title,
-        subtitle: payload.hero?.subtitle || advancedState.hero.subtitle,
-        duration: payload.hero?.duration || advancedState.hero.duration,
+        title: payload.hero?.title || '',
+        subtitle: payload.hero?.subtitle || '',
+        duration: payload.hero?.duration || '',
         media: {
           coverPhotoId: photos[0]?.id || 'photo-0',
           photos: photos.length ? photos : heroPhotos,
@@ -7571,7 +7574,7 @@
 
       // --- Overview ---
       advancedState.overview = {
-        heading: payload.overview?.heading || advancedState.overview.heading,
+        heading: payload.overview?.heading || '',
         paragraphs: (payload.overview?.paragraphs || []).slice(0, 6),
       };
       if (!advancedState.overview.paragraphs.length) advancedState.overview.paragraphs = [advancedState.overview.heading];
@@ -7587,7 +7590,7 @@
       }));
       const pricingMode = (packages.length > 1 && payload.booking?.pricingMode === 'multiple') ? 'multiple' : 'single';
       advancedState.booking = {
-        cancellation: payload.booking?.cancellation || advancedState.booking.cancellation,
+        cancellation: payload.booking?.cancellation || '',
         pricingMode,
         defaultPackageId: (payload.booking?.defaultPackageId && packages.some((p) => p.id === payload.booking.defaultPackageId))
           ? payload.booking.defaultPackageId : packages[0]?.id,
@@ -7601,10 +7604,10 @@
       const locationNote = [loc.note, loc.timezone ? `Time zone: ${loc.timezone}` : '']
         .map((line) => (typeof line === 'string' ? line.trim() : ''))
         .filter(Boolean)
-        .join('\n') || 'Exact arrival instructions are provided after booking.';
+        .join('\n') || '';
       advancedState.locations = [{
         id: 'main',
-        name: loc.name || advancedState.hero.title,
+        name: loc.name || '',
         area: loc.area || '',
         note: locationNote,
         mapQuery: loc.mapQuery || loc.name || '',
@@ -7615,16 +7618,132 @@
       // --- Host ---
       const host = payload.host || {};
       advancedState.host = {
-        name: host.name || advancedState.host.name,
-        role: host.role || advancedState.host.role,
-        bio: host.bio || advancedState.host.bio,
-        avatar: host.avatar || advancedState.host.avatar || '',
+        name: host.name || '',
+        role: host.role || '',
+        bio: host.bio || '',
+        avatar: host.avatar || '',
       };
+
+      // --- Host avatar image (DOM) ---
+      const hostAvatarEl = document.getElementById('hostAvatarImage');
+      if (hostAvatarEl) {
+        if (host.avatar && typeof host.avatar === 'string') {
+          hostAvatarEl.src = host.avatar;
+          hostAvatarEl.style.display = '';
+          hostAvatarEl.alt = host.name ? `${host.name} (host)` : 'Host avatar';
+          hostAvatarEl.classList.remove('grayscale');
+        } else {
+          hostAvatarEl.style.display = 'none';
+        }
+      }
+
+      // --- Host recommendation pill ---
+      const hostPillsEl = document.getElementById('hostRecommendationPills');
+      const hostPillsValueEl = document.getElementById('hostRecommendationValue');
+      if (hostPillsEl && hostPillsValueEl) {
+        const recText = (host.recommendation || '').toString().trim();
+        if (recText) {
+          hostPillsValueEl.textContent = recText;
+          hostPillsEl.hidden = false;
+        } else {
+          hostPillsEl.hidden = true;
+        }
+      }
+
+      // --- Hero rating ---
+      const heroRatingEl = document.getElementById('heroRating');
+      const heroRatingValueEl = document.getElementById('heroRatingValue');
+      const heroRatingCountEl = document.getElementById('heroRatingCount');
+      const payloadRating = payload.reviews?.rating;
+      const payloadReviewCount = payload.reviews?.reviewCount;
+      const hasHeroRating = Number(payloadRating) > 0 && Number(payloadReviewCount) > 0;
+      if (heroRatingEl && heroRatingValueEl && heroRatingCountEl) {
+        if (hasHeroRating) {
+          heroRatingValueEl.textContent = String(Number(payloadRating).toFixed(1));
+          heroRatingCountEl.textContent = `(${Number(payloadReviewCount)} review${Number(payloadReviewCount) === 1 ? '' : 's'})`;
+          heroRatingEl.hidden = false;
+        } else {
+          heroRatingEl.hidden = true;
+        }
+      }
+
+      // --- Booking card rating ---
+      const bookingRatingEl = document.getElementById('bookingRatingValue');
+      if (bookingRatingEl) {
+        if (hasHeroRating) {
+          bookingRatingEl.hidden = false;
+          const bookingRatingNumEl = bookingRatingEl.querySelector('span.font-medium');
+          if (bookingRatingNumEl) bookingRatingNumEl.textContent = String(Number(payloadRating).toFixed(1));
+        } else {
+          bookingRatingEl.hidden = true;
+        }
+      }
+
+      // --- Plan duration badge ---
+      const planDurationBadge = document.getElementById('planDurationBadge');
+      const planDurationBadgeValue = document.getElementById('planDurationBadgeValue');
+      if (planDurationBadge && planDurationBadgeValue) {
+        const durationText = (payload.hero?.duration || '').toString().trim();
+        if (durationText) {
+          planDurationBadgeValue.textContent = durationText;
+          planDurationBadge.hidden = false;
+        } else {
+          planDurationBadge.hidden = true;
+        }
+      }
+
+      // --- Instant confirmation chip: hide unless payload has cancellation flexibility signal ---
+      const instantChip = document.getElementById('instantConfirmationChip');
+      if (instantChip) {
+        const cancellation = (payload.booking?.cancellation || '').toString().toLowerCase();
+        const hasInstant = cancellation.length > 0;
+        instantChip.hidden = !hasInstant;
+      }
+
+      // --- Schedule meta (session count) ---
+      const sessionMetaEl = document.getElementById('weeklySessionMeta');
+      if (sessionMetaEl) {
+        const sessions = payload.schedule?.sessions || [];
+        const count = sessions.length;
+        if (count > 0) {
+          sessionMetaEl.textContent = `${count} session${count === 1 ? '' : 's'}`;
+          sessionMetaEl.hidden = false;
+        } else {
+          sessionMetaEl.textContent = '';
+          sessionMetaEl.hidden = true;
+        }
+      }
+
+      // --- Review card photos + counts (3 preview cards) ---
+      for (let i = 1; i <= 3; i++) {
+        const photoEl = document.getElementById(`review${i}Photo`);
+        const countWrapEl = document.getElementById(`review${i}PhotoCount`);
+        const countValEl = document.getElementById(`review${i}PhotoCountValue`);
+        const review = reviews[i - 1];
+        const reviewPhotos = review?.photos || [];
+        if (photoEl) {
+          if (reviewPhotos.length > 0) {
+            photoEl.src = reviewPhotos[0].src;
+            photoEl.alt = reviewPhotos[0].alt || (review?.name ? `${review.name}'s workshop photo` : 'Workshop photo');
+          } else {
+            photoEl.removeAttribute('src');
+            photoEl.alt = '';
+          }
+        }
+        if (countWrapEl && countValEl) {
+          if (reviewPhotos.length > 0) {
+            countValEl.textContent = String(reviewPhotos.length);
+            countWrapEl.hidden = false;
+          } else {
+            countWrapEl.hidden = true;
+          }
+        }
+      }
 
       // --- Plan ---
       advancedState.plan = {
-        heading: payload.plan?.heading || advancedState.plan.heading,
-        intro: payload.plan?.intro || advancedState.plan.intro,
+        heading: payload.plan?.heading || '',
+        intro: payload.plan?.intro || '',
         steps: (payload.plan?.steps || []).map((s, index) => ({
           id: s.id || 'plan-' + index,
           title: s.title,
@@ -7637,8 +7756,8 @@
       // --- Schedule ---
       const baseSession = (s, index) => ({
         id: s.id || 'session-' + index,
-        start: s.start || '09:00',
-        end: s.end || '18:00',
+        start: s.start || '',
+        end: s.end || '',
         label: s.label || '',
         minParticipants: s.minParticipants != null ? Number(s.minParticipants) : undefined,
         maxParticipants: s.maxParticipants != null ? Number(s.maxParticipants) : undefined,
@@ -7663,8 +7782,8 @@
         sessions: sessionsByDate[date],
       }));
       advancedState.schedule = {
-        heading: payload.schedule?.heading || advancedState.schedule.heading,
-        intro: payload.schedule?.intro || advancedState.schedule.intro,
+        heading: payload.schedule?.heading || '',
+        intro: payload.schedule?.intro || '',
         editorLocationId: advancedState.schedule.editorLocationId || advancedState.activeLocationId || 'main',
         builders: {},
         exceptions: scheduleExceptions,
@@ -7679,7 +7798,7 @@
 
       // --- FAQ ---
       advancedState.faq = {
-        heading: payload.faq?.heading || advancedState.faq.heading,
+        heading: payload.faq?.heading || '',
         items: (payload.faq?.items || []).map((f, index) => ({
           id: f.id || 'faq-' + index,
           question: f.question,
@@ -7720,12 +7839,26 @@
       const facts = payload.facts || {};
       const setFactsText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
       if (facts.format) setFactsText('factsFormat', facts.format);
-      if (facts.duration) { setFactsText('factsDuration', facts.duration); setFactsText('factsDurationNote', ''); }
+      if (facts.duration) { setFactsText('factsDuration', facts.duration); }
+      const factsDurationNoteEl = document.getElementById('factsDurationNote');
+      if (factsDurationNoteEl) factsDurationNoteEl.hidden = true;
       if (Array.isArray(facts.languages) && facts.languages.length) setFactsText('factsLanguages', facts.languages.join(', '));
       if (facts.minimumAge) {
         setFactsText('factsMinAge', facts.minimumAge);
         const noteEl = document.getElementById('factsMinAgeNote');
         if (noteEl) { noteEl.textContent = facts.minimumAgeNote || ''; noteEl.hidden = !facts.minimumAgeNote; }
+      }
+      if (facts.accessibility) {
+        setFactsText('factsAccessibility', facts.accessibility);
+        const aEl = document.getElementById('factsAccessibility');
+        if (aEl) aEl.hidden = false;
+        const aNote = document.getElementById('factsAccessibilityNote');
+        if (aNote) aNote.hidden = true;
+      } else {
+        const aEl = document.getElementById('factsAccessibility');
+        if (aEl) aEl.hidden = true;
+        const aNote = document.getElementById('factsAccessibilityNote');
+        if (aNote) aNote.hidden = true;
       }
 
       // --- Reviews (preview cards + heading + drawer) ---

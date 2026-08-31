@@ -23,10 +23,12 @@ const createItems = [
   { label: "Create an event/workshop", href: "/events/new" },
   { label: "Create a course", href: "/courses/new" },
   { label: "Write an article", href: "/articles/new" },
+  { label: "All articles", href: "/articles" },
 ];
 
 const communityItems = [
   { label: "Discussions", href: "/discussions" },
+  { label: "Threads", href: "/threads" },
   { label: "Communities", href: "/communities" },
   { label: "Tutors", href: "/people" },
   { label: "Workshops/Events", href: "/events" },

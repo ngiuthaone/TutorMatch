@@ -1,6 +1,6 @@
 "use client";
 
-import type { BackendTutorAvailability, BackendTutorLanguage, BackendTutorProfile } from "./tutor-cv-api";
+import type { BackendTutorAvailability, BackendTutorCredential, BackendTutorFaq, BackendTutorLanguage, BackendTutorPolicies, BackendTutorProfile } from "./tutor-cv-api";
 
 export interface TutorProfileInput {
   displayName: string;
@@ -20,6 +20,38 @@ export interface TutorProfileInput {
   timeSlots: string[];
   availability: string[];
   timeZone: string;
+  role?: string;
+  portfolioUrl?: string;
+  lessonDescription?: string;
+  credentials?: TutorCredentialInput[];
+  goals?: string[];
+  teachingStyles?: string[];
+  faqs?: TutorFaqInput[];
+  bookingNotice?: string;
+  bookingWindow?: string;
+  lessonBuffer?: string;
+  sameDayBooking?: boolean;
+  learnerCancellation?: string;
+  lateCancellation?: string;
+  noShowPolicy?: string;
+  consultationEnabled?: boolean;
+  consultationDuration?: string;
+  consultationPrice?: string;
+  consultationPurpose?: string;
+  photoUrl?: string | null;
+  introVideoName?: string;
+}
+
+export interface TutorCredentialInput {
+  id: string;
+  title: string;
+  evidenceUrl: string;
+}
+
+export interface TutorFaqInput {
+  id: string;
+  question: string;
+  answer: string;
 }
 
 const LEVEL_LABEL_TO_CODE = new Map<string, string>([
@@ -202,10 +234,61 @@ export function draftToBackendProfile(draft: TutorProfileInput): BackendTutorPro
 
   const bio = [draft.about, draft.professionalBackground].filter(Boolean).join("\n\n");
 
+  const numberOf = (label: string | undefined): number | null => {
+    if (!label) return null;
+    const match = /(\d+)/.exec(label);
+    return match ? Number(match[1]) : null;
+  };
+
+  const policies: BackendTutorPolicies = {
+    learnerCancellation: draft.learnerCancellation || null,
+    lateCancellation: draft.lateCancellation || null,
+    noShow: draft.noShowPolicy || null,
+    bookingNotice: draft.bookingNotice || null,
+    bookingWindowDays: numberOf(draft.bookingWindow),
+    lessonBufferMin: numberOf(draft.lessonBuffer),
+    sameDayBooking: draft.sameDayBooking === true,
+  };
+
+  const consultation = draft.consultationEnabled
+    ? {
+        enabled: true,
+        durationMin: numberOf(draft.consultationDuration),
+        priceVnd: numberOf(draft.consultationPrice),
+        purpose: draft.consultationPurpose || null,
+      }
+    : null;
+
+  const credentials: BackendTutorCredential[] = (draft.credentials ?? [])
+    .filter((credential) => credential && credential.title && credential.title.trim())
+    .slice(0, 20)
+    .map((credential) => ({
+      title: credential.title.trim(),
+      evidenceUrl: credential.evidenceUrl?.trim() || null,
+      verified: false,
+    }));
+
+  const faqs: BackendTutorFaq[] = (draft.faqs ?? [])
+    .filter((faq) => faq && faq.question && faq.question.trim() && faq.answer && faq.answer.trim())
+    .slice(0, 12)
+    .map((faq) => ({ question: faq.question.trim(), answer: faq.answer.trim() }));
+
   return {
     displayName: draft.displayName,
     headline: draft.headline || null,
     bio: bio || null,
+    role: draft.role || null,
+    portfolioUrl: draft.portfolioUrl || null,
+    lessonDescription: draft.lessonDescription || null,
+    policies,
+    rates: draft.rates && Object.keys(draft.rates).length > 0 ? draft.rates : null,
+    displayDuration: draft.displayDuration ?? null,
+    consultation,
+    credentials,
+    goals: (draft.goals ?? []).slice(0, 12),
+    ageGroups: (draft.ageGroups ?? []).slice(0, 12),
+    teachingStyles: (draft.teachingStyles ?? []).slice(0, 12),
+    faqs,
     hourlyRateVnd,
     currency: "VND",
     teachingFormat,
@@ -233,13 +316,20 @@ export function backendProfileToDraft(profile: BackendTutorProfile): Partial<Tut
   const hourly = profile.hourlyRateVnd ?? null;
   const rates: Record<string, number> = {};
   const sessionLengths: number[] = [];
-  let displayDuration: number | null = null;
-  if (hourly && hourly > 0) {
+  let displayDuration: number | null = profile.displayDuration ?? null;
+  if (profile.rates && Object.keys(profile.rates).length > 0) {
+    for (const [duration, price] of Object.entries(profile.rates)) {
+      if (typeof price === "number") rates[duration] = price;
+    }
+    sessionLengths.push(...Object.keys(rates).map((key) => Number(key)).filter((value) => Number.isFinite(value)));
+  } else if (hourly && hourly > 0) {
     for (const duration of [30, 50, 60, 90]) {
       rates[String(duration)] = Math.round((hourly * duration) / 60);
     }
-    sessionLengths.push(60);
-    displayDuration = 60;
+    sessionLengths.push(...Object.keys(rates).map((key) => Number(key)).filter((value) => Number.isFinite(value)));
+  }
+  if (!displayDuration && sessionLengths.length > 0) {
+    displayDuration = sessionLengths.includes(60) ? 60 : sessionLengths[0];
   }
 
   const regions = profile.regions ?? [];
@@ -257,6 +347,9 @@ export function backendProfileToDraft(profile: BackendTutorProfile): Partial<Tut
   const tzName = profile.availability?.[0]?.timezone;
   const timeZone = tzName ? (TIMEZONE_TO_LABEL.get(tzName) ?? tzName) : "GMT+7 - Asia/Bangkok";
 
+  const numberLabel = (value: number | null | undefined, unit: string): string =>
+    typeof value === "number" && value > 0 ? `${value} ${unit}` : "";
+
   return {
     displayName: profile.displayName,
     headline: profile.headline || "",
@@ -266,7 +359,7 @@ export function backendProfileToDraft(profile: BackendTutorProfile): Partial<Tut
     location,
     skills: (profile.subjects ?? []).filter(Boolean),
     learnerLevels,
-    ageGroups: [],
+    ageGroups: (profile.ageGroups ?? []).slice(),
     languages,
     lessonFormat: formatTeachingFromBackend(profile.teachingFormat),
     sessionLengths,
@@ -275,6 +368,34 @@ export function backendProfileToDraft(profile: BackendTutorProfile): Partial<Tut
     timeSlots,
     availability,
     timeZone,
+    role: profile.role || "",
+    portfolioUrl: profile.portfolioUrl || "",
+    lessonDescription: profile.lessonDescription || "",
+    credentials: (profile.credentials ?? []).map((credential, index) => ({
+      id: `cred-${index}-${Date.now()}`,
+      title: credential.title,
+      evidenceUrl: credential.evidenceUrl || "",
+    })),
+    goals: (profile.goals ?? []).slice(),
+    teachingStyles: (profile.teachingStyles ?? []).slice(),
+    faqs: (profile.faqs ?? []).map((faq, index) => ({
+      id: `faq-${index}-${Date.now()}`,
+      question: faq.question,
+      answer: faq.answer,
+    })),
+    bookingNotice: profile.policies?.bookingNotice || "",
+    bookingWindow: numberLabel(profile.policies?.bookingWindowDays, "days"),
+    lessonBuffer: numberLabel(profile.policies?.lessonBufferMin, "minutes"),
+    sameDayBooking: profile.policies?.sameDayBooking === true,
+    learnerCancellation: profile.policies?.learnerCancellation || "",
+    lateCancellation: profile.policies?.lateCancellation || "",
+    noShowPolicy: profile.policies?.noShow || "",
+    consultationEnabled: profile.consultation?.enabled === true,
+    consultationDuration: numberLabel(profile.consultation?.durationMin, "min"),
+    consultationPrice: numberLabel(profile.consultation?.priceVnd, "VND"),
+    consultationPurpose: profile.consultation?.purpose || "",
+    photoUrl: profile.avatarUrl || null,
+    introVideoName: profile.introVideoUrl || "",
   };
 }
 

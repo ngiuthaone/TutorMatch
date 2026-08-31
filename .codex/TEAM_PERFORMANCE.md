@@ -4,10 +4,10 @@ Generated from `.codex/team-runs/*.json`. This report only uses recorded evidenc
 
 ## Team summary
 
-- Recorded runs: **3**
-- Completed runs: **1**
-- PASS runs: **1** (100%)
-- Average distinct agents per completed run: **1.0**
+- Recorded runs: **6**
+- Completed runs: **3**
+- PASS runs: **2** (67%)
+- Average distinct agents per completed run: **4.0**
 
 ## Per-agent scorecard
 
@@ -15,19 +15,19 @@ Generated from `.codex/team-runs/*.json`. This report only uses recorded evidenc
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
 | product_planner | 0 | 0 | N/A | 0 | 0 | 0/0 | 0 | N/A | N/A | N/A | N/A | N/A | Insufficient data |
 | product_designer | 0 | 0 | N/A | 0 | 0 | 0/0 | 0 | N/A | N/A | N/A | N/A | N/A | Insufficient data |
-| code_explorer | 7 | 7 | 100% | 0 | 0 | 44/0 | 0 | 12.3m | N/A | N/A | 100/100 | Medium | Stable |
-| context_scout | 1 | 1 | 100% | 0 | 0 | 4/0 | 0 | 0s | N/A | N/A | 100/100 | Very low | Insufficient data |
-| frontend_engineer | 0 | 0 | N/A | 0 | 0 | 0/0 | 0 | N/A | N/A | N/A | N/A | N/A | Insufficient data |
-| backend_engineer | 1 | 1 | 100% | 0 | 0 | 5/0 | 0 | 18.2m | N/A | N/A | 100/100 | Very low | Insufficient data |
-| qa_browser | 0 | 0 | N/A | 0 | 0 | 0/0 | 0 | N/A | N/A | N/A | N/A | N/A | Insufficient data |
-| security_reviewer | 1 | 1 | 100% | 0 | 0 | 4/0 | 0 | 17.9m | N/A | N/A | 100/100 | Very low | Insufficient data |
+| code_explorer | 8 | 8 | 100% | 0 | 0 | 53/0 | 0 | 11.1m | N/A | N/A | 100/100 | Medium | Stable |
+| context_scout | 2 | 2 | 100% | 0 | 0 | 10/0 | 0 | 1.5m | N/A | N/A | 100/100 | Very low | Insufficient data |
+| frontend_engineer | 3 | 2 | 100% | 0 | 0 | 4/0 | 0 | 57.3m | N/A | N/A | 85/100 | Very low | Insufficient data |
+| backend_engineer | 3 | 2 | 50% | 1 | 0 | 8/0 | 0 | 12.2h | N/A | N/A | 77/100 | Very low | Insufficient data |
+| qa_browser | 1 | 1 | 100% | 0 | 0 | 3/0 | 0 | 2.9m | N/A | N/A | 100/100 | Very low | Insufficient data |
+| security_reviewer | 2 | 2 | 100% | 0 | 0 | 6/0 | 0 | 11.9m | N/A | N/A | 100/100 | Very low | Insufficient data |
 | researcher | 0 | 0 | N/A | 0 | 0 | 0/0 | 0 | N/A | N/A | N/A | N/A | N/A | Insufficient data |
 | license_guard | 0 | 0 | N/A | 0 | 0 | 0/0 | 0 | N/A | N/A | N/A | N/A | N/A | Insufficient data |
-| database_engineer | 2 | 2 | 50% | 0 | 0 | 7/0 | 0 | 7.0m | N/A | N/A | 86/100 | Very low | Insufficient data |
+| database_engineer | 3 | 3 | 67% | 0 | 0 | 10/0 | 0 | 6.6m | N/A | N/A | 91/100 | Low | Insufficient data |
 | integration_engineer | 0 | 0 | N/A | 0 | 0 | 0/0 | 0 | N/A | N/A | N/A | N/A | N/A | Insufficient data |
 | payments_engineer | 0 | 0 | N/A | 0 | 0 | 0/0 | 0 | N/A | N/A | N/A | N/A | N/A | Insufficient data |
-| qa_engineer | 0 | 0 | N/A | 0 | 0 | 0/0 | 0 | N/A | N/A | N/A | N/A | N/A | Insufficient data |
-| independent_verifier | 0 | 0 | N/A | 0 | 0 | 0/0 | 0 | N/A | N/A | N/A | N/A | N/A | Insufficient data |
+| qa_engineer | 2 | 2 | 50% | 0 | 0 | 4/0 | 0 | 26.2m | N/A | N/A | 100/100 | Very low | Insufficient data |
+| independent_verifier | 1 | 1 | 100% | 0 | 0 | 0/0 | 0 | 6.5m | N/A | N/A | 100/100 | Very low | Insufficient data |
 | reliability_engineer | 0 | 0 | N/A | 0 | 0 | 0/0 | 0 | N/A | N/A | N/A | N/A | N/A | Insufficient data |
 
 ### Effectiveness formula
@@ -62,7 +62,7 @@ Recent activities:
 - `20260828-001113-master-feature-technical-inventory-a` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 6/0.
 - `20260828-001113-master-feature-technical-inventory-a` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 6/0.
 - `20260828-001113-master-feature-technical-inventory-a` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 6/0.
-- `20260828-001113-master-feature-technical-inventory-a` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 6/0.
+- `20260829-110930-production-event-workshop-publicatio` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 9/0.
 
 ### `context_scout`
 
@@ -75,12 +75,37 @@ Recent activities:
 
 Recent activities:
 - `20260827-230758-private-alpha-remediation-phases-1-1` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 4/0.
+- `20260829-110930-production-event-workshop-publicatio` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 6/0.
 
 ### `frontend_engineer`
 
-No recorded delegated work yet.
+- Overall effectiveness: **85/100**
+- Outcome/task success component: **67%**
+- Reviewer acceptance component: **100%**
+- Low rework/regression component: **100%**
+- Efficiency component: **N/A**
+- Specialist contribution component: **100%**
+
+Recent activities:
+- `20260829-110930-production-event-workshop-publicatio` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 4/0.
+- `soft-launch-sprint-20260831` — running / N/A; rework 0; QA failures 0; useful/invalid findings 0/0.
+- `tutor-link-2026-08-31` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 0/0.
 
 ### `backend_engineer`
+
+- Overall effectiveness: **77/100**
+- Outcome/task success component: **67%**
+- Reviewer acceptance component: **100%**
+- Low rework/regression component: **50%**
+- Efficiency component: **N/A**
+- Specialist contribution component: **100%**
+
+Recent activities:
+- `20260827-230758-private-alpha-remediation-phases-1-1` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 5/0.
+- `20260829-110930-production-event-workshop-publicatio` — completed / after_rework; rework 1; QA failures 0; useful/invalid findings 3/0.
+- `soft-launch-sprint-20260831` — running / N/A; rework 0; QA failures 0; useful/invalid findings 0/0.
+
+### `qa_browser`
 
 - Overall effectiveness: **100/100**
 - Outcome/task success component: **100%**
@@ -90,11 +115,7 @@ No recorded delegated work yet.
 - Specialist contribution component: **100%**
 
 Recent activities:
-- `20260827-230758-private-alpha-remediation-phases-1-1` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 5/0.
-
-### `qa_browser`
-
-No recorded delegated work yet.
+- `20260829-110930-production-event-workshop-publicatio` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 3/0.
 
 ### `security_reviewer`
 
@@ -107,6 +128,7 @@ No recorded delegated work yet.
 
 Recent activities:
 - `20260827-230758-private-alpha-remediation-phases-1-1` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 4/0.
+- `20260829-110930-production-event-workshop-publicatio` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 2/0.
 
 ### `researcher`
 
@@ -118,9 +140,9 @@ No recorded delegated work yet.
 
 ### `database_engineer`
 
-- Overall effectiveness: **86/100**
+- Overall effectiveness: **91/100**
 - Outcome/task success component: **100%**
-- Reviewer acceptance component: **50%**
+- Reviewer acceptance component: **67%**
 - Low rework/regression component: **100%**
 - Efficiency component: **N/A**
 - Specialist contribution component: **100%**
@@ -128,6 +150,7 @@ No recorded delegated work yet.
 Recent activities:
 - `20260827-230758-private-alpha-remediation-phases-1-1` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 6/0.
 - `20260827-230758-private-alpha-remediation-phases-1-1` — completed / n_a; rework 0; QA failures 0; useful/invalid findings 1/0.
+- `20260829-110930-production-event-workshop-publicatio` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 3/0.
 
 ### `integration_engineer`
 
@@ -139,11 +162,28 @@ No recorded delegated work yet.
 
 ### `qa_engineer`
 
-No recorded delegated work yet.
+- Overall effectiveness: **100/100**
+- Outcome/task success component: **100%**
+- Reviewer acceptance component: **100%**
+- Low rework/regression component: **100%**
+- Efficiency component: **N/A**
+- Specialist contribution component: **100%**
+
+Recent activities:
+- `20260829-110930-production-event-workshop-publicatio` — completed / after_rework; rework 0; QA failures 0; useful/invalid findings 4/0.
+- `tutor-link-2026-08-31` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 0/0.
 
 ### `independent_verifier`
 
-No recorded delegated work yet.
+- Overall effectiveness: **100/100**
+- Outcome/task success component: **100%**
+- Reviewer acceptance component: **100%**
+- Low rework/regression component: **100%**
+- Efficiency component: **N/A**
+- Specialist contribution component: **100%**
+
+Recent activities:
+- `20260829-110930-production-event-workshop-publicatio` — completed / first_pass; rework 0; QA failures 0; useful/invalid findings 0/0.
 
 ### `reliability_engineer`
 

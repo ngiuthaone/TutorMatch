@@ -34,6 +34,7 @@
   --tutoria-glass: rgba(18, 18, 20, 0.78);
   --tutoria-glass-strong: rgba(11, 11, 12, 0.94);
   --tutoria-line: rgba(255, 255, 255, 0.11);
+  --tutoria-error: #e5484d;
   --font-editorial: var(--font-tutoria-display), Georgia, serif;
 }
 

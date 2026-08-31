@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
+import { makeOffering } from "./_fixtures/offering.js";
 
 const url = process.env.SUPABASE_TEST_URL, key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY, dbUrl = process.env.SUPABASE_TEST_DB_URL, serviceKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY;
 if (!url || !key || !dbUrl || !serviceKey) throw new Error("Payment integration tests require local Supabase URL, publishable key, DB URL, and service role key.");
@@ -36,7 +37,8 @@ async function signup(role: "student" | "tutor") {
 async function paidConfirmedBooking(rate = 300000) {
   const tutor = await signup("tutor"), learner = await signup("student");
   await sql`insert into public.tutor_profiles(user_id,display_name,hourly_rate_vnd,currency) values(${tutor.user.id},'Payment Tutor',${rate},'VND')`;
-  const session = await tutor.client.rpc("create_session", { payload: { startsAt: new Date(Date.now() + 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 4.5 * 3600e3).toISOString(), maxParticipants: 1 } });
+  const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: rate });
+  const session = await tutor.client.rpc("create_session", { payload: { offeringId, startsAt: new Date(Date.now() + 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 4.5 * 3600e3).toISOString(), maxParticipants: 1 } });
   if (session.error) throw session.error;
   const booking = await learner.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 });
   if (booking.error) throw booking.error;
@@ -58,7 +60,8 @@ describe.sequential("Payment Provider V1 local proof", () => {
     const tutor = await signup("tutor"), learner = await signup("student");
     await sql`insert into public.tutor_profiles(user_id,display_name,hourly_rate_vnd,currency) values(${tutor.user.id},'Payment Tutor',300000,'VND')`;
     const startsAt = new Date(Date.now() + 3 * 3600e3).toISOString(), endsAt = new Date(Date.now() + 4.5 * 3600e3).toISOString();
-    const session = await tutor.client.rpc("create_session", { payload: { startsAt, endsAt, maxParticipants: 1 } }); expect(session.error).toBeNull();
+    const offeringId2 = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: 300000 });
+    const session = await tutor.client.rpc("create_session", { payload: { offeringId: offeringId2, startsAt, endsAt, maxParticipants: 1 } }); expect(session.error).toBeNull();
     const booking = await learner.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 }); expect(booking.error).toBeNull();
     const snapshot = await sql`select pricing_amount_vnd,pricing_currency,pricing_hourly_rate_vnd,pricing_duration_minutes,pricing_model from public.bookings where id=${booking.data.id}`;
     expect(snapshot[0]).toMatchObject({ pricing_amount_vnd: "450000", pricing_currency: "VND", pricing_hourly_rate_vnd: "300000", pricing_duration_minutes: 90, pricing_model: "hourly_v1" });
@@ -95,7 +98,8 @@ describe.sequential("Payment Provider V1 local proof", () => {
   it("creates one idempotent system-compensation obligation only when the payment was in flight at cancellation (P4)", async () => {
     const tutor = await signup("tutor"), learner = await signup("student");
     await sql`insert into public.tutor_profiles(user_id,display_name,hourly_rate_vnd,currency) values(${tutor.user.id},'Comp Tutor',240000,'VND')`;
-    const s = await tutor.client.rpc("create_session", { payload: { startsAt: new Date(Date.now()+3*3600e3).toISOString(), endsAt: new Date(Date.now()+4*3600e3).toISOString(), maxParticipants: 1 } });
+    const offeringId3 = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: 240000 });
+    const s = await tutor.client.rpc("create_session", { payload: { offeringId: offeringId3, startsAt: new Date(Date.now()+3*3600e3).toISOString(), endsAt: new Date(Date.now()+4*3600e3).toISOString(), maxParticipants: 1 } });
     const b = await learner.client.rpc("create_booking", { session_id: s.data.id }); await tutor.client.rpc("approve_booking_for_payment", { p_booking_id: b.data.id });
     const a = await learner.client.rpc("start_payment_attempt", { p_booking_id: b.data.id, p_idempotency_key: `comp-test-key-${randomUUID().replace(/-/g, "").slice(0, 20)}` });
     expect(a.error).toBeNull();

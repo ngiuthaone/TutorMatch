@@ -5,6 +5,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
+import { makeOffering } from "./_fixtures/offering.js";
 
 const url = process.env.SUPABASE_TEST_URL;
 const key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY;
@@ -25,7 +26,8 @@ async function signup(role: "student" | "tutor") {
 const FUTURE = { startsAt: new Date(Date.now() + 2 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 3 * 3600e3).toISOString() };
 const PAST = { startsAt: new Date(Date.now() - 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() - 2 * 3600e3).toISOString() };
 async function createSession(tutor: { client: SupabaseClient }, o: Record<string, unknown> = {}) {
-  return tutor.client.rpc("create_session", { payload: { ...FUTURE, ...o } });
+  const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop");
+  return tutor.client.rpc("create_session", { payload: { offeringId, ...FUTURE, ...o } });
 }
 
 describe.sequential("sessions + bookings extended authorization", () => {

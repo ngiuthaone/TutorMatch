@@ -51,6 +51,13 @@ async function createWorkshopOffering(tutor: { client: any; user: { id: string }
     p_booking_mode: "instant",
   });
   if (offering.error) throw new Error(`create_offering failed: ${offering.error.message}`);
+  // create_offering does not insert an offering_hosts row; the tutor must have
+  // host capability on the offering before update_offering_status will run.
+  await sql`
+    insert into public.offering_hosts (offering_id, user_id, capability, granted_by)
+    values (${offering.data.id}, ${tutor.user.id}, 'owner', ${tutor.user.id})
+    on conflict (offering_id, user_id) where revoked_at is null do nothing
+  `;
   const published = await tutor.client.rpc("update_offering_status", {
     p_offering_id: offering.data.id,
     p_expected_version: offering.data.version,

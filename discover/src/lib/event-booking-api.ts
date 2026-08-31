@@ -16,7 +16,7 @@ export class EventApiError extends Error {
 export interface EventOffering {
   id: string;
   hostId: string;
-  offeringType: "event";
+  offeringType: "event" | "workshop";
   title: string;
   description: string | null;
   pricingModel: "hourly_v1" | "flat_per_participant_v1";
@@ -85,6 +85,7 @@ async function request(path: string, options: { method?: string; body?: unknown;
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     credentials: "omit",
     cache: "no-store",
+    signal: AbortSignal.timeout(15000),
   });
   const payload = await jsonResponse(response);
   if (!response.ok) throw apiError(response, payload);
@@ -146,10 +147,15 @@ export async function listBookableEvents(): Promise<EventWithHost[]> {
     });
   }
 
+  const offeringIds = Array.from(sessionsByOffering.keys());
+  const offeringResults = await Promise.all(offeringIds.map((id) => getEventOffering(id)));
+
   const results: EventWithHost[] = [];
-  for (const [offeringId, { sessions, hostDisplayName }] of sessionsByOffering) {
-    const offering = await getEventOffering(offeringId);
-    if (offering && offering.offeringType === "event" && offering.status === "published") {
+  for (let i = 0; i < offeringIds.length; i++) {
+    const offeringId = offeringIds[i];
+    const { sessions, hostDisplayName } = sessionsByOffering.get(offeringId)!;
+    const offering = offeringResults[i];
+    if (offering && ["event", "workshop"].includes(offering.offeringType) && offering.status === "published") {
       results.push({ offering, sessions, hostDisplayName });
     }
   }

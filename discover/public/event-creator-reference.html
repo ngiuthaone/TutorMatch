@@ -749,7 +749,7 @@
             __tutoriaIdentityPending.delete(requestId);
             resolve(empty);
           }
-        }, timeoutMs || 2000);
+        }, timeoutMs || 10000);
         __tutoriaIdentityPending.set(requestId, (identity) => {
           clearTimeout(timer);
           if (!identity) {

@@ -91,6 +91,7 @@ export interface WorkshopDataFacts {
   languages?: string[];
   minimumAge?: string;
   minimumAgeNote?: string;
+  accessibility?: string;
 }
 
 export interface WorkshopData {
@@ -186,29 +187,51 @@ export function toWorkshopData(event: EventDetail, recommendations?: WorkshopDat
       price: unwrapVnd(event.price),
       description: event.subtitle ?? "",
       badge: "",
-      includes: [...event.included],
+      includes: [...(event.included ?? [])],
     });
   }
 
-  const sessions: WorkshopDataSession[] = event.sessions.map((s, index) => ({
-    id: s.id || `session-${index}`,
-    start: s.times?.[0]?.split(" - ")[0]?.trim() || "09:00",
-    end: s.times?.[0]?.split(" - ")[1]?.trim() || s.times?.[0] || "18:00",
-    label: `${s.date}${s.times?.[0] ? ` · ${s.times[0]}` : ""}`,
-    minParticipants: 1,
-    maxParticipants: event.capacity || 1,
-    capacity: event.capacity || 1,
-    bookedParticipants: event.attending || 0,
-    days: [],
-    dateKey: s.dateKey || toDateKey(s.date),
-  }));
+  const sessions: WorkshopDataSession[] = [];
+  (event.sessions ?? []).forEach((s, sIndex) => {
+    const times = Array.isArray(s.times) ? s.times : [];
+    if (times.length === 0) {
+      sessions.push({
+        id: s.id || `session-${sIndex}`,
+        start: "",
+        end: "",
+        label: s.date || "",
+        minParticipants: 1,
+        maxParticipants: event.capacity || 1,
+        capacity: event.capacity || 1,
+        bookedParticipants: event.attending || 0,
+        days: [],
+        dateKey: s.dateKey || toDateKey(s.date),
+      });
+    } else {
+      times.forEach((time, tIndex) => {
+        const [start, end] = String(time).split(" - ").map((p) => p.trim());
+        sessions.push({
+          id: `${s.id || `session-${sIndex}`}-${tIndex}`,
+          start: start || "",
+          end: end || "",
+          label: s.date ? `${s.date}${time ? ` · ${time}` : ""}` : "",
+          minParticipants: 1,
+          maxParticipants: event.capacity || 1,
+          capacity: event.capacity || 1,
+          bookedParticipants: event.attending || 0,
+          days: [],
+          dateKey: s.dateKey || toDateKey(s.date),
+        });
+      });
+    }
+  });
 
   const location = {
-    name: event.studioName || event.location || "Tutoria venue",
+    name: event.studioName || event.location || "",
     area: asDateLabel(event.location) === event.location ? "" : event.location,
     note: event.note && event.note !== "Accessibility: No requirements specified."
       ? event.note
-      : event.accessibility || "Exact arrival instructions are provided after booking.",
+      : (event.accessibility || ""),
     mapQuery: event.address || event.location || event.studioName || "",
     timezone: event.timezone,
   };
@@ -222,18 +245,18 @@ export function toWorkshopData(event: EventDetail, recommendations?: WorkshopDat
       subtitle: event.subtitle,
       duration: event.duration,
       coverImage,
-      photos: [event.image, event.galleryImage, ...event.plan.map((p) => p.image)].filter(
+      photos: [event.image, event.galleryImage, ...(event.plan ?? []).map((p) => p.image)].filter(
         (x): x is string => Boolean(x),
       ),
     },
     overview: {
       heading: event.subtitle || event.title,
-      paragraphs: event.about.length ? event.about : [event.note].filter(Boolean),
+      paragraphs: (event.about ?? []).length ? event.about : [event.note].filter(Boolean),
     },
     details: {
-      learn: event.learn,
-      included: event.included,
-      bring: event.bring,
+      learn: event.learn ?? [],
+      included: event.included ?? [],
+      bring: event.bring ?? [],
       checklists: (event.beforeYouAttend || [])
         .filter((g) => g.title && g.items?.length)
         .map((g) => ({ title: g.title, items: g.items })),
@@ -241,28 +264,29 @@ export function toWorkshopData(event: EventDetail, recommendations?: WorkshopDat
     facts: {
       format: (event.type as string) || event.location,
       duration: event.duration,
-      languages: event.languages,
+      languages: event.languages ?? [],
       minimumAge: event.minimumAge,
       minimumAgeNote: "",
+      accessibility: event.accessibility || "",
     },
     booking: {
       pricingMode: event.pricingMode === "single" || packages.length <= 1 ? "single" : "multiple",
       defaultPackageId: packages[0]?.id,
-      cancellation: event.cancellation?.[0] ?? "Free cancellation up to 24 hours before the start.",
+      cancellation: event.cancellation?.[0] ?? "",
       packages,
     },
     location,
     host: {
       name: event.host,
-      role: event.hostRole || "Workshop host",
+      role: event.hostRole || "",
       bio: event.hostBio || "",
       avatar: event.hostImage,
       recommendation: event.hostRecommendation,
     },
     plan: {
-      heading: "How the session flows",
-      intro: "A guided, hands-on sequence from welcome to wrap-up.",
-      steps: event.plan.map((p, index) => ({
+      heading: "",
+      intro: "",
+      steps: (event.plan ?? []).map((p, index) => ({
         id: `plan-${index}`,
         title: p.title,
         time: p.duration,
@@ -271,13 +295,13 @@ export function toWorkshopData(event: EventDetail, recommendations?: WorkshopDat
       })),
     },
     schedule: {
-      heading: "Pick a session",
-      intro: "Choose a date and time that works for you.",
+      heading: "",
+      intro: "",
       sessions,
     },
     faq: {
-      heading: "Practical details before you book.",
-      items: event.faqs.map((f, index) => ({
+      heading: "",
+      items: (event.faqs ?? []).map((f, index) => ({
         id: `faq-${index}`,
         question: f.question,
         answer: f.answer,
@@ -287,7 +311,7 @@ export function toWorkshopData(event: EventDetail, recommendations?: WorkshopDat
       heading: event.reviewCount > 0 ? `${event.rating} from ${event.reviewCount} reviews` : "Community reviews",
       rating: event.rating,
       reviewCount: event.reviewCount,
-      items: event.reviews.map((r) => ({
+      items: (event.reviews ?? []).map((r) => ({
         name: r.name,
         initials: r.name.slice(0, 2).toUpperCase(),
         rating: r.rating,

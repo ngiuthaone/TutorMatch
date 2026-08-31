@@ -8,6 +8,39 @@ const revealTutorProfile = () => {
   }
 };
 
+(function () {
+  if (typeof window === "undefined") return;
+  let identity = null;
+  window.addEventListener("message", (event) => {
+    if (event.origin !== window.location.origin) return;
+    if (event.source !== window.parent) return;
+    const data = event.data;
+    if (!data || typeof data !== "object") return;
+    if (data.type !== "tutoria:identity") return;
+    const payload = data.payload;
+    if (!payload || typeof payload !== "object") return;
+    identity = {
+      id: typeof payload.id === "string" ? payload.id : null,
+      name: typeof payload.name === "string" ? payload.name : null,
+      role: typeof payload.role === "string" ? payload.role : null,
+      avatarUrl: typeof payload.avatarUrl === "string" ? payload.avatarUrl : null,
+    };
+    try {
+      window.localStorage.setItem("tutoria_iframe_identity", JSON.stringify(identity));
+    } catch {}
+  });
+  try {
+    const cached = window.localStorage.getItem("tutoria_iframe_identity");
+    if (cached) identity = JSON.parse(cached);
+  } catch {}
+  Object.defineProperty(window, "tutoriaIdentity", {
+    configurable: true,
+    get() {
+      return identity;
+    },
+  });
+})();
+
 (async function () {
   const params = new URLSearchParams(window.location.search);
   const profiles = (() => {
@@ -324,6 +357,17 @@ const revealTutorProfile = () => {
   }
   document.documentElement.dataset.activeTutorProfile = JSON.stringify(activeTutorProfile);
 
+  const identity = window.tutoriaIdentity;
+  if (identity && (identity.id || identity.name)) {
+    const sameTutor =
+      (identity.id && profile.id && String(identity.id) === String(profile.id)) ||
+      (identity.name && profile.name && String(identity.name).toLocaleLowerCase().trim() === String(profile.name).toLocaleLowerCase().trim());
+    if (sameTutor && identity.name) {
+      activeTutorProfile.name = identity.name;
+      document.documentElement.dataset.activeTutorProfile = JSON.stringify(activeTutorProfile);
+    }
+  }
+
   const setText = (element, value) => {
     if (element && value !== undefined && value !== null) element.textContent = String(value);
   };
@@ -541,8 +585,11 @@ const revealTutorProfile = () => {
   });
 
   if (isCreatorProfile) {
-    if (liveProfile) {
-    replaceExact("Verified", "Not verified");
+    const verified = profile.isVerified === true || profile.verified === true;
+    if (verified) {
+      replaceExact("ID verified", profile.disclosure || "Identity verified by Tutoria");
+    } else if (liveProfile) {
+      replaceExact("Verified", "Not verified");
       replaceExact("ID verified", profile.disclosure || "Identity not verified");
     } else {
       replaceExact("Verified", "New tutor");
@@ -639,18 +686,33 @@ const revealTutorProfile = () => {
           wrapper.innerHTML = '<div class="p-6 text-sm text-muted">No bookable Sessions are available for this tutor right now.</div>';
         }
       } else {
-        const selectedSlots = new Set((profile.availability || []).map(String));
-        const availabilityRows = [...availabilityPanel.querySelectorAll(".availability-cell")];
-        ["09:00-12:00", "14:00-18:00", "18:00-21:00"].forEach((slot, rowIndex) => {
-          for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
-            const cell = availabilityRows[rowIndex * 8 + dayIndex + 1];
-            if (!cell) continue;
-            const isOpen = selectedSlots.has(`${slot}-${dayIndex}`);
-            cell.outerHTML = isOpen
-              ? '<button class="availability-cell m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent">Open</button>'
-              : '<div class="availability-cell flex items-center justify-center text-muted">—</div>';
-          }
-        });
+        const slotKeys = (profile.availability || []).map(String).filter(Boolean);
+        const rangeOf = (slot) => {
+          const parts = slot.split("-");
+          return parts.length >= 2 ? `${parts[0]}-${parts[1]}` : "";
+        };
+        const dayOf = (slot) => Number(slot.split("-")[2]);
+        const distinctRanges = [...new Set(slotKeys.map(rangeOf).filter(Boolean))].sort();
+        const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const grid = availabilityPanel.querySelector(".min-w-\\[780px\\]");
+        if (grid) {
+          const headerCells = dayNames.map((day) => `<div class="p-4">${day}</div>`).join("");
+          const bodyRows = distinctRanges.length
+            ? distinctRanges.map((range) => {
+                const [start, end] = range.split("-");
+                const cells = dayNames.map((_, dayIndex) => {
+                  const isOpen = slotKeys.some((slot) => rangeOf(slot) === range && Number.isFinite(dayOf(slot)) && dayOf(slot) === dayIndex);
+                  return isOpen
+                    ? '<button class="m-2 rounded-xl bg-accent/55 font-semibold hover:bg-accent" style="min-height:42px">Open</button>'
+                    : '<div class="availability-cell flex items-center justify-center text-muted">—</div>';
+                }).join("");
+                return `<div class="grid grid-cols-[120px_repeat(7,1fr)] border-b border-line text-center text-sm"><div class="availability-cell flex items-center p-4 text-left font-medium">${escapeHtml(start)}–${escapeHtml(end)}</div>${cells}</div>`;
+              }).join("")
+            : '<div class="p-6 text-sm text-muted">Availability not set.</div>';
+          grid.innerHTML = `
+            <div class="grid grid-cols-[120px_repeat(7,1fr)] border-b border-line bg-canvas text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted"><div class="p-4 text-left">Time</div>${headerCells}</div>
+            ${bodyRows}`;
+        }
       }
     }
 
@@ -696,7 +758,8 @@ const revealTutorProfile = () => {
     if (consultationSection && !profile.consultationEnabled) consultationSection.remove();
     if (consultationSection && profile.consultationEnabled) {
       const duration = profile.consultationDuration || "Not set";
-      const price = profile.consultationPrice || "Not set";
+      const rawPrice = profile.consultationPrice;
+      const price = /^\d+$/.test(String(rawPrice || "")) ? formatVnd(Number(rawPrice)) : (rawPrice || "Not set");
       setText(consultationSection.querySelector("h3"), profile.consultationPurpose || "Short consultation");
       setText(consultationSection.querySelector(".mt-3.max-w-2xl"), `A ${duration.replace(" minutes", "-minute")} consultation with ${firstName}.`);
       consultationSection.querySelector(".mt-6.flex.flex-wrap")?.remove();

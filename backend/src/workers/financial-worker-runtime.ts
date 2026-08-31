@@ -1,6 +1,6 @@
 import type { PaymentService } from "../services/payment-service.js";
 
-type SweepName = "refund_execution" | "refund_reconciliation" | "payment_finalization";
+type SweepName = "refund_execution" | "refund_reconciliation" | "payment_finalization" | "sweep_expired_workshop_bookings";
 export type FinancialWorkerLogger = (level: "debug" | "info" | "warn" | "error", event: string, fields?: Record<string, unknown>) => void;
 export type FinancialWorkerHealth = {
   status: "starting" | "ready" | "running" | "degraded" | "stopping" | "stopped";
@@ -20,12 +20,13 @@ const errorMessage = (error: unknown) => {
   return message.slice(0, 500);
 };
 
-export async function runFinancialWorkerIteration(service: Pick<PaymentService, "sweepRefundExecutions" | "sweepRefundReconciliations" | "sweepPendingFinalizations">, workerId: string, logger: FinancialWorkerLogger, isStopped?: () => boolean): Promise<{ ok: boolean; errors: string[] }> {
+export async function runFinancialWorkerIteration(service: Pick<PaymentService, "sweepRefundExecutions" | "sweepRefundReconciliations" | "sweepPendingFinalizations" | "sweepExpiredWorkshopBookings">, workerId: string, logger: FinancialWorkerLogger, isStopped?: () => boolean): Promise<{ ok: boolean; errors: string[] }> {
   const errors: string[] = [];
   const sweeps: Array<[SweepName, () => Promise<{ data?: unknown; error?: unknown }>]> = [
     ["refund_execution", () => service.sweepRefundExecutions(workerId)],
     ["refund_reconciliation", () => service.sweepRefundReconciliations(workerId)],
-    ["payment_finalization", () => service.sweepPendingFinalizations(workerId)]
+    ["payment_finalization", () => service.sweepPendingFinalizations(workerId)],
+    ["sweep_expired_workshop_bookings", () => service.sweepExpiredWorkshopBookings(workerId)]
   ];
   for (const [name, sweep] of sweeps) {
     // No sweep may start once shutdown has begun: claiming after stop would
@@ -52,7 +53,7 @@ export async function runFinancialWorkerIteration(service: Pick<PaymentService, 
 }
 
 export function createFinancialWorkerRuntime(input: {
-  service: Pick<PaymentService, "sweepRefundExecutions" | "sweepRefundReconciliations" | "sweepPendingFinalizations">;
+  service: Pick<PaymentService, "sweepRefundExecutions" | "sweepRefundReconciliations" | "sweepPendingFinalizations" | "sweepExpiredWorkshopBookings">;
   workerId: string;
   intervalMs: number;
   logger: FinancialWorkerLogger;

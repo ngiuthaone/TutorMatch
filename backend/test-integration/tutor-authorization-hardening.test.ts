@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
+import { makeOffering } from "./_fixtures/offering.js";
 
 const url = process.env.SUPABASE_TEST_URL;
 const key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY;
@@ -60,11 +61,12 @@ describe.sequential("Tutor authorization hardening", () => {
     const startsAt = new Date(Date.now() + 2 * 3600e3).toISOString();
     const endsAt = new Date(Date.now() + 3 * 3600e3).toISOString();
     await sql`insert into public.tutor_profiles(user_id, display_name, hourly_rate_vnd, currency) values (${tutorB.user.id}, 'Trusted Tutor B', 300000, 'VND')`;
-    const session = await tutorB.client.rpc("create_session", { payload: { startsAt, endsAt, maxParticipants: 2 } });
+    const offeringId = await makeOffering(tutorB.client, tutorB.user.id, "workshop");
+    const session = await tutorB.client.rpc("create_session", { payload: { offeringId, startsAt, endsAt, maxParticipants: 2 } });
     expect(session.error).toBeNull();
     const booking = await tutorA.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 });
     expect(booking.error).toBeNull();
-    expect((await learner.client.rpc("create_session", { payload: { startsAt, endsAt, maxParticipants: 2 } })).error).toBeTruthy();
+    expect((await learner.client.rpc("create_session", { payload: { offeringId: randomUUID(), startsAt, endsAt, maxParticipants: 2 } })).error).toBeTruthy();
     expect((await learner.client.rpc("approve_booking_for_payment", { p_booking_id: booking.data.id })).error).toBeTruthy();
   });
 });

@@ -24,7 +24,9 @@ export function CommentThread({ contentId, contentType, onUpdate }: CommentThrea
   }, [contentId]);
 
   useEffect(() => {
-    loadComments();
+    let cancelled = false;
+    if (!cancelled) loadComments();
+    return () => { cancelled = true; };
   }, [loadComments]);
 
   const handleSubmit = () => {

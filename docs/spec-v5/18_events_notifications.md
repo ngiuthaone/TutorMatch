@@ -28,7 +28,7 @@
 
 ## 18.3 Messaging contract (Post-Alpha default, `PURPLE`)
 
-- `MSG-001` — Direct host↔learner messaging about a booking: Post-Alpha (`SCOPE-004`). Record design intent here but do not implement at Alpha.
+- `MSG-001` — Direct host↔learner messaging about a booking: **`DEC-015` RESOLVED (31 Aug 2026) — promoted to Alpha** as the 1:1 booking-context core. Realtime push stays deferred. Groups/communities/files/attachments remain Post-Alpha.
 - `MSG-002` — When implemented: server-authoritative conversation+membership+RLS; no client fabrication; idempotent send; moderation hooks.
 
 ## 18.4 ACCEPTANCE CRITERIA

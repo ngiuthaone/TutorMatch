@@ -46,6 +46,34 @@ export interface BackendTutorExperience {
   description: string;
 }
 
+export interface BackendTutorCredential {
+  title: string;
+  evidenceUrl: string | null;
+  verified: boolean;
+}
+
+export interface BackendTutorFaq {
+  question: string;
+  answer: string;
+}
+
+export interface BackendTutorPolicies {
+  learnerCancellation: string | null;
+  lateCancellation: string | null;
+  noShow: string | null;
+  bookingNotice: string | null;
+  bookingWindowDays: number | null;
+  lessonBufferMin: number | null;
+  sameDayBooking: boolean;
+}
+
+export interface BackendTutorConsultation {
+  enabled: boolean;
+  durationMin: number | null;
+  priceVnd: number | null;
+  purpose: string | null;
+}
+
 export interface BackendTutorProfile {
   displayName: string;
   headline: string | null;
@@ -60,6 +88,22 @@ export interface BackendTutorProfile {
   availability: BackendTutorAvailability[];
   education: BackendTutorEducation[];
   experience: BackendTutorExperience[];
+  role: string | null;
+  portfolioUrl: string | null;
+  lessonDescription: string | null;
+  policies: BackendTutorPolicies | null;
+  rates: Record<string, number> | null;
+  displayDuration: number | null;
+  consultation: BackendTutorConsultation | null;
+  credentials: BackendTutorCredential[];
+  goals: string[];
+  ageGroups: string[];
+  teachingStyles: string[];
+  faqs: BackendTutorFaq[];
+  avatarUrl?: string | null;
+  introVideoUrl?: string | null;
+  verified?: boolean;
+  verificationStatus?: "none" | "pending_review" | "verified";
 }
 
 export interface BackendTutorProfileRecord {
@@ -107,6 +151,22 @@ type FlatTutorRecord = {
   availability?: unknown;
   education?: unknown;
   experience?: unknown;
+  role?: unknown;
+  portfolioUrl?: unknown;
+  lessonDescription?: unknown;
+  policies?: unknown;
+  rates?: unknown;
+  displayDuration?: unknown;
+  consultation?: unknown;
+  credentials?: unknown;
+  goals?: unknown;
+  ageGroups?: unknown;
+  teachingStyles?: unknown;
+  faqs?: unknown;
+  avatarUrl?: unknown;
+  introVideoUrl?: unknown;
+  verified?: unknown;
+  verificationStatus?: unknown;
 };
 
 function isTutorRecord(value: unknown): value is FlatTutorRecord {
@@ -118,9 +178,52 @@ function isTutorRecord(value: unknown): value is FlatTutorRecord {
 function recordFromFlat(raw: FlatTutorRecord): BackendTutorProfileRecord {
   const stringArray = (value: unknown): string[] =>
     Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  const nullableString = (value: unknown): string | null => (typeof value === "string" ? value : null);
   const teachingFormat = raw.teachingFormat === "online" || raw.teachingFormat === "in_person" || raw.teachingFormat === "both"
     ? raw.teachingFormat
     : null;
+  const ratesFrom = (value: unknown): Record<string, number> | null => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const out: Record<string, number> = {};
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+      if (typeof val === "number") out[key] = val;
+    }
+    return Object.keys(out).length > 0 ? out : null;
+  };
+  const policiesRaw = raw.policies && typeof raw.policies === "object" && !Array.isArray(raw.policies)
+    ? (raw.policies as Record<string, unknown>)
+    : null;
+  const policies: BackendTutorProfile["policies"] = policiesRaw
+    ? {
+        learnerCancellation: nullableString(policiesRaw.learnerCancellation),
+        lateCancellation: nullableString(policiesRaw.lateCancellation),
+        noShow: nullableString(policiesRaw.noShow),
+        bookingNotice: nullableString(policiesRaw.bookingNotice),
+        bookingWindowDays: typeof policiesRaw.bookingWindowDays === "number" ? policiesRaw.bookingWindowDays : null,
+        lessonBufferMin: typeof policiesRaw.lessonBufferMin === "number" ? policiesRaw.lessonBufferMin : null,
+        sameDayBooking: policiesRaw.sameDayBooking === true,
+      }
+    : null;
+  const consultationRaw = raw.consultation && typeof raw.consultation === "object" && !Array.isArray(raw.consultation)
+    ? (raw.consultation as Record<string, unknown>)
+    : null;
+  const consultation: BackendTutorProfile["consultation"] = consultationRaw
+    ? {
+        enabled: consultationRaw.enabled === true,
+        durationMin: typeof consultationRaw.durationMin === "number" ? consultationRaw.durationMin : null,
+        priceVnd: typeof consultationRaw.priceVnd === "number" ? consultationRaw.priceVnd : null,
+        purpose: nullableString(consultationRaw.purpose),
+      }
+    : null;
+  const credentials = Array.isArray(raw.credentials)
+    ? (raw.credentials as BackendTutorProfile["credentials"])
+    : [];
+  const faqs = Array.isArray(raw.faqs)
+    ? (raw.faqs as BackendTutorProfile["faqs"])
+    : [];
+  const verificationStatus = raw.verificationStatus === "verified" || raw.verificationStatus === "pending_review"
+    ? raw.verificationStatus
+    : "none";
   return {
     id: raw.id as string,
     version: raw.version as number,
@@ -139,6 +242,22 @@ function recordFromFlat(raw: FlatTutorRecord): BackendTutorProfileRecord {
       availability: Array.isArray(raw.availability) ? (raw.availability as BackendTutorProfile["availability"]) : [],
       education: Array.isArray(raw.education) ? (raw.education as BackendTutorProfile["education"]) : [],
       experience: Array.isArray(raw.experience) ? (raw.experience as BackendTutorProfile["experience"]) : [],
+      role: nullableString(raw.role),
+      portfolioUrl: nullableString(raw.portfolioUrl),
+      lessonDescription: nullableString(raw.lessonDescription),
+      policies,
+      rates: ratesFrom(raw.rates),
+      displayDuration: typeof raw.displayDuration === "number" ? raw.displayDuration : null,
+      consultation,
+      credentials,
+      goals: stringArray(raw.goals),
+      ageGroups: stringArray(raw.ageGroups),
+      teachingStyles: stringArray(raw.teachingStyles),
+      faqs,
+      avatarUrl: nullableString(raw.avatarUrl),
+      introVideoUrl: nullableString(raw.introVideoUrl),
+      verified: raw.verified === true,
+      verificationStatus,
     },
   };
 }

@@ -5,7 +5,8 @@ type SweepResult = { data?: unknown; error?: unknown };
 const service = () => ({
   sweepRefundExecutions: vi.fn(async (): Promise<SweepResult> => ({ data: { claimed: 0 } })),
   sweepRefundReconciliations: vi.fn(async (): Promise<SweepResult> => ({ data: { claimed: 0 } })),
-  sweepPendingFinalizations: vi.fn(async (): Promise<SweepResult> => ({ data: { claimed: 0 } }))
+  sweepPendingFinalizations: vi.fn(async (): Promise<SweepResult> => ({ data: { claimed: 0 } })),
+  sweepExpiredWorkshopBookings: vi.fn(async (): Promise<SweepResult> => ({ data: { expired: 0 } }))
 });
 
 describe("financial worker runtime", () => {
@@ -18,6 +19,7 @@ describe("financial worker runtime", () => {
     expect(calls.sweepRefundExecutions).toHaveBeenCalledOnce();
     expect(calls.sweepRefundReconciliations).toHaveBeenCalledOnce();
     expect(calls.sweepPendingFinalizations).toHaveBeenCalledOnce();
+    expect(calls.sweepExpiredWorkshopBookings).toHaveBeenCalledOnce();
     expect(logs).toContain("error:financial_worker_sweep_failed");
   });
 
@@ -28,6 +30,7 @@ describe("financial worker runtime", () => {
     expect(calls.sweepRefundExecutions).toHaveBeenCalledOnce();
     expect(calls.sweepRefundReconciliations).toHaveBeenCalledOnce();
     expect(calls.sweepPendingFinalizations).toHaveBeenCalledOnce();
+    expect(calls.sweepExpiredWorkshopBookings).toHaveBeenCalledOnce();
   });
 
   it("stops the iteration when shutdown begins during the first sweep", async () => {
@@ -39,6 +42,7 @@ describe("financial worker runtime", () => {
     expect(calls.sweepRefundExecutions).toHaveBeenCalledOnce();
     expect(calls.sweepRefundReconciliations).not.toHaveBeenCalled();
     expect(calls.sweepPendingFinalizations).not.toHaveBeenCalled();
+    expect(calls.sweepExpiredWorkshopBookings).not.toHaveBeenCalled();
   });
 
   it("does not invoke the next sweep when shutdown occurs between sweeps", async () => {
@@ -51,6 +55,7 @@ describe("financial worker runtime", () => {
     expect(calls.sweepRefundExecutions).toHaveBeenCalledOnce();
     expect(calls.sweepRefundReconciliations).not.toHaveBeenCalled();
     expect(calls.sweepPendingFinalizations).not.toHaveBeenCalled();
+    expect(calls.sweepExpiredWorkshopBookings).not.toHaveBeenCalled();
   });
 
   it("does not invoke any sweep when shutdown is already active", async () => {
@@ -60,6 +65,7 @@ describe("financial worker runtime", () => {
     expect(calls.sweepRefundExecutions).not.toHaveBeenCalled();
     expect(calls.sweepRefundReconciliations).not.toHaveBeenCalled();
     expect(calls.sweepPendingFinalizations).not.toHaveBeenCalled();
+    expect(calls.sweepExpiredWorkshopBookings).not.toHaveBeenCalled();
   });
 
   it("does not overlap iterations and waits for in-flight work during shutdown", async () => {

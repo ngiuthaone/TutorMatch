@@ -12,9 +12,9 @@
 - `SOC-011` — Discussions: threaded, moderated, RLS-gated by community.
 - `SOC-012` — Articles/CMS: authored publishing workflow; distinct authoring surface; RLS.
 
-## 09.2 Messaging — POST-ALPHA
+## 09.2 Messaging — PROMOTED to ALPHA (1:1 booking-context core) via `DEC-015`
 
-- `MSG-010` — Direct host↔learner context messages; server-authoritative conversation+membership+RLS; idempotent send; moderation. (Reuse `18_events_notifications.md` `MSG-*`.)
+- `MSG-010` — Direct host↔learner context messages; server-authoritative conversation+membership+RLS; idempotent send; moderation. (Reuse `18_events_notifications.md` `MSG-*`.). **`DEC-015` RESOLVED (31 Aug 2026):** promotes the direct 1:1 host↔learner message core to Alpha. Groups/communities, file/attachment storage, polls/tasks/announcements, and realtime push (WebSocket/SSE) remain Post-Alpha (`DEC-015`, `AC-EVT2-003`, `NOTIF-011`).
 
 ## 09.3 Notifications — ALPHA: transactional only
 
@@ -52,7 +52,7 @@
 | Req ID | Req | Impl | Test | Acceptance | Evidence |
 |---|---|---|---|---|---|
 | SOC-010..012 | communities/discussions/articles | — | — | `AC-SOC-001` | SCOPE-004 |
-| MSG-010 | messaging | — | — | `AC-SOC-003` | SCOPE-004 |
+| MSG-010 | messaging (1:1 booking-context promoted via `DEC-015`) | — | — | `AC-SOC-003` | DEC-015 |
 | NOTIF-020 | transactional notif | events→notif | `TST-notif` | `AC-SOC-003` | EVT2/NOTIF |
 | REV-010 | reviews domain | — | — | `AC-SOC-002` | DEC-* |
 | PROF-010/011 | profiles+privacy | storage+api | `TST-leak` | `AC-SOC-004` | SEC-010 |

@@ -185,3 +185,24 @@
     grid-template-columns: 1fr;
   }
 }
+
+.errorState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary, #666);
+}
+
+.errorState p {
+  margin-bottom: 1rem;
+}
+
+.errorState button {
+  padding: 0.5rem 1.5rem;
+  background: var(--primary, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}

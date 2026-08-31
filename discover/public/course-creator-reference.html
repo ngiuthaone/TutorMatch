@@ -1333,7 +1333,8 @@
   <div id="toast" class="toast hidden"></div>
 <script>
 (() => {
-  const STORAGE='tutoria-udemy-complete-flow-v3';
+  const DRAFT_STORAGE='tutoria-published-courses-draft';
+  const STORAGE=DRAFT_STORAGE;
   const categories=['Development','Business','Finance & Accounting','IT & Software','Office Productivity','Personal Development','Design','Marketing','Lifestyle','Photography & Video','Health & Fitness','Music','Teaching & Academics'];
   const languages=['English','Vietnamese','French','German','Spanish','Japanese','Korean','Portuguese','Italian','Indonesian','Thai'];
   const captionLanguages=['English','Vietnamese','Chinese (Simplified)','Chinese (Traditional)','Japanese','Korean','French','German','Spanish','Portuguese','Italian','Dutch','Russian','Ukrainian','Polish','Czech','Romanian','Hungarian','Turkish','Arabic','Hebrew','Hindi','Bengali','Urdu','Tamil','Telugu','Marathi','Indonesian','Malay','Thai','Filipino','Swedish','Norwegian','Danish','Finnish','Greek','Swahili'];
@@ -1529,7 +1530,7 @@
   function pricingPage(){const amount=Number(priceDigits(state.priceTier));return pageHeader('Publish','Pricing','Choose free enrollment or set a one-time purchase price. Currency display and local price tiers can vary by market.')+`<div class="grid-2"><label class="radio-card"><input type="radio" name="priceMode" value="free" ${state.priceMode==='free'?'checked':''}><span><strong>Free</strong><span class="help" style="display:block">Anyone can enroll without payment. Free courses are limited to two hours of video in Udemy’s current model.</span></span></label><label class="radio-card"><input type="radio" name="priceMode" value="paid" ${state.priceMode==='paid'?'checked':''}><span><strong>Paid</strong><span class="help" style="display:block">Learners pay once for ongoing access.</span></span></label></div>${state.priceMode==='paid'?`<section class="panel" style="margin-top:20px"><label><span class="label">Course price</span><div class="price-input-wrap"><span class="price-prefix">VND</span><input class="field price-input" inputmode="numeric" data-bind="priceTier" value="${esc(state.priceTier)}" placeholder="499,000"></div><div class="help">Learner display: ${amount?displayPrice(state.priceTier):'Enter an amount'} · Marketplaces may map this to local pricing tiers.</div></label><div class="grid-2" style="margin-top:18px"><label class="check-card"><input type="checkbox" data-bind-checkbox="premiumInstructor" ${state.premiumInstructor?'checked':''}><span><strong>Premium instructor approved</strong><span class="help" style="display:block">Required to charge for a course.</span></span></label><label class="check-card"><input type="checkbox" data-bind-checkbox="payoutReady" ${state.payoutReady?'checked':''}><span><strong>Payout method configured</strong><span class="help" style="display:block">Needed before paid earnings can be disbursed.</span></span></label><label class="check-card"><input type="checkbox" data-bind-checkbox="taxInfo" ${state.taxInfo?'checked':''}><span><strong>Tax information submitted</strong><span class="help" style="display:block">Tax documentation may be required based on account and country.</span></span></label><label class="check-card"><input type="checkbox" data-bind-checkbox="deals" ${state.deals?'checked':''}><span><strong>Participate in marketplace deals</strong><span class="help" style="display:block">Allow eligible promotional pricing.</span></span></label></div></section>`:`<div class="info warning" style="margin-top:20px"><i data-lucide="clock-3" class="icon"></i><div><strong>Free-course video limit</strong><div class="help">This prototype warns when video content exceeds 120 minutes. Current video total: ${videoMinutes()} minutes.</div></div></div>`}` }
   function promotionsPage(){return pageHeader('Publish','Promotions','Use your instructor referral link and create targeted coupons after the course is approved and published.',`<button class="btn" data-bulk-coupon><i data-lucide="file-up" class="icon"></i>Bulk coupon CSV</button>`)+`<section class="section"><h2 class="section-title">Instructor referral link</h2><p class="section-desc">Share this unique link to attribute eligible sales to your own marketing.</p><div class="row promotions-link-row"><input class="field" readonly value="https://tutoria.vn/course/${slug(state.title)}?ref=instructor"><button class="btn" data-copy-link>Copy</button></div></section><section class="section"><div class="row between"><div><h2 class="section-title">Coupons</h2><p class="section-desc">Create best-price, custom-price, or free coupons with an expiration date and redemption limit.</p></div><button class="btn" data-add-coupon><i data-lucide="plus" class="icon"></i>New coupon</button></div><div class="coupon-table"><div class="coupon-row coupon-head"><span>Code</span><span>Type</span><span>Price</span><span>Expires</span><span>Redemptions</span><span></span></div>${state.coupons.length?state.coupons.map(coupon=>`<div class="coupon-row"><strong>${esc(coupon.code)}</strong><span>${esc(coupon.type)}</span><span>${esc(coupon.price||'—')}</span><span>${esc(coupon.expires)}</span><span>${Number(coupon.used)||0}/${Number(coupon.limit)||1000}</span><button class="icon-btn" data-remove-coupon="${coupon.id}"><i data-lucide="trash-2" class="icon"></i></button></div>`).join(''):`<div class="caption-empty-list"><i data-lucide="ticket" class="icon"></i><strong>No coupons yet</strong><span>Create one manually or import a CSV.</span></div>`}</div></section>`}
   function messagesPage(){const preview=state.messagePreview==='completion'?state.completion:state.welcome;return pageHeader('Publish','Course messages','Optional messages are sent automatically when a learner enrolls and when they complete the course.')+`<div class="info"><i data-lucide="shield-check" class="icon"></i><div><strong>Keep these messages course-focused</strong><div class="help">Do not include coupon codes, unrelated promotions, or requests to move learners away from the learning experience.</div></div></div><div class="grid-2" style="margin-top:22px"><div class="stack"><label><div class="row between"><span class="label">Welcome message</span><span class="count">${state.welcome.length}/1000</span></div><textarea class="field" maxlength="1000" data-bind="welcome" style="min-height:190px" placeholder="Welcome learners and tell them how to begin.">${esc(state.welcome)}</textarea></label><label><div class="row between"><span class="label">Congratulations message</span><span class="count">${state.completion.length}/1000</span></div><textarea class="field" maxlength="1000" data-bind="completion" style="min-height:190px" placeholder="Celebrate completion and suggest appropriate next steps.">${esc(state.completion)}</textarea></label></div><aside class="message-preview"><div class="preview-tabs"><button class="preview-tab ${state.messagePreview!=='completion'?'active':''}" data-message-preview="welcome">Welcome</button><button class="preview-tab ${state.messagePreview==='completion'?'active':''}" data-message-preview="completion">Completion</button></div><div class="message-bubble"><div class="preview-avatar">${esc((state.instructor.name||'I')[0])}</div><div><strong>${esc(state.instructor.name||'Instructor')}</strong><p>${esc(preview||'Your message preview appears here.')}</p></div></div></aside></div>`}
-  function reviewPage(){const checks=reviewChecks(),completed=checks.filter(check=>check.done).length,percent=Math.round(completed/checks.length*100);return pageHeader('Publish','Submit for review','Resolve every required item, confirm ownership and identity, then submit the course to the quality review queue.')+`<div class="grid-2"><div class="panel panel-soft"><div class="review-percent">${percent}%</div><strong>Ready for review</strong><div class="help">${completed} of ${checks.length} submission requirements complete.</div><div class="curriculum-meter" style="margin-top:16px"><span style="width:${percent}%"></span></div></div><div class="panel"><label><span class="label">Course URL</span><div class="url-field"><span>tutoria.vn/course/</span><input class="field" data-bind="courseUrl" value="${esc(state.courseUrl)}" placeholder="${slug(state.title)}"></div></label><div class="help">The URL must be unique and should remain stable after publication.</div></div></div><div class="panel" style="margin-top:22px">${checks.map(check=>`<div class="review-row ${check.done?'done':''}"><div class="review-icon">${check.done?'✓':'!'}</div><div><div class="review-title">${check.label}</div><div class="review-detail">${check.detail}</div></div>${check.target?`<button class="btn btn-sm" data-page-link="${check.target}">${check.done?'Review':'Fix'}</button>`:''}</div>`).join('')}</div><section class="section" style="margin-top:22px"><div class="grid-2"><label class="check-card"><input type="checkbox" data-bind-checkbox="identityVerified" ${state.identityVerified?'checked':''}><span><strong>Identity verification completed</strong><span class="help" style="display:block">Required before the first marketplace publication.</span></span></label><label class="check-card"><input type="checkbox" data-bind-checkbox="termsAccepted" ${state.termsAccepted?'checked':''}><span><strong>I own or have permission to use all content</strong><span class="help" style="display:block">Includes video, audio, images, code, downloads, trademarks, and third-party material.</span></span></label></div></section>${state.reviewStatus==='submitted'?`<div class="info success"><i data-lucide="send" class="icon"></i><div><strong>Submitted for quality review</strong><div class="help">Submitted ${esc(state.submittedAt)}. Review status is stored locally in this prototype.</div></div></div>`:`<div class="review-submit"><div><strong>${allReviewReady()?'Your course is ready':'Complete the remaining requirements'}</strong><div class="help">A reviewer checks technical quality, landing-page accuracy, policy compliance, and learner experience.</div></div><button class="btn btn-primary" data-submit-review ${allReviewReady()?'':'disabled'}><i data-lucide="send" class="icon"></i>Submit for review</button></div>`}` }
+  function reviewPage(){const checks=reviewChecks(),completed=checks.filter(check=>check.done).length,percent=Math.round(completed/checks.length*100);return pageHeader('Publish','Submit for review','Resolve every required item, confirm ownership and identity, then submit the course to the quality review queue.')+`<div class="grid-2"><div class="panel panel-soft"><div class="review-percent">${percent}%</div><strong>Ready for review</strong><div class="help">${completed} of ${checks.length} submission requirements complete.</div><div class="curriculum-meter" style="margin-top:16px"><span style="width:${percent}%"></span></div></div><div class="panel"><label><span class="label">Course URL</span><div class="url-field"><span>tutoria.vn/course/</span><input class="field" data-bind="courseUrl" value="${esc(state.courseUrl)}" placeholder="${slug(state.title)}"></div></label><div class="help">The URL must be unique and should remain stable after publication.</div></div></div><div class="panel" style="margin-top:22px">${checks.map(check=>`<div class="review-row ${check.done?'done':''}"><div class="review-icon">${check.done?'✓':'!'}</div><div><div class="review-title">${check.label}</div><div class="review-detail">${check.detail}</div></div>${check.target?`<button class="btn btn-sm" data-page-link="${check.target}">${check.done?'Review':'Fix'}</button>`:''}</div>`).join('')}</div><section class="section" style="margin-top:22px"><div class="grid-2"><label class="check-card"><input type="checkbox" data-bind-checkbox="identityVerified" ${state.identityVerified?'checked':''}><span><strong>Identity verification completed</strong><span class="help" style="display:block">Required before the first marketplace publication.</span></span></label><label class="check-card"><input type="checkbox" data-bind-checkbox="termsAccepted" ${state.termsAccepted?'checked':''}><span><strong>I own or have permission to use all content</strong><span class="help" style="display:block">Includes video, audio, images, code, downloads, trademarks, and third-party material.</span></span></label></div></section>${state.reviewStatus==='submitted'?`<div class="info success"><i data-lucide="send" class="icon"></i><div><strong>Submitted for quality review</strong><div class="help">Submitted ${esc(state.submittedAt)}. The course has been saved to the demo store at /api/courses.</div></div></div>`:`<div class="review-submit"><div><strong>${allReviewReady()?'Your course is ready':'Complete the remaining requirements'}</strong><div class="help">A reviewer checks technical quality, landing-page accuracy, policy compliance, and learner experience.</div></div><button class="btn btn-primary" data-submit-review ${allReviewReady()?'':'disabled'}><i data-lucide="send" class="icon"></i>Submit for review</button></div>`}` }
   function footerTemplate(){const pages=getPageList(),idx=pages.findIndex(p=>p.id===state.currentPage),last=idx===pages.length-1;return `<footer class="page-footer"><div class="page-footer-inner"><div class="row"><button class="btn btn-ghost" data-prev-page ${idx===0?'disabled':''}><i data-lucide="chevron-left" class="icon"></i>Previous</button><span class="save-state"><span data-save-label>${state.saveStatus}</span></span></div><div class="row"><button class="btn" data-save>Save</button>${last?`<button class="btn btn-primary" data-submit-review ${allReviewReady()&&state.reviewStatus!=='submitted'?'':'disabled'}>Submit for review</button>`:`<button class="btn btn-primary" data-next-page>Save & continue<i data-lucide="chevron-right" class="icon"></i></button>`}</div></div></footer>`}
   function bindManager(){
     document.querySelectorAll('[data-page-link]').forEach(button=>button.onclick=()=>{state.currentPage=button.dataset.pageLink;render()});
@@ -1675,7 +1676,122 @@
     {label:'Course URL is set',detail:state.courseUrl||'Choose a unique URL slug.',done:Boolean(state.courseUrl.trim()),target:null}
   ];return list}
   function allReviewReady(){return reviewChecks().every(c=>c.done)}
-  function submitReview(){if(!allReviewReady())return showToast('Complete every required item first');state.reviewStatus='submitted';state.submittedAt=new Date().toLocaleString();persist();render();showToast('Course submitted for review')}
+  function submitReview(){if(!allReviewReady())return showToast('Complete every required item first');state.reviewStatus='submitted';state.submittedAt=new Date().toLocaleString();persist();render();showToast('Course submitted for review');publishCourse().catch(error=>{console.error('Course publish failed',error);const message=error&&error.message?error.message:'Could not publish this course. Please try again.';showToast(message);return})}
+  async function publishCourse(){
+    const slugValue=slug(state.courseUrl||state.title);
+    if(!slugValue)return;
+    const course={
+      slug:slugValue,
+      title:state.title.trim(),
+      instructor:(state.instructor.name||'Tutoria creator').trim(),
+      category:state.category||'General',
+      lessons:allItems().length,
+      duration:videoMinutes()?(Math.max(1,Math.round(videoMinutes()/60))+'h'):'0h',
+      rating:0,
+      students:0,
+      level:state.level||'All levels',
+      price:state.priceMode==='free'?'Free':displayPrice(state.priceTier),
+      image:state.coverUrl||'',
+      subtitle:state.subtitle.trim()||state.title.trim(),
+      reviewCount:0,
+      updated:new Date().toLocaleString('en-US',{month:'long',year:'numeric'}),
+      language:state.language||'English',
+      certificate:state.courseSettings?.certificate!==false,
+      description:state.description?state.description.split(/\n+/).map(line=>line.trim()).filter(Boolean):[],
+      outcomes:state.outcomes.filter(value=>value.trim()),
+      requirements:state.prerequisites.filter(value=>value.trim()),
+      faqs:state.faqs.filter(faq=>faq.question.trim()&&faq.answer.trim()).map(faq=>({question:faq.question.trim(),answer:faq.answer.trim()})),
+      curriculum:state.sections.filter(section=>section.title.trim()).map(section=>({title:section.title.trim(),duration:section.items.reduce((n,item)=>n+(Number(item.videoMinutes)||0),0)+'m',lessons:section.items.filter(item=>item.title.trim()).map(item=>item.title.trim())})),
+      instructorRole:state.instructor.headline||'Course creator',
+      instructorBio:state.instructor.bio||'',
+      instructorImage:state.instructor.photoUrl||'',
+      reviews:[],
+      submittedAt:new Date().toISOString(),
+      visibility:state.privacy||'Public'
+    };
+    // Live mode: hand the publish off to the authenticated parent page, which
+    // holds the session and posts to the production backend. The iframe never
+    // sees the access token. The parent's reply resolves this promise; the
+    // localStorage mirror is written only after a successful backend ack.
+    if(isLiveCreatorMode()){
+      try{
+        const reply=await requestParentPublish(course);
+        showToast('Course published. Opening its public page…');
+        mirrorPublishedCourse(course);
+        const item=reply&&typeof reply==='object'?reply.item:null;
+        if(item&&typeof item.slug==='string'){
+          window.parent.postMessage({type:'tutoria-course-published',slug:item.slug},window.location.origin);
+          setTimeout(()=>{window.top.location.href='/courses/'+item.slug;},450);
+        }
+        return;
+      }catch(parentError){
+        console.error('Course publish failed',parentError);
+        throw parentError;
+      }
+    }
+    const response=await fetch('/api/courses',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(course)});
+    if(!response.ok){
+      const text=await response.text().catch(()=>'');
+      throw new Error('Publish failed ('+response.status+'): '+(text||'unknown error'));
+    }
+    mirrorPublishedCourse(course);
+    showToast('Course saved to the demo store at /api/courses');
+  }
+
+  /* Live-mode publish bridge: the parent holds the Supabase session and calls
+     POST /api/v1/marketplace/course with the bearer token. The iframe never
+     sees the token. Origin + source are validated by the parent before any
+     reply is acted on (see src/app/courses/new/page.tsx). */
+  function isLiveCreatorMode(){
+    try{
+      const params=new URLSearchParams(window.location.search);
+      const apiBase=params.get('apiBaseUrl');
+      return Boolean(apiBase&&window.parent&&window.parent!==window);
+    }catch{return false}
+  }
+  function requestParentPublish(course){
+    return new Promise((resolve,reject)=>{
+      const requestId='tutoria-course-publish-'+id();
+      const parent=window.parent;
+      if(!parent||parent===window)return reject(new Error('No parent frame is available.'));
+      const timeout=setTimeout(()=>{window.removeEventListener('message',onMessage);reject(new Error('The publish request timed out.'))},20000);
+      function onMessage(event){
+        if(event.origin!==window.location.origin)return;
+        if(event.source!==parent)return;
+        const data=event.data;
+        if(!data||typeof data!=='object')return;
+        if(data.requestId!==requestId)return;
+        if(data.type==='tutoria-course-published'&&data.item){
+          clearTimeout(timeout);
+          window.removeEventListener('message',onMessage);
+          resolve({ok:true,item:data.item});
+          return;
+        }
+        if(data.type==='tutoria-course-publish-error'){
+          clearTimeout(timeout);
+          window.removeEventListener('message',onMessage);
+          reject(new Error(typeof data.message==='string'?data.message:'Publish failed.'));
+          return;
+        }
+        if(data.type==='tutoria-course-demo'){
+          clearTimeout(timeout);
+          window.removeEventListener('message',onMessage);
+          reject(new Error('Live publishing is unavailable in this build.'));
+          return;
+        }
+      }
+      window.addEventListener('message',onMessage);
+      try{parent.postMessage({type:'tutoria-course-publish',requestId,course},window.location.origin)}catch(sendError){clearTimeout(timeout);window.removeEventListener('message',onMessage);reject(sendError)}
+    });
+  }
+  function mirrorPublishedCourse(course){
+    try{
+      const published=JSON.parse(window.localStorage.getItem('tutoria-published-courses')||'[]');
+      const next=[course,...(Array.isArray(published)?published.filter(item=>item.slug!==course.slug):[])];
+      window.localStorage.setItem('tutoria-published-courses',JSON.stringify(next));
+      window.dispatchEvent(new Event('tutoria-published-courses-change'));
+    }catch(error){console.warn('Could not mirror published course into local cache',error)}
+  }
   function openPreview(tab=state.previewTab||'landing',itemId=state.previewItemId||''){state.previewTab=tab;const visibleFaqs=state.faqs.filter(faq=>faq.question.trim()&&faq.answer.trim()),previewItems=allItems().filter(item=>item.published),firstPreview=previewItems.find(item=>item.id===itemId)||lectures().find(item=>item.freePreview)||previewItems[0]||lectures()[0];if(firstPreview)state.previewItemId=firstPreview.id;const landing=`<div><div class="preview-hero"><div class="preview-grid"><div><div class="preview-breadcrumb">${esc(state.category||'Category')} › ${esc(state.subcategory||'Subcategory')}</div><h1 class="preview-title">${esc(state.title||'Your course title')}</h1><p class="preview-sub">${esc(state.subtitle||'Your subtitle will appear here.')}</p><div class="preview-meta">${esc(state.language||'Language')} · ${esc(state.level||'Level')} · ${videoMinutes()} minutes</div><div class="preview-instructor-line">Created by ${esc(state.instructor.name||'Instructor')}</div></div><aside class="preview-buy"><div class="preview-image">${state.coverUrl?`<img src="${state.coverUrl}">`:'Course image'}</div><div class="preview-buy-body"><div class="preview-price">${state.priceMode==='free'?'Free':displayPrice(state.priceTier)}</div><button class="btn btn-primary" data-preview-enroll style="width:100%;margin-top:14px">Enroll now</button><div class="help" style="text-align:center">30-day money-back guarantee</div></div></aside></div></div><div class="preview-body"><div class="preview-box"><h3>What you’ll learn</h3><div class="learn-grid">${state.outcomes.filter(value=>value.trim()).map(value=>`<div class="learn-item"><i data-lucide="check" class="icon"></i><span>${esc(value)}</span></div>`).join('')||'<div class="help">Add learning outcomes.</div>'}</div></div><div class="preview-box"><h3>Course content</h3><div class="help">${state.sections.length} sections · ${allItems().length} lectures and activities · ${videoMinutes()} minutes</div>${state.sections.map(section=>`<details class="faq-preview-item"><summary>${esc(section.title||'Untitled section')} <span>${section.items.length} items</span></summary><div class="faq-preview-answer">${section.items.map(item=>`<div class="preview-content-row"><span>${esc(item.title||itemName(item.type))}</span><small>${item.freePreview?'Preview':itemName(item.type)}</small></div>`).join('')}</div></details>`).join('')}</div><div class="preview-box"><h3>Description</h3><div class="preview-description">${esc(state.description||'Add a course description.')}</div></div><div class="preview-box"><h3>Instructor</h3><div class="preview-instructor"><div class="preview-avatar">${state.instructor.photoUrl?`<img src="${state.instructor.photoUrl}">`:esc((state.instructor.name||'I')[0])}</div><div><strong>${esc(state.instructor.name||'Instructor')}</strong><div>${esc(state.instructor.headline||'Instructor headline')}</div><p>${esc(state.instructor.bio||'Instructor biography')}</p></div></div></div>${visibleFaqs.length?`<div class="preview-box"><h3>Frequently asked questions</h3>${visibleFaqs.map((faq,index)=>`<details class="faq-preview-item" ${index===0?'open':''}><summary>${esc(faq.question)}</summary><div class="faq-preview-answer">${esc(faq.answer)}</div></details>`).join('')}</div>`:''}</div></div>`;const content=`<div class="course-player-preview"><div class="player-main"><div class="player-screen"><i data-lucide="play-circle" class="player-icon"></i><strong>${esc(firstPreview?.title||'Course preview')}</strong><p>${firstPreview?.fileName?esc(firstPreview.fileName):'Upload a video to preview the course player.'}</p></div><div class="player-info"><h2>${esc(firstPreview?.title||'Select a lecture')}</h2><p>${esc(firstPreview?.description||'Lecture details appear here.')}</p></div></div><aside class="player-curriculum"><div class="player-curriculum-head">Course content</div>${state.sections.map(section=>`<div class="player-section"><strong>${esc(section.title||'Untitled section')}</strong>${section.items.map(item=>`<button class="${firstPreview?.id===item.id?'active':''}" data-player-item="${item.id}"><i data-lucide="${itemIcon(item.type)}" class="icon"></i><span>${esc(item.title||itemName(item.type))}</span><small>${item.published?'Ready':'Draft'}</small></button>`).join('')}</div>`).join('')}</aside></div>`;modalRoot.innerHTML=`<div class="modal"><div class="modal-card preview-modal"><div class="modal-head"><div><strong>Learner preview</strong><div class="help">Preview the landing page and enrolled course experience.</div></div><button class="icon-btn" data-close-modal><i data-lucide="x" class="icon"></i></button></div><div class="preview-tabs modal-preview-tabs"><button class="preview-tab ${tab==='landing'?'active':''}" data-preview-tab="landing">Landing page</button><button class="preview-tab ${tab==='content'?'active':''}" data-preview-tab="content">Course content</button></div>${tab==='content'?content:landing}</div></div>`;document.querySelector('[data-close-modal]').onclick=closeModal;document.querySelectorAll('[data-preview-tab]').forEach(button=>button.onclick=()=>openPreview(button.dataset.previewTab,state.previewItemId));document.querySelectorAll('[data-player-item]').forEach(button=>button.onclick=()=>openPreview('content',button.dataset.playerItem));const enroll=document.querySelector('[data-preview-enroll]');if(enroll)enroll.onclick=()=>showToast('Enrollment is disabled in creator preview');lucide.createIcons()}
   function closeModal(){modalRoot.innerHTML=''}
   function showToast(message){toast.textContent=message;toast.classList.remove('hidden');clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.add('hidden'),2200)}
