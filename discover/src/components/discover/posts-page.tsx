@@ -433,24 +433,25 @@ function PostsTab({ searchQuery, feedMode }: {
                         <IconRepeat size={18} />
                         <span className="tabular-nums">{(post.reposts ?? Math.max(1, Math.round(post.comments / 8))) + (isReposted ? 1 : 0)}</span>
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); handleShare(post.id); }}
-                        ref={shareOpen === post.id ? shareRef : undefined}
-                        className={styles.action} aria-label="Share post">
-                        <IconShare size={18} />
-                        <span className="tabular-nums">{post.shares ?? Math.max(1, Math.round(post.likes / 36))}</span>
-                      </button>
-                      {shareOpen === post.id && (
-                        <div className="absolute right-0 bottom-full mb-2 w-48 rounded-xl border border-border bg-background shadow-lg p-1 z-20">
-                          <button onClick={(e) => { e.stopPropagation(); copyLink(post.id); }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
-                            <IconLink size={14} /> Copy link
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); copyLink(post.id); }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
-                            <IconShare size={14} /> Share via...
-                          </button>
-                        </div>
-                      )}
+                      <div className="relative" ref={shareOpen === post.id ? shareRef : undefined}>
+                        <button onClick={(e) => { e.stopPropagation(); handleShare(post.id); }}
+                          className={styles.action} aria-label="Share post">
+                          <IconShare size={18} />
+                          <span className="tabular-nums">{post.shares ?? Math.max(1, Math.round(post.likes / 36))}</span>
+                        </button>
+                        {shareOpen === post.id && (
+                          <div className="absolute right-0 bottom-full mb-2 w-48 rounded-xl border border-border bg-background shadow-lg p-1 z-20">
+                            <button onClick={(e) => { e.stopPropagation(); copyLink(post.id); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
+                              <IconLink size={14} /> Copy link
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); copyLink(post.id); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
+                              <IconShare size={14} /> Share via...
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
               </div>
@@ -493,7 +494,7 @@ function PostsTab({ searchQuery, feedMode }: {
 
       {selectedPost && (
         <ThreadModal post={selectedPost} onClose={() => setSelectedPost(null)}
-          likes={liked} saves={saved} onLike={toggleLike} onSave={toggleSave} following={following} onFollow={toggleFollow}
+          likes={liked} saves={saved} reposts={reposts} onLike={toggleLike} onSave={toggleSave} onRepost={toggleRepost} following={following} onFollow={toggleFollow}
           onCommentUpdate={() => { setPublishedPosts(getPublishedPosts()); }} />
       )}
     </>
@@ -550,17 +551,46 @@ function ComposeModal({ userName, onClose, onPost }: { userName: string; onClose
   );
 }
 
-function ThreadModal({ post, onClose, likes, saves, onLike, onSave, following, onFollow, onCommentUpdate }: {
-  post: typeof POSTS[0]; onClose: () => void;
-  likes: Set<string>; saves: Set<string>; onLike: (id: string) => void; onSave: (id: string) => void;
+function ThreadModal({ post, onClose, likes, saves, reposts, onLike, onSave, onRepost, following, onFollow, onCommentUpdate }: {
+  post: FeedPost; onClose: () => void;
+  likes: Set<string>; saves: Set<string>; reposts: Set<string>; onLike: (id: string) => void; onSave: (id: string) => void; onRepost: (id: string) => void;
   following: string[]; onFollow: (name: string, e: React.MouseEvent) => void;
   onCommentUpdate?: () => void;
 }) {
   const router = useRouter();
+  const [shareOpen, setShareOpen] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
   const comments = postComments[post.id] || [];
   const isLiked = likes.has(post.id);
   const isSaved = saves.has(post.id);
+  const isReposted = reposts.has(post.id);
   const isFollowing = following.includes(post.author);
+
+  const copyLink = useCallback(async () => {
+    const url = `${window.location.origin}/discussions?post=${post.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const input = document.createElement("input");
+      input.value = url;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+    }
+    setShareOpen(false);
+  }, [post.id]);
+
+  useEffect(() => {
+    if (!shareOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setShareOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [shareOpen]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto" onClick={onClose}>
@@ -611,13 +641,33 @@ function ThreadModal({ post, onClose, likes, saves, onLike, onSave, following, o
                   <IconMessage2 size={15} />
                   <span className="tabular-nums">{post.comments}</span>
                 </div>
+                <button onClick={() => onRepost(post.id)}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors ${isReposted ? "text-emerald-400 bg-emerald-50 dark:bg-emerald-900/10" : "hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:text-emerald-400"}`}>
+                  <IconRepeat size={15} />
+                  <span className="tabular-nums">{(post.reposts ?? Math.max(1, Math.round(post.comments / 8))) + (isReposted ? 1 : 0)}</span>
+                </button>
                 <button onClick={() => onSave(post.id)}
                   className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ml-auto transition-colors ${isSaved ? "text-primary bg-primary/5" : "hover:bg-surface hover:text-foreground"}`}>
                   {isSaved ? <IconBookmarkFilled size={15} /> : <IconBookmark size={15} />}
                 </button>
-                <button className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-surface hover:text-foreground transition-colors">
-                  <IconShare size={15} />
-                </button>
+                <div className="relative" ref={shareRef}>
+                  <button onClick={() => setShareOpen((v) => !v)}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-surface hover:text-foreground transition-colors">
+                    <IconShare size={15} />
+                  </button>
+                  {shareOpen && (
+                    <div className="absolute right-0 bottom-full mb-2 w-48 rounded-xl border border-border bg-background shadow-lg p-1 z-20">
+                      <button onClick={copyLink}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
+                        <IconLink size={14} /> Copy link
+                      </button>
+                      <button onClick={copyLink}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
+                        <IconShare size={14} /> Share via...
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -770,6 +820,7 @@ function BlogsTab({ searchQuery, feedMode }: {
 
       {allFeed.slice(0, visibleCount).map((blog) => {
         const avatar = blog.avatar || `https://picsum.photos/seed/${encodeURIComponent(blog.author)}-avatar/60/60`;
+        const isReposted = reposts.has(blog.id);
         return (
           <article key={blog.id} role="button" tabIndex={0}
             onClick={() => router.push(`/discussions/blogs/${blog.id}`)}
@@ -798,8 +849,30 @@ function BlogsTab({ searchQuery, feedMode }: {
               <div className={styles.postActions}>
                 <button onClick={(e) => e.stopPropagation()} className={styles.action} aria-label="Like article"><IconHeart size={17} /><span>{blog.likes}</span></button>
                 <button onClick={(e) => e.stopPropagation()} className={styles.action} aria-label="View article replies"><IconMessage2 size={17} /><span>{blog.comments}</span></button>
-                <button onClick={(e) => e.stopPropagation()} className={styles.action} aria-label="Repost article"><IconRepeat size={18} /><span>{Math.max(1, Math.round(blog.comments / 8))}</span></button>
-                <button onClick={(e) => e.stopPropagation()} className={styles.action} aria-label="Share article"><IconShare size={18} /><span>{Math.max(1, Math.round(blog.likes / 36))}</span></button>
+                <button onClick={(e) => { e.stopPropagation(); toggleRepost(blog.id); }}
+                  className={`${styles.action} ${isReposted ? styles.actionReposted : ""}`} aria-label={`${isReposted ? "Unrepost" : "Repost"} article`}>
+                  <IconRepeat size={18} />
+                  <span className="tabular-nums">{Math.max(1, Math.round(blog.comments / 8)) + (isReposted ? 1 : 0)}</span>
+                </button>
+                <div className="relative" ref={shareOpen === blog.id ? shareRef : undefined}>
+                  <button onClick={(e) => { e.stopPropagation(); handleShare(blog.id); }}
+                    className={styles.action} aria-label="Share article">
+                    <IconShare size={18} />
+                    <span className="tabular-nums">{Math.max(1, Math.round(blog.likes / 36))}</span>
+                  </button>
+                  {shareOpen === blog.id && (
+                    <div className="absolute right-0 bottom-full mb-2 w-48 rounded-xl border border-border bg-background shadow-lg p-1 z-20">
+                      <button onClick={(e) => { e.stopPropagation(); copyLink(blog.id); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
+                        <IconLink size={14} /> Copy link
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); copyLink(blog.id); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
+                        <IconShare size={14} /> Share via...
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </article>
