@@ -189,7 +189,7 @@ export function ArticleEditorPage({ articleId }: ArticleEditorPageProps) {
       <main className="flex-1">
         <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
           <div className="flex items-center justify-between mb-5">
-            <Link href="/threads" className="text-xs text-[#6b7280] hover:text-[#9ca3af]">&larr; Back</Link>
+            <Link href="/articles" className="text-xs text-[#6b7280] hover:text-[#9ca3af]">&larr; Back</Link>
             <div className="flex items-center gap-3">
               <span className="text-xs text-[#6b7280]">{saving ? "Saving…" : draftId ? "Saved" : ""}</span>
               <span className="text-xs text-[#6b7280]">{estimatedReadingMinutes} min read</span>

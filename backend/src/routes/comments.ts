@@ -7,7 +7,7 @@ import type { CommentService } from "../services/comment-service.js";
 const noStore = async (_request: unknown, reply: any, payload: unknown) => { reply.header("Cache-Control", "no-store"); return payload; };
 
 const createCommentSchema = z.object({
-  ownerType: z.enum(["thread", "article"]),
+  ownerType: z.enum(["article"]),
   ownerId: z.string().uuid(),
   body: z.string().min(1).max(2000),
   parentId: z.string().uuid().nullable().optional(),
@@ -15,7 +15,7 @@ const createCommentSchema = z.object({
 
 const idParamSchema = z.string().uuid();
 const listQuerySchema = z.object({
-  ownerType: z.enum(["thread", "article"]),
+  ownerType: z.enum(["article"]),
   ownerId: z.string().uuid(),
 });
 
@@ -26,7 +26,7 @@ export const commentRoutes: FastifyPluginAsync<{
   readMax: number;
   windowMs: number;
 }> = async (app, options) => {
-  // Public comment list for an owner (thread or article).
+  // Public comment list for an owner (article).
   app.get("/api/v1/comments", { config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } }, onSend: noStore }, async (request) => {
     const parsed = listQuerySchema.safeParse(request.query);
     if (!parsed.success) throw new ApiError(400, "INVALID_QUERY", "Invalid comment query parameters.");

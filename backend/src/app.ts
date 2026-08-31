@@ -23,10 +23,8 @@ import { adminRoutes } from "./routes/admin.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
 import { messagingRoutes } from "./routes/messaging.js";
 import { createSupabaseMessagingService, type MessagingService } from "./services/messaging-service.js";
-import { createSupabaseThreadService, type ThreadService } from "./services/thread-service.js";
 import { createSupabaseArticleService, type ArticleService } from "./services/article-service.js";
 import { createSupabaseCommentService, type CommentService } from "./services/comment-service.js";
-import { threadRoutes } from "./routes/threads.js";
 import { articleRoutes } from "./routes/articles.js";
 import { commentRoutes } from "./routes/comments.js";
 import type { AuthService } from "./services/auth-service.js";
@@ -48,7 +46,6 @@ export function createApp(options: {
   complianceService?: ReturnType<typeof createComplianceService>;
   payoutService?: ReturnType<typeof createPayoutService>;
   adminService?: ReturnType<typeof createAdminService>;
-  threadService?: ThreadService;
   articleService?: ArticleService;
   commentService?: CommentService;
   messagingService?: MessagingService;
@@ -73,7 +70,6 @@ export function createApp(options: {
   }
   app.register(marketplaceRoutes, { authService: options.authService, marketplaceService: options.marketplaceService ?? createSupabaseMarketplaceService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY), publishMax: options.config.COURSE_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.COURSE_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   app.register(eventPublicationRoutes, { authService: options.authService, eventService: options.eventService ?? createSupabaseEventPublicationService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.EVENT_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.EVENT_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
-  app.register(threadRoutes, { authService: options.authService, threadService: options.threadService ?? createSupabaseThreadService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.THREAD_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.THREAD_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   app.register(articleRoutes, { authService: options.authService, articleService: options.articleService ?? createSupabaseArticleService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.ARTICLE_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.ARTICLE_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS, allowedImageHosts: options.config.ALLOWED_IMAGE_HOSTS ?? [] });
   app.register(commentRoutes, { authService: options.authService, commentService: options.commentService ?? createSupabaseCommentService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.COMMENT_RATE_LIMIT_MAX, readMax: options.config.ARTICLE_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.bookingService) app.register(bookingRoutes, { service: options.bookingService });

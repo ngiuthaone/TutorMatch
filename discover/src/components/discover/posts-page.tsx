@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { IconHeart, IconHeartFilled, IconMessage2, IconBookmark, IconBookmarkFilled, IconShare, IconRepeat, IconX, IconPlus, IconUserPlus, IconUserCheck, IconSearch, IconHome, IconBell, IconUser, IconMenu2, IconDots } from "@tabler/icons-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { IconHeart, IconHeartFilled, IconMessage2, IconBookmark, IconBookmarkFilled, IconShare, IconRepeat, IconX, IconPlus, IconUserPlus, IconUserCheck, IconSearch, IconHome, IconBell, IconUser, IconMenu2, IconDots, IconLink, IconCheck } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PostComposer } from "@/components/discussion/post-composer";
@@ -18,6 +18,8 @@ interface FeedPost {
   image?: string | null;
   likes: number;
   comments: number;
+  reposts?: number;
+  shares?: number;
   tags: string[];
   createdAt: string;
   title?: string;
@@ -188,7 +190,7 @@ function PostsTab({ searchQuery, feedMode }: {
 }) {
   const router = useRouter();
   const [visibleCount, setVisibleCount] = useState(10);
-  const [selectedPost, setSelectedPost] = useState<typeof POSTS[0] | null>(null);
+  const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
   const [showCompose, setShowCompose] = useState(false);
   const [composePreselect, setComposePreselect] = useState<string | undefined>();
 
@@ -198,6 +200,11 @@ function PostsTab({ searchQuery, feedMode }: {
   const [saves, setSaves] = useState<Set<string>>(() => {
     try { return new Set(JSON.parse(localStorage.getItem("tutoria_saves") || "[]")); } catch { return new Set(); }
   });
+  const [reposts, setReposts] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("tutoria_reposts") || "[]")); } catch { return new Set(); }
+  });
+  const [shareOpen, setShareOpen] = useState<string | null>(null);
+  const shareRef = useRef<HTMLDivElement>(null);
   const [following, setFollowing] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("tutoria_following") || "[]"); } catch { return []; }
   });
@@ -236,6 +243,45 @@ function PostsTab({ searchQuery, feedMode }: {
       return next;
     });
   }, []);
+
+  const toggleRepost = useCallback((id: string) => {
+    setReposts(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      localStorage.setItem("tutoria_reposts", JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
+
+  const handleShare = useCallback((postId: string) => {
+    setShareOpen(prev => prev === postId ? null : postId);
+  }, []);
+
+  const copyLink = useCallback(async (postId: string) => {
+    const url = `${window.location.origin}/discussions?post=${postId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const input = document.createElement("input");
+      input.value = url;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+    }
+    setShareOpen(null);
+  }, []);
+
+  useEffect(() => {
+    if (!shareOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setShareOpen(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [shareOpen]);
 
   const toggleFollow = useCallback((name: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -341,6 +387,8 @@ function PostsTab({ searchQuery, feedMode }: {
 
           {allFeed.slice(0, visibleCount).map((post) => {
             const isLiked = liked.has(post.id);
+            const isSaved = saves.has(post.id);
+            const isReposted = reposts.has(post.id);
             const isFollowing = following.includes(post.author);
 
             return (
@@ -380,15 +428,29 @@ function PostsTab({ searchQuery, feedMode }: {
                         <IconMessage2 size={17} />
                         <span className="tabular-nums">{post.comments}</span>
                       </div>
-                      <button onClick={(e) => e.stopPropagation()} className={styles.action} aria-label="Repost post">
+                      <button onClick={(e) => { e.stopPropagation(); toggleRepost(post.id); }}
+                        className={`${styles.action} ${isReposted ? styles.actionReposted : ""}`} aria-label={`${isReposted ? "Unrepost" : "Repost"} post`}>
                         <IconRepeat size={18} />
-                        <span className="tabular-nums">{post.reposts ?? Math.max(1, Math.round(post.comments / 8))}</span>
+                        <span className="tabular-nums">{(post.reposts ?? Math.max(1, Math.round(post.comments / 8))) + (isReposted ? 1 : 0)}</span>
                       </button>
-                      <button onClick={(e) => e.stopPropagation()}
+                      <button onClick={(e) => { e.stopPropagation(); handleShare(post.id); }}
+                        ref={shareOpen === post.id ? shareRef : undefined}
                         className={styles.action} aria-label="Share post">
                         <IconShare size={18} />
                         <span className="tabular-nums">{post.shares ?? Math.max(1, Math.round(post.likes / 36))}</span>
                       </button>
+                      {shareOpen === post.id && (
+                        <div className="absolute right-0 bottom-full mb-2 w-48 rounded-xl border border-border bg-background shadow-lg p-1 z-20">
+                          <button onClick={(e) => { e.stopPropagation(); copyLink(post.id); }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
+                            <IconLink size={14} /> Copy link
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); copyLink(post.id); }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
+                            <IconShare size={14} /> Share via...
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
               </div>
@@ -610,6 +672,50 @@ function BlogsTab({ searchQuery, feedMode }: {
   const [following, setFollowing] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("tutoria_following") || "[]"); } catch { return []; }
   });
+  const [reposts, setReposts] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("tutoria_reposts") || "[]")); } catch { return new Set(); }
+  });
+  const [shareOpen, setShareOpen] = useState<string | null>(null);
+  const shareRef = useRef<HTMLDivElement>(null);
+
+  const toggleRepost = useCallback((id: string) => {
+    setReposts(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      localStorage.setItem("tutoria_reposts", JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
+
+  const handleShare = useCallback((blogId: string) => {
+    setShareOpen(prev => prev === blogId ? null : blogId);
+  }, []);
+
+  const copyLink = useCallback(async (blogId: string) => {
+    const url = `${window.location.origin}/discussions/blogs/${blogId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const input = document.createElement("input");
+      input.value = url;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+    }
+    setShareOpen(null);
+  }, []);
+
+  useEffect(() => {
+    if (!shareOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setShareOpen(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [shareOpen]);
 
   const [publishedArticles, setPublishedArticles] = useState<PublishedArticle[]>([]);
 

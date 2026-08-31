@@ -56,7 +56,7 @@ export function createSupabaseCommentService(url: string, publishableKey: string
   return {
     async create(
       token: string,
-      input: { ownerType: "thread" | "article"; ownerId: string; body: string; parentId?: string | null },
+      input: { ownerType: "article"; ownerId: string; body: string; parentId?: string | null },
     ): Promise<CommentResult> {
       try {
         const { data, error } = await caller(token).rpc("create_comment", {
@@ -107,7 +107,7 @@ export function createSupabaseCommentService(url: string, publishableKey: string
       }
     },
 
-    async listPublic(ownerType: "thread" | "article", ownerId: string): Promise<PublicCommentListResult> {
+    async listPublic(ownerType: "article", ownerId: string): Promise<PublicCommentListResult> {
       try {
         const { data, error } = await caller().rpc("list_comments", { p_owner_type: ownerType, p_owner_id: ownerId });
         if (error) return { status: "unavailable" };

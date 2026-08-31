@@ -162,6 +162,7 @@
 .action { display: inline-flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 999px; padding: 0 8px; background: transparent; color: var(--discussion-muted); font-size: 12px; cursor: pointer; transition: background-color 180ms ease, color 180ms ease; }
 .action:hover { background: var(--discussion-hover); color: #fff; }
 .actionLiked { color: #f06b78; }
+.actionReposted { color: #34d399; }
 .actionSaved { color: #e5bd70; }
 
 .rightRail { position: sticky; top: 0; grid-column: 3; height: 100dvh; padding: 84px 0 24px 28px; }
