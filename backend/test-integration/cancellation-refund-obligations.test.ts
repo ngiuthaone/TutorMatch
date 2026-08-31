@@ -493,3 +493,5 @@ describe.sequential("Cancellation refund obligations (Phase 2)", () => {
     expect(await obligations(booking.id)).toHaveLength(0);
   });
 });
+
+afterAll(() => sql.end());

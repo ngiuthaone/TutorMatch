@@ -1,80 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { IconHeart, IconHeartFilled, IconMessage2, IconBookmark, IconBookmarkFilled, IconShare, IconRepeat, IconX, IconPlus, IconUserPlus, IconUserCheck, IconSearch, IconHome, IconBell, IconUser, IconMenu2, IconDots, IconLink, IconCheck } from "@tabler/icons-react";
+import { IconMessage2, IconShare, IconRepeat, IconX, IconPlus, IconSearch, IconHome, IconBell, IconUser, IconMenu2, IconDots, IconLink, IconBookmark, IconHeart, IconHeartFilled } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { PostComposer } from "@/components/discussion/post-composer";
-import { CommentThread } from "@/components/discussion/comment-thread";
-import { getPublishedPosts, getPublishedArticles } from "@/lib/storage";
-import type { PublishedPost, PublishedArticle } from "@/lib/types";
-
-interface FeedPost {
-  id: string;
-  author: string;
-  role: string;
-  avatar: string;
-  content: string;
-  image?: string | null;
-  likes: number;
-  comments: number;
-  reposts?: number;
-  shares?: number;
-  tags: string[];
-  createdAt: string;
-  title?: string;
-  excerpt?: string;
-  readTime?: string;
-}
+import { listPosts, createPost, repostPost, unrepostPost, likePost, unlikePost, type Post } from "@/lib/community/posts-api";
+import { listComments, createComment, appreciateComment, unappreciateComment, type Comment } from "@/lib/community/comments-api";
 import styles from "./discussions.module.css";
 
 const ALL_TAGS = ["Photography", "IELTS", "Languages", "Business", "Technology", "Creative", "Cooking", "Personal development", "Academic", "Community"];
 const publicProfileHref = (name: string) =>
   `/user/${encodeURIComponent(name)}`;
-
-const POSTS = [
-  { id: "p1", author: "Duc Pham", role: "Photography Artist", avatar: "https://picsum.photos/seed/duc-avatar/60/60", content: "Golden hour at West Lake today. The light was absolutely incredible \u{1F305}\n\nSometimes you just need to stop and appreciate the moment.", image: "https://picsum.photos/seed/golden-hour/600/400", likes: 142, comments: 8, tags: ["Photography"], createdAt: "1h ago" },
-  { id: "p2", author: "Linh Nguyen", role: "English & IELTS Coach", avatar: "https://picsum.photos/seed/linh-avatar/60/60", content: "Just finished a 2-hour speaking session with a student who went from total silence to a full 7-minute monologue. This is why I love teaching.", likes: 89, comments: 12, tags: ["IELTS", "Languages"], createdAt: "3h ago" },
-  { id: "p3", author: "Thu Ha", role: "Cooking Instructor", avatar: "https://picsum.photos/seed/thu-avatar/60/60", content: "Made ph\u1EDF for 20 people today. My kitchen smells like heaven. Recipe drop in the comments if anyone wants it", image: "https://picsum.photos/seed/pho-bowl/600/400", likes: 203, comments: 24, tags: ["Cooking"], createdAt: "5h ago" },
-  { id: "p4", author: "Huy Tran", role: "Full-stack Developer", avatar: "https://picsum.photos/seed/huy-avatar/60/60", content: "Hot take: TypeScript is great but sometimes I miss the chaos of writing plain JS. Anyone else?", likes: 67, comments: 31, tags: ["Technology"], createdAt: "7h ago" },
-  { id: "p5", author: "Minh Anh", role: "Public Speaking Coach", avatar: "https://picsum.photos/seed/minh-avatar/60/60", content: "Just wrapped a workshop on impromptu speaking. One tip that blew everyone's mind: pause before answering. It makes you look confident, not hesitant.", likes: 156, comments: 14, tags: ["Personal development"], createdAt: "10h ago" },
-  { id: "p6", author: "Bao Long", role: "Business Strategy Mentor", avatar: "https://picsum.photos/seed/bao-avatar/60/60", content: "Read 50 startup pitch decks this week. The ones that stood out had one thing in common: they explained the problem like you've lived it.", image: "https://picsum.photos/seed/pitch-deck/600/400", likes: 95, comments: 7, tags: ["Business"], createdAt: "12h ago" },
-  { id: "p7", author: "Duc Pham", role: "Photography Artist", avatar: "https://picsum.photos/seed/duc-avatar/60/60", content: "Trying film photography for the first time. 36 shots. No preview. No delete button. It's terrifying and I love it", likes: 178, comments: 22, tags: ["Photography"], createdAt: "1d ago" },
-  { id: "p8", author: "Linh Nguyen", role: "English & IELTS Coach", avatar: "https://picsum.photos/seed/linh-avatar/60/60", content: "New resource drop: I compiled 50 IELTS speaking Part 2 topics with model answers. Free link in bio. Go practice!", likes: 312, comments: 45, tags: ["IELTS", "Languages"], createdAt: "1d ago" },
-  { id: "p9", author: "Thu Ha", role: "Cooking Instructor", avatar: "https://picsum.photos/seed/thu-avatar/60/60", content: "Weekend baking project: b\u00E1nh m\u00EC from scratch. Took 3 attempts but finally got that perfect crust. Never giving up", image: "https://picsum.photos/seed/banh-mi/600/400", likes: 134, comments: 18, tags: ["Cooking"], createdAt: "2d ago" },
-  { id: "p10", author: "Huy Tran", role: "Full-stack Developer", avatar: "https://picsum.photos/seed/huy-avatar/60/60", content: "Shipped a side project in 48 hours. Vibe coding is real y'all. AI wrote 70% of it and I'm not even embarrassed.", likes: 221, comments: 36, tags: ["Technology"], createdAt: "2d ago" },
-];
-
-const postComments: Record<string, { author: string; role: string; avatar: string; content: string; createdAt: string }[]> = {
-  p1: [
-    { author: "Thu Ha", role: "Cooking Instructor", avatar: "https://picsum.photos/seed/thu-avatar/60/60", content: "Stunning. Which lens did you use?", createdAt: "45m ago" },
-    { author: "Minh Anh", role: "Public Speaking Coach", avatar: "https://picsum.photos/seed/minh-avatar/60/60", content: "West Lake never disappoints", createdAt: "30m ago" },
-  ],
-  p2: [
-    { author: "Duc Pham", role: "Photography Artist", avatar: "https://picsum.photos/seed/duc-avatar/60/60", content: "That's amazing progress. Love seeing wins like this!", createdAt: "2h ago" },
-    { author: "Thu Ha", role: "Cooking Instructor", avatar: "https://picsum.photos/seed/thu-avatar/60/60", content: "The best feeling as a teacher", createdAt: "1h ago" },
-  ],
-  p3: [
-    { author: "Bao Long", role: "Business Strategy Mentor", avatar: "https://picsum.photos/seed/bao-avatar/60/60", content: "Please drop the recipe! That looks incredible.", createdAt: "4h ago" },
-    { author: "Duc Pham", role: "Photography Artist", avatar: "https://picsum.photos/seed/duc-avatar/60/60", content: "My mouth is watering just looking at this", createdAt: "3h ago" },
-    { author: "Linh Nguyen", role: "English & IELTS Coach", avatar: "https://picsum.photos/seed/linh-avatar/60/60", content: "Hosting a ph\u1EDF party sounds like the best idea ever.", createdAt: "2h ago" },
-  ],
-};
-
-const BLOGS = [
-  { id: "b1", title: "Five mistakes beginners make when learning photography", author: "Duc Pham", role: "Photography Artist", excerpt: "After teaching photography workshops for 5 years, I've seen the same patterns. Here's what holds beginners back.", likes: 234, comments: 18, tags: ["Photography"], createdAt: "2h ago", readTime: "8 min read", image: "https://picsum.photos/seed/post-photo/400/240" },
-  { id: "b2", title: "How I improved my IELTS speaking from 6.0 to 7.5", author: "Linh Nguyen", role: "English & IELTS Coach", excerpt: "Three months of consistent practice. The key insight that changed everything for me.", likes: 412, comments: 37, tags: ["IELTS", "Languages"], createdAt: "5h ago", readTime: "6 min read", image: "https://picsum.photos/seed/post-ielts/400/240" },
-  { id: "b3", title: "What I wish I knew before starting a small business", author: "Huy Tran", role: "Full-stack Developer", excerpt: "Four years in, here are the hard lessons about regulations, hiring, and why co-founders matter.", likes: 189, comments: 24, tags: ["Business"], createdAt: "1d ago", readTime: "10 min read", image: "https://picsum.photos/seed/post-business/400/240" },
-  { id: "b4", title: "Beginner guide to arranging flowers at home", author: "Thu Ha", role: "Cooking Instructor", excerpt: "You don't need expensive tools to create beautiful arrangements. Here's my go-to method.", likes: 156, comments: 12, tags: ["Creative"], createdAt: "3d ago", readTime: "5 min read", image: "https://picsum.photos/seed/post-flowers/400/240" },
-  { id: "b5", title: "React Server Components explained simply", author: "Huy Tran", role: "Full-stack Developer", excerpt: "Server Components never send JS to the client. Here's when and why you'd use them.", likes: 320, comments: 45, tags: ["Technology"], createdAt: "1d ago", readTime: "12 min read", image: "https://picsum.photos/seed/post-react/400/240" },
-  { id: "b6", title: "How to stay consistent with language learning", author: "Linh Nguyen", role: "English & IELTS Coach", excerpt: "Consistency beats intensity. Daily micro-habits that actually work.", likes: 278, comments: 31, tags: ["Languages", "Personal development"], createdAt: "4d ago", readTime: "4 min read", image: "https://picsum.photos/seed/post-language/400/240" },
-  { id: "b7", title: "IELTS Reading: 7 tips for skimming effectively", author: "Linh Nguyen", role: "English & IELTS Coach", excerpt: "Stop reading every word. These 7 techniques save precious time.", likes: 521, comments: 63, tags: ["IELTS", "Academic"], createdAt: "6d ago", readTime: "7 min read", image: "https://picsum.photos/seed/post-reading/400/240" },
-  { id: "b8", title: "Why you should start a community project", author: "Bao Long", role: "Business Strategy Mentor", excerpt: "We started a clean-up group. A year later it's a registered NGO.", likes: 112, comments: 15, tags: ["Community"], createdAt: "1w ago", readTime: "9 min read", image: "https://picsum.photos/seed/post-community/400/240" },
-  { id: "b9", title: "Photography composition cheat sheet", author: "Duc Pham", role: "Photography Artist", excerpt: "Rule of thirds, leading lines, symmetry \u2014 a cheat sheet for every shoot.", likes: 445, comments: 28, tags: ["Photography"], createdAt: "2d ago", readTime: "3 min read", image: "https://picsum.photos/seed/post-composition/400/240" },
-  { id: "b10", title: "Building a personal brand without burning out", author: "Minh Anh", role: "Public Speaking Coach", excerpt: "I grew from zero to 50K while working full-time. It's about having a system.", likes: 167, comments: 22, tags: ["Personal development"], createdAt: "5d ago", readTime: "6 min read", image: "https://picsum.photos/seed/post-brand/400/240" },
-  { id: "b11", title: "Coding interview prep guide for 2026", author: "Huy Tran", role: "Full-stack Developer", excerpt: "More system design, less leetcode. What to focus on this year.", likes: 289, comments: 41, tags: ["Technology"], createdAt: "3d ago", readTime: "15 min read", image: "https://picsum.photos/seed/post-interview/400/240" },
-  { id: "b12", title: "How to start a conversation in any language", author: "Linh Nguyen", role: "English & IELTS Coach", excerpt: "5 conversation starters that work in any language. Connection over perfection.", likes: 198, comments: 19, tags: ["Languages"], createdAt: "1w ago", readTime: "5 min read", image: "https://picsum.photos/seed/post-conversation/400/240" },
-];
 
 export function DiscussionsPage() {
   const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
@@ -106,7 +42,7 @@ export function DiscussionsPage() {
             <Link href="/search" className={styles.navLink} aria-label="Search"><IconSearch size={25} stroke={1.8} /></Link>
             <button className={`${styles.navButton} ${styles.navCreate}`} aria-label="Create a post" onClick={() => window.dispatchEvent(new CustomEvent("tutoria:create-post"))}><IconPlus size={27} stroke={1.8} /></button>
             <Link href="/discussions/saved" className={styles.navLink} aria-label="Saved"><IconBookmark size={25} stroke={1.8} /></Link>
-            <button className={styles.navButton} aria-label="Notifications"><IconHeart size={25} stroke={1.8} /></button>
+            <button className={styles.navButton} aria-label="Notifications"><IconBell size={25} stroke={1.8} /></button>
             <Link href="/user/me" className={styles.navLink} aria-label="Profile"><IconUser size={25} stroke={1.8} /></Link>
           </nav>
           <div className={styles.navBottom}><button className={styles.navButton} aria-label="More options"><IconMenu2 size={25} stroke={1.8} /></button></div>
@@ -133,22 +69,6 @@ export function DiscussionsPage() {
             </div>
           </div>
 
-          <div className="sr-only">
-            <IconSearch size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search discussions\u2026"
-              className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-border bg-background text-foreground placeholder:text-muted/60 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors">
-                <IconX size={14} />
-              </button>
-            )}
-          </div>
           {tab === "posts" ? (
             <PostsTab searchQuery={searchQuery} feedMode={feedMode} />
           ) : (
@@ -164,9 +84,9 @@ export function DiscussionsPage() {
           </section>
           <section className={styles.railCard}>
             <h2 style={{ fontFamily: "var(--font-sans), Inter, sans-serif" }}>Trending today</h2>
-            <Link href="/discussions/tags/Photography" className={styles.railLink}>Photography <span>328 posts</span></Link>
-            <Link href="/discussions/tags/IELTS" className={styles.railLink}>IELTS practice <span>214 posts</span></Link>
-            <Link href="/discussions/tags/Technology" className={styles.railLink}>Technology <span>186 posts</span></Link>
+            <Link href="/discussions/tags/Photography" className={styles.railLink}>Photography <span>View all</span></Link>
+            <Link href="/discussions/tags/IELTS" className={styles.railLink}>IELTS practice <span>View all</span></Link>
+            <Link href="/discussions/tags/Technology" className={styles.railLink}>Technology <span>View all</span></Link>
             <Link href="/communities" className={styles.railLink}>Explore communities <span>View all</span></Link>
           </section>
           <p className={styles.railFooter}>© 2026 Tutoria · Community guidelines · Privacy · Terms</p>
@@ -189,69 +109,82 @@ function PostsTab({ searchQuery, feedMode }: {
   feedMode: "foryou" | "following" | "communities" | "questions";
 }) {
   const router = useRouter();
-  const [visibleCount, setVisibleCount] = useState(10);
-  const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showCompose, setShowCompose] = useState(false);
-  const [composePreselect, setComposePreselect] = useState<string | undefined>();
-
-  const [likes, setLikes] = useState<Set<string>>(() => {
-    try { return new Set(JSON.parse(localStorage.getItem("tutoria_likes") || "[]")); } catch { return new Set(); }
-  });
-  const [saves, setSaves] = useState<Set<string>>(() => {
-    try { return new Set(JSON.parse(localStorage.getItem("tutoria_saves") || "[]")); } catch { return new Set(); }
-  });
-  const [reposts, setReposts] = useState<Set<string>>(() => {
-    try { return new Set(JSON.parse(localStorage.getItem("tutoria_reposts") || "[]")); } catch { return new Set(); }
-  });
   const [shareOpen, setShareOpen] = useState<string | null>(null);
   const shareRef = useRef<HTMLDivElement>(null);
-  const [following, setFollowing] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("tutoria_following") || "[]"); } catch { return []; }
-  });
-  const [userPosts, setUserPosts] = useState<any[]>(() => {
-    try { return JSON.parse(localStorage.getItem("tutoria_user_posts") || "[]"); } catch { return []; }
-  });
-  const [followedTags] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("tutoria_followed_tags") || "[]"); } catch { return []; }
-  });
-  const [userName, setUserName] = useState("");
+
+  const loadPosts = useCallback(async (reset = false) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await listPosts({
+        cursor: reset ? null : cursor,
+        limit: 20,
+        tag: feedMode === "communities" ? searchQuery || null : null,
+        postType: feedMode === "questions" ? "question" : null,
+      });
+      setPosts(prev => reset ? result.posts : [...prev, ...result.posts]);
+      setCursor(result.nextCursor);
+      setHasMore(result.nextCursor !== null);
+    } catch {
+      setError("Posts are temporarily unavailable. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [cursor, feedMode, searchQuery]);
 
   useEffect(() => {
+    loadPosts(true);
+  }, [feedMode, searchQuery]);
+
+  useEffect(() => {
+    const openComposer = () => {
+      if (localStorage.getItem("tutoria_signup")) setShowCompose(true);
+      else router.push("/auth/sign-in?next=/discussions");
+    };
+    window.addEventListener("tutoria:create-post", openComposer);
+    return () => window.removeEventListener("tutoria:create-post", openComposer);
+  }, []);
+
+  const handleRepost = useCallback(async (postId: string) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const isReposted = post.reposted_by_me;
     try {
-      const raw = localStorage.getItem("tutoria_signup");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        queueMicrotask(() => setUserName(parsed.name));
+      if (isReposted) {
+        const result = await unrepostPost(postId);
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, repost_count: result.repost_count, reposted_by_me: false } : p));
+      } else {
+        const result = await repostPost(postId);
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, repost_count: result.repost_count, reposted_by_me: true } : p));
       }
-    } catch {}
-  }, []);
+    } catch {
+      // silently fail
+    }
+  }, [posts]);
 
-  const toggleLike = useCallback((id: string) => {
-    setLikes(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      localStorage.setItem("tutoria_likes", JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
-
-  const toggleSave = useCallback((id: string) => {
-    setSaves(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      localStorage.setItem("tutoria_saves", JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
-
-  const toggleRepost = useCallback((id: string) => {
-    setReposts(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      localStorage.setItem("tutoria_reposts", JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
+  const handleLike = useCallback(async (postId: string) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const isLiked = post.liked_by_me;
+    try {
+      if (isLiked) {
+        const result = await unlikePost(postId);
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, like_count: result.like_count, liked_by_me: false } : p));
+      } else {
+        const result = await likePost(postId);
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, like_count: result.like_count, liked_by_me: true } : p));
+      }
+    } catch {
+      // silently fail
+    }
+  }, [posts]);
 
   const handleShare = useCallback((postId: string) => {
     setShareOpen(prev => prev === postId ? null : postId);
@@ -283,232 +216,148 @@ function PostsTab({ searchQuery, feedMode }: {
     return () => document.removeEventListener("mousedown", handler);
   }, [shareOpen]);
 
-  const toggleFollow = useCallback((name: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFollowing(prev => {
-      const next = prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name];
-      localStorage.setItem("tutoria_following", JSON.stringify(next));
-      return next;
-    });
+  const handlePublish = useCallback(async (body: string, tags: string[]) => {
+    try {
+      const result = await createPost({ body, tags });
+      const newPost: Post = {
+        id: result.id,
+        body,
+        tags,
+        reply_permission: "everyone",
+        like_count: 0,
+        repost_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_author: true,
+        author: { name: "You", avatar_url: null, role: undefined },
+      };
+      setPosts(prev => [newPost, ...prev]);
+      setShowCompose(false);
+    } catch {
+      setError("Failed to publish post. Please try again.");
+    }
   }, []);
-
-  const addUserPost = useCallback((post: any) => {
-    setUserPosts(prev => {
-      const next = [post, ...prev];
-      localStorage.setItem("tutoria_user_posts", JSON.stringify(next));
-      return next;
-    });
-  }, []);
-
-  const liked = likes;
-  const saved = saves;
-
-  const [publishedPosts, setPublishedPosts] = useState<PublishedPost[]>([]);
-
-  useEffect(() => {
-    queueMicrotask(() => setPublishedPosts(getPublishedPosts()));
-  }, []);
-
-  useEffect(() => {
-    const openComposer = () => {
-      if (localStorage.getItem("tutoria_signup")) setShowCompose(true);
-      else router.push("/auth/sign-in?next=/discussions");
-    };
-    window.addEventListener("tutoria:create-post", openComposer);
-    return () => window.removeEventListener("tutoria:create-post", openComposer);
-  }, []);
-
-  let feed: FeedPost[] = [...publishedPosts.map((p) => ({
-    id: p.id, author: p.authorName, role: p.authorRole || "Learner",
-    avatar: p.authorAvatar || `https://picsum.photos/seed/${p.authorName}/60/60`,
-    content: p.body, image: p.attachments.find((a) => a.type === "image")?.url || null,
-    likes: p.likes, comments: p.comments, tags: p.topicName ? [p.topicName] : [],
-    createdAt: new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-  })), ...POSTS];
-
-  if (feedMode === "following" && following.length > 0) {
-    feed = feed.filter(p => following.includes(p.author));
-  } else if (feedMode === "communities" && followedTags.length > 0) {
-    feed = feed.filter((p: FeedPost) => (p.tags || []).some((t: string) => followedTags.includes(t)));
-  } else if (feedMode === "questions") {
-    feed = feed.filter((p: FeedPost) => (p.content || "").includes("?"));
-  }
-
-  if (searchQuery.trim()) {
-    const q = searchQuery.trim().toLowerCase();
-    feed = feed.filter((p: FeedPost) =>
-      (p.content || "").toLowerCase().includes(q) ||
-      (p.tags || []).some((t: string) => t.toLowerCase().includes(q))
-    );
-  }
-
-  const allFeed = (feedMode === "following" && following.length === 0) || (feedMode === "communities" && followedTags.length === 0) ? [] : feed;
 
   return (
     <>
       <div>
-        {feedMode === "following" && following.length === 0 && (
-          <div className="text-center py-12 border border-dashed border-border rounded-2xl">
-            <p className="text-sm text-muted">You&apos;re not following anyone yet.</p>
-            <p className="text-xs text-muted mt-1">Tap the <IconUserPlus size={12} className="inline" /> button on posts to follow creators.</p>
+        {error && (
+          <div className="mb-4 px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-200 text-sm">
+            {error}
           </div>
         )}
 
-        {feedMode === "communities" && followedTags.length === 0 && (
-          <div className="text-center py-12 border border-dashed border-border rounded-2xl">
-            <p className="text-sm text-muted">Follow topics to see community content.</p>
-            <p className="text-xs text-muted mt-1">Tap tags above to follow topics that interest you.</p>
-          </div>
+        {loading && posts.length === 0 && (
+          <div className="text-center py-12 text-sm text-muted">Loading posts…</div>
         )}
 
         <div className={styles.postList}>
-          {userPosts.map((up, i) => (
-            <div key={`user-${i}`} className="rounded-2xl border border-border bg-background p-5">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">{userName?.charAt(0)?.toUpperCase() || "Y"}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 text-xs flex-wrap">
-                    <span className="font-semibold text-foreground">{userName || "You"}</span>
-                    <span className="px-1.5 py-0.5 text-[10px] rounded-md bg-primary/10 text-primary-dark dark:text-primary-light font-medium">You</span>
-                    <span className="w-1 h-1 rounded-full bg-border" />
-                    <span className="text-muted">Just now</span>
-                  </div>
-                  <p className="mt-2 text-sm text-foreground leading-relaxed whitespace-pre-line">{up.content}</p>
-                  <div className="flex items-center gap-1.5 mt-3">
-                    {up.tags?.map((t: string) => (
-                      <a key={t} href={`/discussions/tags/${encodeURIComponent(t)}`}
-                        className="px-1.5 py-0.5 text-[10px] rounded-md bg-primary/10 text-primary-dark dark:text-primary-light hover:bg-primary/20 transition-colors">{t}</a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {allFeed.slice(0, visibleCount).map((post) => {
-            const isLiked = liked.has(post.id);
-            const isSaved = saves.has(post.id);
-            const isReposted = reposts.has(post.id);
-            const isFollowing = following.includes(post.author);
+          {posts.map((post) => {
+            const isLiked = !!post.liked_by_me;
+            const isReposted = !!post.reposted_by_me;
+            const authorName = post.author.name;
+            const authorRole = post.author.role || "Learner";
+            const avatarUrl = post.author.avatar_url || `https://picsum.photos/seed/${encodeURIComponent(authorName)}/60/60`;
 
             return (
-              <div key={post.id} onClick={() => setSelectedPost(post)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter") setSelectedPost(post); }}
+              <div key={post.id} onClick={() => setSelectedPost(post)} role="button" tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter") setSelectedPost(post); }}
                 className={styles.post}>
-                  <div className={styles.avatarRail} onClick={(e) => { e.stopPropagation(); window.location.assign(publicProfileHref(post.author)); }}>
-                    <img src={post.avatar} alt={`${post.author}'s profile`} loading="lazy" width="40" height="40" />
-                    <span className={styles.threadLine} aria-hidden="true" />
+                <div className={styles.avatarRail} onClick={(e) => { e.stopPropagation(); window.location.assign(publicProfileHref(authorName)); }}>
+                  <img src={avatarUrl} alt={`${authorName}'s profile`} loading="lazy" width="40" height="40" />
+                  <span className={styles.threadLine} aria-hidden="true" />
+                </div>
+                <div className={styles.postBody}>
+                  <div className={styles.postMeta}>
+                    <button onClick={(e) => { e.stopPropagation(); window.location.assign(publicProfileHref(authorName)); }}
+                      className={styles.author}>{authorName}</button>
+                    <span className={styles.role}>· {authorRole}</span>
+                    <span className={styles.time}>· {formatTimeAgo(post.created_at)}</span>
+                    <button className={styles.moreButton} aria-label={`More options for ${authorName}`}>
+                      <IconDots size={20} />
+                    </button>
                   </div>
-                  <div className={styles.postBody}>
-                    <div className={styles.postMeta}>
-                      <button onClick={(e) => { e.stopPropagation(); window.location.assign(publicProfileHref(post.author)); }}
-                        className={styles.author}>{post.author}</button>
-                      <span className={styles.role}>· {post.role}</span>
-                      <span className={styles.time}>· {post.createdAt}</span>
-                      <button onClick={(e) => { e.stopPropagation(); toggleFollow(post.author, e); }} className={styles.moreButton} aria-label={isFollowing ? `Unfollow ${post.author}` : `More options for ${post.author}`}>
-                        {isFollowing ? <IconUserCheck size={18} /> : <IconDots size={20} />}
-                      </button>
+                  <p className={styles.postCopy}>{post.body}</p>
+                  <div className={styles.tags}>
+                    {(post.tags || []).map((t: string) => (
+                      <button key={t} onClick={(e) => { e.stopPropagation(); router.push(`/discussions/tags/${encodeURIComponent(t)}`); }} className={styles.tag}>#{t.replaceAll(" ", "")}</button>
+                    ))}
+                  </div>
+                  <div className={styles.postActions}>
+                    <button onClick={(e) => { e.stopPropagation(); handleLike(post.id); }}
+                      className={`${styles.action} ${isLiked ? styles.actionLiked : ""}`} aria-label={`${isLiked ? "Unlike" : "Like"} post`}>
+                      {isLiked ? <IconHeartFilled size={15} /> : <IconHeart size={15} />}
+                      <span className="tabular-nums">{post.like_count + (isLiked && !post.liked_by_me ? 1 : 0)}</span>
+                    </button>
+                    <div className={styles.action} aria-label="Comments">
+                      <IconMessage2 size={17} />
+                      <span className="tabular-nums">0</span>
                     </div>
-                    <p className={styles.postCopy}>{post.content}</p>
-                    {post.image && (
-                      <img src={post.image} alt={`Post by ${post.author}`} className={styles.postImage} loading="lazy" width="600" height="400" />
-                    )}
-                    <div className={styles.tags}>
-                      {(post.tags || []).map((t: string) => (
-                        <button key={t} onClick={(e) => { e.stopPropagation(); router.push(`/discussions/tags/${encodeURIComponent(t)}`); }} className={styles.tag}>#{t.replaceAll(" ", "")}</button>
-                      ))}
-                    </div>
-                    <div className={styles.postActions}>
-                      <button onClick={(e) => { e.stopPropagation(); toggleLike(post.id); }}
-                        className={`${styles.action} ${isLiked ? styles.actionLiked : ""}`} aria-label={`${isLiked ? "Unlike" : "Like"} post`}>
-                        {isLiked ? <IconHeartFilled size={15} /> : <IconHeart size={15} />}
-                        <span className="tabular-nums">{post.likes + (isLiked ? 1 : 0)}</span>
+                    <button onClick={(e) => { e.stopPropagation(); handleRepost(post.id); }}
+                      className={`${styles.action} ${isReposted ? styles.actionReposted : ""}`} aria-label={`${isReposted ? "Unrepost" : "Repost"} post`}>
+                      <IconRepeat size={18} />
+                      <span className="tabular-nums">{post.repost_count}</span>
+                    </button>
+                    <div className="relative" ref={shareOpen === post.id ? shareRef : undefined}>
+                      <button onClick={(e) => { e.stopPropagation(); handleShare(post.id); }}
+                        className={styles.action} aria-label="Share post">
+                        <IconShare size={18} />
                       </button>
-                      <div onClick={(e) => e.stopPropagation()}
-                        className={styles.action} aria-label="View replies">
-                        <IconMessage2 size={17} />
-                        <span className="tabular-nums">{post.comments}</span>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); toggleRepost(post.id); }}
-                        className={`${styles.action} ${isReposted ? styles.actionReposted : ""}`} aria-label={`${isReposted ? "Unrepost" : "Repost"} post`}>
-                        <IconRepeat size={18} />
-                        <span className="tabular-nums">{(post.reposts ?? Math.max(1, Math.round(post.comments / 8))) + (isReposted ? 1 : 0)}</span>
-                      </button>
-                      <div className="relative" ref={shareOpen === post.id ? shareRef : undefined}>
-                        <button onClick={(e) => { e.stopPropagation(); handleShare(post.id); }}
-                          className={styles.action} aria-label="Share post">
-                          <IconShare size={18} />
-                          <span className="tabular-nums">{post.shares ?? Math.max(1, Math.round(post.likes / 36))}</span>
-                        </button>
-                        {shareOpen === post.id && (
-                          <div className="absolute right-0 bottom-full mb-2 w-48 rounded-xl border border-border bg-background shadow-lg p-1 z-20">
-                            <button onClick={(e) => { e.stopPropagation(); copyLink(post.id); }}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
-                              <IconLink size={14} /> Copy link
-                            </button>
-                            <button onClick={(e) => { e.stopPropagation(); copyLink(post.id); }}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
-                              <IconShare size={14} /> Share via...
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      {shareOpen === post.id && (
+                        <div className="absolute right-0 bottom-full mb-2 w-48 rounded-xl border border-border bg-background shadow-lg p-1 z-20">
+                          <button onClick={(e) => { e.stopPropagation(); copyLink(post.id); }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
+                            <IconLink size={14} /> Copy link
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
+                </div>
               </div>
             );
           })}
         </div>
 
-        {visibleCount < allFeed.length && (
-          <button onClick={() => setVisibleCount((c) => c + 10)} className={styles.loadMore}>Load more</button>
+        {hasMore && !loading && (
+          <button onClick={() => loadPosts()} className={styles.loadMore}>Load more</button>
         )}
 
-        {allFeed.length === 0 && feedMode !== "following" && feedMode !== "communities" && !searchQuery && (
+        {!loading && posts.length === 0 && !error && (
           <div className={styles.empty}>No posts yet. Be the first to share something!</div>
-        )}
-
-        {allFeed.length === 0 && searchQuery.trim() && (
-          <div className={styles.empty}>
-            No results for &ldquo;{searchQuery}&rdquo;. Try a different search.
-          </div>
-        )}
-
-        {feedMode === "following" && following.length > 0 && allFeed.length === 0 && (
-          <div className="text-center py-12 border border-dashed border-border rounded-2xl">
-            <p className="text-sm text-muted">No posts from followed creators.</p>
-          </div>
-        )}
-
-        {feedMode === "communities" && followedTags.length > 0 && allFeed.length === 0 && (
-          <div className="text-center py-12 border border-dashed border-border rounded-2xl">
-            <p className="text-sm text-muted">No posts from your followed topics.</p>
-          </div>
         )}
       </div>
 
       {showCompose && (
-        <PostComposer onClose={() => { setShowCompose(false); setComposePreselect(undefined); }}
-          onPublished={() => { setPublishedPosts(getPublishedPosts()); }}
-          preselectType={composePreselect} />
+        <PostComposerModal onClose={() => setShowCompose(false)} onPublished={handlePublish} />
       )}
 
       {selectedPost && (
-        <ThreadModal post={selectedPost} onClose={() => setSelectedPost(null)}
-          likes={liked} saves={saved} reposts={reposts} onLike={toggleLike} onSave={toggleSave} onRepost={toggleRepost} following={following} onFollow={toggleFollow}
-          onCommentUpdate={() => { setPublishedPosts(getPublishedPosts()); }} />
+        <PostDetailModal post={selectedPost} onClose={() => setSelectedPost(null)} />
       )}
     </>
   );
 }
 
-function ComposeModal({ userName, onClose, onPost }: { userName: string; onClose: () => void; onPost: (post: { content: string; tags: string[]; createdAt: string }) => void }) {
+function formatTimeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function PostComposerModal({ onClose, onPublished }: { onClose: () => void; onPublished: (body: string, tags: string[]) => void }) {
   const [content, setContent] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const handleSubmit = () => {
     if (!content.trim()) return;
-    onPost({ content: content.trim(), tags: selectedTags, createdAt: "Just now" });
-    onClose();
+    onPublished(content.trim(), selectedTags);
   };
 
   return (
@@ -524,10 +373,10 @@ function ComposeModal({ userName, onClose, onPost }: { userName: string; onClose
         </div>
         <div className="p-5">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">{userName?.charAt(0)?.toUpperCase() || "Y"}</div>
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">Y</div>
             <div className="flex-1 min-w-0">
-              <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder={`What's on your mind${userName ? `, ${userName}` : ""}?`}
-                rows={4}
+              <textarea value={content} onChange={(e) => setContent(e.target.value)}
+                placeholder="What's on your mind?" rows={4}
                 className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted/60 focus:outline-none leading-relaxed" />
               <div className="mt-4">
                 <p className="text-xs text-muted mb-2">Tag topics (tap to select):</p>
@@ -551,22 +400,108 @@ function ComposeModal({ userName, onClose, onPost }: { userName: string; onClose
   );
 }
 
-function ThreadModal({ post, onClose, likes, saves, reposts, onLike, onSave, onRepost, following, onFollow, onCommentUpdate }: {
-  post: FeedPost; onClose: () => void;
-  likes: Set<string>; saves: Set<string>; reposts: Set<string>; onLike: (id: string) => void; onSave: (id: string) => void; onRepost: (id: string) => void;
-  following: string[]; onFollow: (name: string, e: React.MouseEvent) => void;
-  onCommentUpdate?: () => void;
-}) {
+function PostDetailModal({ post, onClose }: { post: Post; onClose: () => void }) {
   const router = useRouter();
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
   const [shareOpen, setShareOpen] = useState(false);
   const shareRef = useRef<HTMLDivElement>(null);
-  const comments = postComments[post.id] || [];
-  const isLiked = likes.has(post.id);
-  const isSaved = saves.has(post.id);
-  const isReposted = reposts.has(post.id);
-  const isFollowing = following.includes(post.author);
+  const [liked, setLiked] = useState(!!post.liked_by_me);
+  const [likeCount, setLikeCount] = useState(post.like_count);
+  const [reposted, setReposted] = useState(!!post.reposted_by_me);
+  const [repostCount, setRepostCount] = useState(post.repost_count);
+  const authorName = post.author.name;
+  const authorRole = post.author.role || "Learner";
+  const avatarUrl = post.author.avatar_url || `https://picsum.photos/seed/${encodeURIComponent(authorName)}/60/60`;
 
-  const copyLink = useCallback(async () => {
+  useEffect(() => {
+    listComments("post", post.id).then(r => setComments(r.comments)).catch(() => {});
+  }, [post.id]);
+
+  const handleLike = async () => {
+    try {
+      if (liked) {
+        const result = await unlikePost(post.id);
+        setLiked(false);
+        setLikeCount(result.like_count);
+      } else {
+        const result = await likePost(post.id);
+        setLiked(true);
+        setLikeCount(result.like_count);
+      }
+    } catch { /* silently fail */ }
+  };
+
+  const handleRepost = async () => {
+    try {
+      if (reposted) {
+        const result = await unrepostPost(post.id);
+        setReposted(false);
+        setRepostCount(result.repost_count);
+      } else {
+        const result = await repostPost(post.id);
+        setReposted(true);
+        setRepostCount(result.repost_count);
+      }
+    } catch { /* silently fail */ }
+  };
+
+  const submitComment = async () => {
+    if (!newComment.trim()) return;
+    try {
+      const result = await createComment("post", post.id, newComment.trim());
+      const c: Comment = {
+        id: result.id,
+        parent_id: null,
+        body: newComment.trim(),
+        appreciated_count: 0,
+        created_at: new Date().toISOString(),
+        depth: 1,
+        is_creator: true,
+        appreciated_by_me: false,
+        author: { name: "You", avatar_url: null, role: undefined },
+      };
+      setComments(prev => [...prev, c]);
+      setNewComment("");
+    } catch { /* silently fail */ }
+  };
+
+  const submitReply = async (parentId: string) => {
+    if (!replyText.trim()) return;
+    try {
+      const result = await createComment("post", post.id, replyText.trim(), parentId);
+      const c: Comment = {
+        id: result.id,
+        parent_id: parentId,
+        body: replyText.trim(),
+        appreciated_count: 0,
+        created_at: new Date().toISOString(),
+        depth: 2,
+        is_creator: true,
+        appreciated_by_me: false,
+        author: { name: "You", avatar_url: null, role: undefined },
+      };
+      setComments(prev => [...prev, c]);
+      setReplyText("");
+      setReplyTo(null);
+    } catch { /* silently fail */ }
+  };
+
+  const handleAppreciate = async (commentId: string, isAppreciated: boolean) => {
+    try {
+      if (isAppreciated) {
+        const result = await unappreciateComment(commentId);
+        setComments(prev => prev.map(c => c.id === commentId ? { ...c, appreciated_count: result.appreciated_count, appreciated_by_me: false } : c));
+      } else {
+        const result = await appreciateComment(commentId);
+        setComments(prev => prev.map(c => c.id === commentId ? { ...c, appreciated_count: result.appreciated_count, appreciated_by_me: true } : c));
+      }
+    } catch { /* silently fail */ }
+  };
+
+  const copyLink = async () => {
     const url = `${window.location.origin}/discussions?post=${post.id}`;
     try {
       await navigator.clipboard.writeText(url);
@@ -579,7 +514,7 @@ function ThreadModal({ post, onClose, likes, saves, reposts, onLike, onSave, onR
       document.body.removeChild(input);
     }
     setShareOpen(false);
-  }, [post.id]);
+  };
 
   useEffect(() => {
     if (!shareOpen) return;
@@ -598,59 +533,47 @@ function ThreadModal({ post, onClose, likes, saves, reposts, onLike, onSave, onR
       <div onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-[580px] mx-4 my-8 rounded-2xl border border-border bg-background shadow-2xl overflow-hidden">
         <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 border-b border-border bg-background/80 backdrop-blur-sm">
-          <span className="text-xs text-muted">Thread</span>
+          <span className="text-xs text-muted">Post</span>
           <button onClick={onClose} className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-colors">
             <IconX size={18} />
           </button>
         </div>
-
         <div className="p-5">
           <div className="flex items-start gap-3">
-            <div onClick={() => { window.location.assign(publicProfileHref(post.author)); }} className="shrink-0 cursor-pointer">
-              <img src={post.avatar} alt={post.author} className="w-10 h-10 rounded-full object-cover hover:ring-2 hover:ring-primary transition-all" />
+            <div className="shrink-0 cursor-pointer">
+              <img src={avatarUrl} alt={authorName} className="w-10 h-10 rounded-full object-cover hover:ring-2 hover:ring-primary transition-all" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 text-xs flex-wrap">
-                <button onClick={() => window.location.assign(publicProfileHref(post.author))}
-                  className="font-semibold text-foreground hover:text-primary transition-colors">{post.author}</button>
-                <span className="text-muted">{post.role}</span>
+                <button onClick={() => window.location.assign(publicProfileHref(authorName))}
+                  className="font-semibold text-foreground hover:text-primary transition-colors">{authorName}</button>
+                <span className="text-muted">{authorRole}</span>
                 <span className="w-1 h-1 rounded-full bg-border" />
-                <span className="text-muted">{post.createdAt}</span>
-                <button onClick={(e) => onFollow(post.author, e)}
-                  className={`ml-auto flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full border transition-colors ${isFollowing ? "border-primary/30 text-primary bg-primary/5" : "border-border text-muted hover:border-primary/30 hover:text-primary"}`}>
-                  {isFollowing ? <><IconUserCheck size={11} /> Following</> : <><IconUserPlus size={11} /> Follow</>}
-                </button>
+                <span className="text-muted">{formatTimeAgo(post.created_at)}</span>
               </div>
-              <p className="mt-3 text-sm text-foreground leading-relaxed whitespace-pre-line">{post.content}</p>
-              {post.image && (
-                <img src={post.image} alt="" className="mt-3 w-full rounded-xl object-cover max-h-80" loading="lazy" />
-              )}
+              <p className="mt-3 text-sm text-foreground leading-relaxed whitespace-pre-line">{post.body}</p>
               <div className="flex items-center gap-1.5 mt-3">
-                {post.tags.map((t) => (
-                  <span key={t} onClick={(e) => { e.stopPropagation(); router.push(`/discussions/tags/${encodeURIComponent(t)}`); }}
+                {(post.tags || []).map((t: string) => (
+                  <span key={t} onClick={() => router.push(`/discussions/tags/${encodeURIComponent(t)}`)}
                     className="px-1.5 py-0.5 text-[10px] rounded-md bg-primary/10 text-primary-dark dark:text-primary-light cursor-pointer hover:bg-primary/20 transition-colors">{t}</span>
                 ))}
               </div>
               <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border text-xs text-muted">
-                <button onClick={() => onLike(post.id)}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors ${isLiked ? "text-red-400 bg-red-50 dark:bg-red-900/10" : "hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-400"}`}>
-                  {isLiked ? <IconHeartFilled size={15} /> : <IconHeart size={15} />}
-                  <span className="tabular-nums">{post.likes + (isLiked ? 1 : 0)}</span>
+                <button onClick={handleLike}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors ${liked ? "text-red-400 bg-red-50 dark:bg-red-900/10" : "hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-400"}`}>
+                  {liked ? <IconHeartFilled size={15} /> : <IconHeart size={15} />}
+                  <span className="tabular-nums">{likeCount}</span>
                 </button>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-primary/5 hover:text-primary transition-colors cursor-pointer">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg cursor-pointer">
                   <IconMessage2 size={15} />
-                  <span className="tabular-nums">{post.comments}</span>
+                  <span className="tabular-nums">{comments.length}</span>
                 </div>
-                <button onClick={() => onRepost(post.id)}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors ${isReposted ? "text-emerald-400 bg-emerald-50 dark:bg-emerald-900/10" : "hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:text-emerald-400"}`}>
+                <button onClick={handleRepost}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors ${reposted ? "text-emerald-400 bg-emerald-50 dark:bg-emerald-900/10" : "hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:text-emerald-400"}`}>
                   <IconRepeat size={15} />
-                  <span className="tabular-nums">{(post.reposts ?? Math.max(1, Math.round(post.comments / 8))) + (isReposted ? 1 : 0)}</span>
+                  <span className="tabular-nums">{repostCount}</span>
                 </button>
-                <button onClick={() => onSave(post.id)}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ml-auto transition-colors ${isSaved ? "text-primary bg-primary/5" : "hover:bg-surface hover:text-foreground"}`}>
-                  {isSaved ? <IconBookmarkFilled size={15} /> : <IconBookmark size={15} />}
-                </button>
-                <div className="relative" ref={shareRef}>
+                <div className="relative ml-auto" ref={shareRef}>
                   <button onClick={() => setShareOpen((v) => !v)}
                     className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-surface hover:text-foreground transition-colors">
                     <IconShare size={15} />
@@ -661,10 +584,6 @@ function ThreadModal({ post, onClose, likes, saves, reposts, onLike, onSave, onR
                         className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
                         <IconLink size={14} /> Copy link
                       </button>
-                      <button onClick={copyLink}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
-                        <IconShare size={14} /> Share via...
-                      </button>
                     </div>
                   )}
                 </div>
@@ -673,38 +592,56 @@ function ThreadModal({ post, onClose, likes, saves, reposts, onLike, onSave, onR
           </div>
         </div>
 
-        {comments.length > 0 && (
-          <div className="border-t border-border px-5 py-4">
-            <h3 className="text-xs font-semibold text-foreground mb-3">{comments.length} {comments.length === 1 ? "reply" : "replies"}</h3>
-            <div className="space-y-4">
-              {comments.map((c, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <img src={c.avatar} alt={c.author} className="w-7 h-7 rounded-full object-cover shrink-0" loading="lazy" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 text-xs text-muted">
-                      <span className="font-medium text-foreground">{c.author}</span>
-                      <span className="w-1 h-1 rounded-full bg-border" />
-                      <span>{c.createdAt}</span>
-                    </div>
-                    <p className="mt-1 text-sm text-foreground leading-relaxed">{c.content}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         <div className="border-t border-border px-5 py-3">
           <div className="flex items-center gap-3">
-            <img src="https://picsum.photos/seed/default-avatar/60/60" alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
-            <input type="text" placeholder="Write a reply\u2026" className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted/60 focus:outline-none" />
-            <button className="text-sm font-medium text-primary hover:text-primary-dark transition-colors">Post</button>
+            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">Y</div>
+            <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Write a comment…" onKeyDown={(e) => { if (e.key === "Enter") submitComment(); }}
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted/60 focus:outline-none" />
+            <button onClick={submitComment} disabled={!newComment.trim()}
+              className="text-sm font-medium text-primary hover:text-primary-dark transition-colors disabled:opacity-40">Post</button>
           </div>
         </div>
 
-        <div className="border-t border-border px-5 py-4">
-          <CommentThread contentId={post.id} contentType="post" onUpdate={() => onCommentUpdate?.()} />
-        </div>
+        {comments.length > 0 && (
+          <div className="border-t border-border px-5 py-4 space-y-4">
+            {comments.map((c) => (
+              <div key={c.id} className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                  {c.author.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-xs text-muted">
+                    <span className="font-medium text-foreground">{c.author.name}</span>
+                    <span className="w-1 h-1 rounded-full bg-border" />
+                    <span>{formatTimeAgo(c.created_at)}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-foreground leading-relaxed">{c.body}</p>
+                  <div className="flex items-center gap-3 mt-1.5 text-xs text-muted">
+                    <button onClick={() => handleAppreciate(c.id, !!c.appreciated_by_me)}
+                      className={`flex items-center gap-1 ${c.appreciated_by_me ? "text-red-400" : "hover:text-red-400"} transition-colors`}>
+                      {c.appreciated_by_me ? <IconHeartFilled size={12} /> : <IconHeart size={12} />}
+                      <span>{c.appreciated_count}</span>
+                    </button>
+                    <button onClick={() => setReplyTo(replyTo === c.id ? null : c.id)}
+                      className="hover:text-primary transition-colors">
+                      Reply
+                    </button>
+                  </div>
+                  {replyTo === c.id && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <input type="text" value={replyText} onChange={(e) => setReplyText(e.target.value)}
+                        placeholder="Write a reply…" onKeyDown={(e) => { if (e.key === "Enter") submitReply(c.id); }}
+                        className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted/60 focus:outline-none border-b border-border pb-1" />
+                      <button onClick={() => submitReply(c.id)} disabled={!replyText.trim()}
+                        className="text-xs font-medium text-primary hover:text-primary-dark transition-colors disabled:opacity-40">Reply</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -716,80 +653,14 @@ function BlogsTab({ searchQuery, feedMode }: {
 }) {
   const router = useRouter();
   const [visibleCount, setVisibleCount] = useState(8);
-  const [followedTags] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("tutoria_followed_tags") || "[]"); } catch { return []; }
-  });
-  const [following, setFollowing] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("tutoria_following") || "[]"); } catch { return []; }
-  });
-  const [reposts, setReposts] = useState<Set<string>>(() => {
-    try { return new Set(JSON.parse(localStorage.getItem("tutoria_reposts") || "[]")); } catch { return new Set(); }
-  });
-  const [shareOpen, setShareOpen] = useState<string | null>(null);
-  const shareRef = useRef<HTMLDivElement>(null);
 
-  const toggleRepost = useCallback((id: string) => {
-    setReposts(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      localStorage.setItem("tutoria_reposts", JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
+  const BLOGS = [
+    { id: "b1", title: "Five mistakes beginners make when learning photography", author: "Duc Pham", role: "Photography Artist", excerpt: "After teaching photography workshops for 5 years, I've seen the same patterns. Here's what holds beginners back.", likes: 234, comments: 18, tags: ["Photography"], createdAt: "2h ago", readTime: "8 min read", image: "https://picsum.photos/seed/post-photo/400/240" },
+    { id: "b2", title: "How I improved my IELTS speaking from 6.0 to 7.5", author: "Linh Nguyen", role: "English & IELTS Coach", excerpt: "Three months of consistent practice. The key insight that changed everything for me.", likes: 412, comments: 37, tags: ["IELTS", "Languages"], createdAt: "5h ago", readTime: "6 min read", image: "https://picsum.photos/seed/post-ielts/400/240" },
+    { id: "b3", title: "What I wish I knew before starting a small business", author: "Huy Tran", role: "Full-stack Developer", excerpt: "Four years in, here are the hard lessons about regulations, hiring, and why co-founders matter.", likes: 189, comments: 24, tags: ["Business"], createdAt: "1d ago", readTime: "10 min read", image: "https://picsum.photos/seed/post-business/400/240" },
+  ];
 
-  const handleShare = useCallback((blogId: string) => {
-    setShareOpen(prev => prev === blogId ? null : blogId);
-  }, []);
-
-  const copyLink = useCallback(async (blogId: string) => {
-    const url = `${window.location.origin}/discussions/blogs/${blogId}`;
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      const input = document.createElement("input");
-      input.value = url;
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand("copy");
-      document.body.removeChild(input);
-    }
-    setShareOpen(null);
-  }, []);
-
-  useEffect(() => {
-    if (!shareOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
-        setShareOpen(null);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [shareOpen]);
-
-  const [publishedArticles, setPublishedArticles] = useState<PublishedArticle[]>([]);
-
-  useEffect(() => {
-    queueMicrotask(() => setPublishedArticles(getPublishedArticles()));
-  }, []);
-
-  let feed: any[] = [...publishedArticles.map((a) => ({
-    id: a.id, title: a.title, author: a.authorName, role: a.authorRole || "Learner",
-    avatar: a.authorAvatar || `https://picsum.photos/seed/${a.authorName}/60/60`,
-    excerpt: a.subtitle || a.excerpt || "", likes: a.likes, comments: a.comments,
-    tags: a.topicName ? [a.topicName] : [],
-    createdAt: new Date(a.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-    readTime: `${a.estimatedReadingMinutes} min read`,
-    image: a.coverImage?.url || null,
-  })), ...BLOGS];
-
-  if (feedMode === "following" && following.length > 0) {
-    feed = feed.filter(b => following.includes(b.author));
-  } else if (feedMode === "communities" && followedTags.length > 0) {
-    feed = feed.filter((b) => (b.tags || []).some((t: string) => followedTags.includes(t)));
-  } else if (feedMode === "questions") {
-    feed = feed.filter((b) => /^(how|what|why|when|where|can|should)\b/i.test(b.title || ""));
-  }
+  let feed: any[] = [...BLOGS];
 
   if (searchQuery.trim()) {
     const q = searchQuery.trim().toLowerCase();
@@ -800,27 +671,10 @@ function BlogsTab({ searchQuery, feedMode }: {
     );
   }
 
-  const allFeed = (feedMode === "following" && following.length === 0) || (feedMode === "communities" && followedTags.length === 0) ? [] : feed;
-
   return (
     <div className={styles.postList}>
-      {feedMode === "following" && following.length === 0 && (
-        <div className="text-center py-12 border border-dashed border-border rounded-2xl">
-          <p className="text-sm text-muted">You&apos;re not following anyone yet.</p>
-          <p className="text-xs text-muted mt-1">Follow creators on the Posts tab to see their blogs here.</p>
-        </div>
-      )}
-
-      {feedMode === "communities" && followedTags.length === 0 && (
-        <div className="text-center py-12 border border-dashed border-border rounded-2xl">
-          <p className="text-sm text-muted">Follow topics to see community content.</p>
-          <p className="text-xs text-muted mt-1">Tap tags above to follow topics that interest you.</p>
-        </div>
-      )}
-
-      {allFeed.slice(0, visibleCount).map((blog) => {
+      {feed.slice(0, visibleCount).map((blog) => {
         const avatar = blog.avatar || `https://picsum.photos/seed/${encodeURIComponent(blog.author)}-avatar/60/60`;
-        const isReposted = reposts.has(blog.id);
         return (
           <article key={blog.id} role="button" tabIndex={0}
             onClick={() => router.push(`/discussions/blogs/${blog.id}`)}
@@ -847,61 +701,21 @@ function BlogsTab({ searchQuery, feedMode }: {
                 ))}
               </div>
               <div className={styles.postActions}>
-                <button onClick={(e) => e.stopPropagation()} className={styles.action} aria-label="Like article"><IconHeart size={17} /><span>{blog.likes}</span></button>
+                <button onClick={(e) => e.stopPropagation()} className={styles.action} aria-label="Like article"><IconMessage2 size={17} /><span>{blog.likes}</span></button>
                 <button onClick={(e) => e.stopPropagation()} className={styles.action} aria-label="View article replies"><IconMessage2 size={17} /><span>{blog.comments}</span></button>
-                <button onClick={(e) => { e.stopPropagation(); toggleRepost(blog.id); }}
-                  className={`${styles.action} ${isReposted ? styles.actionReposted : ""}`} aria-label={`${isReposted ? "Unrepost" : "Repost"} article`}>
-                  <IconRepeat size={18} />
-                  <span className="tabular-nums">{Math.max(1, Math.round(blog.comments / 8)) + (isReposted ? 1 : 0)}</span>
-                </button>
-                <div className="relative" ref={shareOpen === blog.id ? shareRef : undefined}>
-                  <button onClick={(e) => { e.stopPropagation(); handleShare(blog.id); }}
-                    className={styles.action} aria-label="Share article">
-                    <IconShare size={18} />
-                    <span className="tabular-nums">{Math.max(1, Math.round(blog.likes / 36))}</span>
-                  </button>
-                  {shareOpen === blog.id && (
-                    <div className="absolute right-0 bottom-full mb-2 w-48 rounded-xl border border-border bg-background shadow-lg p-1 z-20">
-                      <button onClick={(e) => { e.stopPropagation(); copyLink(blog.id); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
-                        <IconLink size={14} /> Copy link
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); copyLink(blog.id); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface transition-colors">
-                        <IconShare size={14} /> Share via...
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           </article>
         );
       })}
 
-      {visibleCount < allFeed.length && (
+      {visibleCount < feed.length && (
         <button onClick={() => setVisibleCount((c) => c + 8)} className={styles.loadMore}>Load more</button>
       )}
 
-      {allFeed.length === 0 && feedMode !== "following" && feedMode !== "communities" && !searchQuery && (
-        <div className="text-center py-12 text-sm text-muted border border-dashed border-border rounded-2xl">No blogs yet.</div>
-      )}
-
-      {allFeed.length === 0 && searchQuery.trim() && (
+      {feed.length === 0 && (
         <div className="text-center py-12 text-sm text-muted border border-dashed border-border rounded-2xl">
-          No results for &ldquo;{searchQuery}&rdquo;. Try a different search.
-        </div>
-      )}
-
-      {feedMode === "following" && following.length > 0 && allFeed.length === 0 && (
-        <div className="text-center py-12 border border-dashed border-border rounded-2xl">
-          <p className="text-sm text-muted">No blogs from followed creators.</p>
-        </div>
-      )}
-
-      {feedMode === "communities" && followedTags.length > 0 && allFeed.length === 0 && (
-        <div className="text-center py-12 border border-dashed border-border rounded-2xl">
-          <p className="text-sm text-muted">No blogs from your followed topics.</p>
+          No articles found.
         </div>
       )}
     </div>

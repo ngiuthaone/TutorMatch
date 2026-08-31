@@ -345,3 +345,5 @@ describe.sequential("local events publication (additive migration)", () => {
     expect(after.reschedules).toBe(before.reschedules);
   });
 });
+
+afterAll(() => sql.end());

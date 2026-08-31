@@ -24,12 +24,12 @@ export interface Comment {
   author: CommentAuthor;
 }
 
-export async function listComments(ownerType: "thread" | "article", ownerId: string) {
+export async function listComments(ownerType: "post" | "article", ownerId: string) {
   const q = new URLSearchParams({ ownerType, ownerId });
   return apiFetch<{ comments: Comment[] }>(`/api/v1/comments?${q.toString()}`, { auth: false });
 }
 
-export async function createComment(ownerType: "thread" | "article", ownerId: string, body: string, parentId: string | null = null) {
+export async function createComment(ownerType: "post" | "article", ownerId: string, body: string, parentId: string | null = null) {
   return apiFetch<{ id: string; depth: number; status: string }>("/api/v1/comments", {
     method: "POST",
     body: { ownerType, ownerId, body, parentId },

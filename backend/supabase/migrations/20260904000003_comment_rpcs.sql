@@ -108,10 +108,9 @@ begin
   if not exists(select 1 from public.comments where id = p_comment_id and status = 'published') then
     raise exception 'NOT_FOUND' using errcode = 'P0001';
   end if;
-  insert into public.reference_thread_appreciations(user_id, target_type, target_id)
-  values (uid, 'reply', p_comment_id)
-  on conflict (target_type, target_id, user_id) do nothing;
-  update public.comments set appreciated_count = (select count(*) from public.reference_thread_appreciations where target_type = 'reply' and target_id = p_comment_id) where id = p_comment_id
+  insert into public.comment_appreciations(comment_id, user_id) values (p_comment_id, uid)
+  on conflict (comment_id, user_id) do nothing;
+  update public.comments set appreciated_count = (select count(*) from public.comment_appreciations where comment_id = p_comment_id) where id = p_comment_id
   returning appreciated_count into v_count;
   return jsonb_build_object('comment_id', p_comment_id, 'appreciated_count', coalesce(v_count, 0), 'appreciated_by_me', true);
 end $$;
@@ -123,8 +122,8 @@ returns jsonb language plpgsql security definer set search_path = ''
 as $$
 declare uid uuid := public.assert_verified_booking_caller(); v_count int;
 begin
-  delete from public.reference_thread_appreciations where user_id = uid and target_type = 'reply' and target_id = p_comment_id;
-  update public.comments set appreciated_count = (select count(*) from public.reference_thread_appreciations where target_type = 'reply' and target_id = p_comment_id) where id = p_comment_id
+  delete from public.comment_appreciations where user_id = uid and comment_id = p_comment_id;
+  update public.comments set appreciated_count = (select count(*) from public.comment_appreciations where comment_id = p_comment_id) where id = p_comment_id
   returning appreciated_count into v_count;
   return jsonb_build_object('comment_id', p_comment_id, 'appreciated_count', coalesce(v_count, 0), 'appreciated_by_me', false);
 end $$;
@@ -170,7 +169,7 @@ begin
       'created_at', t.created_at,
       'depth', t.depth,
       'is_creator', (t.creator_id = v_auth_uid),
-      'appreciated_by_me', exists(select 1 from public.reference_thread_appreciations a where a.target_type = 'reply' and a.target_id = t.id and a.user_id = v_auth_uid),
+      'appreciated_by_me', exists(select 1 from public.comment_appreciations a where a.comment_id = t.id and a.user_id = v_auth_uid),
       'author', jsonb_build_object('name', t.author_name, 'avatar_url', t.author_avatar, 'role', t.author_role)
     ) obj, t.created_at
     from tree t

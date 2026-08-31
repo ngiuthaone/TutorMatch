@@ -292,3 +292,5 @@ describe.sequential("sessions + bookings extended concurrency invariants", () =>
     expect(rows.map((r: { status: string }) => r.status)).toEqual(["cancelled", "requested"]);
   });
 });
+
+afterAll(() => sql.end());

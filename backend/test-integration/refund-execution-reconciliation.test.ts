@@ -332,3 +332,5 @@ describe.sequential("Refund execution + reconciliation (Phase 3 DB semantics)", 
     expect(finalize.error?.code).toBe("42501");
   });
 });
+
+afterAll(() => sql.end());

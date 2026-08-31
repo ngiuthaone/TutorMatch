@@ -7,7 +7,7 @@ import type { CommentService } from "../services/comment-service.js";
 const noStore = async (_request: unknown, reply: any, payload: unknown) => { reply.header("Cache-Control", "no-store"); return payload; };
 
 const createCommentSchema = z.object({
-  ownerType: z.enum(["article"]),
+  ownerType: z.enum(["post", "article"]),
   ownerId: z.string().uuid(),
   body: z.string().min(1).max(2000),
   parentId: z.string().uuid().nullable().optional(),
@@ -15,7 +15,7 @@ const createCommentSchema = z.object({
 
 const idParamSchema = z.string().uuid();
 const listQuerySchema = z.object({
-  ownerType: z.enum(["article"]),
+  ownerType: z.enum(["post", "article"]),
   ownerId: z.string().uuid(),
 });
 

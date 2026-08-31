@@ -1,13 +1,23 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const signInSchema = z.object({
+  email: z.string().trim().email().max(254),
+  password: z.string().min(1).max(128),
+});
+
 const authBffRoutes: FastifyPluginAsync = async (app) => {
   app.post('/api/v1/auth/sign-in', async (request, reply) => {
+    const parsed = signInSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ ok: false, error: { code: 'INVALID_REQUEST', message: 'Invalid email or password format.' } });
+    }
     const body = request.body as { email: string; password: string };
     const { data, error } = await supabaseAdmin.auth.signInWithPassword({
       email: body.email,

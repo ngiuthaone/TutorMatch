@@ -142,10 +142,13 @@ declare
   b public.bookings%rowtype;
   s public.sessions%rowtype;
 begin
+  raise notice 'open_or_get: uid=%, booking_id=%', uid, p_booking_id;
   if uid is null then raise insufficient_privilege; end if;
   select * into b from public.bookings where id = p_booking_id;
+  raise notice 'open_or_get: b.id=%, b.learner_id=%, b.session_id=%', b.id, b.learner_id, b.session_id;
   if b.id is null then raise insufficient_privilege; end if;
   select * into s from public.sessions where id = b.session_id;
+  raise notice 'open_or_get: s.id=%, s.host_id=%', s.id, s.host_id;
   if s.id is null then raise insufficient_privilege; end if;
   if uid <> b.learner_id and uid <> s.host_id then raise insufficient_privilege; end if;
   select id into cid from public.conversations where booking_id = p_booking_id;
@@ -169,9 +172,12 @@ revoke all on function public.open_or_get_booking_conversation(uuid) from public
 -- the booking. Creates the conversation + membership if it does not exist.
 create or replace function public.get_or_create_booking_conversation(p_booking_id uuid) returns jsonb
 language plpgsql security definer set search_path = '' as $$
-declare cid uuid := public.open_or_get_booking_conversation(p_booking_id);
+declare
+  cid uuid := public.open_or_get_booking_conversation(p_booking_id);
+  caller uuid := auth.uid();
 begin
-  return public.conversation_summary(cid, auth.uid());
+  raise notice 'get_or_create_booking_conversation: p_booking_id=%, caller=%', p_booking_id, caller;
+  return public.conversation_summary(cid, caller);
 end;
 $$;
 revoke all on function public.get_or_create_booking_conversation(uuid) from public, anon, authenticated;

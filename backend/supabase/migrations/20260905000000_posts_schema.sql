@@ -13,6 +13,7 @@ create table if not exists public.posts (
   reply_permission text not null default 'everyone',
   community_id    uuid,
   status          text not null default 'draft' check (status in ('draft','published','deleted')),
+  like_count      integer not null default 0,
   repost_count    integer not null default 0,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
@@ -59,6 +60,31 @@ create policy "post_reposts_public_read"
 
 create policy "post_reposts_user_write"
   on public.post_reposts for all
+  to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+-- Likes table (upvote-only appreciation for posts)
+create table if not exists public.post_likes (
+  id              uuid primary key default gen_random_uuid(),
+  post_id         uuid not null references public.posts(id) on delete cascade,
+  user_id         uuid not null references public.profiles(id) on delete cascade,
+  created_at      timestamptz not null default now(),
+  unique (post_id, user_id)
+);
+
+create index idx_post_likes_post on public.post_likes (post_id);
+create index idx_post_likes_user on public.post_likes (user_id);
+
+alter table public.post_likes enable row level security;
+
+create policy "post_likes_public_read"
+  on public.post_likes for select
+  to public
+  using (true);
+
+create policy "post_likes_user_write"
+  on public.post_likes for all
   to authenticated
   using (user_id = auth.uid())
   with check (user_id = auth.uid());

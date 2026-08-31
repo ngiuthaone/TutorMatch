@@ -156,3 +156,5 @@ describe.sequential("sessions + bookings extended authorization", () => {
     expect(byLearner.error).toBeNull();
   });
 });
+
+afterAll(() => sql.end());

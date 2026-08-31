@@ -19,6 +19,7 @@ if (!["localhost", "127.0.0.1", "host.docker.internal"].includes(new URL(url).ho
 const anon = createClient(url, key, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
+
 const sql = postgres(dbUrl, { max: 4 });
 const password = "Local-test-only-Password1!";
 
@@ -574,3 +575,5 @@ describe.sequential("transactional outbox: committed domain facts, atomicity, ac
     await expect(sql`select public.fail_event('w', ${randomUUID()}, 'x', -1)`).rejects.toThrow();
   });
 });
+
+afterAll(() => sql.end());

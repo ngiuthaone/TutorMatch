@@ -220,3 +220,4 @@ describe.sequential("messaging Alpha (MSG-010 / DEC-015): RLS, idempotency, memb
     expect(JSON.stringify(learnerList.data)).toContain(conv.id);
   });
 });
+afterAll(() => sql.end());

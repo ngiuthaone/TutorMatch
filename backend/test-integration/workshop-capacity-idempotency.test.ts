@@ -520,3 +520,5 @@ describe.sequential("workshop capacity and idempotency invariants", () => {
     expect(await reserved(s.id)).toBe(1);
   });
 });
+
+afterAll(() => sql.end());

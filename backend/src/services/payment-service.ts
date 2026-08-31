@@ -53,6 +53,9 @@ export function createSupabasePaymentService(url: string, publishableKey: string
     async start(token: string, bookingId: string, idempotencyKey: string) {
       const { data, error } = await caller(token).rpc("start_payment_attempt", { p_booking_id: bookingId, p_idempotency_key: idempotencyKey });
       if (error) return { error };
+      if (!data || data.merchantReference == null || data.amountVnd == null) {
+        return { error: { code: "INVALID_RESPONSE", message: "Payment service returned invalid data." } };
+      }
       return { data: { ...data, redirectUrl: buildVnpayPaymentUrl(vnpay, { merchantReference: data.merchantReference, amountVnd: data.amountVnd, orderInfo: `Tutoria booking ${bookingId}`, returnUrl: returnUrlForBooking(vnpay.returnUrl, bookingId), createdAt: new Date() }) } };
     },
     async read(token: string, bookingId: string) { return await caller(token).rpc("get_booking_payment", { p_booking_id: bookingId }); },
@@ -68,7 +71,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       if (attempt.error || !attempt.data) return { data: null, error: attempt.error ?? new Error("Unknown provider reference") };
       const operationKey = `query:${merchantReference}`;
       const existing = await trusted.from("payment_provider_operations").select("status,response_payload").eq("operation_key", operationKey).maybeSingle();
-      if (existing.data?.status === "succeeded") return { data: existing.data.response_payload, error: null };
+      if (existing.data && existing.data.status === "succeeded") return { data: existing.data.response_payload, error: null };
       const requestId = `query-${merchantReference}-${Date.now()}`;
       const query = buildVnpayTransactionRequest(vnpay, { requestId, command: "querydr", merchantReference, amountVnd: Number(attempt.data.amount_vnd), orderInfo: "Tutoria payment reconciliation", createdAt: new Date() });
       const operation = await trusted.from("payment_provider_operations").upsert({ operation_type: "query", operation_key: operationKey, payment_id: attempt.data.payment_id, attempt_id: attempt.data.id, merchant_reference: merchantReference, provider_request_id: requestId, status: "pending", request_payload: query.body }, { onConflict: "operation_key", ignoreDuplicates: true });
@@ -125,10 +128,6 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       const queryKey = `queryrefund:${refundId}`;
       const existing = await trusted.from("payment_provider_operations").select("status,provider_request_id").eq("operation_key", queryKey).maybeSingle();
       if (existing.data?.status === "succeeded" || existing.data?.status === "failed") return { data: existing.data, error: null };
-      // Reuse the persisted provider request identity when a previous query
-      // attempt exists. The operation key is stable across retries, so a new
-      // in-memory request ID would not match the persisted operation row and
-      // the authoritative recorder would reject the result as unknown.
       const requestId = existing.data?.provider_request_id ?? `queryrefund-${refundId}-${Date.now()}`;
       const query = buildVnpayTransactionRequest(vnpay, { requestId, command: "querydr", merchantReference: attempt.data.merchant_reference, amountVnd: Number(refund.data.amount_vnd), transactionNo: refund.data.provider_transaction_no ?? undefined, transactionDate: formatVnpayDateTime(new Date(op.data.created_at)), orderInfo: "Tutoria refund reconciliation", createdAt: new Date() });
       const inserted = await trusted.from("payment_provider_operations").upsert({ operation_type: "query", operation_key: queryKey, payment_id: refund.data.payment_id, attempt_id: attempt.data.id, refund_id: refundId, merchant_reference: attempt.data.merchant_reference, provider_request_id: requestId, status: "pending", request_payload: query.body }, { onConflict: "operation_key", ignoreDuplicates: true });
@@ -152,7 +151,14 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       let executed = 0;
       for (const row of (data ?? []) as { refundId: string }[]) {
         if (workerOptions.signal?.aborted) break;
-        const result = await this.executeRefund(row.refundId);
+        let result: { data?: unknown; error?: unknown };
+        try {
+          result = await this.executeRefund(row.refundId);
+        } catch (err) {
+          console.error("refund_execution_exception", { refundId: row.refundId, error: String(err) });
+          try { await releaseRefundClaim(workerId, row.refundId, String(err)); } catch { /* ignore */ }
+          continue;
+        }
         if (result.error) {
           await releaseRefundClaim(workerId, row.refundId, String((result.error as Error | undefined)?.message ?? "refund_execution_error"));
           continue;

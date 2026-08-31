@@ -119,10 +119,12 @@ begin
     'level', p.level,
     'post_type', p.post_type,
     'reply_permission', p.reply_permission,
+    'like_count', p.like_count,
     'repost_count', p.repost_count,
     'created_at', p.created_at,
     'updated_at', p.updated_at,
     'is_author', (p.author_id = v_auth_uid),
+    'liked_by_me', exists(select 1 from public.post_likes l where l.post_id = p.id and l.user_id = v_auth_uid),
     'reposted_by_me', exists(select 1 from public.post_reposts r where r.post_id = p.id and r.user_id = v_auth_uid),
     'author', jsonb_build_object('name', pr.name, 'avatar_url', pr.avatar_url, 'role', pr.role)
   )
@@ -144,7 +146,8 @@ create or replace function public.list_public_posts(
   p_cursor text default null,
   p_limit integer default 20,
   p_tag text default null,
-  p_post_type text default null
+  p_post_type text default null,
+  p_author_name text default null
 ) returns jsonb
 language plpgsql
 stable
@@ -166,6 +169,7 @@ begin
       'level', p.level,
       'post_type', p.post_type,
       'reply_permission', p.reply_permission,
+      'like_count', p.like_count,
       'repost_count', p.repost_count,
       'created_at', p.created_at,
       'author', jsonb_build_object('name', pr.name, 'avatar_url', pr.avatar_url, 'role', pr.role)
@@ -176,6 +180,7 @@ begin
       and (p_cursor is null or p.created_at < to_timestamp(p_cursor::double precision / 1000.0))
       and (p_tag is null or p_tag = any(p.tags))
       and (p_post_type is null or p.post_type = p_post_type)
+      and (p_author_name is null or pr.name = p_author_name)
     order by p.created_at desc
     limit v_limit
   ) t;
@@ -184,10 +189,12 @@ begin
   from (
     select p.created_at
     from public.posts p
+    left join public.profiles pr on pr.id = p.author_id
     where p.status = 'published'
       and (p_cursor is null or p.created_at < to_timestamp(p_cursor::double precision / 1000.0))
       and (p_tag is null or p_tag = any(p.tags))
       and (p_post_type is null or p.post_type = p_post_type)
+      and (p_author_name is null or pr.name = p_author_name)
     order by p.created_at desc
     limit 1 offset v_limit
   ) t;
@@ -198,8 +205,8 @@ begin
   );
 end $$;
 
-revoke all on function public.list_public_posts(text, integer, text, text) from public, anon, authenticated;
-grant execute on function public.list_public_posts(text, integer, text, text) to anon, authenticated;
+revoke all on function public.list_public_posts(text, integer, text, text, text) from public, anon, authenticated;
+grant execute on function public.list_public_posts(text, integer, text, text, text) to anon, authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────
 -- list_my_posts — author's own posts
@@ -261,3 +268,36 @@ begin
 end $$;
 revoke all on function public.unrepost_post(uuid) from public, anon, authenticated;
 grant execute on function public.unrepost_post(uuid) to authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- like_post / unlike_post
+-- ─────────────────────────────────────────────────────────────────────
+create or replace function public.like_post(p_post_id uuid)
+returns jsonb language plpgsql security definer set search_path = ''
+as $$
+declare uid uuid := public.assert_verified_booking_caller(); v_count int;
+begin
+  if not exists(select 1 from public.posts where id = p_post_id and status = 'published') then
+    raise exception 'NOT_FOUND' using errcode = 'P0001';
+  end if;
+  insert into public.post_likes(post_id, user_id) values (p_post_id, uid)
+  on conflict (post_id, user_id) do nothing;
+  update public.posts set like_count = (select count(*) from public.post_likes where post_id = p_post_id) where id = p_post_id
+  returning like_count into v_count;
+  return jsonb_build_object('post_id', p_post_id, 'like_count', coalesce(v_count, 0), 'liked_by_me', true);
+end $$;
+revoke all on function public.like_post(uuid) from public, anon, authenticated;
+grant execute on function public.like_post(uuid) to authenticated;
+
+create or replace function public.unlike_post(p_post_id uuid)
+returns jsonb language plpgsql security definer set search_path = ''
+as $$
+declare uid uuid := public.assert_verified_booking_caller(); v_count int;
+begin
+  delete from public.post_likes where user_id = uid and post_id = p_post_id;
+  update public.posts set like_count = (select count(*) from public.post_likes where post_id = p_post_id) where id = p_post_id
+  returning like_count into v_count;
+  return jsonb_build_object('post_id', p_post_id, 'like_count', coalesce(v_count, 0), 'liked_by_me', false);
+end $$;
+revoke all on function public.unlike_post(uuid) from public, anon, authenticated;
+grant execute on function public.unlike_post(uuid) to authenticated;
