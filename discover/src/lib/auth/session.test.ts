@@ -165,7 +165,7 @@ describe("email verification", () => {
   it("resends confirmation through Supabase with a safe booking return path", async () => {
     const { resendSignupConfirmation, ensureSession } = await loadSession();
     getSessionMock.mockResolvedValue({ data: { session: makeSession() }, error: null });
-    onAuthStateChangeMock.mockImplementation(() => () => {});
+    onAuthStateChangeMock.mockImplementation(() => ({ data: { subscription: { unsubscribe: () => {} } } }));
     getMeMock.mockResolvedValue(makeProfile());
     resendMock.mockResolvedValue({ data: {}, error: null });
     await ensureSession();
@@ -182,7 +182,7 @@ describe("ensureSession", () => {
   it("restores an anonymous state when no session exists", async () => {
     const { ensureSession, getSessionSnapshot } = await loadSession();
     getSessionMock.mockResolvedValue({ data: { session: null }, error: null });
-    onAuthStateChangeMock.mockImplementation(() => () => {});
+    onAuthStateChangeMock.mockImplementation(() => ({ data: { subscription: { unsubscribe: () => {} } } }));
 
     await ensureSession();
 
@@ -192,7 +192,7 @@ describe("ensureSession", () => {
   it("restores an authenticated state from a persisted session and profile", async () => {
     const { ensureSession, getSessionSnapshot } = await loadSession();
     getSessionMock.mockResolvedValue({ data: { session: makeSession() }, error: null });
-    onAuthStateChangeMock.mockImplementation(() => () => {});
+    onAuthStateChangeMock.mockImplementation(() => ({ data: { subscription: { unsubscribe: () => {} } } }));
     getMeMock.mockResolvedValue(makeProfile());
 
     await ensureSession();
@@ -217,7 +217,7 @@ describe("ensureSession", () => {
     getSessionMock.mockResolvedValue({ data: { session }, error: null });
     onAuthStateChangeMock.mockImplementation((callback: (event: string, session: Session | null) => void) => {
       authCallback = callback;
-      return () => {};
+      return { data: { subscription: { unsubscribe: () => {} } } };
     });
     getMeMock.mockResolvedValue(makeProfile());
     subscribeToIdentity(listener);
@@ -242,7 +242,7 @@ describe("ensureSession", () => {
     const refreshed = makeSession({ access_token: "access-token-2" });
     const { ApiClientError } = await import("@/lib/auth/api-client");
     getSessionMock.mockResolvedValue({ data: { session }, error: null });
-    onAuthStateChangeMock.mockImplementation(() => () => {});
+    onAuthStateChangeMock.mockImplementation(() => ({ data: { subscription: { unsubscribe: () => {} } } }));
     refreshSessionMock.mockResolvedValue({ data: { session: refreshed }, error: null });
     getMeMock
       .mockRejectedValueOnce(new ApiClientError("UNAUTHORIZED", 401))
