@@ -27,7 +27,7 @@ begin
 end $$;
 
 revoke all on function public.create_notification(uuid, uuid, text, text, uuid, text) from public, anon, authenticated;
-grant execute on function public.create_notification(uuid, uuid, text, text, uuid, text) to authenticated;
+-- Only callable from security definer trigger functions, not directly by users
 
 -- ─────────────────────────────────────────────────────────────────────
 -- list_notifications — authenticated user's notifications

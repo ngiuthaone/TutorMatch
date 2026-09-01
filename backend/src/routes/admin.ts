@@ -17,6 +17,22 @@ const searchSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+const auditLogQuerySchema = z.object({
+  action: z.string().trim().min(1).max(200).optional(),
+  targetType: z.string().trim().min(1).max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+
+const disputesQuerySchema = z.object({
+  status: z.string().trim().min(1).max(50).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+
+const hostCancellationsQuerySchema = z.object({
+  hostId: z.string().uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+
 export const adminRoutes: FastifyPluginAsync<{
   authService: AuthService;
   adminService: ReturnType<typeof import("../services/admin-service.js").createAdminService>;
@@ -50,15 +66,12 @@ export const adminRoutes: FastifyPluginAsync<{
     preHandler: adminPreHandler,
     config: { rateLimit: { max: options.max, timeWindow: options.windowMs } },
   }, async (request) => {
-    const { action, targetType, limit } = request.query as {
-      action?: string;
-      targetType?: string;
-      limit?: string;
-    };
+    const parsed = auditLogQuerySchema.safeParse(request.query);
+    if (!parsed.success) throw new ApiError(400, "SEARCH_INVALID", "Audit log query is invalid.");
     const result = await options.adminService.searchAuditLog(
-      action,
-      targetType,
-      limit ? parseInt(limit, 10) : 50,
+      parsed.data.action,
+      parsed.data.targetType,
+      parsed.data.limit,
     );
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Admin service is temporarily unavailable.");
     return { ok: true, entries: result.data };
@@ -81,10 +94,11 @@ export const adminRoutes: FastifyPluginAsync<{
     preHandler: adminPreHandler,
     config: { rateLimit: { max: options.max, timeWindow: options.windowMs } },
   }, async (request) => {
-    const { status, limit } = request.query as { status?: string; limit?: string };
+    const parsed = disputesQuerySchema.safeParse(request.query);
+    if (!parsed.success) throw new ApiError(400, "SEARCH_INVALID", "Disputes query is invalid.");
     const result = await options.adminService.searchDisputes(
-      status,
-      limit ? parseInt(limit, 10) : 50,
+      parsed.data.status,
+      parsed.data.limit,
     );
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Admin service is temporarily unavailable.");
     return { ok: true, disputes: result.data };
@@ -95,10 +109,11 @@ export const adminRoutes: FastifyPluginAsync<{
     preHandler: adminPreHandler,
     config: { rateLimit: { max: options.max, timeWindow: options.windowMs } },
   }, async (request) => {
-    const { hostId, limit } = request.query as { hostId?: string; limit?: string };
+    const parsed = hostCancellationsQuerySchema.safeParse(request.query);
+    if (!parsed.success) throw new ApiError(400, "SEARCH_INVALID", "Host cancellations query is invalid.");
     const result = await options.adminService.searchHostCancellations(
-      hostId,
-      limit ? parseInt(limit, 10) : 50,
+      parsed.data.hostId,
+      parsed.data.limit,
     );
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Admin service is temporarily unavailable.");
     return { ok: true, records: result.data };

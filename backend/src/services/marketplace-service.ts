@@ -59,6 +59,9 @@ export function buildStoredPayload(inputConfig: Record<string, unknown>): Record
 export type MarketplaceKind = "course" | "event";
 export type MarketplaceListing = { id: string; kind: MarketplaceKind; slug: string; title: string; creatorId: string; payload: Record<string, unknown>; publishedAt: string; status: string; version: number };
 export type MarketplaceResult<T> = { status: "ok"; data: T } | { status: "conflict" | "unavailable" };
+export type MarketplaceListResult =
+  | { status: "ok"; data: MarketplaceListing[] }
+  | { status: "unavailable" };
 export type MarketplaceReadResult =
   | { status: "ok"; data: MarketplaceListing }
   | { status: "not_found" | "unavailable" };
@@ -68,6 +71,13 @@ export type MarketplaceUpdateResult =
 export type MarketplaceUnpublishResult =
   | { status: "ok"; data: MarketplaceListing }
   | { status: "not_found" | "conflict" | "unavailable" };
+export type MarketplaceFilters = {
+  query?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  level?: string;
+  language?: string;
+};
 
 export function mapRow(row: Record<string, unknown>, includeCreatorId = true): MarketplaceListing {
   return {
@@ -111,6 +121,20 @@ export function createSupabaseMarketplaceService(
       }
     },
 
+    async createDraft(token: string, creatorId: string, input: Omit<MarketplaceListing, "id" | "creatorId" | "publishedAt" | "status" | "version">): Promise<MarketplaceResult<MarketplaceListing>> {
+      try {
+        const storedPayload = buildStoredPayload(input.payload);
+        const { data, error } = await caller(token).from("marketplace_listings").upsert({
+          kind: input.kind, slug: input.slug, title: input.title, creator_id: creatorId, payload: storedPayload, status: "draft", published_at: null,
+        }, { onConflict: "kind,slug" }).select("id,kind,slug,title,creator_id,payload,published_at,status,version").single();
+        if (error) return error.code === "23505" || error.code === "42501" ? { status: "conflict" } : { status: "unavailable" };
+        return { status: "ok", data: mapRow(data) };
+      } catch (error) {
+        logServiceError({ service: "marketplace-service", operation: "createDraft", error });
+        return { status: "unavailable" };
+      }
+    },
+
     async getPublic(kind: MarketplaceKind, slug: string): Promise<MarketplaceReadResult> {
       try {
         const { data, error } = await caller().from("marketplace_listings")
@@ -124,13 +148,56 @@ export function createSupabaseMarketplaceService(
       }
     },
 
-    async list(kind: MarketplaceKind): Promise<MarketplaceResult<MarketplaceListing[]>> {
+    async list(kind: MarketplaceKind, filters?: MarketplaceFilters): Promise<MarketplaceListResult> {
       try {
-        const { data, error } = await caller().from("marketplace_listings").select("id,kind,slug,title,creator_id,payload,published_at,status,version").eq("kind", kind).eq("status", "published").order("published_at", { ascending: false }).limit(100);
+        let q = caller().from("marketplace_listings").select("id,kind,slug,title,creator_id,payload,published_at,status,version").eq("kind", kind).eq("status", "published").order("published_at", { ascending: false }).limit(100);
+        
+        if (filters?.query) {
+          q = q.ilike("title", `%${filters.query}%`);
+        }
+        if (filters?.level) {
+          q = q.eq("payload->>level", filters.level);
+        }
+        if (filters?.language) {
+          q = q.eq("payload->>language", filters.language);
+        }
+        
+        const { data, error } = await q;
         if (error) return { status: "unavailable" };
-        return { status: "ok", data: (data || []).map((row) => mapRow(row, false)) };
+        
+        let items = (data || []).map((row) => mapRow(row, false));
+        
+        if (filters?.minPrice !== undefined) {
+          items = items.filter(item => {
+            const price = typeof item.payload?.price === 'number' ? item.payload.price : 0;
+            return price >= filters.minPrice!;
+          });
+        }
+        if (filters?.maxPrice !== undefined) {
+          items = items.filter(item => {
+            const price = typeof item.payload?.price === 'number' ? item.payload.price : 0;
+            return price <= filters.maxPrice!;
+          });
+        }
+        
+        return { status: "ok", data: items };
       } catch (error) {
         logServiceError({ service: "marketplace-service", operation: "list", error });
+        return { status: "unavailable" };
+      }
+    },
+
+    async listMine(token: string, kind: MarketplaceKind): Promise<MarketplaceListResult> {
+      try {
+        const { data, error } = await caller(token).from("marketplace_listings")
+          .select("id,kind,slug,title,creator_id,payload,published_at,status,version")
+          .eq("kind", kind)
+          .order("published_at", { ascending: false })
+          .limit(100);
+        if (error) return { status: "unavailable" };
+        return { status: "ok", data: (data || []).map((row) => mapRow(row, true)) };
+      } catch (error) {
+        logServiceError({ service: "marketplace-service", operation: "listMine", error });
         return { status: "unavailable" };
       }
     },
@@ -195,6 +262,30 @@ export function createSupabaseMarketplaceService(
         return { status: "ok", data: mapRow(data) };
       } catch (error) {
         logServiceError({ service: "marketplace-service", operation: "unpublish", error });
+        return { status: "unavailable" };
+      }
+    },
+
+    async publishDraft(token: string, kind: MarketplaceKind, slug: string): Promise<MarketplaceUnpublishResult> {
+      try {
+        const { data: existing, error: readError } = await caller(token).from("marketplace_listings")
+          .select("id,kind,slug,title,creator_id,payload,published_at,status,version")
+          .eq("kind", kind).eq("slug", slug).single();
+        if (readError || !existing) return { status: "not_found" };
+        if (existing.status === "published") return { status: "conflict" };
+        const nextVersion = Number(existing.version) + 1;
+        const { data, error } = await caller(token).from("marketplace_listings")
+          .update({ status: "published", published_at: new Date().toISOString(), version: nextVersion })
+          .eq("kind", kind).eq("slug", slug).eq("status", "draft").eq("version", existing.version)
+          .select("id,kind,slug,title,creator_id,payload,published_at,status,version").single();
+        if (error) {
+          if (error.code === "PGRST116") return { status: "conflict" };
+          return { status: "unavailable" };
+        }
+        if (!data) return { status: "conflict" };
+        return { status: "ok", data: mapRow(data) };
+      } catch (error) {
+        logServiceError({ service: "marketplace-service", operation: "publishDraft", error });
         return { status: "unavailable" };
       }
     },

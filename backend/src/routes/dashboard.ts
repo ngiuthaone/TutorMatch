@@ -32,6 +32,7 @@ export const dashboardRoutes: FastifyPluginAsync<{
   app.get("/api/v1/dashboard/overview", {
     preHandler: [app.authenticate, options.requireAdmin],
     config: { rateLimit: { max: options.max, timeWindow: options.windowMs } },
+    onSend: async (_request, reply, payload) => { reply.header("Cache-Control", "no-store").header("Pragma", "no-cache"); return payload; },
   }, async () => {
     try {
       // Funnel counts from analytics_events (server-authoritative funnel events).

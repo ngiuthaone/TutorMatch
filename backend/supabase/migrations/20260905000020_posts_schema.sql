@@ -57,9 +57,9 @@ create index idx_post_reposts_user on public.post_reposts (user_id);
 alter table public.post_reposts enable row level security;
 
 drop policy if exists "post_reposts_public_read" on public.post_reposts;
-create policy "post_reposts_public_read"
+create policy "post_reposts_authenticated_read"
   on public.post_reposts for select
-  to public
+  to authenticated
   using (true);
 
 drop policy if exists "post_reposts_user_write" on public.post_reposts;
@@ -84,9 +84,9 @@ create index idx_post_likes_user on public.post_likes (user_id);
 alter table public.post_likes enable row level security;
 
 drop policy if exists "post_likes_public_read" on public.post_likes;
-create policy "post_likes_public_read"
+create policy "post_likes_authenticated_read"
   on public.post_likes for select
-  to public
+  to authenticated
   using (true);
 
 drop policy if exists "post_likes_user_write" on public.post_likes;
@@ -111,9 +111,9 @@ create index idx_comment_appreciations_user on public.comment_appreciations (use
 alter table public.comment_appreciations enable row level security;
 
 drop policy if exists "comment_appreciations_public_read" on public.comment_appreciations;
-create policy "comment_appreciations_public_read"
+create policy "comment_appreciations_authenticated_read"
   on public.comment_appreciations for select
-  to public
+  to authenticated
   using (true);
 
 drop policy if exists "comment_appreciations_user_write" on public.comment_appreciations;

@@ -45,6 +45,14 @@ const courseImageUrl = (value: string): boolean => {
 const kindSchema = z.enum(["course", "event"]);
 const slugParamSchema = z.string().trim().min(1).max(120);
 
+const marketplaceFilterSchema = z.object({
+  q: z.string().max(200).optional(),
+  minPrice: z.coerce.number().min(0).optional(),
+  maxPrice: z.coerce.number().min(0).optional(),
+  level: z.enum(["Beginner", "Intermediate", "Advanced"]).optional(),
+  language: z.string().max(60).optional(),
+});
+
 // coursePostSchema covers the fields the course-creator iframe emits today. The
 // payload is free-form for future fields, but the well-known fields are
 // validated here so a 5MB image or a malformed URL is rejected with 400 before
@@ -149,9 +157,25 @@ function courseFieldsToPayload(input: Record<string, unknown>): Record<string, u
 
 export const marketplaceRoutes: FastifyPluginAsync<{ authService: AuthService; marketplaceService: ReturnType<typeof import("../services/marketplace-service.js").createSupabaseMarketplaceService>; publishMax: number; readMax: number; windowMs: number }> = async (app, options) => {
   app.get("/api/v1/marketplace/:kind", { config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } }, onSend: noStore }, async (request) => {
-    const parsed = kindSchema.safeParse((request.params as { kind?: unknown }).kind);
-    if (!parsed.success) throw new ApiError(404, "NOT_FOUND", "Marketplace type not found.");
-    const result = await options.marketplaceService.list(parsed.data);
+    const kindParse = kindSchema.safeParse((request.params as { kind?: unknown }).kind);
+    if (!kindParse.success) throw new ApiError(404, "NOT_FOUND", "Marketplace type not found.");
+    const filterParse = marketplaceFilterSchema.safeParse(request.query);
+    const filters = filterParse.success ? {
+      ...(filterParse.data.q !== undefined && { query: filterParse.data.q }),
+      ...(filterParse.data.minPrice !== undefined && { minPrice: filterParse.data.minPrice }),
+      ...(filterParse.data.maxPrice !== undefined && { maxPrice: filterParse.data.maxPrice }),
+      ...(filterParse.data.level !== undefined && { level: filterParse.data.level }),
+      ...(filterParse.data.language !== undefined && { language: filterParse.data.language }),
+    } : undefined;
+    const result = await options.marketplaceService.list(kindParse.data, filters);
+    if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Marketplace is temporarily unavailable.");
+    return { ok: true, items: result.data };
+  });
+
+  app.get("/api/v1/marketplace/:kind/mine", { preHandler: app.authenticate, config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } }, onSend: noStore }, async (request) => {
+    const kindParse = kindSchema.safeParse((request.params as { kind?: unknown }).kind);
+    if (!kindParse.success) throw new ApiError(404, "NOT_FOUND", "Marketplace type not found.");
+    const result = await options.marketplaceService.listMine(request.auth.accessToken, kindParse.data);
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Marketplace is temporarily unavailable.");
     return { ok: true, items: result.data };
   });
@@ -190,6 +214,27 @@ export const marketplaceRoutes: FastifyPluginAsync<{ authService: AuthService; m
     return { ok: true, item: result.data };
   });
 
+  app.post("/api/v1/marketplace/:kind/draft", { preHandler: app.authenticate, bodyLimit: MARKETPLACE_BODY_LIMIT_BYTES, config: { rateLimit: { max: options.publishMax, timeWindow: options.windowMs } }, onSend: noStore }, async (request) => {
+    await requireTutor(options.authService, request);
+    const kind = kindSchema.safeParse((request.params as { kind?: unknown }).kind);
+    if (!kind.success) throw new ApiError(404, "NOT_FOUND", "Marketplace type not found.");
+    if (kind.data === "course") {
+      const body = coursePostSchema.safeParse(request.body);
+      if (!body.success) throw new ApiError(400, "MARKETPLACE_INVALID", "Listing details are invalid.");
+      const payload = courseFieldsToPayload(body.data) as Record<string, unknown>;
+      const result = await options.marketplaceService.createDraft(request.auth.accessToken, request.auth.userId, { kind: "course", slug: body.data.slug, title: body.data.title, payload });
+      if (result.status === "conflict") throw new ApiError(409, "LISTING_SLUG_CONFLICT", "That public URL belongs to another creator.");
+      if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Marketplace is temporarily unavailable.");
+      return { ok: true, item: result.data };
+    }
+    const body = eventPostSchema.safeParse(request.body);
+    if (!body.success) throw new ApiError(400, "MARKETPLACE_INVALID", "Listing details are invalid.");
+    const result = await options.marketplaceService.createDraft(request.auth.accessToken, request.auth.userId, { kind: "event", slug: body.data.slug, title: body.data.title, payload: body.data.payload });
+    if (result.status === "conflict") throw new ApiError(409, "LISTING_SLUG_CONFLICT", "That public URL belongs to another creator.");
+    if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Marketplace is temporarily unavailable.");
+    return { ok: true, item: result.data };
+  });
+
   app.patch("/api/v1/marketplace/:kind/:slug", { preHandler: app.authenticate, bodyLimit: MARKETPLACE_BODY_LIMIT_BYTES, config: { rateLimit: { max: options.publishMax, timeWindow: options.windowMs } }, onSend: noStore }, async (request) => {
     await requireTutor(options.authService, request);
     const kind = kindSchema.safeParse((request.params as { kind?: unknown }).kind);
@@ -221,6 +266,19 @@ export const marketplaceRoutes: FastifyPluginAsync<{ authService: AuthService; m
     if (result.status === "conflict") throw new ApiError(409, "VERSION_CONFLICT", "The listing was modified by another request. Reload and try again.");
     if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Listing not found.");
     if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You do not own this listing.");
+    if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Marketplace is temporarily unavailable.");
+    return { ok: true, item: result.data };
+  });
+
+  app.patch("/api/v1/marketplace/:kind/:slug/publish", { preHandler: app.authenticate, config: { rateLimit: { max: options.publishMax, timeWindow: options.windowMs } }, onSend: noStore }, async (request) => {
+    await requireTutor(options.authService, request);
+    const kind = kindSchema.safeParse((request.params as { kind?: unknown }).kind);
+    if (!kind.success) throw new ApiError(404, "NOT_FOUND", "Marketplace type not found.");
+    const slug = slugParamSchema.safeParse(decodeURIComponent((request.params as { slug?: string }).slug ?? ""));
+    if (!slug.success) throw new ApiError(404, "NOT_FOUND", "Listing not found.");
+    const result = await options.marketplaceService.publishDraft(request.auth.accessToken, kind.data, slug.data);
+    if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Listing not found or not a draft.");
+    if (result.status === "conflict") throw new ApiError(409, "ALREADY_PUBLISHED", "This listing is already published.");
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Marketplace is temporarily unavailable.");
     return { ok: true, item: result.data };
   });

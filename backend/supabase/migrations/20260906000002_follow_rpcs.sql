@@ -60,7 +60,7 @@ begin
 end $$;
 
 revoke all on function public.is_following(text) from public, anon, authenticated;
-grant execute on function public.is_following(text) to anon, authenticated;
+grant execute on function public.is_following(text) to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────
 -- list_followers

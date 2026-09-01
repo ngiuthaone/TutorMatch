@@ -27,6 +27,7 @@ export const policyRoutes: FastifyPluginAsync<{
   /** GET /api/v1/policies — list active policy versions (public). */
   app.get("/api/v1/policies", {
     config: { rateLimit: { max: options.max, timeWindow: options.windowMs } },
+    onSend: async (_request, reply, payload) => { reply.header("Cache-Control", "public, max-age=300"); return payload; },
   }, async () => {
     const result = await options.policyService.listActivePolicies();
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Policy service is temporarily unavailable.");
@@ -56,6 +57,7 @@ export const policyRoutes: FastifyPluginAsync<{
   app.get("/api/v1/policies/check", {
     preHandler: app.authenticate,
     config: { rateLimit: { max: options.max, timeWindow: options.windowMs } },
+    onSend: async (_request, reply, payload) => { reply.header("Cache-Control", "no-store").header("Pragma", "no-cache"); return payload; },
   }, async (request) => {
     const { type, version } = request.query as { type?: string; version?: string };
     if (!type) throw new ApiError(400, "POLICY_TYPE_REQUIRED", "policy type query parameter is required.");

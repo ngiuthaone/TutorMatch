@@ -20,6 +20,7 @@ export type PaymentService = {
   sweepRefundReconciliations(workerId: string): Promise<{ data?: any; error?: any }>;
   sweepPendingFinalizations(workerId: string): Promise<{ data?: any; error?: any }>;
   sweepExpiredWorkshopBookings(workerId: string): Promise<{ data?: any; error?: any }>;
+  sweepExpiredBookings(workerId: string): Promise<{ data?: { expired: number }; error?: unknown }>;
 };
 export type PaymentWorkerOptions = {
   batchSize?: number;
@@ -29,6 +30,9 @@ export type PaymentWorkerOptions = {
   signal?: AbortSignal;
 };
 export function createSupabasePaymentService(url: string, publishableKey: string, serviceRoleKey: string | undefined, vnpay: VnpayConfig, vnpayApiUrl: string, fetchImpl: typeof fetch = fetch, workerOptions: PaymentWorkerOptions = {}): PaymentService {
+  if (!serviceRoleKey) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required: payment service cannot operate without service role authority");
+  }
   const caller = (token: string) => createClient(url, publishableKey, { ...options, global: { headers: { Authorization: `Bearer ${token}` } } });
   const trusted = serviceRoleKey ? createClient(url, serviceRoleKey, options) : null;
   const workerLeaseSeconds = workerOptions.leaseSeconds ?? 300;
@@ -37,7 +41,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
   const executeProvider = (request: ReturnType<typeof buildVnpayTransactionRequest>) => executeVnpayTransaction(vnpayApiUrl, request, fetchImpl, workerOptions.providerRequestTimeoutMs, workerOptions.signal);
 
   async function recordRefundResult(refundId: string, outcome: "pending" | "succeeded" | "failed" | "ambiguous", providerRequestId: string, body: Record<string, unknown>) {
-    if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
+    if (!trusted) return { error: new Error("Payment service authority is not configured") };
     return await trusted.rpc("record_vnpay_refund_result", {
       p_refund_id: refundId, p_outcome: outcome, p_provider_request_id: providerRequestId,
       p_provider_transaction_no: typeof body.vnp_TransactionNo === "string" ? body.vnp_TransactionNo : null,
@@ -46,7 +50,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
   }
 
   async function releaseRefundClaim(workerId: string, refundId: string, message: string) {
-    if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
+    if (!trusted) return { error: new Error("Payment service authority is not configured") };
     return await trusted.rpc("release_refund_claim", { p_worker_id: workerId, p_refund_id: refundId, p_error: message, p_backoff_seconds: releaseBackoffSeconds });
   }
 
@@ -61,13 +65,13 @@ export function createSupabasePaymentService(url: string, publishableKey: string
     },
     async read(token: string, bookingId: string) { return await caller(token).rpc("get_booking_payment", { p_booking_id: bookingId }); },
     async observe(fields: { eventKey: string; merchantReference: string; outcome: string; providerTransactionNo: string | null; amountVnd: number; payload: Record<string, unknown> }) {
-      if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
+      if (!trusted) return { error: new Error("Payment service authority is not configured") };
       const result = await trusted.rpc("record_vnpay_observation", { p_provider_event_key: fields.eventKey, p_merchant_reference: fields.merchantReference, p_outcome: fields.outcome, p_provider_transaction_no: fields.providerTransactionNo, p_amount_vnd: fields.amountVnd, p_payload: fields.payload });
       if (!result.error && result.data?.status === "succeeded" && result.data.bookingId) await trusted.rpc("finalize_paid_booking", { p_booking_id: result.data.bookingId });
       return result;
     },
     async reconcile(merchantReference: string) {
-      if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
+      if (!trusted) return { error: new Error("Payment service authority is not configured") };
       const attempt = await trusted.from("payment_attempts").select("id,payment_id,amount_vnd,merchant_reference").eq("merchant_reference", merchantReference).maybeSingle();
       if (attempt.error || !attempt.data) return { data: null, error: attempt.error ?? new Error("Unknown provider reference") };
       const operationKey = `query:${merchantReference}`;
@@ -88,7 +92,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       }
     },
     async executeRefund(refundId: string) {
-      if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
+      if (!trusted) return { error: new Error("Payment service authority is not configured") };
       const refund = await trusted.from("refunds").select("id,payment_id,amount_vnd,status,provider_transaction_no").eq("id", refundId).maybeSingle();
       if (refund.error || !refund.data) return { data: null, error: refund.error ?? new Error("Unknown refund obligation") };
       if (refund.data.status === "succeeded") return { data: refund.data, error: null };
@@ -118,7 +122,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
       }
     },
     async reconcileRefund(refundId: string) {
-      if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
+      if (!trusted) return { error: new Error("Payment service authority is not configured") };
       const refund = await trusted.from("refunds").select("id,payment_id,amount_vnd,status,provider_transaction_no").eq("id", refundId).maybeSingle();
       if (refund.error || !refund.data) return { data: null, error: refund.error ?? new Error("Unknown refund obligation") };
       if (refund.data.status === "succeeded") return { data: refund.data, error: null };
@@ -146,7 +150,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
     },
     async sweepRefundExecutions(workerId: string) {
       if (workerOptions.signal?.aborted) return { data: { claimed: 0, executed: 0 }, error: null };
-      if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
+      if (!trusted) return { error: new Error("Payment service authority is not configured") };
       const { data, error } = await trusted.rpc("claim_pending_refund_executions", { p_worker_id: workerId, p_max_count: sweepBatch, p_lease_seconds: workerLeaseSeconds });
       if (error) return { data: null, error };
       let executed = 0;
@@ -170,7 +174,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
     },
     async sweepRefundReconciliations(workerId: string) {
       if (workerOptions.signal?.aborted) return { data: { claimed: 0, reconciled: 0 }, error: null };
-      if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
+      if (!trusted) return { error: new Error("Payment service authority is not configured") };
       const { data, error } = await trusted.rpc("claim_pending_refund_reconciliations", { p_worker_id: workerId, p_max_count: sweepBatch, p_lease_seconds: workerLeaseSeconds });
       if (error) return { data: null, error };
       let reconciled = 0;
@@ -187,7 +191,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
     },
     async sweepPendingFinalizations(workerId: string) {
       if (workerOptions.signal?.aborted) return { data: { claimed: 0, finalized: 0 }, error: null };
-      if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
+      if (!trusted) return { error: new Error("Payment service authority is not configured") };
       const { data, error } = await trusted.rpc("claim_pending_payment_finalizations", { p_worker_id: workerId, p_max_count: sweepBatch, p_lease_seconds: workerLeaseSeconds });
       if (error) return { data: null, error };
       let finalized = 0;
@@ -212,8 +216,13 @@ export function createSupabasePaymentService(url: string, publishableKey: string
     },
     async sweepExpiredWorkshopBookings(workerId: string) {
       if (workerOptions.signal?.aborted) return { data: { expired: 0 }, error: null };
-      if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
+      if (!trusted) return { error: new Error("Payment service authority is not configured") };
       return await trusted.rpc("expire_stale_workshop_bookings", { p_worker_id: workerId });
+    },
+    async sweepExpiredBookings(workerId: string) {
+      if (workerOptions.signal?.aborted) return { data: { expired: 0 }, error: null };
+      if (!trusted) return { error: new Error("Payment service authority is not configured") };
+      return await trusted.rpc("expire_stale_bookings", { p_worker_id: workerId }) as { data?: { expired: number }; error?: unknown };
     }
   };
 }

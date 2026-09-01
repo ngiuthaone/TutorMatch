@@ -1,7 +1,16 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { ApiError } from "../errors/api-error.js";
+import type { AuthService } from "../services/auth-service.js";
 import type { BookingService, BookingServiceResult } from "../services/booking-service.js";
+
+async function requireTutor(authService: AuthService, request: any) {
+  const profile = await authService.getOwnProfile(request.auth.accessToken, request.auth.userId);
+  if (profile.status === "unavailable") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Profile service is temporarily unavailable.");
+  if (profile.status !== "found" || profile.profile.id !== request.auth.userId || profile.profile.role !== "tutor") throw new ApiError(403, "TUTOR_ROLE_REQUIRED", "A tutor account is required.");
+}
+
+const noStore = async (_request: unknown, reply: any, payload: unknown) => { reply.header("Cache-Control", "no-store").header("Pragma", "no-cache"); return payload; };
 
 const id = z.string().uuid();
 const version = z.number().int().positive();
@@ -59,8 +68,8 @@ async function readAfterMutation(service: BookingService, token: string, booking
   return read.error ? fallback : read.data;
 }
 
-export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = async (app, options) => {
-  app.get("/api/v1/sessions", async (request) => {
+export const bookingRoutes: FastifyPluginAsync<{ service: BookingService; authService: AuthService }> = async (app, options) => {
+  app.get("/api/v1/sessions", { onSend: noStore }, async (request) => {
     const raw = request.query as { tutorProfileId?: unknown; offeringId?: unknown; kind?: unknown };
     const tutorProfileId = raw.tutorProfileId === undefined ? undefined : routeId(raw.tutorProfileId, "tutorProfileId");
     const offeringId = raw.offeringId === undefined ? undefined : routeId(raw.offeringId, "offeringId");
@@ -70,7 +79,7 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = as
     return { ok: true, sessions: result.data };
   });
 
-  app.get("/api/v1/sessions/:sessionId", async (request) => {
+  app.get("/api/v1/sessions/:sessionId", { onSend: noStore }, async (request) => {
     const sessionId = routeId((request.params as { sessionId?: unknown }).sessionId, "sessionId");
     const result = await options.service.getSession(sessionId);
     if (result.error) fail(result);
@@ -86,25 +95,25 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = as
     return { ok: true, booking: await readAfterMutation(options.service, request.auth.accessToken, (result.data as { id: string }).id, result.data) };
   });
 
-  app.get("/api/v1/bookings", { preHandler: app.authenticate }, async (request) => {
+  app.get("/api/v1/bookings", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
     const result = await options.service.listLearnerBookings(request.auth.accessToken);
     if (result.error) fail(result);
     return { ok: true, bookings: result.data };
   });
 
-  app.get("/api/v1/me/tutor-bookings", { preHandler: app.authenticate }, async (request) => {
+  app.get("/api/v1/me/tutor-bookings", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
     const result = await options.service.listTutorBookings(request.auth.accessToken);
     if (result.error) fail(result);
     return { ok: true, bookings: result.data };
   });
 
-  app.get("/api/v1/me/host-bookings", { preHandler: app.authenticate }, async (request) => {
+  app.get("/api/v1/me/host-bookings", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
     const result = await options.service.listHostBookings(request.auth.accessToken);
     if (result.error) fail(result);
     return { ok: true, bookings: result.data };
   });
 
-  app.get("/api/v1/bookings/:bookingId", { preHandler: app.authenticate }, async (request) => {
+  app.get("/api/v1/bookings/:bookingId", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
     const bookingId = routeId((request.params as { bookingId?: unknown }).bookingId, "bookingId");
     const result = await options.service.getBooking(request.auth.accessToken, bookingId);
     if (result.error) fail(result);
@@ -112,7 +121,7 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = as
     return { ok: true, booking: result.data };
   });
 
-  app.get("/api/v1/bookings/:bookingId/cancellation-preview", { preHandler: app.authenticate }, async (request) => {
+  app.get("/api/v1/bookings/:bookingId/cancellation-preview", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
     const bookingId = routeId((request.params as { bookingId?: unknown }).bookingId, "bookingId");
     const result = await options.service.getCancellationPreview(request.auth.accessToken, bookingId);
     if (result.error) fail(result);
@@ -215,7 +224,7 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = as
   // Offering routes (Workshop booking V1)
   // ============================================================
 
-  app.get("/api/v1/offerings/:offeringId", async (request) => {
+  app.get("/api/v1/offerings/:offeringId", { onSend: noStore }, async (request) => {
     const offeringId = routeId((request.params as { offeringId?: unknown }).offeringId, "offeringId");
     const result = await options.service.getOffering(offeringId);
     if (result.error) fail(result);
@@ -223,7 +232,7 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = as
     return { ok: true, offering: result.data };
   });
 
-  app.get("/api/v1/offerings/:offeringId/sessions", async (request) => {
+  app.get("/api/v1/offerings/:offeringId/sessions", { onSend: noStore }, async (request) => {
     const offeringId = routeId((request.params as { offeringId?: unknown }).offeringId, "offeringId");
     const result = await options.service.listSessionsByOffering(offeringId);
     if (result.error) fail(result);
@@ -231,6 +240,7 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = as
   });
 
   app.post("/api/v1/offerings", { preHandler: app.authenticate }, async (request) => {
+    await requireTutor(options.authService, request);
     const body = createOfferingSchema.safeParse(request.body);
     if (!body.success) throw new ApiError(400, "OFFERING_INVALID", "Offering details are invalid.");
     const d = body.data;
@@ -261,7 +271,7 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService }> = as
   // Workshop Booking Management routes
   // ============================================================
 
-  app.get("/api/v1/me/workshop-bookings", { preHandler: app.authenticate }, async (request) => {
+  app.get("/api/v1/me/workshop-bookings", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
     const result = await options.service.listWorkshopBookings(request.auth.accessToken);
     if (result.error) fail(result);
     return { ok: true, bookings: result.data };
