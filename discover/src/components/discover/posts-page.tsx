@@ -7,6 +7,7 @@ import Link from "next/link";
 import { listPosts, createPost, repostPost, unrepostPost, likePost, unlikePost, type Post } from "@/lib/community/posts-api";
 import { listComments, createComment, appreciateComment, unappreciateComment, type Comment } from "@/lib/community/comments-api";
 import { getSessionAccessToken } from "@/lib/auth/session";
+import { followUser, unfollowUser } from "@/lib/community/follows-api";
 import styles from "./discussions.module.css";
 
 const ALL_TAGS = ["Photography", "IELTS", "Languages", "Business", "Technology", "Creative", "Cooking", "Personal development", "Academic", "Community"];
