@@ -13,9 +13,27 @@ export interface AdminAuditEntry {
   createdAt: string;
 }
 
+export type AdminService = ReturnType<typeof createAdminService>;
+
 export type AdminServiceResult<T> =
   | { status: "ok"; data: T }
   | { status: "unavailable" };
+
+export interface AdminMediaSubmission {
+  id: string;
+  userId: string;
+  tutorProfileId: string | null;
+  kind: string;
+  bucket: string;
+  objectPath: string;
+  mime: string;
+  sizeBytes: number;
+  status: string;
+  moderationProvider: string | null;
+  moderationNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Admin/support service. All mutations record actor, timestamp, reason,
@@ -164,6 +182,72 @@ export function createAdminService(
         return { status: "ok", data: data || [] };
       } catch (error) {
         logServiceError({ service: "admin-service", operation: "searchHostCancellations", error });
+        return { status: "unavailable" };
+      }
+    },
+
+    /** List tutor media submissions for the moderation queue. status='all' returns every row. */
+    async listMediaSubmissions(
+      status: "pending" | "approved" | "rejected" | "removed" | "all" = "pending",
+      limit: number = 100,
+    ): Promise<AdminServiceResult<AdminMediaSubmission[]>> {
+      try {
+        let query = adminClient
+          .from("media_submissions")
+          .select("id, user_id, tutor_profile_id, kind, bucket, object_path, mime, size_bytes, status, moderation_provider, moderation_note, created_at, updated_at")
+          .order("created_at", { ascending: false })
+          .limit(limit);
+        if (status !== "all") query = query.eq("status", status);
+        const { data, error } = await query;
+        if (error) return { status: "unavailable" };
+        return {
+          status: "ok",
+          data: (data || []).map((row) => ({
+            id: row.id,
+            userId: row.user_id,
+            tutorProfileId: row.tutor_profile_id ?? null,
+            kind: row.kind,
+            bucket: row.bucket,
+            objectPath: row.object_path,
+            mime: row.mime,
+            sizeBytes: row.size_bytes,
+            status: row.status,
+            moderationProvider: row.moderation_provider ?? null,
+            moderationNote: row.moderation_note ?? null,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+          })),
+        };
+      } catch (error) {
+        logServiceError({ service: "admin-service", operation: "listMediaSubmissions", error });
+        return { status: "unavailable" };
+      }
+    },
+
+    /** Decide on a media submission via the security-definer moderate_tutor_media RPC. */
+    async decideMediaSubmission(
+      submissionId: string,
+      decision: "approved" | "rejected" | "removed",
+      note: string | null,
+    ): Promise<AdminServiceResult<{ id: string; status: string; decidedAt: string | null }>> {
+      try {
+        const { data, error } = await adminClient.rpc("moderate_tutor_media", {
+          p_submission_id: submissionId,
+          p_status: decision,
+          p_note: note,
+        });
+        if (error) return { status: "unavailable" };
+        const row = data as { id: string; status: string; decidedAt: string | null };
+        return {
+          status: "ok",
+          data: {
+            id: row.id,
+            status: row.status,
+            decidedAt: row.decidedAt ?? null,
+          },
+        };
+      } catch (error) {
+        logServiceError({ service: "admin-service", operation: "decideMediaSubmission", error });
         return { status: "unavailable" };
       }
     },

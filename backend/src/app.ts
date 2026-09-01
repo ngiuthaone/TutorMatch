@@ -22,6 +22,7 @@ import { policyRoutes } from "./routes/policies.js";
 import { complianceRoutes } from "./routes/compliance.js";
 import { payoutRoutes } from "./routes/payouts.js";
 import { adminRoutes } from "./routes/admin.js";
+import { adminModerationRoutes } from "./routes/admin-moderation.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
 import { messagingRoutes } from "./routes/messaging.js";
 import { createSupabaseMessagingService, type MessagingService } from "./services/messaging-service.js";
@@ -112,6 +113,7 @@ export function createApp(options: {
   }
   if (options.adminService && options.requireAdmin) {
     app.register(adminRoutes, { authService: options.authService, adminService: options.adminService, requireAdmin: options.requireAdmin, max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+    app.register(adminModerationRoutes, { adminService: options.adminService, requireAdmin: options.requireAdmin, max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   }
   const messagingService = options.messagingService ?? createSupabaseMessagingService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY);
   app.register(messagingRoutes, { service: messagingService, readMax: options.config.MESSAGING_READ_RATE_LIMIT_MAX, sendMax: options.config.MESSAGING_SEND_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
