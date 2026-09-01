@@ -1,53 +1,52 @@
 import type { FastifyPluginAsync } from "fastify";
-import { sql } from "@/lib/db";
 
 export const healthRoutes: FastifyPluginAsync = async (app) => {
-  app.get("/api/v1/health", {
-    schema: {
-      response: {
-        200: {
-          type: "object",
-          required: ["ok", "service", "version", "timestamp", "database"],
-          properties: {
-            ok: { const: true },
-            service: { const: "tutoria-api" },
-            version: { const: "v1" },
-            timestamp: { type: "string", format: "date-time" },
-            database: { const: "ok" }
-          }
-        },
-        503: {
-          type: "object",
-          required: ["ok", "service", "version", "timestamp", "database"],
-          properties: {
-            ok: { const: false },
-            service: { const: "tutoria-api" },
-            version: { const: "v1" },
-            timestamp: { type: "string", format: "date-time" },
-            database: { const: "error" }
-          }
-        }
-      }
-    }
-  }, async (_request, reply) => {
+  // Liveness probe - returns 200 without hitting any external dependencies
+  app.get("/api/v1/health", async (request, reply) => {
     reply.header("Cache-Control", "no-store");
+    return {
+      ok: true,
+      service: "tutoria-api",
+      version: "v1",
+      timestamp: new Date().toISOString(),
+    };
+  });
 
+  // Readiness probe - checks Supabase connectivity
+  app.get("/api/v1/health/ready", async (_request, reply) => {
     let databaseStatus: "ok" | "error" = "ok";
 
     try {
-      await sql.query("SELECT 1");
+      const supabaseUrl = process.env.SUPABASE_URL;
+      if (!supabaseUrl) {
+        databaseStatus = "error";
+      } else {
+        const response = await fetch(`${supabaseUrl}/rest/v1/`, {
+          method: "HEAD",
+          headers: { "apikey": process.env.SUPABASE_PUBLISHABLE_KEY || "" },
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!response.ok && response.status !== 401) {
+          databaseStatus = "error";
+        }
+      }
     } catch {
       databaseStatus = "error";
     }
 
     const ok = databaseStatus === "ok";
-
-    return {
+    return reply.status(ok ? 200 : 503).send({
       ok,
       service: "tutoria-api",
       version: "v1",
       timestamp: new Date().toISOString(),
-      database: databaseStatus
-    };
+      database: databaseStatus,
+    });
   });
+
+  // Simple liveness probe (for k8s/load balancer)
+  app.get("/health", async () => ({
+    ok: true,
+    timestamp: new Date().toISOString(),
+  }));
 };
