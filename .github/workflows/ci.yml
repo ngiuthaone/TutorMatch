@@ -45,3 +45,99 @@ jobs:
       - run: npm run typecheck || npm run lint
       - run: npm test
       - run: npm run build
+
+  supabase-schema:
+    name: Supabase (schema + RLS validation)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/login-action@v2
+        with:
+          supabase-url: ${{ vars.SUPABASE_URL }}
+          supabase-token: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      # Push migrations dry-run (validates all migrations apply cleanly)
+      - name: Validate migrations (dry-run)
+        run: |
+          cd backend
+          supabase db push --dry-run --include-all
+
+      # Check RLS policies exist on key tables
+      - name: Verify RLS policies on key tables
+        run: |
+          cd backend
+          supabase inspect db rls-policies --json > rls_policies.json
+          python3 -c "
+import json
+with open('rls_policies.json') as f:
+    data = json.load(f)
+tables = ['profiles','bookings','payments','marketplace_listings',
+           'messages','notifications','posts','comments',
+           'articles','sessions','reschedule_requests']
+missing = [t for t in tables if not any(p.get('tablename','') == t for p in data)]
+if missing:
+    print('ERROR: Tables without RLS:', ', '.join(missing))
+    exit(1)
+print('OK: All key tables have RLS policies')
+"
+
+      # Verify critical indexes exist
+      - name: Verify critical indexes
+        run: |
+          cd backend
+          supabase inspect db indexes --json > indexes.json
+          python3 -c "
+import json
+with open('indexes.json') as f:
+    data = json.load(f)
+checks = [
+    ('bookings', 'sessions_offering_id'),
+    ('bookings', 'bookings_learner'),
+    ('marketplace_listings', 'creator'),
+    ('profiles', 'profiles_role'),
+    ('reschedule_requests', 'booking_status'),
+]
+errors = []
+for tbl, idx_name in checks:
+    found = any(
+        p.get('tablename','') == tbl and
+        (p.get('indexname','') == idx_name or idx_name in p.get('indexname',''))
+        for p in data
+    )
+    if not found:
+        errors.append(f'Missing: {idx_name} on {tbl}')
+if errors:
+    print('ERRORS:')
+    for e in errors: print(' -', e)
+    exit(1)
+print('OK: All critical indexes present')
+"
+
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: [backend, discover]
+    if: github.event_name == 'push'
+    defaults:
+      run:
+        working-directory: discover
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: discover/package-lock.json
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - run: npm ci
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          BASE_URL: ${{ vars.E2E_BASE_URL || 'http://localhost:3000' }}
+          E2E_TUTOR_EMAIL: ${{ vars.E2E_TUTOR_EMAIL }}
+          E2E_TUTOR_PASSWORD: ${{ secrets.E2E_TUTOR_PASSWORD }}
+          CI: "true"

@@ -1,3 +1,117 @@
+# PRODUCTION SERVICES — deploy only when VNPAY_ENVIRONMENT is set to "production"
+# Staging services below; production deploys require separate render.com service creation
+services:
+  - type: web
+    name: tutoria-api
+    runtime: node
+    rootDir: backend
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /api/v1/health
+    maxShutdownDelaySeconds: 60
+    autoDeploy: false  # Disable auto-deploy; requires manual promotion from staging
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.0
+      - key: NODE_ENV
+        value: production
+      - key: TUTORIA_ENVIRONMENT
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      # IMPORTANT: Set VNPAY_ENVIRONMENT to "production" before promoting this service
+      - key: VNPAY_ENVIRONMENT
+        value: "production"
+      - key: VNPAY_PAYMENT_URL
+        value: https://payment.vnpayment.vn/paymentv2/vpcpay.html
+      - key: VNPAY_API_URL
+        value: https:// Merchant_webapi/api/transaction
+      - key: VNPAY_REQUEST_TIMEOUT_MS
+        value: 15000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: FRONTEND_ORIGINS
+        sync: false  # Set to your production frontend URL (e.g. https://tutoria.com)
+      - key: VNPAY_TMN_CODE
+        sync: false
+      - key: VNPAY_HASH_SECRET
+        sync: false
+      - key: VNPAY_RETURN_URL
+        sync: false
+      - key: VNPAY_IPN_URL
+        sync: false
+      - key: PAYMENT_RECONCILIATION_TOKEN
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
+  - type: worker
+    name: tutoria-financial-worker
+    runtime: node
+    rootDir: backend
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm worker:start
+    maxShutdownDelaySeconds: 60
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.0
+      - key: NODE_ENV
+        value: production
+      - key: TUTORIA_ENVIRONMENT
+        value: production
+      - key: HOST
+        value: 127.0.0.1
+      - key: PORT
+        value: 10000
+      - key: VNPAY_ENVIRONMENT
+        value: "production"
+      - key: VNPAY_PAYMENT_URL
+        value: https://payment.vnpayment.vn/paymentv2/vpcpay.html
+      - key: VNPAY_API_URL
+        value: https:// Merchant_webapi/api/transaction
+      - key: VNPAY_REQUEST_TIMEOUT_MS
+        value: 15000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: FRONTEND_ORIGINS
+        sync: false
+      - key: VNPAY_TMN_CODE
+        sync: false
+      - key: VNPAY_HASH_SECRET
+        sync: false
+      - key: VNPAY_RETURN_URL
+        sync: false
+      - key: VNPAY_IPN_URL
+        sync: false
+      - key: PAYMENT_RECONCILIATION_TOKEN
+        sync: false
+      - key: FINANCIAL_WORKER_INTERVAL_MS
+        value: 60000
+      - key: FINANCIAL_WORKER_BATCH_SIZE
+        value: 50
+      - key: FINANCIAL_WORKER_LEASE_SECONDS
+        value: 300
+      - key: FINANCIAL_WORKER_RELEASE_BACKOFF_SECONDS
+        value: 60
+      - key: FINANCIAL_WORKER_LOG_LEVEL
+        value: info
+      - key: FINANCIAL_WORKER_WORKER_ID
+        value: tutoria-financial-worker
+      - key: SENTRY_DSN
+        sync: false
+
+# STAGING SERVICES (existing — do not remove until production is verified)
 services:
   - type: web
     name: tutoria-api-staging

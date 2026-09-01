@@ -173,9 +173,10 @@ export const marketplaceRoutes: FastifyPluginAsync<{ authService: AuthService; m
   });
 
   app.get("/api/v1/marketplace/:kind/mine", { preHandler: app.authenticate, config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } }, onSend: noStore }, async (request) => {
+    await requireTutor(options.authService, request);
     const kindParse = kindSchema.safeParse((request.params as { kind?: unknown }).kind);
     if (!kindParse.success) throw new ApiError(404, "NOT_FOUND", "Marketplace type not found.");
-    const result = await options.marketplaceService.listMine(request.auth.accessToken, kindParse.data);
+    const result = await options.marketplaceService.listMine(request.auth.accessToken, kindParse.data, request.auth.userId);
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Marketplace is temporarily unavailable.");
     return { ok: true, items: result.data };
   });

@@ -3,11 +3,11 @@ import { createFinancialWorkerRuntime, runFinancialWorkerIteration } from "../sr
 
 type SweepResult = { data?: unknown; error?: unknown };
 const service = () => ({
-  sweepRefundExecutions: vi.fn(async (): Promise<SweepResult> => ({ data: { claimed: 0 } })),
-  sweepRefundReconciliations: vi.fn(async (): Promise<SweepResult> => ({ data: { claimed: 0 } })),
-  sweepPendingFinalizations: vi.fn(async (): Promise<SweepResult> => ({ data: { claimed: 0 } })),
-  sweepExpiredWorkshopBookings: vi.fn(async (): Promise<SweepResult> => ({ data: { expired: 0 } })),
-  sweepExpiredBookings: vi.fn(async (): Promise<SweepResult> => ({ data: { expired: 0 } }))
+  sweepRefundExecutions: vi.fn(async (): Promise<{ data?: unknown; error?: unknown }> => ({ data: { claimed: 0 } })),
+  sweepRefundReconciliations: vi.fn(async (): Promise<{ data?: unknown; error?: unknown }> => ({ data: { claimed: 0 } })),
+  sweepPendingFinalizations: vi.fn(async (): Promise<{ data?: unknown; error?: unknown }> => ({ data: { claimed: 0 } })),
+  sweepExpiredWorkshopBookings: vi.fn(async (): Promise<{ data?: unknown; error?: unknown }> => ({ data: { expired: 0 } })),
+  sweepExpiredBookings: vi.fn(async (): Promise<{ data?: { expired: number }; error?: unknown }> => ({ data: { expired: 0 } }))
 });
 
 describe("financial worker runtime", () => {

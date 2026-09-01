@@ -4,10 +4,10 @@ Generated from `.codex/team-runs/*.json`. This report only uses recorded evidenc
 
 ## Team summary
 
-- Recorded runs: **1**
-- Completed runs: **1**
+- Recorded runs: **2**
+- Completed runs: **2**
 - PASS runs: **0** (0%)
-- Average distinct agents per completed run: **2.0**
+- Average distinct agents per completed run: **1.0**
 
 ## Per-agent scorecard
 

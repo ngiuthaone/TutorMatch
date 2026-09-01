@@ -14,6 +14,7 @@ function fakeMarketplace() {
   service.getPublic = async () => ({ status: "not_found" });
   service.update = async () => ({ status: "not_found" });
   service.unpublish = async () => ({ status: "not_found" });
+  service.listMine = async () => ({ status: "ok", data: [] });
   return service;
 }
 function setup(role: "student" | "tutor" = "tutor", service: any = fakeMarketplace(), logger: any = undefined) {
@@ -73,6 +74,32 @@ describe("marketplace routes", () => {
     expect(r.statusCode).toBe(403);
     expect(r.json().error.code).toBe("TUTOR_ROLE_REQUIRED");
     expect(service.calls).toBe(0);
+  });
+  it("requires authentication to list my listings", async () => {
+    const { app } = setup();
+    const r = await app.inject({ method: "GET", url: "/api/v1/marketplace/course/mine" });
+    expect(r.statusCode).toBe(401);
+  });
+  it("rejects non-tutors from listing my listings", async () => {
+    const { app, service } = setup("student");
+    service.listMine = async () => { service.calls++; return { status: "ok", data: [] }; };
+    const r = await app.inject({ method: "GET", url: "/api/v1/marketplace/course/mine", headers: { authorization: `Bearer ${token}` } });
+    expect(r.statusCode).toBe(403);
+    expect(r.json().error.code).toBe("TUTOR_ROLE_REQUIRED");
+    expect(service.calls).toBe(0);
+  });
+  it("allows tutors to list only their own listings", async () => {
+    const { app, service } = setup();
+    const mine = [{ id: "draft-1", kind: "course", slug: "a", title: "A", creatorId: userId, payload: {}, publishedAt: "2026-01-01T00:00:00Z", status: "draft", version: 1 }];
+    service.listMine = async (_token: unknown, _kind: unknown, ownerId: unknown) => {
+      expect(ownerId).toBe(userId);
+      service.calls++;
+      return { status: "ok", data: mine };
+    };
+    const r = await app.inject({ method: "GET", url: "/api/v1/marketplace/course/mine", headers: { authorization: `Bearer ${token}` } });
+    expect(r.statusCode).toBe(200);
+    expect(service.calls).toBe(1);
+    expect(r.json().items).toHaveLength(1);
   });
   it("allows tutors to publish", async () => {
     const { app, service } = setup();

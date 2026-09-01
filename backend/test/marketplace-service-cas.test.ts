@@ -32,10 +32,12 @@ type QueryState = {
   table: string | null;
   mode: "select" | "update" | "upsert" | "delete" | "insert";
   updatePatch: Record<string, unknown>;
+  insertRow: Record<string, unknown> | null;
   upsertRow: Record<string, unknown> | null;
   upsertOnConflict: string | null;
   selectColumns: string | null;
   eqFilters: Eq[];
+  inFilters: { column: string; values: unknown[] }[];
   expectSingle: boolean;
 };
 
@@ -47,10 +49,12 @@ function makeFakeClient(initialRows: Row[]) {
       table: null,
       mode: "select",
       updatePatch: {},
+      insertRow: null,
       upsertRow: null,
       upsertOnConflict: null,
       selectColumns: null,
       eqFilters: [],
+      inFilters: [],
       expectSingle: false,
     };
 
@@ -78,8 +82,23 @@ function makeFakeClient(initialRows: Row[]) {
         state.upsertOnConflict = options?.onConflict ?? null;
         return builder;
       },
+      insert(row: Record<string, unknown>) {
+        state.mode = "insert";
+        state.insertRow = row;
+        return builder;
+      },
       eq(column: string, value: unknown) {
         state.eqFilters.push({ column, value });
+        return builder;
+      },
+      in(column: string, values: unknown[]) {
+        state.inFilters.push({ column, values });
+        return builder;
+      },
+      order(_column: string, _opts?: unknown) {
+        return builder;
+      },
+      limit(_count: number) {
         return builder;
       },
       single() {
@@ -93,7 +112,10 @@ function makeFakeClient(initialRows: Row[]) {
     };
 
     function applyEqs(candidates: Row[]): Row[] {
-      return candidates.filter((row) => state.eqFilters.every((f) => (row as any)[f.column] === f.value));
+      return candidates.filter((row) =>
+        state.eqFilters.every((f) => (row as any)[f.column] === f.value) &&
+        state.inFilters.every((f) => f.values.includes((row as any)[f.column]))
+      );
     }
 
     function runQuery(): Promise<{ data: any; error: any }> {
@@ -122,6 +144,16 @@ function makeFakeClient(initialRows: Row[]) {
         }
         const saved = rows.find((r) => conflictKeys.every((k) => (r as any)[k] === (incoming as any)[k]))!;
         if (state.expectSingle) return Promise.resolve({ data: projectColumns(saved, state.selectColumns), error: null });
+        return Promise.resolve({ data: projectColumns(saved, state.selectColumns), error: null });
+      }
+
+      if (state.mode === "insert") {
+        if (!state.insertRow) return Promise.resolve({ data: null, error: { code: "MISSING_INSERT_ROW" } });
+        const incoming = state.insertRow as unknown as Row;
+        const exists = rows.some((r) => r.kind === incoming.kind && r.slug === incoming.slug && r.creator_id === incoming.creator_id && r.status === incoming.status);
+        if (exists) return Promise.resolve({ data: null, error: { code: "23505", message: "duplicate key value violates unique constraint" } });
+        const saved = { ...incoming, payload: { ...(incoming.payload ?? {}) }, version: incoming.version ?? 1 };
+        rows.push(saved);
         return Promise.resolve({ data: projectColumns(saved, state.selectColumns), error: null });
       }
 
@@ -330,10 +362,12 @@ function makeFakeClientWithUpdateError(updateError: { code: string; message: str
       table: null,
       mode: "select",
       updatePatch: {},
+      insertRow: null,
       upsertRow: null,
       upsertOnConflict: null,
       selectColumns: null,
       eqFilters: [],
+      inFilters: [],
       expectSingle: false,
     };
     const builder: any = {
@@ -442,5 +476,80 @@ describe("marketplace-service unpublish CAS race", () => {
     expect(second.status).toBe("not_found");
     expect(second.status).not.toBe("conflict");
     expect(rows[0]!.version).toBe(2);
+  });
+});
+
+describe("marketplace-service listMine owner scoping (regression for cross-user disclosure)", () => {
+  it("listMine returns only rows owned by the requesting user, never other creators' rows", async () => {
+    const selfDraft = makeRow({ id: "draft-1", status: "draft", version: 1, payload: { name: "my draft" } });
+    const selfLive = makeRow({ id: "live-1", status: "published", version: 2, payload: { name: "my live" } });
+    const otherLive = makeRow({ id: "other-1", creator_id: otherCreator, status: "published", version: 3, payload: { name: "not mine" } });
+    const otherDraft = makeRow({ id: "other-2", creator_id: otherCreator, status: "draft", version: 1, payload: { name: "not mine either" } });
+
+    const { client } = makeFakeClient([selfDraft, selfLive, otherLive, otherDraft]);
+    const service = createSupabaseMarketplaceService("http://example.test", "anon-key", () => client as any);
+
+    const result = await service.listMine(token, "course", creatorId);
+    expect(result.status).toBe("ok");
+
+    if (result.status !== "ok") throw new Error("listMine must succeed");
+    const ids = result.data.map((row) => row.id).sort();
+    // Only the two rows owned by creatorId; the two otherCreator rows (including
+    // a published one that is public to the marketplace) must NOT be returned.
+    expect(ids).toEqual(["draft-1", "live-1"]);
+    // No other creator's auth UID can appear in the returned rows.
+    expect(result.data.some((row) => (row as unknown as { creator_id?: string }).creator_id === otherCreator)).toBe(false);
+  });
+});
+
+describe("marketplace-service draft lifecycle (regression: no silent state clobber)", () => {
+  const mySlug = "algebra-fundamentals";
+
+  it("createDraft on a published slug returns conflict and never takes the live listing offline", async () => {
+    const live = makeRow({ id: "live-1", status: "published", version: 3 });
+    const { client, rows } = makeFakeClient([live]);
+    const service = createSupabaseMarketplaceService("http://example.test", "anon-key", () => client as any);
+
+    const result = await service.createDraft(token, creatorId, { kind: "course", slug: mySlug, title: "Edited", payload: { name: "new draft" } });
+    expect(result.status).toBe("conflict");
+
+    // The live listing must remain untouched and visible.
+    expect(rows[0]!.status).toBe("published");
+    expect(rows[0]!.version).toBe(3);
+  });
+
+  it("createDraft on another creator's slug returns conflict", async () => {
+    const { client, rows } = makeFakeClient([]);
+    const service = createSupabaseMarketplaceService("http://example.test", "anon-key", () => client as any);
+    const otherSlug = "rivals-course";
+    const otherLive = makeRow({ id: "other-1", creator_id: otherCreator, slug: otherSlug, status: "published", version: 2 });
+    rows.push(otherLive);
+
+    const result = await service.createDraft(token, creatorId, { kind: "course", slug: otherSlug, title: "Mine", payload: {} });
+    expect(result.status).toBe("conflict");
+    expect(rows[0]!.creator_id).toBe(otherCreator);
+    expect(rows[0]!.status).toBe("published");
+  });
+
+  it("createDraft creates a fresh draft when no row exists for the slug", async () => {
+    const { client } = makeFakeClient([]);
+    const service = createSupabaseMarketplaceService("http://example.test", "anon-key", () => client as any);
+    const result = await service.createDraft(token, creatorId, { kind: "course", slug: "brand-new", title: "New draft", payload: { name: "x" } });
+    expect(result.status).toBe("ok");
+    if (result.status === "ok") expect(result.data.status).toBe("draft");
+  });
+
+  it("publishDraft can republish an unpublished (taken-down) row", async () => {
+    const takenDown = makeRow({ id: "td-1", status: "unpublished", version: 4 });
+    const { client, rows } = makeFakeClient([takenDown]);
+    const service = createSupabaseMarketplaceService("http://example.test", "anon-key", () => client as any);
+
+    const result = await service.publishDraft(token, "course", slug);
+    expect(result.status).toBe("ok");
+    if (result.status === "ok") {
+      expect(result.data.status).toBe("published");
+      expect(result.data.version).toBe(5);
+    }
+    expect(rows[0]!.status).toBe("published");
   });
 });

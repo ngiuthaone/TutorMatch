@@ -110,8 +110,9 @@ export function createSupabaseMarketplaceService(
         // Sanitize + strip identity keys before persistence (R5/L3). creatorId
         // always comes from the JWT below, never from the client payload.
         const storedPayload = buildStoredPayload(input.payload);
+        const storedTitle = sanitizeHtmlText(input.title);
         const { data, error } = await caller(token).from("marketplace_listings").upsert({
-          kind: input.kind, slug: input.slug, title: input.title, creator_id: creatorId, payload: storedPayload, status: "published", published_at: new Date().toISOString(),
+          kind: input.kind, slug: input.slug, title: storedTitle, creator_id: creatorId, payload: storedPayload, status: "published", published_at: new Date().toISOString(),
         }, { onConflict: "kind,slug" }).select("id,kind,slug,title,creator_id,payload,published_at,status,version").single();
         if (error) return error.code === "23505" || error.code === "42501" ? { status: "conflict" } : { status: "unavailable" };
         return { status: "ok", data: mapRow(data) };
@@ -123,10 +124,33 @@ export function createSupabaseMarketplaceService(
 
     async createDraft(token: string, creatorId: string, input: Omit<MarketplaceListing, "id" | "creatorId" | "publishedAt" | "status" | "version">): Promise<MarketplaceResult<MarketplaceListing>> {
       try {
+        // Read first: createDraft must never silently overwrite a live or
+        // unpublished listing. The (kind,slug) key is shared across all
+        // statuses, so creating a draft under a slug that already holds a
+        // published/unpublished row would otherwise take that listing offline.
+        const { data: existing, error: readError } = await caller(token).from("marketplace_listings")
+          .select("id,kind,slug,title,creator_id,payload,published_at,status,version")
+          .eq("kind", input.kind).eq("slug", input.slug).single();
+        if (!readError && existing) {
+          // Row already exists for this (kind,slug).
+          if (existing.creator_id !== creatorId) return { status: "conflict" };
+          if (existing.status !== "draft") return { status: "conflict" };
+          // Updating a draft we own: bump version and refill content.
+          const storedPayload = buildStoredPayload(input.payload);
+          const nextVersion = Number(existing.version) + 1;
+          const { data, error } = await caller(token).from("marketplace_listings")
+            .update({ title: sanitizeHtmlText(input.title), payload: storedPayload, version: nextVersion })
+            .eq("kind", input.kind).eq("slug", input.slug).eq("creator_id", creatorId).eq("status", "draft").eq("version", existing.version)
+            .select("id,kind,slug,title,creator_id,payload,published_at,status,version").single();
+          if (error) return error.code === "PGRST116" ? { status: "conflict" } : { status: "unavailable" };
+          if (!data) return { status: "conflict" };
+          return { status: "ok", data: mapRow(data) };
+        }
+        // No row yet: insert a fresh draft owned by this creator.
         const storedPayload = buildStoredPayload(input.payload);
-        const { data, error } = await caller(token).from("marketplace_listings").upsert({
-          kind: input.kind, slug: input.slug, title: input.title, creator_id: creatorId, payload: storedPayload, status: "draft", published_at: null,
-        }, { onConflict: "kind,slug" }).select("id,kind,slug,title,creator_id,payload,published_at,status,version").single();
+        const { data, error } = await caller(token).from("marketplace_listings").insert({
+          kind: input.kind, slug: input.slug, title: sanitizeHtmlText(input.title), creator_id: creatorId, payload: storedPayload, status: "draft", published_at: null,
+        }).select("id,kind,slug,title,creator_id,payload,published_at,status,version").single();
         if (error) return error.code === "23505" || error.code === "42501" ? { status: "conflict" } : { status: "unavailable" };
         return { status: "ok", data: mapRow(data) };
       } catch (error) {
@@ -187,11 +211,12 @@ export function createSupabaseMarketplaceService(
       }
     },
 
-    async listMine(token: string, kind: MarketplaceKind): Promise<MarketplaceListResult> {
+    async listMine(token: string, kind: MarketplaceKind, userId: string): Promise<MarketplaceListResult> {
       try {
         const { data, error } = await caller(token).from("marketplace_listings")
           .select("id,kind,slug,title,creator_id,payload,published_at,status,version")
           .eq("kind", kind)
+          .eq("creator_id", userId)
           .order("published_at", { ascending: false })
           .limit(100);
         if (error) return { status: "unavailable" };
@@ -211,8 +236,8 @@ export function createSupabaseMarketplaceService(
         if (readError || !existing) return { status: "not_found" };
         if (Number(existing.version) !== expectedVersion) return { status: "conflict" };
 
-        const update: Record<string, unknown> = { version: expectedVersion + 1 };
-        if (patch.title !== undefined) update.title = patch.title;
+        const update: Record<string, unknown> = { version: expectedVersion + 1, updated_at: new Date().toISOString() };
+        if (patch.title !== undefined) update.title = sanitizeHtmlText(patch.title);
         if (patch.payload !== undefined) update.payload = buildStoredPayload(patch.payload);
         const { data, error } = await caller(token).from("marketplace_listings")
           .update(update)
@@ -247,7 +272,7 @@ export function createSupabaseMarketplaceService(
         if (existing.status !== "published") return { status: "not_found" };
         const nextVersion = Number(existing.version) + 1;
         const { data, error } = await caller(token).from("marketplace_listings")
-          .update({ status: "unpublished", version: nextVersion })
+          .update({ status: "unpublished", version: nextVersion, updated_at: new Date().toISOString() })
           .eq("kind", kind).eq("slug", slug).eq("status", "published").eq("version", existing.version)
           .select("id,kind,slug,title,creator_id,payload,published_at,status,version").single();
         // See update() above: a 0-row conditional UPDATE returns PGRST116,
@@ -272,11 +297,14 @@ export function createSupabaseMarketplaceService(
           .select("id,kind,slug,title,creator_id,payload,published_at,status,version")
           .eq("kind", kind).eq("slug", slug).single();
         if (readError || !existing) return { status: "not_found" };
-        if (existing.status === "published") return { status: "conflict" };
+        // A published row cannot be (re)published again; a draft or an
+        // unpublished (taken-down) row may be promoted back to published.
+        if (existing.status !== "draft" && existing.status !== "unpublished") return { status: "conflict" };
         const nextVersion = Number(existing.version) + 1;
         const { data, error } = await caller(token).from("marketplace_listings")
-          .update({ status: "published", published_at: new Date().toISOString(), version: nextVersion })
-          .eq("kind", kind).eq("slug", slug).eq("status", "draft").eq("version", existing.version)
+          .update({ status: "published", published_at: new Date().toISOString(), version: nextVersion, updated_at: new Date().toISOString() })
+          .eq("kind", kind).eq("slug", slug).eq("version", existing.version)
+          .in("status", ["draft", "unpublished"])
           .select("id,kind,slug,title,creator_id,payload,published_at,status,version").single();
         if (error) {
           if (error.code === "PGRST116") return { status: "conflict" };
