@@ -4,18 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type
 import { useRouter, usePathname } from "next/navigation";
 import { isLiveMode } from "@/lib/auth/config";
 import { evaluateAuthGate } from "@/lib/auth/gate";
-import { ensureSession, useSession } from "@/lib/auth/session";
-import {
-  MessagingApiError,
-  generateClientMessageId,
-  getConversation,
-  listConversations,
-  listMessages,
-  markConversationRead,
-  sendMessage,
-  type MessagingConversation,
-  type MessagingMessage,
-} from "@/lib/messaging-api";
+import { useSession } from "@/lib/auth/session";
+import { MessagingApiError, generateClientMessageId, getConversation, listConversations, listMessages, markConversationRead, sendMessage, type MessagingConversation, type MessagingMessage } from "@/lib/messaging-api";
 
 const MAX_BODY_LENGTH = 2000;
 const MIN_BODY_LENGTH = 1;
@@ -214,7 +204,6 @@ function Composer({
   const [draft, setDraft] = useState("");
   const [sendState, setSendState] = useState<SendState>({ status: "idle" });
   const clientMessageIdRef = useRef<string | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const trimmed = draft.trim();
   const tooLong = trimmed.length > MAX_BODY_LENGTH;
@@ -267,7 +256,6 @@ function Composer({
       <div className="flex items-end gap-3">
         <textarea
           id={`composer-${conversationId}`}
-          ref={textareaRef}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={onKeyDown}
@@ -427,9 +415,6 @@ export default function MessagesPage() {
 }
 
 function LiveMessages() {
-  useEffect(() => {
-    void ensureSession();
-  }, []);
   const [conversations, setConversations] = useState<MessagingConversation[] | null>(null);
   const [loadError, setLoadError] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);

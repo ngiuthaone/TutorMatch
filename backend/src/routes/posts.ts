@@ -28,6 +28,7 @@ const listQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(50).optional(),
   tag: z.string().optional(),
   postType: z.string().optional(),
+  authorName: z.string().optional(),
 });
 
 const idParamSchema = z.string().uuid();
@@ -44,7 +45,7 @@ export const postRoutes: FastifyPluginAsync<{
     const parsed = listQuerySchema.safeParse(request.query);
     if (!parsed.success) throw new ApiError(400, "INVALID_QUERY", "Invalid post query parameters.");
     const q = parsed.data;
-    const result = await options.postService.listPublic(q.cursor ?? null, q.limit ?? 20, q.tag ?? null, q.postType ?? null);
+    const result = await options.postService.listPublic(q.cursor ?? null, q.limit ?? 20, q.tag ?? null, q.postType ?? null, q.authorName ?? null);
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Posts are temporarily unavailable.");
     return { posts: result.data.posts, nextCursor: result.data.nextCursor };
   });

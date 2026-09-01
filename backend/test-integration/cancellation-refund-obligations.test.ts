@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import postgres from "postgres";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
 import { CANCELLATION_REFUND_CUTOFF_HOURS } from "../src/domain/cancellation-refund-policy.js";
 import { makeOffering } from "./_fixtures/offering.js";

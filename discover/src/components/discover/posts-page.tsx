@@ -226,6 +226,7 @@ function PostsTab({ searchQuery, feedMode }: {
         reply_permission: "everyone",
         like_count: 0,
         repost_count: 0,
+        comment_count: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         is_author: true,
@@ -291,7 +292,7 @@ function PostsTab({ searchQuery, feedMode }: {
                     </button>
                     <div className={styles.action} aria-label="Comments">
                       <IconMessage2 size={17} />
-                      <span className="tabular-nums">0</span>
+                      <span className="tabular-nums">{post.comment_count}</span>
                     </div>
                     <button onClick={(e) => { e.stopPropagation(); handleRepost(post.id); }}
                       className={`${styles.action} ${isReposted ? styles.actionReposted : ""}`} aria-label={`${isReposted ? "Unrepost" : "Repost"} post`}>
@@ -472,13 +473,14 @@ function PostDetailModal({ post, onClose }: { post: Post; onClose: () => void })
     if (!replyText.trim()) return;
     try {
       const result = await createComment("post", post.id, replyText.trim(), parentId);
+      const parentComment = comments.find(c => c.id === parentId);
       const c: Comment = {
         id: result.id,
         parent_id: parentId,
         body: replyText.trim(),
         appreciated_count: 0,
         created_at: new Date().toISOString(),
-        depth: 2,
+        depth: (parentComment?.depth ?? 0) + 1,
         is_creator: true,
         appreciated_by_me: false,
         author: { name: "You", avatar_url: null, role: undefined },
@@ -606,7 +608,7 @@ function PostDetailModal({ post, onClose }: { post: Post; onClose: () => void })
         {comments.length > 0 && (
           <div className="border-t border-border px-5 py-4 space-y-4">
             {comments.map((c) => (
-              <div key={c.id} className="flex items-start gap-3">
+              <div key={c.id} className="flex items-start gap-3" style={{ marginLeft: `${Math.min((c.depth - 1) * 24, 72)}px` }}>
                 <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
                   {c.author.name.charAt(0).toUpperCase()}
                 </div>

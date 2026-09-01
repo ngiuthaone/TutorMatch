@@ -33,15 +33,11 @@ begin
   if btrim(coalesce(p_body, '')) = '' or char_length(p_body) > 2000 then
     raise exception 'INVALID_BODY' using errcode = '22023';
   end if;
-  if p_owner_type not in ('thread','article','post') then
+  if p_owner_type not in ('article','post') then
     raise exception 'INVALID_OWNER' using errcode = '22023';
   end if;
 
-  if p_owner_type = 'thread' then
-    select rt.status into v_owner_status from public.reference_threads rt where rt.id = p_owner_id;
-    if v_owner_status is null then raise exception 'NOT_FOUND' using errcode = 'P0001'; end if;
-    if v_owner_status != 'published' then raise exception 'OWNER_CLOSED' using errcode = 'P0001'; end if;
-  elsif p_owner_type = 'post' then
+  if p_owner_type = 'post' then
     select p.status into v_owner_status from public.posts p where p.id = p_owner_id;
     if v_owner_status is null then raise exception 'NOT_FOUND' using errcode = 'P0001'; end if;
     if v_owner_status != 'published' then raise exception 'OWNER_CLOSED' using errcode = 'P0001'; end if;

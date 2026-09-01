@@ -94,82 +94,158 @@ create policy "regions_read_all"
 drop policy if exists "tutor_subjects_read" on public.tutor_subjects;
 create policy "tutor_subjects_read"
   on public.tutor_subjects for select
-  using (auth.uid() = tutor_subjects.user_id or public.is_tutor_published(tutor_subjects.user_id) = true);
+  using (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_subjects.tutor_profile_id
+        and (tp.user_id = auth.uid() or public.is_tutor_published(tp.user_id) = true)
+    )
+  );
 
 drop policy if exists "tutor_subjects_write" on public.tutor_subjects;
 create policy "tutor_subjects_write"
   on public.tutor_subjects for insert
-  with check (auth.uid() = tutor_subjects.user_id);
+  with check (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_subjects.tutor_profile_id and tp.user_id = auth.uid()
+    )
+  );
 
 -- tutor_levels
 drop policy if exists "tutor_levels_read" on public.tutor_levels;
 create policy "tutor_levels_read"
   on public.tutor_levels for select
-  using (auth.uid() = tutor_levels.user_id or public.is_tutor_published(tutor_levels.user_id) = true);
+  using (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_levels.tutor_profile_id
+        and (tp.user_id = auth.uid() or public.is_tutor_published(tp.user_id) = true)
+    )
+  );
 
 drop policy if exists "tutor_levels_write" on public.tutor_levels;
 create policy "tutor_levels_write"
   on public.tutor_levels for insert
-  with check (auth.uid() = tutor_levels.user_id);
+  with check (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_levels.tutor_profile_id and tp.user_id = auth.uid()
+    )
+  );
 
 -- tutor_regions
 drop policy if exists "tutor_regions_read" on public.tutor_regions;
 create policy "tutor_regions_read"
   on public.tutor_regions for select
-  using (auth.uid() = tutor_regions.user_id or public.is_tutor_published(tutor_regions.user_id) = true);
+  using (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_regions.tutor_profile_id
+        and (tp.user_id = auth.uid() or public.is_tutor_published(tp.user_id) = true)
+    )
+  );
 
 drop policy if exists "tutor_regions_write" on public.tutor_regions;
 create policy "tutor_regions_write"
   on public.tutor_regions for insert
-  with check (auth.uid() = tutor_regions.user_id);
+  with check (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_regions.tutor_profile_id and tp.user_id = auth.uid()
+    )
+  );
 
 -- tutor_languages
 drop policy if exists "tutor_languages_read" on public.tutor_languages;
 create policy "tutor_languages_read"
   on public.tutor_languages for select
-  using (auth.uid() = tutor_languages.user_id or public.is_tutor_published(tutor_languages.user_id) = true);
+  using (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_languages.tutor_profile_id
+        and (tp.user_id = auth.uid() or public.is_tutor_published(tp.user_id) = true)
+    )
+  );
 
 drop policy if exists "tutor_languages_write" on public.tutor_languages;
 create policy "tutor_languages_write"
   on public.tutor_languages for insert
-  with check (auth.uid() = tutor_languages.user_id);
+  with check (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_languages.tutor_profile_id and tp.user_id = auth.uid()
+    )
+  );
 
 -- tutor_availability_slots
 drop policy if exists "tutor_availability_slots_read" on public.tutor_availability_slots;
 create policy "tutor_availability_slots_read"
   on public.tutor_availability_slots for select
-  using (auth.uid() = tutor_availability_slots.user_id);
+  using (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_availability_slots.tutor_profile_id and tp.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "tutor_availability_slots_write" on public.tutor_availability_slots;
 create policy "tutor_availability_slots_write"
   on public.tutor_availability_slots for insert
-  with check (auth.uid() = tutor_availability_slots.user_id);
+  with check (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_availability_slots.tutor_profile_id and tp.user_id = auth.uid()
+    )
+  );
 
 -- tutor_education_entries
 drop policy if exists "tutor_education_entries_read" on public.tutor_education_entries;
 create policy "tutor_education_entries_read"
   on public.tutor_education_entries for select
-  using (auth.uid() = tutor_education_entries.user_id or public.is_tutor_published(tutor_education_entries.user_id) = true);
+  using (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_education_entries.tutor_profile_id
+        and (tp.user_id = auth.uid() or public.is_tutor_published(tp.user_id) = true)
+    )
+  );
 
 drop policy if exists "tutor_education_entries_write" on public.tutor_education_entries;
 create policy "tutor_education_entries_write"
   on public.tutor_education_entries for insert
-  with check (auth.uid() = tutor_education_entries.user_id);
+  with check (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_education_entries.tutor_profile_id and tp.user_id = auth.uid()
+    )
+  );
 
 -- tutor_experience_entries
 drop policy if exists "tutor_experience_entries_read" on public.tutor_experience_entries;
 create policy "tutor_experience_entries_read"
   on public.tutor_experience_entries for select
-  using (auth.uid() = tutor_experience_entries.user_id or public.is_tutor_published(tutor_experience_entries.user_id) = true);
+  using (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_experience_entries.tutor_profile_id
+        and (tp.user_id = auth.uid() or public.is_tutor_published(tp.user_id) = true)
+    )
+  );
 
 drop policy if exists "tutor_experience_entries_write" on public.tutor_experience_entries;
 create policy "tutor_experience_entries_write"
   on public.tutor_experience_entries for insert
-  with check (auth.uid() = tutor_experience_entries.user_id);
+  with check (
+    exists (
+      select 1 from public.tutor_profiles tp
+      where tp.id = tutor_experience_entries.tutor_profile_id and tp.user_id = auth.uid()
+    )
+  );
 
 -- tutor_profile_events
 drop policy if exists "tutor_profile_events_owner" on public.tutor_profile_events;
 create policy "tutor_profile_events_owner"
   on public.tutor_profile_events for all
-  using (auth.uid() = tutor_profile_events.user_id)
-  with check (auth.uid() = tutor_profile_events.user_id);
+  using (auth.uid() = tutor_profile_events.actor_user_id)
+  with check (auth.uid() = tutor_profile_events.actor_user_id);
