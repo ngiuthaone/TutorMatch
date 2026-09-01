@@ -36,16 +36,14 @@ describe("getEventOffering", () => {
   it("returns the offering when API returns {ok: true, offering: {...}}", async () => {
     const offering = {
       id: "offering-1",
-      hostId: "host-1",
-      offeringType: "event",
+      kind: "event",
       title: "Test Event",
       description: "A test",
       pricingModel: "hourly_v1",
       pricePerParticipantVnd: null,
       hourlyRateVnd: 50000,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     mockFetch({ ok: true, offering });
@@ -123,16 +121,14 @@ describe("listBookableEvents", () => {
 
     const offering = {
       id: "offering-1",
-      hostId: "host-1",
-      offeringType: "event",
+      kind: "event",
       title: "Test Event",
       description: null,
       pricingModel: "hourly_v1",
       pricePerParticipantVnd: null,
       hourlyRateVnd: 50000,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     mockFetch({ ok: true, offering });
@@ -176,16 +172,14 @@ describe("listBookableEvents", () => {
 
     const offering = {
       id: "offering-1",
-      hostId: "host-1",
-      offeringType: "event",
+      kind: "event",
       title: "Test Event",
       description: null,
       pricingModel: "hourly_v1",
       pricePerParticipantVnd: null,
       hourlyRateVnd: 50000,
-      currency: "VND",
       bookingMode: "approval",
-      status: "unpublished",
+      publicationStatus: "unpublished",
       version: 1,
     };
     mockFetch({ ok: true, offering });
@@ -223,30 +217,26 @@ describe("listBookableEvents", () => {
 
     const courseOffering = {
       id: "offering-course",
-      hostId: "host-1",
-      offeringType: "course",
+      kind: "course",
       title: "Course",
       description: null,
       pricingModel: "hourly_v1",
       pricePerParticipantVnd: null,
       hourlyRateVnd: 50000,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     const eventOffering = {
       id: "offering-event",
-      hostId: "host-1",
-      offeringType: "event",
+      kind: "event",
       title: "Event",
       description: null,
       pricingModel: "hourly_v1",
       pricePerParticipantVnd: null,
       hourlyRateVnd: 50000,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     mockFetch({ ok: true, offering: courseOffering });
@@ -254,7 +244,7 @@ describe("listBookableEvents", () => {
 
     const result = await eventBookingApi.listBookableEvents();
     expect(result).toHaveLength(1);
-    expect(result[0].offering.offeringType).toBe("event");
+    expect(result[0].offering.kind).toBe("event");
   });
 
   it("returns host display name from tutor object", async () => {
@@ -275,16 +265,14 @@ describe("listBookableEvents", () => {
 
     const offering = {
       id: "offering-1",
-      hostId: "host-1",
-      offeringType: "event",
+      kind: "event",
       title: "Test Event",
       description: null,
       pricingModel: "hourly_v1",
       pricePerParticipantVnd: null,
       hourlyRateVnd: 50000,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     mockFetch({ ok: true, offering });
@@ -311,16 +299,14 @@ describe("listBookableEvents", () => {
 
     const offering = {
       id: "offering-1",
-      hostId: "host-1",
-      offeringType: "event",
+      kind: "event",
       title: "Test Event",
       description: null,
       pricingModel: "hourly_v1",
       pricePerParticipantVnd: null,
       hourlyRateVnd: 50000,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     mockFetch({ ok: true, offering });
@@ -334,16 +320,14 @@ describe("isFreeEvent", () => {
   it("returns true when hourlyRateVnd is 0", () => {
     const offering: eventBookingApi.EventOffering = {
       id: "1",
-      hostId: "host-1",
-      offeringType: "event",
+      kind: "event",
       title: "Free Event",
       description: null,
       pricingModel: "hourly_v1",
       pricePerParticipantVnd: null,
       hourlyRateVnd: 0,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     expect(eventBookingApi.isFreeEvent(offering)).toBe(true);
@@ -352,16 +336,14 @@ describe("isFreeEvent", () => {
   it("returns true when pricePerParticipantVnd is 0", () => {
     const offering: eventBookingApi.EventOffering = {
       id: "1",
-      hostId: "host-1",
-      offeringType: "workshop",
+      kind: "workshop",
       title: "Free Workshop",
       description: null,
       pricingModel: "flat_per_participant_v1",
       pricePerParticipantVnd: 0,
       hourlyRateVnd: null,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     expect(eventBookingApi.isFreeEvent(offering)).toBe(true);
@@ -370,16 +352,14 @@ describe("isFreeEvent", () => {
   it("returns false when prices are set", () => {
     const offering: eventBookingApi.EventOffering = {
       id: "1",
-      hostId: "host-1",
-      offeringType: "event",
+      kind: "event",
       title: "Paid Event",
       description: null,
       pricingModel: "hourly_v1",
       pricePerParticipantVnd: null,
       hourlyRateVnd: 50000,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     expect(eventBookingApi.isFreeEvent(offering)).toBe(false);
@@ -388,16 +368,14 @@ describe("isFreeEvent", () => {
   it("returns false for flat_per_participant with non-zero price", () => {
     const offering: eventBookingApi.EventOffering = {
       id: "1",
-      hostId: "host-1",
-      offeringType: "workshop",
+      kind: "workshop",
       title: "Paid Workshop",
       description: null,
       pricingModel: "flat_per_participant_v1",
       pricePerParticipantVnd: 100000,
       hourlyRateVnd: null,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     expect(eventBookingApi.isFreeEvent(offering)).toBe(false);
@@ -408,16 +386,14 @@ describe("formatEventPriceVnd", () => {
   it('returns "Free" for zero-price events', () => {
     const offering: eventBookingApi.EventOffering = {
       id: "1",
-      hostId: "host-1",
-      offeringType: "event",
+      kind: "event",
       title: "Free Event",
       description: null,
       pricingModel: "hourly_v1",
       pricePerParticipantVnd: null,
       hourlyRateVnd: 0,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     expect(eventBookingApi.formatEventPriceVnd(offering)).toBe("Free");
@@ -426,16 +402,14 @@ describe("formatEventPriceVnd", () => {
   it("returns formatted VND amount with đ symbol", () => {
     const offering: eventBookingApi.EventOffering = {
       id: "1",
-      hostId: "host-1",
-      offeringType: "event",
+      kind: "event",
       title: "Paid Event",
       description: null,
       pricingModel: "hourly_v1",
       pricePerParticipantVnd: null,
       hourlyRateVnd: 150000,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     expect(eventBookingApi.formatEventPriceVnd(offering)).toBe("150.000 đ");
@@ -444,16 +418,14 @@ describe("formatEventPriceVnd", () => {
   it("formats flat_per_participant price", () => {
     const offering: eventBookingApi.EventOffering = {
       id: "1",
-      hostId: "host-1",
-      offeringType: "workshop",
+      kind: "workshop",
       title: "Workshop",
       description: null,
       pricingModel: "flat_per_participant_v1",
       pricePerParticipantVnd: 200000,
       hourlyRateVnd: null,
-      currency: "VND",
       bookingMode: "approval",
-      status: "published",
+      publicationStatus: "published",
       version: 1,
     };
     expect(eventBookingApi.formatEventPriceVnd(offering)).toBe("200.000 đ");

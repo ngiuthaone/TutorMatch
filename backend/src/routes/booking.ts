@@ -232,6 +232,15 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService; authSe
     return { ok: true, offering: result.data };
   });
 
+  app.get("/api/v1/offerings/by-slug/:slug", { onSend: noStore }, async (request) => {
+    const slug = (request.params as { slug?: unknown }).slug;
+    if (typeof slug !== "string" || slug.length === 0) throw new ApiError(400, "INVALID_SLUG", "Slug is required.");
+    const result = await options.service.getOfferingBySlug(slug);
+    if (result.error) fail(result);
+    if (result.data === null) throw new ApiError(404, "OFFERING_NOT_FOUND", "Workshop not found.");
+    return { ok: true, offering: (result.data as { offering: unknown }).offering, sessions: (result.data as { sessions: unknown }).sessions };
+  });
+
   app.get("/api/v1/offerings/:offeringId/sessions", { onSend: noStore }, async (request) => {
     const offeringId = routeId((request.params as { offeringId?: unknown }).offeringId, "offeringId");
     const result = await options.service.listSessionsByOffering(offeringId);

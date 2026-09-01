@@ -42,12 +42,14 @@ const createGroup: NavGroup = {
 const communityGroup: NavGroup = {
   label: "Community",
   items: [
+    { label: "Threads", href: "/threads" },
     { label: "Discussions", href: "/discussions" },
+    { label: "Articles", href: "/articles" },
     { label: "Communities", href: "/communities" },
     { label: "Tutors", href: "/people" },
     { label: "Workshops/Events", href: "/events" },
   ],
-  matchPatterns: ["/discussions", "/communities", "/events"],
+  matchPatterns: ["/threads", "/discussions", "/communities", "/events"],
 };
 
 const navGroups = [learnGroup, createGroup, communityGroup];

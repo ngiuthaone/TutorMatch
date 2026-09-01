@@ -41,12 +41,21 @@ export const messagingRoutes: FastifyPluginAsync<{
   windowMs: number;
 }> = async (app, options) => {
   // GET /api/v1/messaging/conversations — list the caller's conversations.
+  // Optional `?q=` for full-text search across conversation title + the
+  // other party's display name + last-message preview.
   app.get("/api/v1/messaging/conversations", {
     preHandler: app.authenticate,
     config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } },
   }, async (request) => {
+    const q = String((request.query as { q?: unknown }).q ?? "").trim();
+    if (q.length > 0) {
+      if (q.length > 200) throw new ApiError(400, "INVALID_QUERY", "Search query is too long.");
+      const result = await options.service.searchConversations(request.auth.accessToken, q);
+      if (result.status === "unavailable") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+      return { ok: true, conversations: result.data };
+    }
     const result = await options.service.listConversations(request.auth.accessToken);
-    if (result.status === "unavailable") failAvailability("unavailable");
+    if (result.status === "unavailable") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
     return { ok: true, conversations: result.data };
   });
 
@@ -129,6 +138,86 @@ export const messagingRoutes: FastifyPluginAsync<{
     if (!id.success) throw new ApiError(400, "INVALID_ID", "Conversation id is invalid.");
     const result = await options.service.markRead(request.auth.accessToken, id.data.id);
     if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You are not a member of this conversation.");
+    if (result.status !== "ok") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+    return { ok: true, ...result.data };
+  });
+
+  // PATCH /api/v1/messaging/messages/:id — owner only. Edit body.
+  app.patch("/api/v1/messaging/messages/:id", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.sendMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const id = idParam.safeParse(request.params);
+    if (!id.success) throw new ApiError(400, "INVALID_ID", "Message id is invalid.");
+    const body = z.object({ body: z.string().trim().min(1).max(2000) }).safeParse(request.body);
+    if (!body.success) throw new ApiError(400, "INVALID_MESSAGE", "Message body is invalid.");
+    const result = await options.service.editMessage(request.auth.accessToken, id.data.id, body.data.body);
+    if (result.status === "not_found") throw new ApiError(404, "MESSAGE_NOT_FOUND", "Message not found.");
+    if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You can only edit your own messages.");
+    if (result.status === "invalid") throw new ApiError(400, "INVALID_MESSAGE", "Message body is invalid.");
+    if (result.status !== "ok") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+    return { ok: true, message: result.data };
+  });
+
+  // DELETE /api/v1/messaging/messages/:id — owner only. Soft delete.
+  app.delete("/api/v1/messaging/messages/:id", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.sendMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const id = idParam.safeParse(request.params);
+    if (!id.success) throw new ApiError(400, "INVALID_ID", "Message id is invalid.");
+    const result = await options.service.deleteMessage(request.auth.accessToken, id.data.id);
+    if (result.status === "not_found") throw new ApiError(404, "MESSAGE_NOT_FOUND", "Message not found.");
+    if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You can only delete your own messages.");
+    if (result.status !== "ok") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+    return { ok: true, message: result.data };
+  });
+
+  // POST /api/v1/messaging/messages/:id/report — any active member of
+  // the conversation. Persists a moderation record (admin + reporter only).
+  app.post("/api/v1/messaging/messages/:id/report", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.sendMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const id = idParam.safeParse(request.params);
+    if (!id.success) throw new ApiError(400, "INVALID_ID", "Message id is invalid.");
+    const body = z.object({
+      reason: z.enum(["harassment", "spam", "scam", "inappropriate", "abuse", "other"]),
+      details: z.string().trim().max(2000).optional(),
+    }).safeParse(request.body);
+    if (!body.success) throw new ApiError(400, "INVALID_REPORT", "Report reason is invalid.");
+    const result = await options.service.reportMessage(request.auth.accessToken, id.data.id, body.data.reason, body.data.details);
+    if (result.status === "not_found") throw new ApiError(404, "MESSAGE_NOT_FOUND", "Message not found.");
+    if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You can only report messages in your own conversations.");
+    if (result.status === "invalid") throw new ApiError(400, "INVALID_REPORT", "Report is invalid.");
+    if (result.status !== "ok") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+    return { ok: true, report: result.data };
+  });
+
+  // POST /api/v1/messaging/users/:userId/block — caller is the blocker.
+  app.post("/api/v1/messaging/users/:userId/block", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.sendMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const id = z.object({ userId: z.string().uuid() }).safeParse(request.params);
+    if (!id.success) throw new ApiError(400, "INVALID_ID", "User id is invalid.");
+    const result = await options.service.blockUser(request.auth.accessToken, id.data.userId);
+    if (result.status === "not_found") throw new ApiError(404, "USER_NOT_FOUND", "User not found.");
+    if (result.status === "invalid") throw new ApiError(400, "INVALID_REQUEST", "Cannot block this user.");
+    if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You do not have permission to block this user.");
+    if (result.status !== "ok") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+    return { ok: true, ...result.data };
+  });
+
+  // DELETE /api/v1/messaging/users/:userId/block — caller is the blocker.
+  app.delete("/api/v1/messaging/users/:userId/block", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const id = z.object({ userId: z.string().uuid() }).safeParse(request.params);
+    if (!id.success) throw new ApiError(400, "INVALID_ID", "User id is invalid.");
+    const result = await options.service.unblockUser(request.auth.accessToken, id.data.userId);
+    if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You do not have permission to unblock this user.");
     if (result.status !== "ok") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
     return { ok: true, ...result.data };
   });

@@ -9,7 +9,8 @@ import {
   IconShieldCheck,
   IconX,
 } from "@tabler/icons-react";
-import { BookingApiError, createBooking, type BookableSession, type BookingRecord } from "@/lib/booking-api";
+import { type BookableSession, type BookingRecord } from "@/lib/booking-api";
+import { WorkshopApiError, createWorkshopBooking, startWorkshopPayment } from "@/lib/workshop-booking-api";
 import { useSession, ensureSession } from "@/lib/auth/session";
 import { SessionDatePicker } from "@/components/shared/session-date-picker";
 import { ParticipantQuantity } from "@/components/shared/participant-quantity";
@@ -89,25 +90,20 @@ function phoneToInput(value: string): string {
 }
 
 function mapBookingError(error: unknown): string {
-  if (!(error instanceof BookingApiError)) return "Something went wrong. Please try again.";
-  switch (error.code) {
-    case "SESSION_CAPACITY_EXHAUSTED":
-      return "That session just filled up. Choose another or try again.";
-    case "BOOKING_CONFLICT":
-      return "You already have a booking for this session.";
-    case "LEARNER_PHONE_INVALID":
-      return "Enter a valid Vietnamese phone number (+84 or starting 0).";
-    case "LEARNER_NAME_REQUIRED":
-      return "Please enter your full name.";
-    case "LEARNER_EMAIL_INVALID":
-      return "Enter a valid email address.";
-    case "UNAUTHORIZED":
-      return "AUTH_REDIRECT_SIGN_IN";
-    case "EMAIL_VERIFICATION_REQUIRED":
-      return "AUTH_REDIRECT_VERIFY";
-    default:
-      return "Something went wrong. Please try again.";
+  if (error instanceof WorkshopApiError) {
+    switch (error.code) {
+      case "SESSION_CAPACITY_EXHAUSTED":
+        return "That session just filled up. Choose another or try again.";
+      case "BOOKING_CONFLICT":
+        return "You already have a booking for this session.";
+      case "UNAUTHORIZED":
+        return "AUTH_REDIRECT_SIGN_IN";
+      default:
+        return "Something went wrong. Please try again.";
+    }
   }
+  if (error instanceof Error && error.message.includes("401")) return "AUTH_REDIRECT_SIGN_IN";
+  return "Something went wrong. Please try again.";
 }
 
 /* ── Props ── */
@@ -245,10 +241,9 @@ export function WorkshopBookingSheet({
     onClose();
   };
 
-  /* Final submit: auth gate -> createBooking(contact) -> show in-sheet receipt.
-     The booking is request-based: the host confirms, and payment is handled in a
-     later secure step (real provider integration is deferred). We never claim a
-     charge was captured here. */
+  /* Final submit: auth gate -> createWorkshopBooking -> handle payment redirect or show in-sheet receipt.
+     For instant-booking workshops, initiate payment immediately after booking.
+     For approval-mode workshops, show in-sheet receipt for host confirmation. */
   const handleSubmit = useCallback(async () => {
     if (!selectedSession) return;
     if (!acceptedTerms) {
@@ -268,24 +263,47 @@ export function WorkshopBookingSheet({
     setSubmitError(null);
     try {
       await ensureSession();
-      const booking = await createBooking(selectedSession.id, participants, {
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        ...(note.trim() ? { note: note.trim() } : {}),
-      });
+      const booking = await createWorkshopBooking(selectedSession.id, participants);
+
+      // For instant-booking workshops, initiate payment immediately
+      if (booking.paymentReady) {
+        const { redirectUrl } = await startWorkshopPayment(booking.id);
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      // Otherwise show in-sheet receipt for approval-mode workshops
+      const adaptedBooking: BookingRecord = {
+        id: booking.id,
+        sessionId: booking.sessionId,
+        status: booking.status,
+        participantCount: booking.participantCount,
+        version: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        pricing: booking.pricing,
+        session: {
+          id: booking.sessionId,
+          startsAt: selectedSession.startsAt,
+          endsAt: selectedSession.endsAt,
+          status: "scheduled" as const,
+          minParticipants: selectedSession.minParticipants ?? null,
+          maxParticipants: selectedSession.maxParticipants ?? null,
+          hardReservedCapacity: 0,
+          spotsLeft: selectedSession.spotsLeft ?? null,
+          version: 1,
+        },
+        paymentRequired: booking.paymentRequired,
+        paymentReady: booking.paymentReady,
+      };
       setServerTotal(booking.pricing?.amountVnd ?? null);
-      setReceipt(booking);
+      setReceipt(adaptedBooking);
       setSubmitting(false);
-      onBooked(booking);
+      onBooked(adaptedBooking);
     } catch (error) {
       const message = mapBookingError(error);
       if (message === "AUTH_REDIRECT_SIGN_IN") {
         window.location.assign(`/auth/sign-in?next=${encodeURIComponent(currentPath)}`);
-        return;
-      }
-      if (message === "AUTH_REDIRECT_VERIFY") {
-        window.location.assign(`/auth/verify-email?next=${encodeURIComponent(currentPath)}`);
         return;
       }
       setSubmitError(message);
@@ -298,10 +316,6 @@ export function WorkshopBookingSheet({
     session,
     currentPath,
     participants,
-    name,
-    email,
-    phone,
-    note,
     onBooked,
   ]);
 
@@ -817,8 +831,6 @@ function BookingReceipt({
           <span />
           <span className="bg-[#17171a]" />
           <span className="bg-[#17171a]" />
-          <span className="bg-[#17171a]" />
-          <span className="bg-[#17171a]" />
           <span />
           <span className="bg-[#17171a]" />
           <span className="bg-[#17171a]" />
@@ -826,18 +838,7 @@ function BookingReceipt({
           <span />
           <span className="bg-[#17171a]" />
           <span className="bg-[#17171a]" />
-          <span className="bg-[#17171a]" />
-          <span className="bg-[#17171a]" />
           <span />
-          <span className="bg-[#17171a]" />
-          <span className="bg-[#17171a]" />
-          <span className="bg-[#17171a]" />
-          <span />
-          <span />
-          <span className="bg-[#17171a]" />
-          <span className="bg-[#17171a]" />
-          <span />
-          <span className="bg-[#17171a]" />
           <span />
           <span className="bg-[#17171a]" />
           <span />
@@ -848,6 +849,20 @@ function BookingReceipt({
           <span className="bg-[#17171a]" />
           <span className="bg-[#17171a]" />
           <span />
+          <span />
+          <span className="bg-[#17171a]" />
+          <span className="bg-[#17171a]" />
+          <span />
+          <span className="bg-[#17171a]" />
+          <span className="bg-[#17171a]" />
+          <span />
+          <span />
+          <span className="bg-[#17171a]" />
+          <span />
+          <span className="bg-[#17171a]" />
+          <span className="bg-[#17171a]" />
+          <span className="bg-[#17171a]" />
+          <span />
           <span className="bg-[#17171a]" />
           <span className="bg-[#17171a]" />
           <span />
@@ -856,9 +871,14 @@ function BookingReceipt({
           <span className="bg-[#17171a]" />
           <span />
           <span className="bg-[#17171a]" />
+          <span />
+          <span className="bg-[#17171a]" />
           <span className="bg-[#17171a]" />
           <span className="bg-[#17171a]" />
           <span />
+          <span className="bg-[#17171a]" />
+          <span />
+          <span className="bg-[#17171a]" />
           <span className="bg-[#17171a]" />
         </div>
         <div className="mt-3 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--quiet,#71717a)]">

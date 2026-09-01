@@ -1,12 +1,7 @@
-import { PeopleBrowser } from "./people-browser";
+import { permanentRedirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Browse Tutors | Tutoria",
-  description: "Browse tutors on Tutoria.",
-};
-
-export default function People() {
-  return <PeopleBrowser />;
+export default function PeopleRedirectPage() {
+  permanentRedirect("/tutors");
 }

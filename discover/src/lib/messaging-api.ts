@@ -52,6 +52,9 @@ export type MessagingMessage = {
   mine: boolean;
   body: string;
   createdAt: string;
+  editedAt: string | null;
+  deletedAt: string | null;
+  messageType: "text" | "image" | "file" | "system" | "media";
   moderationStatus: string;
 };
 
@@ -148,6 +151,13 @@ function messageFrom(value: unknown): MessagingMessage {
     mine: m.mine === true,
     body: ensureString(m.body, "message.body"),
     createdAt: ensureIsoDate(m.createdAt, "message.createdAt"),
+    editedAt: m.editedAt === null || m.editedAt === undefined ? null : ensureIsoDate(m.editedAt, "message.editedAt"),
+    deletedAt: m.deletedAt === null || m.deletedAt === undefined ? null : ensureIsoDate(m.deletedAt, "message.deletedAt"),
+    messageType: ((): MessagingMessage["messageType"] => {
+      const t = m.messageType;
+      if (t === "text" || t === "image" || t === "file" || t === "system" || t === "media") return t;
+      return "text";
+    })(),
     moderationStatus: ensureString(m.moderationStatus, "message.moderationStatus"),
   };
 }
@@ -253,4 +263,102 @@ export async function loadConversationPage(conversationId: string, signal?: Abor
     listMessages(conversationId, 200, signal),
   ]);
   return { conversation, messages };
+}
+
+export async function searchConversations(query: string, signal?: AbortSignal): Promise<MessagingConversation[]> {
+  if (!query.trim()) return [];
+  const url = `${BASE}/conversations?q=${encodeURIComponent(query)}`;
+  const payload = await request<{ ok?: unknown; conversations?: unknown[] }>(url, { authenticated: true, ...(signal ? { signal } : {}) });
+  if (payload.ok !== true || !Array.isArray(payload.conversations)) throw new MessagingApiError("INVALID_RESPONSE", 500);
+  return payload.conversations.map(conversationFrom);
+}
+
+export type ReportReason = "harassment" | "spam" | "scam" | "inappropriate" | "abuse" | "other";
+
+export async function editMessage(messageId: string, body: string): Promise<MessagingMessage> {
+  const payload = await request<{ ok?: unknown; message?: unknown }>(`${BASE}/messages/${encodeURIComponent(messageId)}`, {
+    method: "PATCH",
+    body: { body },
+    authenticated: true,
+  });
+  if (payload.ok !== true) throw new MessagingApiError("INVALID_RESPONSE", 500);
+  return messageFrom(payload.message);
+}
+
+export async function deleteMessage(messageId: string): Promise<MessagingMessage> {
+  const payload = await request<{ ok?: unknown; message?: unknown }>(`${BASE}/messages/${encodeURIComponent(messageId)}`, {
+    method: "DELETE",
+    authenticated: true,
+  });
+  if (payload.ok !== true) throw new MessagingApiError("INVALID_RESPONSE", 500);
+  return messageFrom(payload.message);
+}
+
+export async function reportMessage(messageId: string, reason: ReportReason, details?: string): Promise<{ id: string; status: string }> {
+  const payload = await request<{ ok?: unknown; report?: { id?: unknown; status?: unknown } }>(
+    `${BASE}/messages/${encodeURIComponent(messageId)}/report`,
+    { method: "POST", body: { reason, ...(details ? { details } : {}) }, authenticated: true },
+  );
+  if (payload.ok !== true || !payload.report) throw new MessagingApiError("INVALID_RESPONSE", 500);
+  return { id: String(payload.report.id ?? ""), status: String(payload.report.status ?? "pending") };
+}
+
+export async function blockUser(userId: string): Promise<void> {
+  await request<{ ok?: unknown }>(`${BASE}/users/${encodeURIComponent(userId)}/block`, { method: "POST", authenticated: true });
+}
+
+export async function unblockUser(userId: string): Promise<void> {
+  await request<{ ok?: unknown }>(`${BASE}/users/${encodeURIComponent(userId)}/block`, { method: "DELETE", authenticated: true });
+}
+
+// Realtime: subscribe to new messages on a single conversation. Returns an
+// unsubscribe function. The channel is server-side authorized via Supabase
+// RLS on public.messages, so a caller can only see inserts for
+// conversations they are a member of.
+export function subscribeToConversationMessages(
+  conversationId: string,
+  onMessage: (msg: MessagingMessage) => void,
+  signal?: AbortSignal,
+): () => void {
+  if (typeof window === "undefined") return () => undefined;
+  // Lazy import to keep the messaging-api usable in non-browser contexts.
+  let unsubscribe = () => undefined;
+  let cancelled = false;
+  void (async () => {
+    try {
+      const supabase = (await import("@/lib/auth/supabase-client")).getSupabaseClient();
+      if (cancelled) return;
+      const channel = supabase
+        .channel(`messaging:conversation:${conversationId}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+          (payload) => {
+            try {
+              const row = payload.new as Record<string, unknown>;
+              onMessage(messageFrom(row));
+            } catch (error) {
+              console.error("subscribeToConversationMessages: failed to parse payload", error);
+            }
+          },
+        )
+        .subscribe();
+      unsubscribe = () => {
+        void supabase.removeChannel(channel);
+      };
+    } catch (error) {
+      console.error("subscribeToConversationMessages: subscribe failed", error);
+    }
+  })();
+  if (signal) {
+    const onAbort = () => {
+      cancelled = true;
+      unsubscribe();
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+  }
+  return () => {
+    cancelled = true;
+    unsubscribe();
+  };
 }

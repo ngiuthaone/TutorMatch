@@ -27,6 +27,8 @@ const createItems = [
 ];
 
 const communityItems = [
+  { label: "Threads", href: "/threads" },
+  { label: "Articles", href: "/articles" },
   { label: "Discussions", href: "/discussions" },
   { label: "Communities", href: "/communities" },
   { label: "Tutors", href: "/people" },

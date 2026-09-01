@@ -15,16 +15,14 @@ export class EventApiError extends Error {
 
 export interface EventOffering {
   id: string;
-  hostId: string;
-  offeringType: "event" | "workshop";
+  kind: "event" | "workshop";
   title: string;
   description: string | null;
   pricingModel: "hourly_v1" | "flat_per_participant_v1";
   pricePerParticipantVnd: number | null;
   hourlyRateVnd: number | null;
-  currency: "VND";
   bookingMode: "approval" | "instant";
-  status: "draft" | "published" | "unpublished";
+  publicationStatus: "draft" | "published" | "unpublished";
   version: number;
 }
 
@@ -95,7 +93,20 @@ async function request(path: string, options: { method?: string; body?: unknown;
 export async function getEventOffering(offeringId: string): Promise<EventOffering | null> {
   const payload = await request(`/api/v1/offerings/${encodeURIComponent(offeringId)}`) as { ok?: unknown; offering?: unknown };
   if (payload.ok !== true) return null;
-  return payload.offering as EventOffering;
+  const raw = payload.offering as Record<string, unknown>;
+  // Remap RPC field names to interface field names
+  return {
+    id: String(raw.id ?? ""),
+    kind: (raw.kind as EventOffering["kind"]) ?? "event",
+    title: String(raw.title ?? ""),
+    description: raw.description == null ? null : String(raw.description),
+    pricingModel: (raw.pricingModel as EventOffering["pricingModel"]) ?? "hourly_v1",
+    pricePerParticipantVnd: raw.pricePerParticipantVnd == null ? null : Number(raw.pricePerParticipantVnd),
+    hourlyRateVnd: raw.hourlyRateVnd == null ? null : Number(raw.hourlyRateVnd),
+    bookingMode: (raw.bookingMode as EventOffering["bookingMode"]) ?? "approval",
+    publicationStatus: (raw.publicationStatus as EventOffering["publicationStatus"]) ?? "draft",
+    version: Number(raw.version ?? 1),
+  };
 }
 
 export async function getEventSessions(offeringId: string): Promise<EventSession[]> {
@@ -155,7 +166,7 @@ export async function listBookableEvents(): Promise<EventWithHost[]> {
     const offeringId = offeringIds[i];
     const { sessions, hostDisplayName } = sessionsByOffering.get(offeringId)!;
     const offering = offeringResults[i];
-    if (offering && ["event", "workshop"].includes(offering.offeringType) && offering.status === "published") {
+    if (offering && ["event", "workshop"].includes(offering.kind) && offering.publicationStatus === "published") {
       results.push({ offering, sessions, hostDisplayName });
     }
   }

@@ -25,6 +25,7 @@ export type BookingService = {
   rescheduleSession(token: string, sessionId: string, startsAt: string, endsAt: string, expectedVersion: number): Promise<BookingServiceResult>;
   // Offering RPCs
   getOffering(offeringId: string): Promise<BookingServiceResult>;
+  getOfferingBySlug(slug: string): Promise<BookingServiceResult>;
   listSessionsByOffering(offeringId: string): Promise<BookingServiceResult>;
   createOffering(token: string, params: { offeringType: string; title: string; pricingModel: string; pricePerParticipantVnd?: number; hourlyRateVnd?: number; bookingMode?: string; description?: string }): Promise<BookingServiceResult>;
   updateOfferingStatus(token: string, offeringId: string, expectedVersion: number, status: string): Promise<BookingServiceResult>;
@@ -71,6 +72,7 @@ export function createSupabaseBookingService(url: string, publishableKey: string
     rescheduleSession: (token, sessionId, startsAt, endsAt, expectedVersion) => rpc("reschedule_session", { sid: sessionId, starts_at: startsAt, ends_at: endsAt, expected_version: expectedVersion }, token),
     // Offering RPCs
     getOffering: (offeringId) => rpc("get_offering", { p_offering_id: offeringId }),
+    getOfferingBySlug: (slug) => rpc("get_offering_with_sessions_by_slug", { p_slug: slug }),
     listSessionsByOffering: (offeringId) => rpc("list_sessions_by_offering_id", { p_offering_id: offeringId }),
     createOffering: (token, params) => rpc("create_offering", {
       p_offering_type: params.offeringType,

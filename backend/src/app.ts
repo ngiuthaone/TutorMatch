@@ -24,6 +24,7 @@ import { payoutRoutes } from "./routes/payouts.js";
 import { adminRoutes } from "./routes/admin.js";
 import { adminModerationRoutes } from "./routes/admin-moderation.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
+import { tutorDashboardRoutes } from "./routes/tutor-dashboard.js";
 import { messagingRoutes } from "./routes/messaging.js";
 import { createSupabaseMessagingService, type MessagingService } from "./services/messaging-service.js";
 import { createSupabaseArticleService, type ArticleService } from "./services/article-service.js";
@@ -32,12 +33,16 @@ import { createSupabaseCommentService, type CommentService } from "./services/co
 import { createSupabaseFollowService, type FollowService } from "./services/follow-service.js";
 import { createSupabaseNotificationService, type NotificationService } from "./services/notification-service.js";
 import { createSupabaseThreadService, type ThreadService } from "./services/thread-service.js";
+import { createSupabaseCommunityService, type CommunityService } from "./services/community-service.js";
+import { createSupabaseBookmarkService, type BookmarkService, createSupabaseReportService, type ReportService } from "./services/bookmark-service.js";
 import { articleRoutes } from "./routes/articles.js";
 import { postRoutes } from "./routes/posts.js";
 import { commentRoutes } from "./routes/comments.js";
 import { followRoutes } from "./routes/follows.js";
 import { notificationRoutes } from "./routes/notifications.js";
 import { threadRoutes } from "./routes/threads.js";
+import { communityRoutes } from "./routes/communities.js";
+import { bookmarkRoutes } from "./routes/bookmarks.js";
 import type { AuthService } from "./services/auth-service.js";
 import type { BookingService } from "./services/booking-service.js";
 import type { TutorCvService } from "./types/tutor-cv.js";
@@ -63,6 +68,9 @@ export function createApp(options: {
   followService?: FollowService;
   notificationService?: NotificationService;
   threadService?: ThreadService;
+  communityService?: CommunityService;
+  bookmarkService?: BookmarkService;
+  reportService?: ReportService;
   messagingService?: MessagingService;
   requireAdmin?: (request: import("fastify").FastifyRequest, reply: import("fastify").FastifyReply) => Promise<void>;
   logger?: FastifyServerOptions["logger"];
@@ -137,6 +145,8 @@ export function createApp(options: {
   app.register(followRoutes, { authService: options.authService, followService: options.followService ?? createSupabaseFollowService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.FOLLOW_RATE_LIMIT_MAX, readMax: options.config.POST_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   app.register(notificationRoutes, { authService: options.authService, notificationService: options.notificationService ?? createSupabaseNotificationService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), readMax: options.config.NOTIFICATION_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   app.register(threadRoutes, { authService: options.authService, threadService: options.threadService ?? createSupabaseThreadService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.THREAD_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.THREAD_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  app.register(communityRoutes, { authService: options.authService, communityService: options.communityService ?? createSupabaseCommunityService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.THREAD_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.THREAD_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  app.register(bookmarkRoutes, { authService: options.authService, bookmarkService: options.bookmarkService ?? createSupabaseBookmarkService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), reportService: options.reportService ?? createSupabaseReportService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), readMax: options.config.NOTIFICATION_READ_RATE_LIMIT_MAX, publishMax: options.config.COMMENT_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.bookingService) app.register(bookingRoutes, { service: options.bookingService, authService: options.authService });
   if (options.config.VNPAY_TMN_CODE && options.config.VNPAY_HASH_SECRET && options.config.VNPAY_RETURN_URL && options.config.VNPAY_IPN_URL) {
     app.register(paymentRoutes, { service: createSupabasePaymentService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.config.SUPABASE_SERVICE_ROLE_KEY, { tmnCode: options.config.VNPAY_TMN_CODE, hashSecret: options.config.VNPAY_HASH_SECRET, paymentUrl: options.config.VNPAY_PAYMENT_URL, returnUrl: options.config.VNPAY_RETURN_URL, ipnUrl: options.config.VNPAY_IPN_URL }, options.config.VNPAY_API_URL, fetch, { providerRequestTimeoutMs: options.config.VNPAY_REQUEST_TIMEOUT_MS }), vnpay: { tmnCode: options.config.VNPAY_TMN_CODE, hashSecret: options.config.VNPAY_HASH_SECRET, paymentUrl: options.config.VNPAY_PAYMENT_URL, returnUrl: options.config.VNPAY_RETURN_URL, ipnUrl: options.config.VNPAY_IPN_URL }, reconciliationToken: options.config.PAYMENT_RECONCILIATION_TOKEN });
@@ -156,6 +166,7 @@ export function createApp(options: {
   }
   const messagingService = options.messagingService ?? createSupabaseMessagingService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY);
   app.register(messagingRoutes, { service: messagingService, readMax: options.config.MESSAGING_READ_RATE_LIMIT_MAX, sendMax: options.config.MESSAGING_SEND_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  app.register(tutorDashboardRoutes, { authService: options.authService, config: options.config, max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.requireAdmin) {
     const dashConfig: { SUPABASE_URL: string; SUPABASE_PUBLISHABLE_KEY: string; SUPABASE_SERVICE_ROLE_KEY?: string } = {
       SUPABASE_URL: options.config.SUPABASE_URL,

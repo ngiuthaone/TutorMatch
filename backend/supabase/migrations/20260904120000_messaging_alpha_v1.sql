@@ -286,8 +286,10 @@ revoke all on function public.get_conversation(uuid) from public, anon, authenti
 grant execute on function public.get_conversation(uuid) to authenticated;
 
 -- list_conversation_messages: paginated, oldest-first; viewer must be a
--- member. Returns messages with id, senderId, body, createdAt,
--- moderationStatus, and a synthetic 'mine' flag for the client.
+-- member. Returns messages with id, senderId, body, createdAt, editedAt,
+-- deletedAt, messageType, moderationStatus, and a synthetic 'mine' flag
+-- for the client. Soft-deleted messages are NOT included in the list
+-- (the server hides them in line with the client UX).
 create or replace function public.list_conversation_messages(cid uuid, p_limit int default 100, p_before timestamptz default null) returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
 declare uid uuid := auth.uid(); rows jsonb; lim int;
@@ -301,12 +303,16 @@ begin
     'mine', m.sender_id = uid,
     'body', m.body,
     'createdAt', m.created_at,
+    'editedAt', m.edited_at,
+    'deletedAt', m.deleted_at,
+    'messageType', m.message_type,
     'moderationStatus', m.moderation_status
   ) order by m.created_at asc), '[]'::jsonb)
     into rows
   from (
     select * from public.messages m
     where m.conversation_id = cid
+      and m.deleted_at is null
       and (p_before is null or m.created_at < p_before)
     order by m.created_at desc
     limit lim

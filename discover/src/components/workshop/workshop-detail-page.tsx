@@ -1,68 +1,139 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   IconArrowLeft,
   IconBookmark,
-  IconCheck,
-  IconClock,
-  IconMapPin,
-  IconPlus,
+  IconCalendar,
+  IconChevronDown,
   IconShare,
-  IconStarFilled,
-  IconWorld,
 } from "@tabler/icons-react";
 import { type BookableSession, type BookingRecord } from "@/lib/booking-api";
-import { getMarketplaceListing, type MarketplaceListing } from "@/lib/marketplace-api";
+import { getWorkshopBySlug, type WorkshopOffering, type WorkshopSession } from "@/lib/workshop-booking-api";
 import { useSession } from "@/lib/auth/session";
-import { SessionDatePicker } from "@/components/shared/session-date-picker";
 import { ParticipantQuantity } from "@/components/shared/participant-quantity";
 import { PriceSummary } from "@/components/shared/price-summary";
 import { BookingCTA, MobileBookingBar } from "@/components/shared/booking-cta";
-import { HostSummaryCard } from "@/components/shared/host-summary-card";
-import { WorkshopFactsCard } from "@/components/shared/workshop-facts-card";
 import { WorkshopBookingSheet } from "./workshop-booking-sheet";
 import styles from "./workshop-detail-page.module.css";
 
 /* ── Types ── */
 
-interface WorkshopPayload {
-  subtitle?: string;
-  description?: string;
-  about?: string[];
-  image?: string;
-  category?: string;
-  rating?: number;
-  reviewCount?: number;
-  duration?: string;
-  languages?: string[];
-  level?: string;
-  location?: string;
-  format?: string;
-  host?: {
-    name?: string;
-    avatarUrl?: string;
-    role?: string;
-    bio?: string;
-    profileUrl?: string;
-  };
-  cancellation?: string[];
-  whatYouWillLearn?: string[];
-  whatIsIncluded?: string[];
-  faqs?: Array<{ question: string; answer: string }>;
-}
-
 type PageState =
   | { status: "loading" }
   | { status: "not-found" }
-  | { status: "ready"; listing: MarketplaceListing; payload: WorkshopPayload };
+  | { status: "ready"; offering: WorkshopOffering; sessions: BookableSession[] };
 
 /* ── Helpers ── */
 
 function formatVnd(amount: number): string {
   return `${new Intl.NumberFormat("vi-VN").format(amount)} \u0111`;
+}
+
+/* ── Session Selector (inline — uses pre-fetched sessions) ── */
+
+function SessionSelector({
+  sessions,
+  selected,
+  onSelect,
+}: {
+  sessions: BookableSession[];
+  selected: BookableSession | null;
+  onSelect: (s: BookableSession) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const summaryText = !selected
+    ? "Choose a date and time"
+    : (() => {
+        const d = new Date(selected.startsAt);
+        const fmtTime = (dt: Date) =>
+          dt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+        return (
+          d.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" }) +
+          "  ·  " +
+          fmtTime(new Date(selected.startsAt)) +
+          "–" +
+          fmtTime(new Date(selected.endsAt))
+        );
+      })();
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        className="flex min-h-[44px] w-full items-center justify-between gap-3 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 text-left transition-colors hover:border-[rgba(255,255,255,0.15)]"
+      >
+        <span className="flex items-center gap-3 min-w-0">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[rgba(255,255,255,0.05)] text-[var(--muted,#a1a1aa)]">
+            <IconCalendar size={17} />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[0.625rem] font-extrabold uppercase tracking-[0.14em] text-[var(--quiet,#71717a)]">
+              Date and time
+            </span>
+            <span className="mt-0.5 block truncate text-[0.9rem] font-semibold text-white">
+              {summaryText}
+            </span>
+          </span>
+        </span>
+        <IconChevronDown
+          size={15}
+          className={`shrink-0 text-[var(--muted,#a1a1aa)] transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 right-0 z-30 mt-2 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[var(--panel-2,#1b1b1e)] p-3 shadow-2xl">
+          {sessions.length === 0 ? (
+            <p className="py-4 text-center text-[0.82rem] text-[var(--muted,#a1a1aa)]">
+              No sessions available yet.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {sessions.map((session) => {
+                const isSelected = selected?.id === session.id;
+                const isFull = session.spotsLeft !== null && session.spotsLeft <= 0;
+                const d = new Date(session.startsAt);
+                const timeLabel =
+                  d.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" }) +
+                  " · " +
+                  new Date(session.startsAt).toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  });
+                return (
+                  <button
+                    key={session.id}
+                    type="button"
+                    disabled={isFull}
+                    onClick={() => {
+                      onSelect(session);
+                      setOpen(false);
+                    }}
+                    className={`min-h-[34px] rounded-full border px-3 text-[0.75rem] font-semibold transition-colors ${
+                      isSelected
+                        ? "border-[rgba(255,255,255,0.28)] bg-white text-[#09090b]"
+                        : isFull
+                          ? "cursor-not-allowed border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] text-[var(--quiet,#71717a)] opacity-50 line-through"
+                          : "border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.025)] text-[var(--muted,#a1a1aa)] hover:border-[rgba(255,255,255,0.2)] hover:text-white"
+                    }`}
+                  >
+                    {timeLabel}
+                    {isFull ? " Full" : ""}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /* ── Component ── */
@@ -78,7 +149,6 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
   const [participants, setParticipants] = useState(1);
   const [saved, setSaved] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [openFaq, setOpenFaq] = useState<string | null>(null);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -89,7 +159,7 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
     toastTimer.current = setTimeout(() => setToast(""), 4000);
   }, []);
 
-  /* Fetch marketplace listing */
+  /* Fetch workshop offering + sessions */
   useEffect(() => {
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -100,15 +170,33 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
 
     (async () => {
       try {
-        const listing = await getMarketplaceListing("event", slug);
+        const result = await getWorkshopBySlug(slug);
         if (cancelled.current || controller.signal.aborted) return;
-        if (!listing) {
+        if (!result) {
           setPage({ status: "not-found" });
           return;
         }
-        const payload = (listing.payload ?? {}) as WorkshopPayload;
-        if (!cancelled.current) setPage({ status: "ready", listing, payload });
-        if (!cancelled.current && payload.faqs?.length) setOpenFaq(payload.faqs[0].question);
+        const { offering, sessions } = result;
+
+        // Map WorkshopSession[] to BookableSession[] for the picker
+        const bookableSessions: BookableSession[] = sessions.map((s: WorkshopSession) => ({
+          id: s.id,
+          startsAt: s.startsAt,
+          endsAt: s.endsAt,
+          status: s.status,
+          minParticipants: s.minParticipants,
+          maxParticipants: s.maxParticipants,
+          spotsLeft: s.spotsLeft,
+          unitPriceVnd: offering.pricePerParticipantVnd ?? null,
+          host: null,
+          offering: {
+            id: offering.id,
+            title: offering.title,
+            kind: offering.kind,
+          },
+        }));
+
+        if (!cancelled.current) setPage({ status: "ready", offering, sessions: bookableSessions });
       } catch {
         if (!cancelled.current && !controller.signal.aborted) setPage({ status: "not-found" });
       }
@@ -120,19 +208,14 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
     };
   }, [slug]);
 
-  /* Reset session selection when listing changes */
+  /* Reset session selection when page changes */
   useEffect(() => {
-    queueMicrotask(() => {
-      setSelectedSession(null);
-      setParticipants(1);
-    });
+    queueMicrotask(() => setSelectedSession(null));
   }, [page]);
 
   /* Derived data */
-  const payload = page.status === "ready" ? page.payload : null;
-  const listing = page.status === "ready" ? page.listing : null;
-
-  const unitPrice = selectedSession?.unitPriceVnd ?? null;
+  const offering = page.status === "ready" ? page.offering : null;
+  const unitPrice = offering?.pricePerParticipantVnd ?? null;
   const isFree = unitPrice === 0;
   const isUnknownPrice = unitPrice === null;
   const spotsLeft = selectedSession?.spotsLeft ?? null;
@@ -146,17 +229,15 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
 
   const sessionLabel = useMemo(() => {
     if (!selectedSession) return "Choose a session";
-    const start = new Date(selectedSession.startsAt);
-    const fmt = (d: Date) =>
+    const d = new Date(selectedSession.startsAt);
+    return (
       d.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" }) +
-      " " +
-      d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
-    return fmt(start);
+      " · " +
+      d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
+    );
   }, [selectedSession]);
 
   const ctaLabel = "Book this workshop";
-
-  const cancellationPolicy = payload?.cancellation?.[0] ?? null;
 
   /* Auth gate */
   const isAuthenticated = session.status === "authenticated";
@@ -164,7 +245,6 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
 
   /* Booking flow */
   const openBookingFlow = useCallback(() => {
-    /* Auth gate: keep the existing sign-in / verify redirect behavior. */
     if (!isAuthenticated) {
       window.location.assign(`/auth/sign-in?next=${encodeURIComponent(currentPath)}`);
       return;
@@ -179,8 +259,6 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
   const handleBooked = useCallback(
     (booking: BookingRecord) => {
       const serverTotal = booking.pricing?.amountVnd;
-      // The booking sheet renders the in-sheet receipt; we only toast here and do
-      // not navigate away (there is no /bookings/[id] page to land on).
       showToast(
         serverTotal != null ? `Booking request sent \u00B7 ${formatVnd(serverTotal)}` : "Booking request sent",
       );
@@ -190,7 +268,7 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
 
   /* Share handler */
   const handleShare = async () => {
-    const shareData = { title: listing?.title ?? "Workshop", url: window.location.href };
+    const shareData = { title: offering?.title ?? "Workshop", url: window.location.href };
     try {
       if (navigator.share) {
         await navigator.share(shareData);
@@ -209,7 +287,7 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
       <div className={styles.page} aria-busy="true">
         <header className={styles.topBar}>
           <div className={styles.topBarInner}>
-            <Link href="/events" className={styles.backLink}>
+            <Link href="/workshops" className={styles.backLink}>
               <IconArrowLeft size={16} /> Explore
             </Link>
           </div>
@@ -238,41 +316,31 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
   }
 
   /* ── Not found ── */
-  if (page.status === "not-found" || !payload || !listing) {
+  if (page.status === "not-found" || !offering) {
     return (
       <div className={`${styles.page} ${styles.notFound}`}>
         <div>
           <h1>Workshop not found</h1>
           <p>This workshop is unavailable or has not been published.</p>
-          <Link href="/events">Back to workshops</Link>
+          <Link href="/workshops">Back to workshops</Link>
         </div>
       </div>
     );
   }
 
-  /* ── Workshop facts ── */
-  const facts = [
-    payload.format && { label: "Format", value: payload.format },
-    payload.duration && { label: "Duration", value: payload.duration },
-    payload.level && { label: "Level", value: payload.level },
-    payload.languages?.length && { label: "Languages", value: payload.languages.join(", ") },
-    payload.location && { label: "Location", value: payload.location },
-  ].filter(Boolean) as Array<{ label: string; value: string }>;
-
-  /* ── FAQs ── */
-  const faqs = payload.faqs ?? [];
+  const sessions = page.sessions;
 
   return (
     <div className={styles.page}>
       {/* ── Top bar ── */}
       <header className={styles.topBar}>
         <div className={styles.topBarInner}>
-          <Link href="/events" className={styles.backLink}>
+          <Link href="/workshops" className={styles.backLink}>
             <IconArrowLeft size={16} /> Explore
           </Link>
           <div className={styles.topTitle}>
             <span>Tutoria</span>
-            <strong>{payload.category || "Workshop"}</strong>
+            <strong>{offering.kind === "workshop" ? "Workshop" : offering.kind}</strong>
           </div>
           <div className={styles.topActions}>
             <button type="button" aria-label="Share workshop" onClick={handleShare}>
@@ -298,246 +366,84 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
         <section className={styles.heroSection} aria-labelledby="workshop-title">
           <div className={styles.heroGrid}>
             <div className={styles.heroContent}>
-              {payload.category && (
-                <span className={styles.categoryBadge}>{payload.category}</span>
-              )}
-              <h1 id="workshop-title">{listing.title}</h1>
-              {payload.subtitle && <p>{payload.subtitle}</p>}
+              <span className={styles.categoryBadge}>
+                {offering.kind === "workshop" ? "Workshop" : offering.kind}
+              </span>
+              <h1 id="workshop-title">{offering.title}</h1>
 
-              <div className={styles.heroMeta}>
-                {payload.rating != null && (
-                  <span>
-                    <IconStarFilled size={16} /> <strong>{payload.rating}</strong>
-                    {payload.reviewCount != null && ` (${payload.reviewCount} reviews)`}
-                  </span>
-                )}
-                {payload.duration && (
-                  <span>
-                    <IconClock size={16} /> {payload.duration}
-                  </span>
-                )}
-                {payload.location && (
-                  <span>
-                    <IconMapPin size={16} /> {payload.location}
-                  </span>
-                )}
-              </div>
-
-              {/* Cover image */}
-              {payload.image && (
-                <div className={styles.coverImage}>
-                  <Image
-                    src={payload.image}
-                    alt={listing.title}
-                    fill
-                    priority
-                    unoptimized={payload.image.startsWith("http")}
-                    sizes="(max-width: 1100px) 100vw, 820px"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* ── Booking panel (desktop sticky) ── */}
-            <aside className={styles.bookingPanel} aria-label="Booking summary">
-              <div className={styles.bookingHead}>
-                <div>
-                  <strong>
-                    {isFree ? "Free" : isUnknownPrice ? "\u2014" : formatVnd(unitPrice!)}
-                  </strong>
-                  {!isFree && !isUnknownPrice && <span>/ participant</span>}
-                </div>
-                {spotsLeft != null && (
-                  <em>{spotsLeft} spots</em>
-                )}
-              </div>
-
-              <div className="space-y-0">
-                {/* Session picker */}
-                <div className="mx-4 mt-3">
-                  <SessionDatePicker
-                    offeringId={listing.id}
-                    kind="event"
-                    onSelect={setSelectedSession}
-                    selected={selectedSession}
-                  />
+              {/* ── Booking panel (desktop sticky) ── */}
+              <aside className={styles.bookingPanel} aria-label="Booking summary">
+                <div className={styles.bookingHead}>
+                  <div>
+                    <strong>
+                      {isFree ? "Free" : isUnknownPrice ? "\u2014" : formatVnd(unitPrice!)}
+                    </strong>
+                    {!isFree && !isUnknownPrice && <span>/ participant</span>}
+                  </div>
+                  {spotsLeft != null && <em>{spotsLeft} spots</em>}
                 </div>
 
-                {/* Spots remaining */}
-                {selectedSession && spotsLeft != null && spotsLeft > 0 && (
-                  <p
-                    className={`${styles.spotsRemaining} ${spotsLeft <= 3 ? styles.urgent : ""}`}
-                  >
-                    {spotsLeft} spot{spotsLeft === 1 ? "" : "s"} remaining
-                  </p>
-                )}
-
-                {/* Participant quantity */}
-                {selectedSession && (
+                <div className="space-y-0">
+                  {/* Session selector */}
                   <div className="mx-4 mt-3">
-                    <ParticipantQuantity
-                      max={maxParticipants}
-                      value={participants}
-                      onChange={setParticipants}
+                    <SessionSelector
+                      sessions={sessions}
+                      selected={selectedSession}
+                      onSelect={setSelectedSession}
                     />
                   </div>
-                )}
 
-                {/* Price summary */}
-                <div className="mt-3 border-t border-[rgba(255,255,255,0.08)]">
-                  <PriceSummary
-                    unitPrice={unitPrice}
-                    quantity={participants}
-                    serverTotal={null}
-                    policy={cancellationPolicy ?? undefined}
-                  />
+                  {/* Spots remaining */}
+                  {selectedSession && spotsLeft != null && spotsLeft > 0 && (
+                    <p
+                      className={`${styles.spotsRemaining} ${spotsLeft <= 3 ? styles.urgent : ""}`}
+                    >
+                      {spotsLeft} spot{spotsLeft === 1 ? "" : "s"} remaining
+                    </p>
+                  )}
+
+                  {/* Participant quantity */}
+                  {selectedSession && (
+                    <div className="mx-4 mt-3">
+                      <ParticipantQuantity
+                        max={maxParticipants}
+                        value={participants}
+                        onChange={setParticipants}
+                      />
+                    </div>
+                  )}
+
+                  {/* Price summary */}
+                  <div className="mt-3 border-t border-[rgba(255,255,255,0.08)]">
+                    <PriceSummary
+                      unitPrice={unitPrice}
+                      quantity={participants}
+                      serverTotal={null}
+                    />
+                  </div>
+
+                  {/* Desktop CTA */}
+                  <div className="p-5">
+                    <BookingCTA
+                      onClick={openBookingFlow}
+                      loading={false}
+                      error={null}
+                      disabled={false}
+                      label={ctaLabel}
+                    />
+                  </div>
                 </div>
+              </aside>
 
-                {/* Desktop CTA */}
-                <div className="p-5">
-                  <BookingCTA
-                    onClick={openBookingFlow}
-                    loading={false}
-                    error={null}
-                    disabled={false}
-                    label={ctaLabel}
-                  />
+              {/* ── Description ── */}
+              {offering.description && (
+                <div className={styles.descriptionSection}>
+                  <p>{offering.description}</p>
                 </div>
-              </div>
-            </aside>
-          </div>
-        </section>
-
-        {/* ── Section nav ── */}
-        <nav className={styles.sectionNav} aria-label="Workshop sections">
-          <a href="#about">About</a>
-          {facts.length > 0 && <a href="#details">Details</a>}
-          {payload.whatYouWillLearn?.length || payload.whatIsIncluded?.length ? (
-            <a href="#whats-included">What&apos;s included</a>
-          ) : null}
-          <a href="#host">Host</a>
-          {faqs.length > 0 && <a href="#faq">FAQ</a>}
-        </nav>
-
-        {/* ── About ── */}
-        <section id="about" className={styles.overviewSection}>
-          <span className={styles.sectionLabel}>About this workshop</span>
-          <h2>{payload.subtitle || listing.title}</h2>
-          {(payload.about ?? [payload.description].filter(Boolean) as string[]).length > 0 && (
-            <div>
-              {(payload.about ?? [payload.description].filter(Boolean) as string[]).map(
-                (paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
-                ),
               )}
             </div>
-          )}
-        </section>
-
-        {/* ── Details: facts + learning cards ── */}
-        {(facts.length > 0 || payload.whatYouWillLearn?.length || payload.whatIsIncluded?.length) && (
-          <section id="details" className={styles.detailsSection}>
-            {facts.length > 0 && <WorkshopFactsCard facts={facts} />}
-
-            {(payload.whatYouWillLearn?.length || payload.whatIsIncluded?.length) && (
-              <div id="whats-included" className={styles.learningCards}>
-                {payload.whatYouWillLearn?.length && payload.whatYouWillLearn.length > 0 && (
-                  <section>
-                    <h3>What you will learn</h3>
-                    <ul>
-                      {payload.whatYouWillLearn.map((item) => (
-                        <li key={item}>
-                          <IconCheck size={15} /> {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-                {payload.whatIsIncluded?.length && payload.whatIsIncluded.length > 0 && (
-                  <section>
-                    <h3>What is included</h3>
-                    <ul>
-                      {payload.whatIsIncluded.map((item) => (
-                        <li key={item}>
-                          <IconCheck size={15} /> {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* ── Host & location ── */}
-        <section id="host" className={styles.hostLocationGrid}>
-          {payload.host && (
-            <HostSummaryCard
-              name={payload.host.name ?? "Host"}
-              avatarUrl={payload.host.avatarUrl}
-              role={payload.host.role}
-              bio={payload.host.bio}
-              profileUrl={payload.host.profileUrl}
-            />
-          )}
-
-          <div className={styles.locationCard}>
-            <span className="block text-[0.6875rem] font-bold uppercase tracking-[0.18em] text-[var(--quiet)]">
-              Location
-            </span>
-            <h2 className="mt-5 text-[1.65rem] font-semibold tracking-tight text-white">
-              {payload.location || "Online"}
-            </h2>
-            {payload.format?.toLowerCase().includes("online") ? (
-              <>
-                <p className="mt-1 text-[var(--muted)]">Join from anywhere</p>
-                <div className={styles.onlineVenue}>
-                  <IconWorld size={44} />
-                  <strong className="mt-2 text-white">Join from anywhere</strong>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="mt-1 text-[var(--muted)]">
-                  Exact entrance details are provided after booking.
-                </p>
-              </>
-            )}
           </div>
         </section>
-
-        {/* ── FAQ ── */}
-        {faqs.length > 0 && (
-          <section id="faq" className={styles.faqSection}>
-            <span className={styles.sectionLabel}>FAQ</span>
-            <h2>Practical details before you book.</h2>
-            <div className={styles.faqList}>
-              {faqs.map((faq, index) => {
-                const isOpen = openFaq === faq.question;
-                const answerId = `workshop-faq-${index}`;
-                return (
-                  <article className={isOpen ? styles.faqOpen : undefined} key={faq.question}>
-                    <button
-                      type="button"
-                      aria-expanded={isOpen}
-                      aria-controls={answerId}
-                      onClick={() => setOpenFaq(isOpen ? null : faq.question)}
-                    >
-                      <span>{faq.question}</span>
-                      <IconPlus size={19} />
-                    </button>
-                    {isOpen && (
-                      <div id={answerId} role="region" aria-label={faq.question}>
-                        <p>{faq.answer}</p>
-                      </div>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-        )}
       </main>
 
       {/* ── Mobile bottom bar ── */}
@@ -550,14 +456,13 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
         label="Book this workshop"
       />
 
-      {/* ── Stepped booking sheet (mounted per open so state resets) ── */}
+      {/* ── Booking sheet ── */}
       {bookingOpen && (
         <WorkshopBookingSheet
           open
           onClose={() => setBookingOpen(false)}
-          offeringId={listing.id}
-          kind="event"
-          listingTitle={listing.title}
+          offeringId={offering.id}
+          listingTitle={offering.title}
           selectedSession={selectedSession}
           onSelectSession={setSelectedSession}
           participants={participants}

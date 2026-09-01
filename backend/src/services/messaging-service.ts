@@ -170,6 +170,110 @@ export function createSupabaseMessagingService(
         return { status: "unavailable" };
       }
     },
+
+    async searchConversations(token: string, query: string): Promise<MessagingResult<MessagingConversation[]>> {
+      try {
+        const { data, error } = await caller(token).rpc("search_conversations", { p_query: query });
+        if (error) {
+          if (error.code === "42501" || /insufficient_privilege|forbidden/i.test(error.message)) {
+            return { status: { status: "unavailable" } } as unknown as MessagingResult<MessagingConversation[]>;
+          }
+          return { status: "unavailable" };
+        }
+        const list = (data as MessagingConversation[]) ?? [];
+        return { status: "ok", data: list };
+      } catch (error) {
+        logServiceError({ service: "messaging-service", operation: "searchConversations", error });
+        return { status: "unavailable" };
+      }
+    },
+
+    async editMessage(token: string, messageId: string, body: string): Promise<MessagingReadResult<MessagingMessage>> {
+      try {
+        const { data, error } = await caller(token).rpc("edit_message", { p_message_id: messageId, p_new_body: body });
+        if (error) {
+          if (error.code === "42501" || /insufficient_privilege|forbidden/i.test(error.message)) {
+            return { status: "forbidden" };
+          }
+          if (error.code === "P0001") return { status: "not_found" };
+          if (error.code === "22023") return { status: "invalid" };
+          return { status: "unavailable" };
+        }
+        return { status: "ok", data: data as MessagingMessage };
+      } catch (error) {
+        logServiceError({ service: "messaging-service", operation: "editMessage", error });
+        return { status: "unavailable" };
+      }
+    },
+
+    async deleteMessage(token: string, messageId: string): Promise<MessagingReadResult<MessagingMessage>> {
+      try {
+        const { data, error } = await caller(token).rpc("soft_delete_message", { p_message_id: messageId });
+        if (error) {
+          if (error.code === "42501" || /insufficient_privilege|forbidden/i.test(error.message)) {
+            return { status: "forbidden" };
+          }
+          if (error.code === "P0001") return { status: "not_found" };
+          return { status: "unavailable" };
+        }
+        return { status: "ok", data: data as MessagingMessage };
+      } catch (error) {
+        logServiceError({ service: "messaging-service", operation: "deleteMessage", error });
+        return { status: "unavailable" };
+      }
+    },
+
+    async reportMessage(token: string, messageId: string, reason: string, details?: string): Promise<MessagingReadResult<{ id: string; status: string }>> {
+      try {
+        const { data, error } = await caller(token).rpc("report_message", { p_message_id: messageId, p_reason: reason, p_details: details ?? null });
+        if (error) {
+          if (error.code === "42501" || /insufficient_privilege|forbidden/i.test(error.message)) {
+            return { status: "forbidden" };
+          }
+          if (error.code === "P0001") return { status: "not_found" };
+          if (error.code === "22023") return { status: "invalid" };
+          return { status: "unavailable" };
+        }
+        return { status: "ok", data: data as { id: string; status: string } };
+      } catch (error) {
+        logServiceError({ service: "messaging-service", operation: "reportMessage", error });
+        return { status: "unavailable" };
+      }
+    },
+
+    async blockUser(token: string, targetUserId: string): Promise<MessagingReadResult<{ blocker: string; blocked: string }>> {
+      try {
+        const { data, error } = await caller(token).rpc("block_user", { p_target_user_id: targetUserId });
+        if (error) {
+          if (error.code === "42501" || /insufficient_privilege|forbidden/i.test(error.message)) {
+            return { status: "forbidden" };
+          }
+          if (error.code === "P0001") return { status: "not_found" };
+          if (error.code === "22023") return { status: "invalid" };
+          return { status: "unavailable" };
+        }
+        return { status: "ok", data: data as { blocker: string; blocked: string } };
+      } catch (error) {
+        logServiceError({ service: "messaging-service", operation: "blockUser", error });
+        return { status: "unavailable" };
+      }
+    },
+
+    async unblockUser(token: string, targetUserId: string): Promise<MessagingReadResult<{ blocker: string; blocked: string }>> {
+      try {
+        const { data, error } = await caller(token).rpc("unblock_user", { p_target_user_id: targetUserId });
+        if (error) {
+          if (error.code === "42501" || /insufficient_privilege|forbidden/i.test(error.message)) {
+            return { status: "forbidden" };
+          }
+          return { status: "unavailable" };
+        }
+        return { status: "ok", data: data as { blocker: string; blocked: string } };
+      } catch (error) {
+        logServiceError({ service: "messaging-service", operation: "unblockUser", error });
+        return { status: "unavailable" };
+      }
+    },
   };
 }
 

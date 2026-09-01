@@ -15,16 +15,14 @@ export class WorkshopApiError extends Error {
 
 export interface WorkshopOffering {
   id: string;
-  hostId: string;
-  offeringType: "tutor" | "workshop" | "class" | "event";
+  kind: "tutor" | "workshop" | "class" | "event";
   title: string;
   description: string | null;
   pricingModel: "hourly_v1" | "flat_per_participant_v1";
   pricePerParticipantVnd: number | null;
   hourlyRateVnd: number | null;
-  currency: "VND";
   bookingMode: "approval" | "instant";
-  status: "draft" | "published" | "unpublished";
+  publicationStatus: "draft" | "published" | "unpublished";
   version: number;
 }
 
@@ -94,7 +92,19 @@ async function request(path: string, options: { method?: string; body?: unknown;
 export async function getWorkshopOffering(offeringId: string): Promise<WorkshopOffering | null> {
   const payload = await request(`/api/v1/offerings/${encodeURIComponent(offeringId)}`) as { ok?: unknown; offering?: unknown };
   if (payload.ok !== true) return null;
-  return payload.offering as WorkshopOffering;
+  const raw = payload.offering as Record<string, unknown>;
+  return {
+    id: String(raw.id ?? ""),
+    kind: (raw.kind as WorkshopOffering["kind"]) ?? "workshop",
+    title: String(raw.title ?? ""),
+    description: raw.description == null ? null : String(raw.description),
+    pricingModel: (raw.pricingModel as WorkshopOffering["pricingModel"]) ?? "hourly_v1",
+    pricePerParticipantVnd: raw.pricePerParticipantVnd == null ? null : Number(raw.pricePerParticipantVnd),
+    hourlyRateVnd: raw.hourlyRateVnd == null ? null : Number(raw.hourlyRateVnd),
+    bookingMode: (raw.bookingMode as WorkshopOffering["bookingMode"]) ?? "approval",
+    publicationStatus: (raw.publicationStatus as WorkshopOffering["publicationStatus"]) ?? "draft",
+    version: Number(raw.version ?? 1),
+  };
 }
 
 export async function getWorkshopSessions(offeringId: string): Promise<WorkshopSession[]> {
@@ -134,4 +144,50 @@ export async function startWorkshopPayment(bookingId: string): Promise<{ redirec
   const redirectUrl = (payload as { payment?: { redirectUrl?: unknown } } | null)?.payment?.redirectUrl;
   if (typeof redirectUrl !== "string" || !redirectUrl) throw new WorkshopApiError("INVALID_RESPONSE", 500);
   return { redirectUrl };
+}
+
+export interface WorkshopWithSessions {
+  offering: WorkshopOffering;
+  sessions: WorkshopSession[];
+}
+
+/**
+ * Fetch a published workshop by slug, including its sessions.
+ * Used by the workshop detail page.
+ */
+export async function getWorkshopBySlug(slug: string): Promise<WorkshopWithSessions | null> {
+  const payload = await request(`/api/v1/offerings/by-slug/${encodeURIComponent(slug)}`) as {
+    ok?: unknown;
+    offering?: unknown;
+    sessions?: unknown;
+  };
+  if (payload.ok !== true) return null;
+  const raw = payload.offering as Record<string, unknown> | null;
+  if (!raw) return null;
+
+  const offering: WorkshopOffering = {
+    id: String(raw.id ?? ""),
+    kind: (raw.kind as WorkshopOffering["kind"]) ?? "workshop",
+    title: String(raw.title ?? ""),
+    description: raw.description == null ? null : String(raw.description),
+    pricingModel: (raw.pricingModel as WorkshopOffering["pricingModel"]) ?? "hourly_v1",
+    pricePerParticipantVnd: raw.pricePerParticipantVnd == null ? null : Number(raw.pricePerParticipantVnd),
+    hourlyRateVnd: raw.hourlyRateVnd == null ? null : Number(raw.hourlyRateVnd),
+    bookingMode: (raw.bookingMode as WorkshopOffering["bookingMode"]) ?? "approval",
+    publicationStatus: (raw.publicationStatus as WorkshopOffering["publicationStatus"]) ?? "draft",
+    version: Number(raw.version ?? 1),
+  };
+
+  const rawSessions = payload.sessions as Array<Record<string, unknown>> | null;
+  const sessions: WorkshopSession[] = (rawSessions ?? []).map((s) => ({
+    id: String(s.id ?? ""),
+    startsAt: String(s.starts_at ?? s.startsAt ?? ""),
+    endsAt: String(s.ends_at ?? s.endsAt ?? ""),
+    minParticipants: s.min_participants == null ? null : Number(s.min_participants),
+    maxParticipants: s.max_participants == null ? null : Number(s.max_participants),
+    spotsLeft: typeof s.spots_left === "number" ? s.spots_left : (typeof s.spotsLeft === "number" ? s.spotsLeft : 0),
+    status: (s.status as WorkshopSession["status"]) ?? "scheduled",
+  }));
+
+  return { offering, sessions };
 }

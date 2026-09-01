@@ -27,28 +27,14 @@ export default function EventLiveDetailPage({ params }: { params: Promise<{ slug
 
           if (cancelled) return;
 
-          if (!offeringData || offeringData.offeringType !== "event" && offeringData.offeringType !== "workshop") {
+          if (!offeringData || (offeringData.kind !== "event" && offeringData.kind !== "workshop")) {
             setError("Event not found");
             return;
           }
 
           setOffering(offeringData);
           setSessions(sessionsData);
-
-          // Fetch host display name from tutor profile
-          try {
-            const { getApiBaseUrl } = await import("@/lib/auth/config");
-            const response = await fetch(`${getApiBaseUrl()}/api/v1/sessions?tutorProfileId=${encodeURIComponent(offeringData.hostId)}`, { cache: "no-store" });
-            if (response.ok) {
-              const data = await response.json();
-              const session = data.sessions?.[0];
-              if (session?.tutor?.displayName) {
-                setHostDisplayName(session.tutor.displayName);
-              }
-            }
-          } catch {
-            // Keep default host name
-          }
+          // hostDisplayName is set separately via sessions data
         } catch (err) {
           if (!cancelled) {
             setError(err instanceof Error ? err.message : "Failed to load event");

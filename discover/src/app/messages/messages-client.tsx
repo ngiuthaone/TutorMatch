@@ -5,7 +5,22 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { isLiveMode } from "@/lib/auth/config";
 import { evaluateAuthGate } from "@/lib/auth/gate";
 import { useSession } from "@/lib/auth/session";
-import { MessagingApiError, generateClientMessageId, getConversation, listConversations, listMessages, markConversationRead, sendMessage, type MessagingConversation, type MessagingMessage } from "@/lib/messaging-api";
+import {
+  MessagingApiError,
+  deleteMessage,
+  editMessage,
+  generateClientMessageId,
+  getConversation,
+  listConversations,
+  listMessages,
+  markConversationRead,
+  reportMessage,
+  searchConversations,
+  sendMessage,
+  subscribeToConversationMessages,
+  type MessagingConversation,
+  type MessagingMessage,
+} from "@/lib/messaging-api";
 
 const MAX_BODY_LENGTH = 2000;
 const MIN_BODY_LENGTH = 1;
@@ -157,8 +172,49 @@ function ConversationList({
   );
 }
 
-function MessageList({ messages, viewerRole }: { messages: MessagingMessage[]; viewerRole: MessagingConversation["viewerRole"] }) {
+function BookingContextCard({ context, conversationId }: { context: NonNullable<MessagingConversation["bookingContext"]>; conversationId: string }) {
+  const startsAt = new Date(context.sessionStartsAt);
+  const endsAt = new Date(context.sessionEndsAt);
+  const dateStr = startsAt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short", timeZone: "Asia/Ho_Chi_Minh" });
+  const startStr = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(startsAt);
+  const endStr = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(endsAt);
+  return (
+    <div className="border-b border-[#1c1d20] bg-[#0f0f12] px-4 py-3" data-testid="booking-context">
+      <p className="text-[11px] uppercase tracking-wide text-[#7a7a80]">Booking</p>
+      <p className="mt-1 text-sm font-medium text-[#f4f4f2]">{dateStr} · {startStr}–{endStr}</p>
+      <p className="mt-0.5 text-xs text-[#9c9ca3]">
+        Status: {context.bookingStatus}
+      </p>
+      <div className="mt-2 flex gap-2">
+        <a
+          href={`/bookings/${context.bookingId}`}
+          className="rounded-lg border border-[#1c1d20] bg-[#15161a] px-3 py-1 text-[11px] text-[#f4f4f2] hover:bg-[#1c1d20]"
+        >
+          View booking
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function MessageList({
+  messages,
+  viewerRole,
+  currentUserId,
+  onEdit,
+  onDelete,
+  onReport,
+}: {
+  messages: MessagingMessage[];
+  viewerRole: MessagingConversation["viewerRole"];
+  currentUserId: string | null;
+  onEdit: (id: string, body: string) => Promise<void> | void;
+  onDelete: (id: string) => Promise<void> | void;
+  onReport: (id: string) => Promise<void> | void;
+}) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingBody, setEditingBody] = useState("");
   useEffect(() => {
     const node = scrollRef.current;
     if (!node) return;
@@ -175,17 +231,93 @@ function MessageList({ messages, viewerRole }: { messages: MessagingMessage[]; v
     <div ref={scrollRef} className="flex h-full flex-col gap-3 overflow-y-auto px-4 py-4" aria-live="polite" aria-relevant="additions">
       {messages.map((message) => {
         const mine = message.mine;
+        const edited = message.editedAt != null;
         return (
           <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+              className={`group relative max-w-[78%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
                 mine ? "bg-[#f4f4f2] text-[#0b0b0c]" : "bg-[#15161a] text-[#e8e8eb]"
               }`}
             >
-              <p className="whitespace-pre-wrap break-words">{message.body}</p>
-              <p className={`mt-1 text-[10px] uppercase tracking-wide ${mine ? "text-[#5f5f64]" : "text-[#7a7a80]"}`}>
-                {mine ? "You" : viewerRole === "host" ? "Learner" : "Host"} · {formatTimestamp(message.createdAt)}
-              </p>
+              {editingId === message.id ? (
+                <form
+                  className="flex flex-col gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void onEdit(message.id, editingBody).then(() => {
+                      setEditingId(null);
+                    });
+                  }}
+                >
+                  <textarea
+                    value={editingBody}
+                    onChange={(event) => setEditingBody(event.target.value)}
+                    rows={2}
+                    className="w-full resize-none rounded border border-[#1c1d20] bg-[#0b0b0c] p-2 text-sm text-[#f4f4f2]"
+                  />
+                  <div className="flex justify-end gap-2 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setEditingId(null)}
+                      className="rounded border border-[#1c1d20] px-2 py-1 text-[#9c9ca3]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="rounded bg-[#f4f4f2] px-2 py-1 text-[#0b0b0c]"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                  <p className={`mt-1 text-[10px] uppercase tracking-wide ${mine ? "text-[#5f5f64]" : "text-[#7a7a80]"}`}>
+                    {mine ? "You" : viewerRole === "host" ? "Learner" : "Host"}
+                    {edited ? " · edited" : ""}
+                    {" · "}
+                    {formatTimestamp(message.createdAt)}
+                  </p>
+                  <div className={`absolute -top-2 right-2 hidden gap-1 rounded-full border border-[#1c1d20] bg-[#0b0b0c] px-2 py-1 text-[10px] group-hover:flex`}>
+                    {mine ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingId(message.id);
+                            setEditingBody(message.body);
+                          }}
+                          className="text-[#9c9ca3] hover:text-[#f4f4f2]"
+                          aria-label="Edit message"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm("Delete this message?")) void onDelete(message.id);
+                          }}
+                          className="text-[#f4a8a8] hover:text-[#f4f4f2]"
+                          aria-label="Delete message"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void onReport(message.id)}
+                        className="text-[#9c9ca3] hover:text-[#f4f4f2]"
+                        aria-label="Report message"
+                      >
+                        Report
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         );
@@ -302,6 +434,7 @@ function ConversationView({
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState("");
   const lastReadAtRef = useRef<string | null>(null);
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -339,9 +472,39 @@ function ConversationView({
     setConversation((current) => (current ? { ...current, unreadCount: 0 } : current));
   }, [conversation, conversationId, state]);
 
+  // Realtime: append new messages as they arrive. RLS on public.messages
+  // ensures we only receive rows for conversations we are a member of.
+  useEffect(() => {
+    if (state !== "ready") return;
+    const controller = new AbortController();
+    const unsubscribe = subscribeToConversationMessages(
+      conversationId,
+      (msg) => {
+        setMessages((current) => {
+          if (current.some((existing) => existing.id === msg.id)) return current;
+          return [...current, msg];
+        });
+        // If the new message is from the other party and we are viewing
+        // the conversation, mark it read immediately.
+        if (!msg.mine) {
+          void markConversationRead(conversationId).catch(() => undefined);
+        }
+        onMessageSent?.(msg);
+      },
+      controller.signal,
+    );
+    return () => {
+      controller.abort();
+      unsubscribe();
+    };
+  }, [conversationId, onMessageSent, state]);
+
   const handleMessageSent = useCallback(
     (message: MessagingMessage) => {
-      setMessages((current) => [...current, message]);
+      setMessages((current) => {
+        if (current.some((existing) => existing.id === message.id)) return current;
+        return [...current, message];
+      });
       setConversation((current) =>
         current
           ? {
@@ -355,6 +518,35 @@ function ConversationView({
     },
     [onMessageSent],
   );
+
+  const handleEdit = useCallback(async (id: string, body: string) => {
+    try {
+      const updated = await editMessage(id, body);
+      setMessages((current) => current.map((m) => (m.id === id ? { ...m, body: updated.body, editedAt: updated.editedAt } : m)));
+      setActionError("");
+    } catch (error) {
+      setActionError(summarizeError(error));
+    }
+  }, []);
+
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await deleteMessage(id);
+      setMessages((current) => current.filter((m) => m.id !== id));
+      setActionError("");
+    } catch (error) {
+      setActionError(summarizeError(error));
+    }
+  }, []);
+
+  const handleReport = useCallback(async (id: string) => {
+    try {
+      await reportMessage(id, "other");
+      setActionError("Report submitted. Our team will review it.");
+    } catch (error) {
+      setActionError(summarizeError(error));
+    }
+  }, []);
 
   if (state === "loading") {
     return (
@@ -380,16 +572,27 @@ function ConversationView({
           {conversation.participant.role === "host" ? "Host" : "Learner"}
           {conversation.bookingContext ? " · Booking in progress" : ""}
         </p>
+        {actionError ? (
+          <p className="mt-1 text-[11px] text-[#f4a8a8]" role="status">{actionError}</p>
+        ) : null}
       </header>
+      {conversation.bookingContext ? (
+        <BookingContextCard context={conversation.bookingContext} conversationId={conversationId} />
+      ) : null}
       <div className="flex-1 overflow-hidden">
-        <MessageList messages={messages} viewerRole={conversation.viewerRole} />
+        <MessageList
+          messages={messages}
+          viewerRole={conversation.viewerRole}
+          currentUserId={conversation.participant.userId}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onReport={handleReport}
+        />
       </div>
       <Composer
         conversationId={conversationId}
         onSent={(message, clientMessageId) => {
-          // Optimistic append is intentionally avoided: server-authoritative
-          // returns the persisted message so the client cannot fabricate
-          // membership or content (tutoria-server-authoritative-ui).
+          // Server-authoritative append: we do not optimistically insert.
           handleMessageSent(message);
           void clientMessageId;
         }}

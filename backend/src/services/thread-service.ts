@@ -110,7 +110,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
           p_reply_permission: input.replyPermission ?? "everyone",
         });
         if (error) {
-          logServiceError("thread.create", error);
+          logServiceError({ service: "thread", operation: "create", error });
           const mapped = mapThreadError(error.code ?? "", error.message ?? "");
           if (mapped.status === "invalid") return { status: "invalid", code: (mapped.code ?? "INVALID_BODY") as ThreadCreateResult extends { status: "invalid" } ? ThreadCreateResult["code"] : never };
           if (mapped.status === "forbidden") return { status: "forbidden" };
@@ -119,7 +119,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "published") } };
       } catch (err) {
-        logServiceError("thread.create.exception", err);
+        logServiceError({ service: "thread", operation: "create.exception", error: err });
         return { status: "unavailable" };
       }
     },
@@ -133,11 +133,11 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
           p_level: level ?? null,
           p_anchor_type: anchorType ?? null,
         });
-        if (error) { logServiceError("thread.list", error); return { status: "unavailable" }; }
+        if (error) { logServiceError({ service: "thread", operation: "list", error }); return { status: "unavailable" }; }
         const row = data as { threads?: Record<string, unknown>[]; next_cursor?: string | null };
         return { status: "ok", data: { threads: row.threads ?? [], nextCursor: row.next_cursor ?? null } };
       } catch (err) {
-        logServiceError("thread.list.exception", err);
+        logServiceError({ service: "thread", operation: "list.exception", error: err });
         return { status: "unavailable" };
       }
     },
@@ -145,11 +145,11 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
     async getPublic(id: string): Promise<ThreadGetResult> {
       try {
         const { data, error } = await caller().rpc("get_reference_thread", { p_id: id });
-        if (error) { logServiceError("thread.get", error); return { status: "unavailable" }; }
+        if (error) { logServiceError({ service: "thread", operation: "get", error }); return { status: "unavailable" }; }
         if (data === null) return { status: "not_found" };
         return { status: "ok", data: data as Record<string, unknown> };
       } catch (err) {
-        logServiceError("thread.get.exception", err);
+        logServiceError({ service: "thread", operation: "get.exception", error: err });
         return { status: "unavailable" };
       }
     },
@@ -157,11 +157,11 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
     async listReplies(threadId: string): Promise<ThreadReplyListResult> {
       try {
         const { data, error } = await caller().rpc("list_thread_replies", { p_thread_id: threadId });
-        if (error) { logServiceError("thread.replies", error); return { status: "unavailable" }; }
+        if (error) { logServiceError({ service: "thread", operation: "replies", error }); return { status: "unavailable" }; }
         const row = data as { replies?: Record<string, unknown>[] };
         return { status: "ok", data: { replies: row.replies ?? [] } };
       } catch (err) {
-        logServiceError("thread.replies.exception", err);
+        logServiceError({ service: "thread", operation: "replies.exception", error: err });
         return { status: "unavailable" };
       }
     },
@@ -174,7 +174,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
           p_parent_id: parentId ?? null,
         });
         if (error) {
-          logServiceError("thread.reply", error);
+          logServiceError({ service: "thread", operation: "reply", error });
           const mapped = mapThreadError(error.code ?? "", error.message ?? "");
           if (mapped.status === "invalid") return { status: "invalid", code: (mapped.code ?? "INVALID_BODY") as ThreadReplyCreateResult extends { status: "invalid" } ? ThreadReplyCreateResult["code"] : never };
           if (mapped.status === "forbidden") return { status: "forbidden" };
@@ -184,7 +184,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
         const row = data as { id?: string; depth?: number; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), depth: row.depth ?? 1, status: String(row.status ?? "published") } };
       } catch (err) {
-        logServiceError("thread.reply.exception", err);
+        logServiceError({ service: "thread", operation: "reply.exception", error: err });
         return { status: "unavailable" };
       }
     },
@@ -193,7 +193,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
       try {
         const { data, error } = await caller(token).rpc("close_reference_thread", { p_id: id });
         if (error) {
-          logServiceError("thread.close", error);
+          logServiceError({ service: "thread", operation: "close", error });
           const mapped = mapThreadError(error.code ?? "", error.message ?? "");
           if (mapped.status === "not_found") return { status: "not_found" };
           if (mapped.status === "forbidden") return { status: "forbidden" };
@@ -201,14 +201,14 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
         }
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "closed") } };
-      } catch (err) { logServiceError("thread.close.exception", err); return { status: "unavailable" }; }
+      } catch (err) { logServiceError({ service: "thread", operation: "close.exception", error: err }); return { status: "unavailable" }; }
     },
 
     async reopen(token: string, id: string): Promise<ThreadMutationResult> {
       try {
         const { data, error } = await caller(token).rpc("reopen_reference_thread", { p_id: id });
         if (error) {
-          logServiceError("thread.reopen", error);
+          logServiceError({ service: "thread", operation: "reopen", error });
           const mapped = mapThreadError(error.code ?? "", error.message ?? "");
           if (mapped.status === "not_found") return { status: "not_found" };
           if (mapped.status === "forbidden") return { status: "forbidden" };
@@ -216,14 +216,14 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
         }
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "published") } };
-      } catch (err) { logServiceError("thread.reopen.exception", err); return { status: "unavailable" }; }
+      } catch (err) { logServiceError({ service: "thread", operation: "reopen.exception", error: err }); return { status: "unavailable" }; }
     },
 
     async deleteThread(token: string, id: string): Promise<ThreadMutationResult> {
       try {
         const { data, error } = await caller(token).rpc("delete_reference_thread", { p_id: id });
         if (error) {
-          logServiceError("thread.delete", error);
+          logServiceError({ service: "thread", operation: "delete", error });
           const mapped = mapThreadError(error.code ?? "", error.message ?? "");
           if (mapped.status === "not_found") return { status: "not_found" };
           if (mapped.status === "forbidden") return { status: "forbidden" };
@@ -231,7 +231,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
         }
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "deleted") } };
-      } catch (err) { logServiceError("thread.delete.exception", err); return { status: "unavailable" }; }
+      } catch (err) { logServiceError({ service: "thread", operation: "delete.exception", error: err }); return { status: "unavailable" }; }
     },
 
     async deleteReply(token: string, id: string): Promise<ThreadMutationResult> {
@@ -256,12 +256,12 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
           p_target_id: targetId,
         });
         if (error) {
-          logServiceError("thread.appreciate", error);
+          logServiceError({ service: "thread", operation: "appreciate", error });
           if ((error.code ?? "") === "P0001") return { status: "not_found" };
           return { status: "unavailable" };
         }
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch (err) { logServiceError("thread.appreciate.exception", err); return { status: "unavailable" }; }
+      } catch (err) { logServiceError({ service: "thread", operation: "appreciate.exception", error: err }); return { status: "unavailable" }; }
     },
 
     async unappreciate(token: string, targetType: string, targetId: string): Promise<ThreadAppreciateResult> {
@@ -270,9 +270,9 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
           p_target_type: targetType,
           p_target_id: targetId,
         });
-        if (error) { logServiceError("thread.unappreciate", error); return { status: "unavailable" }; }
+        if (error) { logServiceError({ service: "thread", operation: "unappreciate", error }); return { status: "unavailable" }; }
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch (err) { logServiceError("thread.unappreciate.exception", err); return { status: "unavailable" }; }
+      } catch (err) { logServiceError({ service: "thread", operation: "unappreciate.exception", error: err }); return { status: "unavailable" }; }
     },
 
     async report(token: string, targetType: string, targetId: string, reason: string): Promise<ThreadReportResult> {
@@ -283,7 +283,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
           p_reason: reason,
         });
         if (error) {
-          logServiceError("thread.report", error);
+          logServiceError({ service: "thread", operation: "report", error });
           if (error.code === "22023" && error.message?.includes("INVALID_REASON")) {
             return { status: "invalid", code: "INVALID_REASON" };
           }
@@ -291,7 +291,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
         }
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "pending") } };
-      } catch (err) { logServiceError("thread.report.exception", err); return { status: "unavailable" }; }
+      } catch (err) { logServiceError({ service: "thread", operation: "report.exception", error: err }); return { status: "unavailable" }; }
     },
   };
 }

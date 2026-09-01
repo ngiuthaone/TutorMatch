@@ -9,6 +9,7 @@ import { BookingApiError, cancelLearnerBooking, getCancellationPreview, getLearn
 import { PaymentApiError, startPayment } from "@/lib/payment-api";
 import { bookingAmount, bookingPaymentLabel, bookingSubtitle, bookingTitle, canCancelBooking, canStartPayment, refundAmount, refundStatusLabel } from "@/lib/booking-payment-state";
 import { getOrCreateBookingConversation } from "@/lib/messaging-api";
+import { submitTutorReview, TutorDashboardApiError } from "@/lib/tutor-dashboard-api";
 
 function money(amount: number): string { return `${new Intl.NumberFormat("vi-VN").format(amount)}₫`; }
 function schedule(booking: BookingRecord): string {
@@ -22,6 +23,81 @@ function cancellationCopy(preview: CancellationPreview): string {
   if (preview.paymentInFlight) return "A payment attempt is still processing. Cancelling now stops this booking; if a late payment succeeds, Tutoria will handle the resulting compensation automatically.";
   if (preview.refundMode === "FULL") return `Your payment of ${money(preview.refundAmountVnd)} will be refunded.`;
   return preview.policyCode === "ATTENDEE_CANCEL_CONFIRMED_PAID_INSIDE_CUTOFF" ? "This cancellation is not eligible for a refund." : "No payment will be refunded for this cancellation.";
+}
+
+
+function ReviewDialog({ booking, onClose, onSubmitted }: { booking: BookingRecord; onClose: () => void; onSubmitted: () => Promise<void> }) {
+  const [rating, setRating] = useState(5);
+  const [body, setBody] = useState("");
+  const [state, setState] = useState<"idle" | "submitting" | "error">("idle");
+  const [error, setError] = useState("");
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    dialogRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); onClose(); }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => { document.removeEventListener("keydown", onKeyDown); previous?.focus(); };
+  }, [onClose]);
+  const submit = async () => {
+    if (state === "submitting") return;
+    if (body.trim().length < 10) { setError("Review body must be at least 10 characters."); return; }
+    setState("submitting"); setError("");
+    try {
+      await submitTutorReview({ bookingId: booking.id, rating, body: body.trim() });
+      setState("idle");
+      await onSubmitted();
+      onClose();
+    } catch (cause) {
+      setState("error");
+      if (cause instanceof TutorDashboardApiError) {
+        setError(cause.message || "Could not submit review.");
+      } else {
+        setError("Could not submit review. Try again later.");
+      }
+    }
+  };
+  return (
+    <div role="dialog" aria-modal="true" aria-labelledby="review-title" className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-5">
+      <div ref={dialogRef} tabIndex={-1} className="w-full max-w-md rounded-3xl border border-white/15 bg-[#191919] p-6 text-[#e8e6df] shadow-2xl">
+        <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-white/40">Leave a review</p>
+        <h2 id="review-title" className="mt-3 text-2xl font-semibold">How was your lesson?</h2>
+        <p className="mt-2 text-xs text-white/55">Reviews help other learners choose the right tutor.</p>
+        <fieldset className="mt-5 flex items-center gap-2">
+          {[1, 2, 3, 4, 5].map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setRating(value)}
+              aria-label={`Rate ${value} of 5`}
+              className={`h-9 w-9 rounded-full border text-lg ${rating >= value ? "border-amber-300/60 bg-amber-300/10 text-amber-300" : "border-white/15 text-white/45"}`}
+            >★</button>
+          ))}
+        </fieldset>
+        <label className="mt-5 block text-xs text-white/55">
+          Your review
+          <textarea
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            rows={4}
+            minLength={10}
+            maxLength={2000}
+            className="mt-2 w-full rounded-xl border border-white/15 bg-black/40 p-3 text-sm text-white outline-none focus:border-white/30"
+            placeholder="What worked well? Anything to know?"
+          />
+        </label>
+        {error && <p role="alert" className="mt-4 text-sm text-red-300">{error}</p>}
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button type="button" onClick={onClose} className="rounded-xl border border-white/15 px-4 py-3 text-sm text-white/70">Cancel</button>
+          <button type="button" onClick={() => void submit()} disabled={state === "submitting"} className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-black disabled:cursor-wait disabled:opacity-50">
+            {state === "submitting" ? "Submitting…" : "Submit review"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function CancelDialog({ booking, onClose, onCancelled, onConflict }: { booking: BookingRecord; onClose: () => void; onCancelled: (booking: BookingRecord) => Promise<void>; onConflict: () => Promise<void> }) {
@@ -72,7 +148,9 @@ function CancelDialog({ booking, onClose, onCancelled, onConflict }: { booking: 
 
 function BookingCard({ booking, onRefresh }: { booking: BookingRecord; onRefresh: (bookingId: string) => Promise<void> }) {
   const router = useRouter();
-  const [starting, setStarting] = useState(false); const [error, setError] = useState(""); const [cancelOpen, setCancelOpen] = useState(false); const startingRef = useRef(false);
+  const [starting, setStarting] = useState(false); const [error, setError] = useState(""); const [cancelOpen, setCancelOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const canReview = booking.status === "completed"; const startingRef = useRef(false);
   const [messaging, setMessaging] = useState<"idle" | "opening" | "error">("idle");
   const amount = bookingAmount(booking); const canPay = canStartPayment(booking); const accepted = booking.paymentReady || booking.status === "confirmed"; const paid = booking.payment?.status === "succeeded"; const confirmed = booking.status === "confirmed" && paid;
   const pay = async () => { if (!canPay || amount === null || startingRef.current) return; startingRef.current = true; setStarting(true); setError(""); try { const result = await startPayment(booking.id); window.location.assign(result.redirectUrl); } catch (cause) { startingRef.current = false; setStarting(false); if (cause instanceof PaymentApiError) await onRefresh(booking.id); setError(cause instanceof Error ? cause.message : "Payment could not be started. Refresh and try again."); } };
@@ -96,7 +174,8 @@ function BookingCard({ booking, onRefresh }: { booking: BookingRecord; onRefresh
     {canCancelBooking(booking) && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[.1] px-5 py-4 sm:px-8"><p className="text-xs text-white/45">Need to change your plans?</p><button type="button" onClick={() => setCancelOpen(true)} className="rounded-xl border border-white/20 px-4 py-2.5 text-sm text-white/80">{booking.status === "requested" && !booking.paymentReady ? "Cancel request" : "Cancel booking"}</button></div>}
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[.1] px-5 py-4 sm:px-8"><p className="text-xs text-white/45">Need to send a note to {booking.host?.displayName ?? booking.tutor?.displayName ?? "the host"}?</p><button type="button" onClick={() => void openConversation()} disabled={messaging === "opening"} className="rounded-xl border border-white/20 px-4 py-2.5 text-sm text-white/80 disabled:cursor-wait disabled:opacity-50">{messaging === "opening" ? "Opening…" : messaging === "error" ? "Try again" : "Message"}</button></div>
     {booking.payment?.status === "succeeded" && booking.status !== "confirmed" && <p className="mx-5 mb-5 rounded-2xl border border-amber-300/20 bg-amber-300/[.06] p-4 text-sm leading-6 text-amber-100 sm:mx-8 sm:mb-8">Payment received, but this session could not be confirmed. {booking.refund?.status === "processing" ? "A refund is being processed." : "Tutoria is checking the booking state."}</p>}
-    {error && <p role="alert" className="mx-5 mb-5 text-sm text-red-300 sm:mx-8 sm:mb-8">{error}</p>}{cancelOpen && <CancelDialog booking={booking} onClose={() => setCancelOpen(false)} onConflict={() => onRefresh(booking.id)} onCancelled={async (next) => { setCancelOpen(false); await onRefresh(next.id); }} />}
+    {canReview && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[.1] px-5 py-4 sm:px-8"><p className="text-xs text-white/55">This lesson is complete.</p><button type="button" onClick={() => setReviewOpen(true)} className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black">Leave a review</button></div>}
+    {error && <p role="alert" className="mx-5 mb-5 text-sm text-red-300 sm:mx-8 sm:mb-8">{error}</p>}{cancelOpen && <CancelDialog booking={booking} onClose={() => setCancelOpen(false)} onConflict={() => onRefresh(booking.id)} onCancelled={async (next) => { setCancelOpen(false); await onRefresh(next.id); }} />}{reviewOpen && <ReviewDialog booking={booking} onClose={() => setReviewOpen(false)} onSubmitted={async () => { await onRefresh(booking.id); }} />}
   </article>;
 }
 

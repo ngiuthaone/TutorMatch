@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { ApiError } from "../errors/api-error.js";
-import { isSafeHttpUrl } from "../lib/sanitize.js";
+import { safeHttpUrl } from "../lib/sanitize.js";
 import type { AuthService } from "../services/auth-service.js";
 import type { ThreadService } from "../services/thread-service.js";
 
@@ -15,7 +15,7 @@ const createThreadSchema = z.object({
   body: z.string().max(2000).optional(),
   anchorType: z.enum(["course", "event", "workshop", "article", "tutor_profile", "external_url"]),
   anchorId: z.string().uuid().optional(),
-  anchorUrl: z.string().max(2048).refine((v) => isSafeHttpUrl(v), { message: "INVALID_URL" }).optional(),
+  anchorUrl: z.string().max(2048).refine((v) => safeHttpUrl(v), { message: "INVALID_URL" }).optional(),
   anchorTitle: z.string().max(500).optional(),
   anchorDomain: z.string().max(255).optional(),
   tags: z.array(z.string().max(50)).max(5).optional(),
