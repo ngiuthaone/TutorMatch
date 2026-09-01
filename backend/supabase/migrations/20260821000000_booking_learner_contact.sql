@@ -140,12 +140,12 @@ begin
     begin
       insert into public.bookings(
         id, session_id, learner_id, participant_count, status, idempotency_key,
-        pricing_amount_vnd, pricing_currency, pricing_price_per_participant_vnd,
-        pricing_model, pricing_snapshotted_at,
+        pricing_amount_vnd, pricing_currency, pricing_unit_price_vnd,
+        pricing_participant_count, pricing_model, pricing_snapshotted_at,
         learner_name, learner_email, learner_phone, learner_note
       ) values (
         bid, session_id, uid, participant_count, 'requested', btrim(p_idempotency_key),
-        amount, 'VND', ppv,
+        amount, 'VND', ppv, participant_count,
         'flat_per_participant_v1', now(),
         norm_name, norm_email, norm_phone, nullif(norm_note, '')
       );
