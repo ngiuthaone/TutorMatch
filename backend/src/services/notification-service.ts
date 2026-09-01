@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { AuthService } from "./auth-service.js";
+import { logServiceError } from "../lib/service-error.js";
 
 const authOptions = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } as const;
 
@@ -28,7 +29,8 @@ export function createSupabaseNotificationService(url: string, publishableKey: s
         if (error) return { status: "unavailable" };
         const row = data as { notifications?: Record<string, unknown>[]; next_cursor?: string | null };
         return { status: "ok", data: { notifications: row.notifications ?? [], nextCursor: row.next_cursor ?? null } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "notification-service", operation: "listNotifications", error });
         return { status: "unavailable" };
       }
     },
@@ -39,7 +41,8 @@ export function createSupabaseNotificationService(url: string, publishableKey: s
         if (error) return { status: "unavailable" };
         const row = data as { count?: number };
         return { status: "ok", data: { count: row.count ?? 0 } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "notification-service", operation: "getUnreadCount", error });
         return { status: "unavailable" };
       }
     },
@@ -49,7 +52,8 @@ export function createSupabaseNotificationService(url: string, publishableKey: s
         const { data, error } = await caller(token).rpc("mark_notification_read", { p_id: id });
         if (error) return { status: "unavailable" };
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "notification-service", operation: "markRead", error });
         return { status: "unavailable" };
       }
     },
@@ -59,7 +63,8 @@ export function createSupabaseNotificationService(url: string, publishableKey: s
         const { data, error } = await caller(token).rpc("mark_all_notifications_read");
         if (error) return { status: "unavailable" };
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "notification-service", operation: "markAllRead", error });
         return { status: "unavailable" };
       }
     },
@@ -84,7 +89,8 @@ export function createSupabaseNotificationService(url: string, publishableKey: s
         });
         if (error) return { status: "unavailable" };
         return { status: "ok", data: { id: String(data) } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "notification-service", operation: "createNotification", error });
         return { status: "unavailable" };
       }
     },

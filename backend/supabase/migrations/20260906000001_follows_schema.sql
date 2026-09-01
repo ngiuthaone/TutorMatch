@@ -15,9 +15,9 @@ create index idx_follows_followee on public.follows (followee_id);
 
 alter table public.follows enable row level security;
 
-create policy "follows_public_read"
+create policy "follows_authenticated_read"
   on public.follows for select
-  to public
+  to authenticated
   using (true);
 
 create policy "follows_user_write"

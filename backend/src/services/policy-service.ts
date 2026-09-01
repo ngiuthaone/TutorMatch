@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { logServiceError } from "../lib/service-error.js";
 
 export type PolicyType =
   | "terms_of_service"
@@ -73,7 +74,8 @@ export function createPolicyService(
             active: row.active,
           })),
         };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "policy-service", operation: "listActivePolicies", error });
         return { status: "unavailable" };
       }
     },
@@ -100,7 +102,8 @@ export function createPolicyService(
         );
         if (error) return { status: "unavailable" };
         return { status: "ok", data: data as { status: string } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "policy-service", operation: "recordAcceptance", error });
         return { status: "unavailable" };
       }
     },
@@ -123,7 +126,8 @@ export function createPolicyService(
         );
         if (error) return { status: "unavailable" };
         return { status: "ok", data: data as { accepted: boolean } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "policy-service", operation: "hasAccepted", error });
         return { status: "unavailable" };
       }
     },
@@ -138,7 +142,8 @@ export function createPolicyService(
         );
         if (error) return { status: "unavailable" };
         return { status: "ok", data: (data as PolicyAcceptance[]) || [] };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "policy-service", operation: "getMyAcceptances", error });
         return { status: "unavailable" };
       }
     },

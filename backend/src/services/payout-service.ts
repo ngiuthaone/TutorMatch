@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { logServiceError } from "../lib/service-error.js";
 
 export interface PayoutStatement {
   id: string;
@@ -41,7 +42,8 @@ export function createPayoutService(
         );
         if (error) return { status: "unavailable" };
         return { status: "ok", data: (data as PayoutStatement[]) || [] };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "payout-service", operation: "getMyPayoutStatements", error });
         return { status: "unavailable" };
       }
     },

@@ -7,6 +7,8 @@ import {
   Link2, MapPin, MessageCircle, PanelsTopLeft, Repeat2, Send,
   Star, UserRound, UsersRound, Pencil, X, Plus, Trash2, Move,
 } from "lucide-react";
+import { followUser, unfollowUser, isFollowing } from "@/lib/community/follows-api";
+import { listPosts, type Post } from "@/lib/community/posts-api";
 
 type ProfileOffer = { title: string; description: string };
 
@@ -209,6 +211,8 @@ export function CommunityUserProfile({ name }: { name?: string }) {
   const [cropTarget, setCropTarget] = useState<"avatar" | "cover" | null>(null);
   const [draft, setDraft] = useState<ProfileDraft | null>(null);
   const [editError, setEditError] = useState("");
+  const [isFollowingUser, setIsFollowingUser] = useState(false);
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
   const currentUserSnapshot = useSyncExternalStore(subscribeToCurrentUser, getCurrentUserSnapshot, getServerCurrentUserSnapshot);
   const savedProfilesSnapshot = useSyncExternalStore(subscribeToCurrentUser, getSavedProfilesSnapshot, getServerCurrentUserSnapshot);
   const currentUserName = readCurrentUserName(currentUserSnapshot);
@@ -223,6 +227,31 @@ export function CommunityUserProfile({ name }: { name?: string }) {
   const displayedOffers = isSampleProfile ? sampleOffers : profile.offers || [];
   const displayedAchievements = isSampleProfile ? sampleAchievements : profile.achievements || [];
   const firstName = profile.name.split(" ")[0];
+  const [followerCount, setFollowerCount] = useState(profile.followers);
+
+  useEffect(() => {
+    if (isOwnProfile || !requestedName || requestedName === "Tutoria member") return;
+    isFollowing(requestedName).then(r => setIsFollowingUser(r.following)).catch(() => {});
+    listPosts({ authorName: requestedName, limit: 20 }).then(r => setUserPosts(r.posts)).catch(() => {});
+  }, [requestedName, isOwnProfile]);
+
+  const handleFollowToggle = async () => {
+    if (isOwnProfile || !requestedName) return;
+    const previousState = isFollowingUser;
+    const previousCount = followerCount;
+    setIsFollowingUser(!previousState);
+    setFollowerCount(prev => previousState ? prev - 1 : prev + 1);
+    try {
+      if (previousState) {
+        await unfollowUser(requestedName);
+      } else {
+        await followUser(requestedName);
+      }
+    } catch {
+      setIsFollowingUser(previousState);
+      setFollowerCount(previousCount);
+    }
+  };
 
   useEffect(() => {
     if (!editing) {
@@ -478,7 +507,7 @@ export function CommunityUserProfile({ name }: { name?: string }) {
               {isOwnProfile ? (
                 <button type="button" onClick={openEditor}><Pencil aria-hidden="true" />Edit profile</button>
               ) : (
-                <><button>Follow</button><button>Message</button></>
+                <><button onClick={handleFollowToggle}>{isFollowingUser ? "Unfollow" : "Follow"}</button><button>Message</button></>
               )}
             </div>
           </header>
@@ -488,7 +517,7 @@ export function CommunityUserProfile({ name }: { name?: string }) {
               <section className="tr-profile-stats">
                 <div><UsersRound /><strong>{profile.learners}</strong><small>Learners</small></div>
                 <div><Star /><strong>{profile.rating}</strong><small>Rating</small></div>
-                <div><UsersRound /><strong>{profile.followers}</strong><small>Followers</small></div>
+                <div><UsersRound /><strong>{followerCount}</strong><small>Followers</small></div>
               </section>
               <section className="tr-profile-skills">
                 <h2 style={{ fontFamily: "var(--font-sans), Inter, sans-serif" }}>Skills</h2>
@@ -498,18 +527,38 @@ export function CommunityUserProfile({ name }: { name?: string }) {
                 {tabs.map(([label, Icon]) => <button key={label} aria-current={tab === label ? "page" : undefined} onClick={() => setTab(label)}><Icon />{label}</button>)}
               </nav>
 
-              {tab === "Posts" && isSampleProfile && (
-                <article className="tr-profile-post tr-thread-post">
-                  <div className="tr-thread-avatar"><img src={profile.avatar} alt={`${profile.name}'s profile`} /><span aria-hidden="true" /></div>
-                  <div className="tr-thread-content">
-                    <header><span><strong>{profile.name}</strong><small>· 1h</small></span><button aria-label="Post options"><Ellipsis /></button></header>
-                    <p>Sharing something I&apos;ve been working on lately.</p>
-                    <img className="tr-profile-post-image" src={profile.cover} alt={`${profile.name}'s latest work`} />
-                    <footer><button aria-label="Like post"><Heart />142</button><button aria-label="Reply to post"><MessageCircle />8</button><button aria-label="Repost"><Repeat2 />1</button><button aria-label="Share post"><Send />4</button></footer>
-                  </div>
-                </article>
+              {tab === "Posts" && userPosts.length > 0 && (
+                <div className="space-y-4">
+                  {userPosts.map((post) => (
+                    <article key={post.id} className="tr-profile-post tr-thread-post">
+                      <div className="tr-thread-avatar">
+                        <img src={post.author.avatar_url || `https://picsum.photos/seed/${encodeURIComponent(post.author.name)}/80/80`} alt={`${post.author.name}'s profile`} />
+                        <span aria-hidden="true" />
+                      </div>
+                      <div className="tr-thread-content">
+                        <header>
+                          <span><strong>{post.author.name}</strong><small>· {new Date(post.created_at).toLocaleDateString()}</small></span>
+                          <button aria-label="Post options"><Ellipsis /></button>
+                        </header>
+                        <p>{post.body}</p>
+                        {post.image_url && <img className="tr-profile-post-image" src={post.image_url} alt="Post image" />}
+                        <footer>
+                          <button aria-label="Like post"><Heart />{post.like_count}</button>
+                          <button aria-label="Comments"><MessageCircle />{post.comment_count}</button>
+                          <button aria-label="Repost"><Repeat2 />{post.repost_count}</button>
+                          <button aria-label="Share post"><Send /></button>
+                        </footer>
+                      </div>
+                    </article>
+                  ))}
+                </div>
               )}
-              {tab === "Posts" && !isSampleProfile && <section className="tr-profile-empty"><h2>No posts yet</h2><p>{isOwnProfile ? "Share your first post when you are ready." : `${firstName} has not shared anything yet.`}</p></section>}
+              {tab === "Posts" && userPosts.length === 0 && (
+                <section className="tr-profile-empty">
+                  <h2>No posts yet</h2>
+                  <p>{isOwnProfile ? "Share your first post when you are ready." : `${firstName} has not shared anything yet.`}</p>
+                </section>
+              )}
               {tab === "Articles" && <section className="tr-profile-empty"><h2>Articles</h2><p>Long-form content will appear here.</p></section>}
               {tab === "Sessions" && <section className="tr-profile-empty"><h2>Learn with {firstName}</h2><p>Private sessions and workshops are available from {firstName}&apos;s profile.</p></section>}
               {tab === "About" && <section className="tr-profile-empty"><h2>About {firstName}</h2><p>{profile.about || (isOwnProfile ? "Add your story, experience, or approach from Edit profile." : "No additional information yet.")}</p></section>}

@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { AuthService } from "./auth-service.js";
+import { logServiceError } from "../lib/service-error.js";
 
 /**
  * Defense-in-depth text sanitizer (bounded port of the discover `sanitizeTree`
@@ -125,8 +126,8 @@ async function deriveHostIdentity(token: string, userId: string, _email: string 
       if (cv.headline) headline = cv.headline;
       if (cv.bio) bio = cv.bio;
     }
-  } catch {
-    // ignore
+  } catch (error) {
+    logServiceError({ service: "event-publication-service", operation: "deriveHostIdentity", error });
   }
 
   return { name, avatarUrl, headline, bio };
@@ -204,7 +205,8 @@ export function createSupabaseEventPublicationService(url: string, publishableKe
             version: row.version ?? 1,
           },
         };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "event-publication-service", operation: "publishEvent", error });
         return { status: "unavailable" };
       }
     },
@@ -229,7 +231,8 @@ export function createSupabaseEventPublicationService(url: string, publishableKe
         const config = (row.config as Record<string, unknown> | null) ?? {};
         const payload: PublicEventPayload = { ...config, slug: String(row.slug ?? slug), title: String(row.title ?? "") };
         return { status: "ok", data: payload };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "event-publication-service", operation: "getPublicEventBySlug", error });
         return { status: "unavailable" };
       }
     },
@@ -251,7 +254,8 @@ export function createSupabaseEventPublicationService(url: string, publishableKe
           })
           .filter((e): e is PublicEventPayload => e !== null && e.slug !== "");
         return { status: "ok", data: { events } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "event-publication-service", operation: "listPublicEvents", error });
         return { status: "unavailable" };
       }
     },

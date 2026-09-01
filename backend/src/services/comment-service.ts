@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { AuthService } from "./auth-service.js";
+import { logServiceError } from "../lib/service-error.js";
 
 const authOptions = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } as const;
 
@@ -68,7 +69,8 @@ export function createSupabaseCommentService(url: string, publishableKey: string
         if (error) return mapCommentError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; depth?: number; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), depth: row.depth ?? 1, status: String(row.status ?? "published") } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "comment-service", operation: "create", error });
         return { status: "unavailable" };
       }
     },
@@ -79,7 +81,8 @@ export function createSupabaseCommentService(url: string, publishableKey: string
         if (error) return mapMutationError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "deleted") } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "comment-service", operation: "deleteComment", error });
         return { status: "unavailable" };
       }
     },
@@ -92,7 +95,8 @@ export function createSupabaseCommentService(url: string, publishableKey: string
           return { status: "unavailable" };
         }
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "comment-service", operation: "appreciate", error });
         return { status: "unavailable" };
       }
     },
@@ -102,7 +106,8 @@ export function createSupabaseCommentService(url: string, publishableKey: string
         const { data, error } = await caller(token).rpc("unappreciate_comment", { p_comment_id: commentId });
         if (error) return { status: "unavailable" };
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "comment-service", operation: "unappreciate", error });
         return { status: "unavailable" };
       }
     },
@@ -113,7 +118,8 @@ export function createSupabaseCommentService(url: string, publishableKey: string
         if (error) return { status: "unavailable" };
         const row = data as { comments?: Record<string, unknown>[] };
         return { status: "ok", data: { comments: row.comments ?? [] } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "comment-service", operation: "listPublic", error });
         return { status: "unavailable" };
       }
     },

@@ -157,6 +157,14 @@ function PostsTab({ searchQuery, feedMode }: {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
     const isReposted = post.reposted_by_me;
+    const previousState = { repost_count: post.repost_count, reposted_by_me: post.reposted_by_me };
+
+    setPosts(prev => prev.map(p => p.id === postId ? {
+      ...p,
+      repost_count: isReposted ? p.repost_count - 1 : p.repost_count + 1,
+      reposted_by_me: !isReposted
+    } : p));
+
     try {
       if (isReposted) {
         const result = await unrepostPost(postId);
@@ -165,8 +173,9 @@ function PostsTab({ searchQuery, feedMode }: {
         const result = await repostPost(postId);
         setPosts(prev => prev.map(p => p.id === postId ? { ...p, repost_count: result.repost_count, reposted_by_me: true } : p));
       }
-    } catch {
-      // silently fail
+    } catch (error) {
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, ...previousState } : p));
+      console.error("Failed to toggle repost:", error);
     }
   }, [posts]);
 
@@ -174,16 +183,19 @@ function PostsTab({ searchQuery, feedMode }: {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
     const isFollowing = post.is_following;
+    const previousState = { is_following: post.is_following };
+
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, is_following: !isFollowing } : p));
+
     try {
       if (isFollowing) {
         await unfollowUser(authorName);
-        setPosts(prev => prev.map(p => p.id === postId ? { ...p, is_following: false } : p));
       } else {
         await followUser(authorName);
-        setPosts(prev => prev.map(p => p.id === postId ? { ...p, is_following: true } : p));
       }
-    } catch {
-      // silently fail
+    } catch (error) {
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, ...previousState } : p));
+      console.error("Failed to toggle follow:", error);
     }
   }, [posts]);
 
@@ -191,6 +203,14 @@ function PostsTab({ searchQuery, feedMode }: {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
     const isLiked = post.liked_by_me;
+    const previousState = { like_count: post.like_count, liked_by_me: post.liked_by_me };
+
+    setPosts(prev => prev.map(p => p.id === postId ? {
+      ...p,
+      like_count: isLiked ? p.like_count - 1 : p.like_count + 1,
+      liked_by_me: !isLiked
+    } : p));
+
     try {
       if (isLiked) {
         const result = await unlikePost(postId);
@@ -199,8 +219,9 @@ function PostsTab({ searchQuery, feedMode }: {
         const result = await likePost(postId);
         setPosts(prev => prev.map(p => p.id === postId ? { ...p, like_count: result.like_count, liked_by_me: true } : p));
       }
-    } catch {
-      // silently fail
+    } catch (error) {
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, ...previousState } : p));
+      console.error("Failed to toggle like:", error);
     }
   }, [posts]);
 

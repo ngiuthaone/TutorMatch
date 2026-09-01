@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { AuthService } from "./auth-service.js";
+import { logServiceError } from "../lib/service-error.js";
 
 const authOptions = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } as const;
 
@@ -44,7 +45,8 @@ export function createSupabaseFollowService(url: string, publishableKey: string,
         if (error) return mapFollowError(error.code ?? "", error.message ?? "");
         const row = data as { followee?: string; following?: boolean };
         return { status: "ok", data: { followee: String(row.followee ?? ""), following: Boolean(row.following) } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "follow-service", operation: "follow", error });
         return { status: "unavailable" };
       }
     },
@@ -55,7 +57,8 @@ export function createSupabaseFollowService(url: string, publishableKey: string,
         if (error) return mapFollowError(error.code ?? "", error.message ?? "");
         const row = data as { followee?: string; following?: boolean };
         return { status: "ok", data: { followee: String(row.followee ?? ""), following: Boolean(row.following) } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "follow-service", operation: "unfollow", error });
         return { status: "unavailable" };
       }
     },
@@ -69,7 +72,8 @@ export function createSupabaseFollowService(url: string, publishableKey: string,
         }
         const row = data as { following?: boolean };
         return { status: "ok", data: { following: Boolean(row.following) } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "follow-service", operation: "isFollowing", error });
         return { status: "unavailable" };
       }
     },
@@ -83,7 +87,8 @@ export function createSupabaseFollowService(url: string, publishableKey: string,
         }
         const row = data as { followers?: Record<string, unknown>[] };
         return { status: "ok", data: { users: row.followers ?? [] } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "follow-service", operation: "listFollowers", error });
         return { status: "unavailable" };
       }
     },
@@ -97,7 +102,8 @@ export function createSupabaseFollowService(url: string, publishableKey: string,
         }
         const row = data as { following?: Record<string, unknown>[] };
         return { status: "ok", data: { users: row.following ?? [] } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "follow-service", operation: "listFollowing", error });
         return { status: "unavailable" };
       }
     },

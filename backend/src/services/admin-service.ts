@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { logServiceError } from "../lib/service-error.js";
 
 export interface AdminAuditEntry {
   id: number;
@@ -52,7 +53,8 @@ export function createAdminService(
         );
         if (error) return { status: "unavailable" };
         return { status: "ok", data: { id: data as number } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "admin-service", operation: "logAction", error });
         return { status: "unavailable" };
       }
     },
@@ -87,7 +89,8 @@ export function createAdminService(
             createdAt: row.created_at,
           })),
         };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "admin-service", operation: "searchAuditLog", error });
         return { status: "unavailable" };
       }
     },
@@ -117,7 +120,8 @@ export function createAdminService(
             role: row.role ?? undefined,
           })),
         };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "admin-service", operation: "searchUsers", error });
         return { status: "unavailable" };
       }
     },
@@ -137,7 +141,8 @@ export function createAdminService(
         const { data, error } = await query;
         if (error) return { status: "unavailable" };
         return { status: "ok", data: data || [] };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "admin-service", operation: "searchDisputes", error });
         return { status: "unavailable" };
       }
     },
@@ -157,7 +162,8 @@ export function createAdminService(
         const { data, error } = await query;
         if (error) return { status: "unavailable" };
         return { status: "ok", data: data || [] };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "admin-service", operation: "searchHostCancellations", error });
         return { status: "unavailable" };
       }
     },

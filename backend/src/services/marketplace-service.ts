@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { logServiceError } from "../lib/service-error.js";
 
 /**
  * Defense-in-depth text sanitizer (mirror of the events service). The DB is the
@@ -104,7 +105,10 @@ export function createSupabaseMarketplaceService(
         }, { onConflict: "kind,slug" }).select("id,kind,slug,title,creator_id,payload,published_at,status,version").single();
         if (error) return error.code === "23505" || error.code === "42501" ? { status: "conflict" } : { status: "unavailable" };
         return { status: "ok", data: mapRow(data) };
-      } catch { return { status: "unavailable" }; }
+      } catch (error) {
+        logServiceError({ service: "marketplace-service", operation: "publish", error });
+        return { status: "unavailable" };
+      }
     },
 
     async getPublic(kind: MarketplaceKind, slug: string): Promise<MarketplaceReadResult> {
@@ -114,7 +118,10 @@ export function createSupabaseMarketplaceService(
           .eq("kind", kind).eq("slug", slug).eq("status", "published").single();
         if (error || !data) return { status: "not_found" };
         return { status: "ok", data: mapRow(data, false) };
-      } catch { return { status: "unavailable" }; }
+      } catch (error) {
+        logServiceError({ service: "marketplace-service", operation: "getPublic", error });
+        return { status: "unavailable" };
+      }
     },
 
     async list(kind: MarketplaceKind): Promise<MarketplaceResult<MarketplaceListing[]>> {
@@ -122,7 +129,10 @@ export function createSupabaseMarketplaceService(
         const { data, error } = await caller().from("marketplace_listings").select("id,kind,slug,title,creator_id,payload,published_at,status,version").eq("kind", kind).eq("status", "published").order("published_at", { ascending: false }).limit(100);
         if (error) return { status: "unavailable" };
         return { status: "ok", data: (data || []).map((row) => mapRow(row, false)) };
-      } catch { return { status: "unavailable" }; }
+      } catch (error) {
+        logServiceError({ service: "marketplace-service", operation: "list", error });
+        return { status: "unavailable" };
+      }
     },
 
     async update(token: string, kind: MarketplaceKind, slug: string, expectedVersion: number, patch: { title?: string; payload?: Record<string, unknown> }): Promise<MarketplaceUpdateResult> {
@@ -155,7 +165,10 @@ export function createSupabaseMarketplaceService(
         }
         if (!data) return { status: "conflict" };
         return { status: "ok", data: mapRow(data) };
-      } catch { return { status: "unavailable" }; }
+      } catch (error) {
+        logServiceError({ service: "marketplace-service", operation: "update", error });
+        return { status: "unavailable" };
+      }
     },
 
     async unpublish(token: string, kind: MarketplaceKind, slug: string): Promise<MarketplaceUnpublishResult> {
@@ -180,7 +193,10 @@ export function createSupabaseMarketplaceService(
         }
         if (!data) return { status: "not_found" };
         return { status: "ok", data: mapRow(data) };
-      } catch { return { status: "unavailable" }; }
+      } catch (error) {
+        logServiceError({ service: "marketplace-service", operation: "unpublish", error });
+        return { status: "unavailable" };
+      }
     },
   };
 }

@@ -12,5 +12,5 @@
 
 set search_path = '';
 
-drop function if exists public.create_booking(uuid, int);
+drop function if exists public.create_booking(uuid, integer);
 drop function if exists public.list_bookable_sessions(uuid);

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { AuthService } from "./auth-service.js";
+import { logServiceError } from "../lib/service-error.js";
 
 const authOptions = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } as const;
 
@@ -100,7 +101,8 @@ export function createSupabasePostService(url: string, publishableKey: string, _
         if (error) return mapCreateError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "published") } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "post-service", operation: "create", error });
         return { status: "unavailable" };
       }
     },
@@ -123,7 +125,8 @@ export function createSupabasePostService(url: string, publishableKey: string, _
         if (error) return mapUpdateError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "published") } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "post-service", operation: "update", error });
         return { status: "unavailable" };
       }
     },
@@ -134,7 +137,8 @@ export function createSupabasePostService(url: string, publishableKey: string, _
         if (error) return mapMutationError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "deleted") } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "post-service", operation: "delete", error });
         return { status: "unavailable" };
       }
     },
@@ -145,7 +149,8 @@ export function createSupabasePostService(url: string, publishableKey: string, _
         if (error) return { status: "unavailable" };
         if (data === null) return { status: "not_found" };
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "post-service", operation: "getPublic", error });
         return { status: "unavailable" };
       }
     },
@@ -162,7 +167,8 @@ export function createSupabasePostService(url: string, publishableKey: string, _
         if (error) return { status: "unavailable" };
         const row = data as { posts?: Record<string, unknown>[]; next_cursor?: string | null };
         return { status: "ok", data: { posts: row.posts ?? [], nextCursor: row.next_cursor ?? null } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "post-service", operation: "listPublic", error });
         return { status: "unavailable" };
       }
     },
@@ -173,7 +179,8 @@ export function createSupabasePostService(url: string, publishableKey: string, _
         if (error) return { status: "unavailable" };
         const row = data as { posts?: Record<string, unknown>[] };
         return { status: "ok", data: { posts: row.posts ?? [] } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "post-service", operation: "listMyPosts", error });
         return { status: "unavailable" };
       }
     },
@@ -186,7 +193,8 @@ export function createSupabasePostService(url: string, publishableKey: string, _
           return { status: "unavailable" };
         }
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "post-service", operation: "repost", error });
         return { status: "unavailable" };
       }
     },
@@ -196,7 +204,8 @@ export function createSupabasePostService(url: string, publishableKey: string, _
         const { data, error } = await caller(token).rpc("unrepost_post", { p_post_id: postId });
         if (error) return { status: "unavailable" };
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "post-service", operation: "unrepost", error });
         return { status: "unavailable" };
       }
     },
@@ -209,7 +218,8 @@ export function createSupabasePostService(url: string, publishableKey: string, _
           return { status: "unavailable" };
         }
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "post-service", operation: "like", error });
         return { status: "unavailable" };
       }
     },
@@ -219,7 +229,8 @@ export function createSupabasePostService(url: string, publishableKey: string, _
         const { data, error } = await caller(token).rpc("unlike_post", { p_post_id: postId });
         if (error) return { status: "unavailable" };
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "post-service", operation: "unlike", error });
         return { status: "unavailable" };
       }
     },

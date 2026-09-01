@@ -29,8 +29,3 @@ create policy "notifications_owner_update"
   to authenticated
   using (recipient_id = auth.uid())
   with check (recipient_id = auth.uid());
-
-create policy "notifications_system_insert"
-  on public.notifications for insert
-  to authenticated
-  with check (true);

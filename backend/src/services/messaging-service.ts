@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { logServiceError } from "../lib/service-error.js";
 
 export type MessagingConversation = {
   id: string;
@@ -70,7 +71,8 @@ export function createSupabaseMessagingService(
       const { data, error } = await caller(token).rpc(name, args);
       if (error) return { status: "unavailable" };
       return { status: "ok", data: data as T };
-    } catch {
+    } catch (error) {
+      logServiceError({ service: "messaging-service", operation: "rpc", error });
       return { status: "unavailable" };
     }
   }
@@ -99,7 +101,8 @@ export function createSupabaseMessagingService(
         }
         if (!data) return { status: "not_found" };
         return { status: "ok", data: data as MessagingConversation };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "messaging-service", operation: "getOrCreateBookingConversation", error });
         return { status: "unavailable" };
       }
     },
@@ -116,7 +119,8 @@ export function createSupabaseMessagingService(
           return { status: "unavailable" };
         }
         return { status: "ok", data: (data as MessagingMessage[]) ?? [] };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "messaging-service", operation: "listMessages", error });
         return { status: "unavailable" };
       }
     },
@@ -145,7 +149,8 @@ export function createSupabaseMessagingService(
         if (!data) return { status: "unavailable" };
         const message = data as MessagingMessage & { duplicate?: boolean };
         return { status: "ok", data: message, duplicate: Boolean(message.duplicate) };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "messaging-service", operation: "sendMessage", error });
         return { status: "unavailable" };
       }
     },
@@ -160,7 +165,8 @@ export function createSupabaseMessagingService(
           return { status: "unavailable" };
         }
         return { status: "ok", data: data as { conversationId: string; lastReadAt: string } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "messaging-service", operation: "markRead", error });
         return { status: "unavailable" };
       }
     },

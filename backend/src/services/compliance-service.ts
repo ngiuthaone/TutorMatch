@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { logServiceError } from "../lib/service-error.js";
 
 export type VerificationStatus = "not_verified" | "pending" | "verified";
 export type PayoutEligibility = "not_eligible" | "eligible";
@@ -55,7 +56,8 @@ export function createComplianceService(
             hostAgreementAcceptedAt: (row.hostAgreementAcceptedAt as string) ?? undefined,
           },
         };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "compliance-service", operation: "ensureCompliance", error });
         return { status: "unavailable" };
       }
     },
@@ -72,7 +74,8 @@ export function createComplianceService(
         );
         if (error) return { status: "unavailable" };
         return { status: "ok", data: { eligible: data as boolean } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "compliance-service", operation: "isPayoutEligible", error });
         return { status: "unavailable" };
       }
     },

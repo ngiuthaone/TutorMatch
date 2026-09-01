@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { AuthService } from "./auth-service.js";
+import { logServiceError } from "../lib/service-error.js";
 
 const authOptions = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } as const;
 
@@ -117,7 +118,8 @@ export function createSupabaseArticleService(url: string, publishableKey: string
         if (error) return mapDraftError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "draft") } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "article-service", operation: "createDraft", error });
         return { status: "unavailable" };
       }
     },
@@ -145,7 +147,8 @@ export function createSupabaseArticleService(url: string, publishableKey: string
         if (error) return mapUpdateError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "draft") } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "article-service", operation: "updateDraft", error });
         return { status: "unavailable" };
       }
     },
@@ -156,7 +159,8 @@ export function createSupabaseArticleService(url: string, publishableKey: string
         if (error) return mapPublishError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; slug?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), slug: String(row.slug ?? ""), status: String(row.status ?? "published") } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "article-service", operation: "publish", error });
         return { status: "unavailable" };
       }
     },
@@ -167,7 +171,8 @@ export function createSupabaseArticleService(url: string, publishableKey: string
         if (error) return mapMutationError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "draft") } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "article-service", operation: "unpublish", error });
         return { status: "unavailable" };
       }
     },
@@ -178,7 +183,8 @@ export function createSupabaseArticleService(url: string, publishableKey: string
         if (error) return mapMutationError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "deleted") } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "article-service", operation: "deleteArticle", error });
         return { status: "unavailable" };
       }
     },
@@ -189,7 +195,8 @@ export function createSupabaseArticleService(url: string, publishableKey: string
         if (error) return { status: "unavailable" };
         if (!data || typeof data !== "object") return { status: "not_found" };
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "article-service", operation: "getPublicArticle", error });
         return { status: "unavailable" };
       }
     },
@@ -200,7 +207,8 @@ export function createSupabaseArticleService(url: string, publishableKey: string
         if (error) return { status: "unavailable" };
         const row = data as { articles?: Record<string, unknown>[]; next_cursor?: string | null };
         return { status: "ok", data: { articles: row.articles ?? [], nextCursor: row.next_cursor ?? null } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "article-service", operation: "listPublicArticles", error });
         return { status: "unavailable" };
       }
     },
@@ -211,7 +219,8 @@ export function createSupabaseArticleService(url: string, publishableKey: string
         if (error) return { status: "unavailable" };
         const row = data as { articles?: Record<string, unknown>[] };
         return { status: "ok", data: { articles: row.articles ?? [] } };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "article-service", operation: "listMyArticles", error });
         return { status: "unavailable" };
       }
     },
@@ -222,7 +231,8 @@ export function createSupabaseArticleService(url: string, publishableKey: string
         if (error) return { status: "unavailable" };
         if (!data || typeof data !== "object") return { status: "not_found" };
         return { status: "ok", data: data as Record<string, unknown> };
-      } catch {
+      } catch (error) {
+        logServiceError({ service: "article-service", operation: "getMyArticle", error });
         return { status: "unavailable" };
       }
     },

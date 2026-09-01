@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { buildVnpayPaymentUrl, buildVnpayTransactionRequest, executeVnpayTransaction, normalizeVnpayOutcome, classifyVnpayRefundOutcome, formatVnpayDateTime, type VnpayConfig } from "./vnpay-adapter.js";
+import { logServiceError } from "../lib/service-error.js";
 
 function returnUrlForBooking(returnUrl: string, bookingId: string): string {
   const url = new URL(returnUrl);
@@ -156,7 +157,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
           result = await this.executeRefund(row.refundId);
         } catch (err) {
           console.error("refund_execution_exception", { refundId: row.refundId, error: String(err) });
-          try { await releaseRefundClaim(workerId, row.refundId, String(err)); } catch { /* ignore */ }
+          try { await releaseRefundClaim(workerId, row.refundId, String(err)); } catch (error) { logServiceError({ service: "payment-service", operation: "sweepRefundExecutions.releaseRefundClaim", error }); }
           continue;
         }
         if (result.error) {

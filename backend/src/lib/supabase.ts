@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { profileSchema } from "../schemas/profile.js";
 import type { AuthService } from "../services/auth-service.js";
+import { logServiceError } from "./service-error.js";
 
 const authOptions = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } as const;
 
@@ -13,7 +14,10 @@ export function createSupabaseAuthService(url: string, publishableKey: string): 
         if (error) return error.status === 401 || error.status === 403 ? { status: "invalid" } : { status: "unavailable" };
         if (!data.user) return { status: "invalid" };
         return { status: "authenticated", user: { id: data.user.id, email: data.user.email ?? null } };
-      } catch { return { status: "unavailable" }; }
+      } catch (error) {
+        logServiceError({ service: "supabase", operation: "validateAccessToken", error });
+        return { status: "unavailable" };
+      }
     },
     async getOwnProfile(token, userId) {
       try {
@@ -27,7 +31,10 @@ export function createSupabaseAuthService(url: string, publishableKey: string): 
         if (!data) return { status: "not_found" };
         const parsed = profileSchema.safeParse(data);
         return parsed.success ? { status: "found", profile: parsed.data } : { status: "invalid_data" };
-      } catch { return { status: "unavailable" }; }
+      } catch (error) {
+        logServiceError({ service: "supabase", operation: "getOwnProfile", error });
+        return { status: "unavailable" };
+      }
     }
   };
 }
