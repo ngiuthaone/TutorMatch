@@ -196,7 +196,7 @@ export function createSupabaseMessagingService(
             return { status: "forbidden" };
           }
           if (error.code === "P0001") return { status: "not_found" };
-          if (error.code === "22023") return { status: "invalid" };
+          if (error.code === "22023") return { status: "unavailable" };
           return { status: "unavailable" };
         }
         return { status: "ok", data: data as MessagingMessage };
@@ -231,7 +231,7 @@ export function createSupabaseMessagingService(
             return { status: "forbidden" };
           }
           if (error.code === "P0001") return { status: "not_found" };
-          if (error.code === "22023") return { status: "invalid" };
+          if (error.code === "22023") return { status: "unavailable" };
           return { status: "unavailable" };
         }
         return { status: "ok", data: data as { id: string; status: string } };
@@ -249,7 +249,6 @@ export function createSupabaseMessagingService(
             return { status: "forbidden" };
           }
           if (error.code === "P0001") return { status: "not_found" };
-          if (error.code === "22023") return { status: "invalid" };
           return { status: "unavailable" };
         }
         return { status: "ok", data: data as { blocker: string; blocked: string } };

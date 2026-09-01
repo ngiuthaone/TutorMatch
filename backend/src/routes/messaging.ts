@@ -154,7 +154,6 @@ export const messagingRoutes: FastifyPluginAsync<{
     const result = await options.service.editMessage(request.auth.accessToken, id.data.id, body.data.body);
     if (result.status === "not_found") throw new ApiError(404, "MESSAGE_NOT_FOUND", "Message not found.");
     if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You can only edit your own messages.");
-    if (result.status === "invalid") throw new ApiError(400, "INVALID_MESSAGE", "Message body is invalid.");
     if (result.status !== "ok") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
     return { ok: true, message: result.data };
   });
@@ -189,7 +188,6 @@ export const messagingRoutes: FastifyPluginAsync<{
     const result = await options.service.reportMessage(request.auth.accessToken, id.data.id, body.data.reason, body.data.details);
     if (result.status === "not_found") throw new ApiError(404, "MESSAGE_NOT_FOUND", "Message not found.");
     if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You can only report messages in your own conversations.");
-    if (result.status === "invalid") throw new ApiError(400, "INVALID_REPORT", "Report is invalid.");
     if (result.status !== "ok") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
     return { ok: true, report: result.data };
   });
@@ -203,7 +201,6 @@ export const messagingRoutes: FastifyPluginAsync<{
     if (!id.success) throw new ApiError(400, "INVALID_ID", "User id is invalid.");
     const result = await options.service.blockUser(request.auth.accessToken, id.data.userId);
     if (result.status === "not_found") throw new ApiError(404, "USER_NOT_FOUND", "User not found.");
-    if (result.status === "invalid") throw new ApiError(400, "INVALID_REQUEST", "Cannot block this user.");
     if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You do not have permission to block this user.");
     if (result.status !== "ok") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
     return { ok: true, ...result.data };

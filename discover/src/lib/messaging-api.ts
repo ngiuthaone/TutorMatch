@@ -328,6 +328,7 @@ export function subscribeToConversationMessages(
     try {
       const supabase = (await import("@/lib/auth/supabase-client")).getSupabaseClient();
       if (cancelled) return;
+      if (!supabase) return; // Not configured for live mode — caller is in demo.
       const channel = supabase
         .channel(`messaging:conversation:${conversationId}`)
         .on(

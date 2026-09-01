@@ -244,7 +244,7 @@ function MessageList({
                   className="flex flex-col gap-2"
                   onSubmit={(event) => {
                     event.preventDefault();
-                    void onEdit(message.id, editingBody).then(() => {
+                    Promise.resolve(onEdit(message.id, editingBody)).then(() => {
                       setEditingId(null);
                     });
                   }}
@@ -623,25 +623,15 @@ function LiveMessages() {
   const [conversations, setConversations] = useState<MessagingConversation[] | null>(null);
   const [loadError, setLoadError] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const isActiveCandidate = useCallback(
-    (id: string | null): boolean => {
-      if (!id) return false;
-      if (deepLinkId) return id === deepLinkId;
-      return true;
-    },
-    [deepLinkId],
-  );
-
-  const refreshConversations = useCallback(async () => {
+  const refreshConversations = useCallback(async (q?: string) => {
     try {
-      const list = await listConversations();
+      const list = q && q.trim() ? await searchConversations(q) : await listConversations();
       setConversations(list);
       setLoadError("");
       setActiveId((current) => {
-        // A deep-linked conversationId (from a booking) wins; otherwise prefer
-        // the already-open conversation; otherwise default to the newest.
-        if (current && (list.some((conversation) => conversation.id === current) || isActiveCandidate(current))) return current;
+        if (current && list.some((conversation) => conversation.id === current)) return current;
         const target = deepLinkId ?? list[0]?.id ?? null;
         if (target && list.some((conversation) => conversation.id === target)) return target;
         return null;
@@ -649,13 +639,21 @@ function LiveMessages() {
     } catch (caught) {
       setLoadError(summarizeError(caught));
     }
-  }, [deepLinkId, isActiveCandidate]);
+  }, [deepLinkId]);
 
   useEffect(() => {
     void (async () => {
       await refreshConversations();
     })();
   }, [refreshConversations]);
+
+  // Debounced search re-fetch.
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      void refreshConversations(searchQuery);
+    }, 250);
+    return () => clearTimeout(handle);
+  }, [searchQuery, refreshConversations]);
 
   const showEmpty = conversations !== null && conversations.length === 0 && !loadError;
   const showError = conversations === null && loadError;
@@ -675,16 +673,27 @@ function LiveMessages() {
           className={`${activeId ? "hidden md:flex" : "flex"} flex-col border-b border-[#1c1d20] md:border-b-0 md:border-r`}
           aria-label="Conversation list"
         >
-          <header className="flex items-center justify-between px-4 py-2">
-            <p className="text-xs uppercase tracking-wide text-[#7a7a80]">Conversations</p>
-            <button
-              type="button"
-              onClick={() => void refreshConversations()}
-              className="text-[11px] uppercase tracking-wide text-[#9c9ca3] hover:text-[#f4f4f2]"
-              aria-label="Refresh conversations"
-            >
-              Refresh
-            </button>
+          <header className="flex flex-col gap-2 border-b border-[#1c1d20] px-4 py-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs uppercase tracking-wide text-[#7a7a80]">Conversations</p>
+              <button
+                type="button"
+                onClick={() => void refreshConversations(searchQuery)}
+                className="text-[11px] uppercase tracking-wide text-[#9c9ca3] hover:text-[#f4f4f2]"
+                aria-label="Refresh conversations"
+              >
+                Refresh
+              </button>
+            </div>
+            <label htmlFor="messaging-search" className="sr-only">Search conversations</label>
+            <input
+              id="messaging-search"
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search…"
+              className="w-full rounded-lg border border-[#1c1d20] bg-[#0b0b0c] px-3 py-1.5 text-xs text-[#f4f4f2] placeholder:text-[#5f5f64] focus:border-[#3a3a3f] focus:outline-none"
+            />
           </header>
           <div className="min-h-0 flex-1">
             {conversations === null && !loadError ? (
@@ -697,7 +706,7 @@ function LiveMessages() {
                 <p className="text-xs text-[#9c9ca3]">{loadError}</p>
                 <button
                   type="button"
-                  onClick={() => void refreshConversations()}
+                  onClick={() => void refreshConversations(searchQuery)}
                   className="mt-2 rounded-lg border border-[#1c1d20] px-3 py-1 text-xs text-[#f4f4f2]"
                 >
                   Try again
@@ -705,9 +714,11 @@ function LiveMessages() {
               </div>
             ) : showEmpty ? (
               <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-                <p className="text-sm text-[#f4f4f2]">No conversations yet.</p>
+                <p className="text-sm text-[#f4f4f2]">
+                  {searchQuery ? "No conversations match your search." : "No conversations yet."}
+                </p>
                 <p className="mt-2 text-xs text-[#9c9ca3]">
-                  Direct messaging opens when a learner has a confirmed booking with a host. Open a booking to start a conversation.
+                  {searchQuery ? "Try a different search term." : "Direct messaging opens when a learner has a confirmed booking with a host. Open a booking to start a conversation."}
                 </p>
               </div>
             ) : showList ? (
