@@ -18,13 +18,24 @@ function paymentError(error: { code?: string; message?: string } | null, fallbac
 export const paymentRoutes: FastifyPluginAsync<{ service: PaymentService; vnpay: VnpayConfig; reconciliationToken: string | undefined }> = async (app, options) => {
   app.post("/api/v1/payments/start", { preHandler: app.authenticate }, async (request) => {
     const body = startSchema.safeParse(request.body); if (!body.success) throw new ApiError(400, "PAYMENT_INVALID", "Payment details are invalid.");
-    const result = await options.service.start(request.auth.accessToken, body.data.bookingId, body.data.idempotencyKey);
+    let result;
+    try {
+      result = await options.service.start(request.auth.accessToken, body.data.bookingId, body.data.idempotencyKey);
+    } catch (err) {
+      throw new ApiError(500, "PAYMENT_START_ERROR", "An unexpected error occurred while starting the payment.");
+    }
     if (result.error) throw paymentError(result.error, "PAYMENT_START_REJECTED", 409);
     return { ok: true, payment: result.data };
   });
   app.get("/api/v1/payments/:bookingId", { preHandler: app.authenticate }, async (request) => {
     const bookingId = z.string().uuid().safeParse((request.params as { bookingId?: unknown }).bookingId); if (!bookingId.success) throw new ApiError(404, "NOT_FOUND", "Payment not found.");
-    const result = await options.service.read(request.auth.accessToken, bookingId.data); if (result.error) throw paymentError(result.error, "PAYMENT_UNAVAILABLE");
+    let result;
+    try {
+      result = await options.service.read(request.auth.accessToken, bookingId.data);
+    } catch (err) {
+      throw new ApiError(500, "PAYMENT_UNAVAILABLE", "An unexpected error occurred while retrieving the payment.");
+    }
+    if (result.error) throw paymentError(result.error, "PAYMENT_UNAVAILABLE");
     if (!result.data) throw new ApiError(404, "PAYMENT_NOT_FOUND", "Payment not found."); return { ok: true, payment: result.data };
   });
   app.get("/api/v1/payments/vnpay/ipn", async (request, reply) => {

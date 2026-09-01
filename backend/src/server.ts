@@ -72,6 +72,27 @@ async function main() {
   await app.listen({ host: config.HOST, port: config.PORT });
   app.log.info({ host: config.HOST, port: config.PORT }, "Tutoria API started");
 
+  process.on("unhandledRejection", (reason, promise) => {
+    app.log.error({ err: reason, type: "unhandledRejection" }, "Unhandled promise rejection");
+    if (process.env.SENTRY_DSN) {
+      import("@sentry/node").then(({ captureException }) => {
+        captureException(reason, { extra: { type: "unhandledRejection" } });
+      }).catch(() => {});
+    }
+  });
+
+  process.on("uncaughtException", (error) => {
+    app.log.error({ err: error, type: "uncaughtException" }, "Uncaught exception");
+    if (process.env.SENTRY_DSN) {
+      import("@sentry/node").then(({ captureException }) => {
+        captureException(error, { extra: { type: "uncaughtException" } });
+      }).catch(() => {});
+    }
+    if (process.env.NODE_ENV === "production") {
+      process.exit(1);
+    }
+  });
+
   if (process.env.START_WORKER === "true" && config.VNPAY_TMN_CODE && config.VNPAY_HASH_SECRET && config.VNPAY_RETURN_URL && config.VNPAY_IPN_URL) {
     try {
       const worker = requireFinancialWorkerConfig(config, `financial-recovery-${hostname()}-${process.pid}`);

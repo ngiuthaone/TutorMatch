@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ApiError } from "../errors/api-error.js";
 import type { AuthService } from "../services/auth-service.js";
 import type { EventPublicationService } from "../services/event-publication-service.js";
+import { safeHttpUrl } from "../lib/sanitize.js";
 
 // Realistic event payloads carry base64 cover/gallery/plan images up to ~350KB
 // each; mirror the discover `eventPostSchema` image caps and allow a full event
@@ -19,24 +20,6 @@ const IMAGE_DATA_MAX_BYTES = 500 * 1024;
 const IMAGE_HTTPS_MAX_BYTES = 2 * 1024;
 const DATA_IMAGE_RE = /^data:image\/(?:avif|gif|jpe?g|png|webp);base64,[a-z0-9+/=\s]+$/i;
 const HTTPS_URL_RE = /^https:\/\/[^\s]+$/i;
-
-const INTERNAL_HOST_RE = /^(localhost|127\.\d+\.\d+\.\d+|::1|::|0\.0\.0\.0|(10\.\d+|\d{1,3}\.10)\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+)$/i;
-
-function isInternalHost(hostname: string): boolean {
-  return INTERNAL_HOST_RE.test(hostname);
-}
-
-const safeHttpUrl = (value: string) => {
-  const trimmed = String(value || "").trim();
-  if (!trimmed) return true;
-  if (trimmed.startsWith("/") || trimmed.startsWith("./") || trimmed.startsWith("../")) return trimmed.startsWith("//") ? false : true;
-  let url: URL;
-  try { url = new URL(trimmed); } catch { return false; }
-  if (url.protocol !== "https:") return false;
-  // Block SSRF: reject internal/private network hosts
-  if (isInternalHost(url.hostname)) return false;
-  return true;
-};
 
 
 const eventImageUrl = (value: string): boolean => {

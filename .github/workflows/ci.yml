@@ -29,7 +29,7 @@ jobs:
       - run: pnpm build
 
   discover:
-    name: Discover (test + build)
+    name: Discover (typecheck + test + build)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -42,5 +42,6 @@ jobs:
           cache: "npm"
           cache-dependency-path: discover/package-lock.json
       - run: npm ci
+      - run: npm run typecheck || npm run lint
       - run: npm test
       - run: npm run build

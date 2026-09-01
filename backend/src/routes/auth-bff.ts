@@ -19,10 +19,16 @@ const authBffRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ ok: false, error: { code: 'INVALID_REQUEST', message: 'Invalid email or password format.' } });
     }
     const body = request.body as { email: string; password: string };
-    const { data, error } = await supabaseAdmin.auth.signInWithPassword({
-      email: body.email,
-      password: body.password,
-    });
+    let data, error;
+    try {
+      ({ data, error } = await supabaseAdmin.auth.signInWithPassword({
+        email: body.email,
+        password: body.password,
+      }));
+    } catch (err) {
+      console.error('signInWithPassword error:', err);
+      return reply.status(500).send({ ok: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred during sign-in.' } });
+    }
     if (error || !data.session) {
       return reply.status(401).send({ ok: false, error: { code: 'AUTH_FAILED', message: error?.message ?? 'Sign-in failed' } });
     }
@@ -41,7 +47,13 @@ const authBffRoutes: FastifyPluginAsync = async (app) => {
     if (!refreshToken) {
       return reply.status(401).send({ ok: false, error: { code: 'NO_TOKEN', message: 'No refresh token' } });
     }
-    const { data, error } = await supabaseAdmin.auth.refreshSession({ refresh_token: refreshToken });
+    let data, error;
+    try {
+      ({ data, error } = await supabaseAdmin.auth.refreshSession({ refresh_token: refreshToken }));
+    } catch (err) {
+      console.error('refreshSession error:', err);
+      return reply.status(500).send({ ok: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred during token refresh.' } });
+    }
     if (error || !data.session) {
       reply.clearCookie('tutoria_refresh_token');
       return reply.status(401).send({ ok: false, error: { code: 'REFRESH_FAILED', message: error?.message ?? 'Refresh failed' } });

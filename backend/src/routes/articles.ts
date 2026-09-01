@@ -3,17 +3,9 @@ import { z } from "zod";
 import { ApiError } from "../errors/api-error.js";
 import type { AuthService } from "../services/auth-service.js";
 import type { ArticleService } from "../services/article-service.js";
+import { safeHttpUrl } from "../lib/sanitize.js";
 
 const noStore = async (_request: unknown, reply: any, payload: unknown) => { reply.header("Cache-Control", "no-store"); return payload; };
-
-const safeHttpUrl = (value: string) => {
-  const trimmed = String(value || "").trim();
-  if (!trimmed) return true;
-  if (trimmed.startsWith("/") || trimmed.startsWith("./") || trimmed.startsWith("../")) return trimmed.startsWith("//") ? false : true;
-  let url: URL;
-  try { url = new URL(trimmed); } catch { return false; }
-  return url.protocol === "https:";
-};
 
 function isAllowedImageHost(value: string, allowedHosts: string[]): boolean {
   if (allowedHosts.length === 0) return true;
