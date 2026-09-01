@@ -90,7 +90,7 @@ begin
 end $$;
 
 revoke all on function public.list_followers(text) from public, anon, authenticated;
-grant execute on function public.list_followers(text) to anon, authenticated;
+grant execute on function public.list_followers(text) to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────
 -- list_following
@@ -120,4 +120,4 @@ begin
 end $$;
 
 revoke all on function public.list_following(text) from public, anon, authenticated;
-grant execute on function public.list_following(text) to anon, authenticated;
+grant execute on function public.list_following(text) to authenticated;

@@ -52,7 +52,7 @@ export async function createPost(input: CreatePostInput) {
 }
 
 export async function updatePost(id: string, input: Partial<CreatePostInput>) {
-  return apiFetch<{ id: string; status: string }>(`/api/v1/posts/${id}`, {
+  return apiFetch<{ id: string; status: string }>(`/api/v1/posts/${encodeURIComponent(id)}`, {
     method: "PATCH",
     body: {
       body: input.body,
@@ -66,7 +66,7 @@ export async function updatePost(id: string, input: Partial<CreatePostInput>) {
 }
 
 export async function deletePost(id: string) {
-  return apiFetch<{ id: string; status: string }>(`/api/v1/posts/${id}`, { method: "DELETE" });
+  return apiFetch<{ id: string; status: string }>(`/api/v1/posts/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 export async function getPost(id: string) {
@@ -89,19 +89,19 @@ export async function listMyPosts() {
 }
 
 export async function repostPost(id: string) {
-  return apiFetch<{ post_id: string; repost_count: number; reposted_by_me: boolean }>(`/api/v1/posts/${id}/repost`, { method: "POST" });
+  return apiFetch<{ post_id: string; repost_count: number; reposted_by_me: boolean }>(`/api/v1/posts/${encodeURIComponent(id)}/repost`, { method: "POST" });
 }
 
 export async function unrepostPost(id: string) {
-  return apiFetch<{ post_id: string; repost_count: number; reposted_by_me: boolean }>(`/api/v1/posts/${id}/repost`, { method: "DELETE" });
+  return apiFetch<{ post_id: string; repost_count: number; reposted_by_me: boolean }>(`/api/v1/posts/${encodeURIComponent(id)}/repost`, { method: "DELETE" });
 }
 
 export async function likePost(id: string) {
-  return apiFetch<{ post_id: string; like_count: number; liked_by_me: boolean }>(`/api/v1/posts/${id}/like`, { method: "POST" });
+  return apiFetch<{ post_id: string; like_count: number; liked_by_me: boolean }>(`/api/v1/posts/${encodeURIComponent(id)}/like`, { method: "POST" });
 }
 
 export async function unlikePost(id: string) {
-  return apiFetch<{ post_id: string; like_count: number; liked_by_me: boolean }>(`/api/v1/posts/${id}/like`, { method: "DELETE" });
+  return apiFetch<{ post_id: string; like_count: number; liked_by_me: boolean }>(`/api/v1/posts/${encodeURIComponent(id)}/like`, { method: "DELETE" });
 }
 
 export function isCommunityApiError(error: unknown): error is CommunityApiError {

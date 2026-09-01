@@ -37,17 +37,17 @@ export async function createComment(ownerType: "post" | "article", ownerId: stri
 }
 
 export async function deleteComment(id: string) {
-  return apiFetch<{ id: string; status: string }>(`/api/v1/comments/${id}`, { method: "DELETE" });
+  return apiFetch<{ id: string; status: string }>(`/api/v1/comments/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 export async function appreciateComment(id: string) {
   return apiFetch<{ comment_id: string; appreciated_count: number; appreciated_by_me: boolean }>(
-    `/api/v1/comments/${id}/appreciate`, { method: "POST" },
+    `/api/v1/comments/${encodeURIComponent(id)}/appreciate`, { method: "POST" },
   );
 }
 
 export async function unappreciateComment(id: string) {
   return apiFetch<{ comment_id: string; appreciated_count: number; appreciated_by_me: boolean }>(
-    `/api/v1/comments/${id}/appreciate`, { method: "DELETE" },
+    `/api/v1/comments/${encodeURIComponent(id)}/appreciate`, { method: "DELETE" },
   );
 }

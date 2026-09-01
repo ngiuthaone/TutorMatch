@@ -6,7 +6,8 @@ const service = () => ({
   sweepRefundExecutions: vi.fn(async (): Promise<SweepResult> => ({ data: { claimed: 0 } })),
   sweepRefundReconciliations: vi.fn(async (): Promise<SweepResult> => ({ data: { claimed: 0 } })),
   sweepPendingFinalizations: vi.fn(async (): Promise<SweepResult> => ({ data: { claimed: 0 } })),
-  sweepExpiredWorkshopBookings: vi.fn(async (): Promise<SweepResult> => ({ data: { expired: 0 } }))
+  sweepExpiredWorkshopBookings: vi.fn(async (): Promise<SweepResult> => ({ data: { expired: 0 } })),
+  sweepExpiredBookings: vi.fn(async (): Promise<SweepResult> => ({ data: { expired: 0 } }))
 });
 
 describe("financial worker runtime", () => {

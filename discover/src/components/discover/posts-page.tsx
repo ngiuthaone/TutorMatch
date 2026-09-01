@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { listPosts, createPost, repostPost, unrepostPost, likePost, unlikePost, type Post } from "@/lib/community/posts-api";
 import { listComments, createComment, appreciateComment, unappreciateComment, type Comment } from "@/lib/community/comments-api";
-import { followUser, unfollowUser } from "@/lib/community/follows-api";
+import { getSessionAccessToken } from "@/lib/auth/session";
 import styles from "./discussions.module.css";
 
 const ALL_TAGS = ["Photography", "IELTS", "Languages", "Business", "Technology", "Creative", "Cooking", "Personal development", "Academic", "Community"];
@@ -146,7 +146,7 @@ function PostsTab({ searchQuery, feedMode }: {
 
   useEffect(() => {
     const openComposer = () => {
-      if (localStorage.getItem("tutoria_signup")) setShowCompose(true);
+      if (getSessionAccessToken()) setShowCompose(true);
       else router.push("/auth/sign-in?next=/discussions");
     };
     window.addEventListener("tutoria:create-post", openComposer);
