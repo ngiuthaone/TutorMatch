@@ -35,6 +35,12 @@ begin
     safe_name := left(btrim(coalesce(split_part(new.email, '@', 1), '')), 120);
     if safe_name = '' then safe_name := 'New user'; end if;
   end if;
+  -- SECURITY INVARIANT (L9): a new auth.users row's raw_user_meta_data
+  -- is fully caller-controlled, so this trigger MUST NOT map any value to
+  -- 'admin'. The CASE only ever returns 'tutor' or 'student', and any
+  -- user-supplied 'role' outside that set falls through to 'student'.
+  -- Promote to admin only via an explicit server-side RPC (e.g.
+  -- promote_user_to_admin), never via signup metadata.
   safe_role := case new.raw_user_meta_data ->> 'role'
     when 'tutor' then 'tutor'::public.user_role
     when 'student' then 'student'::public.user_role

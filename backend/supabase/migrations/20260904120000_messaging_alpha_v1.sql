@@ -342,6 +342,10 @@ begin
   if char_length(p_client_message_id) < 8 or char_length(p_client_message_id) > 128 then
     raise exception 'INVALID_MESSAGE' using errcode = '22023';
   end if;
+  -- Length / null checks for body are enforced by the `messages.body`
+  -- column CHECK (char_length between 1 and 2000) plus the NOT NULL on
+  -- sender_id + client_message_id. We re-trim here only to normalize
+  -- whitespace before persisting.
   trimmed := btrim(coalesce(p_body, ''));
   if char_length(trimmed) < 1 or char_length(trimmed) > 2000 then
     raise exception 'INVALID_MESSAGE' using errcode = '22023';

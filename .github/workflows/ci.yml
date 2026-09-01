@@ -14,11 +14,11 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4
         with:
           version: 9
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
         with:
           node-version: "22"
           cache: "pnpm"
@@ -35,8 +35,8 @@ jobs:
       run:
         working-directory: discover
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
         with:
           node-version: "22"
           cache: "npm"
@@ -53,17 +53,17 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/login-action@v2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: supabase/setup-cli@2eb3ca6f0c46ccd31e43d6a5f3b0dc0a4d70b6cd # v3
         with:
           supabase-url: ${{ vars.SUPABASE_URL }}
-          supabase-token: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          supabase-api-key: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       # Push migrations dry-run (validates all migrations apply cleanly)
       - name: Validate migrations (dry-run)
         run: |
           cd backend
-          supabase db push --dry-run --include-all
+          supabase db push --dry-run
 
       # Check RLS policies exist on key tables
       - name: Verify RLS policies on key tables
@@ -120,13 +120,13 @@ print('OK: All critical indexes present')
     name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
     needs: [backend, discover]
-    if: github.event_name == 'push'
+    if: github.event_name == "push"
     defaults:
       run:
         working-directory: discover
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
         with:
           node-version: "22"
           cache: "npm"
@@ -134,8 +134,24 @@ print('OK: All critical indexes present')
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - run: npm ci
+      - name: Start dev server
+        run: npm run dev
+        env:
+          BASE_URL: http://localhost:3000
+      - name: Wait for server to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:3000 > /dev/null 2>&1; then
+              echo "Server is ready"
+              exit 0
+            fi
+            echo "Waiting for server... ($i/30)"
+            sleep 5
+          done
+          echo "Server failed to start"
+          exit 1
       - name: Run E2E tests
-        run: npx playwright test
+        run: npm run test:e2e
         env:
           BASE_URL: ${{ vars.E2E_BASE_URL || 'http://localhost:3000' }}
           E2E_TUTOR_EMAIL: ${{ vars.E2E_TUTOR_EMAIL }}

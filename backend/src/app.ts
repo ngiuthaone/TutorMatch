@@ -121,8 +121,8 @@ export function createApp(options: {
   app.register(cookie);
   app.register(securityPlugin, { config: options.config });
   app.register(authenticationPlugin, { authService: options.authService, maxHeaderLength: options.config.MAX_AUTHORIZATION_HEADER_LENGTH });
-  app.register(healthRoutes, { config: options.config });
-  app.register(authBffRoutes);
+  app.register(healthRoutes, { config: options.config, ...(options.requireAdmin ? { requireAdmin: options.requireAdmin } : {}) });
+  app.register(authBffRoutes, { supabaseUrl: options.config.SUPABASE_URL, supabasePublishableKey: options.config.SUPABASE_PUBLISHABLE_KEY, signInRateMax: options.config.AUTH_SIGN_IN_RATE_LIMIT_MAX, signInWindowMs: options.config.AUTH_SIGN_IN_WINDOW_MS });
   app.register(securityAlertRoutes);
   app.register(meRoutes, { authService: options.authService, max: options.config.ME_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.tutorCvService) {

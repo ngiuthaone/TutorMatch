@@ -58,10 +58,15 @@ const schema = z.object({
   COMMENT_RATE_LIMIT_MAX: positiveInteger("COMMENT_RATE_LIMIT_MAX").default(30),
   FOLLOW_RATE_LIMIT_MAX: positiveInteger("FOLLOW_RATE_LIMIT_MAX").default(30),
   NOTIFICATION_READ_RATE_LIMIT_MAX: positiveInteger("NOTIFICATION_READ_RATE_LIMIT_MAX").default(60),
+  THREAD_PUBLISH_RATE_LIMIT_MAX: positiveInteger("THREAD_PUBLISH_RATE_LIMIT_MAX").default(10),
+  THREAD_READ_RATE_LIMIT_MAX: positiveInteger("THREAD_READ_RATE_LIMIT_MAX").default(60),
   PUBLIC_TUTORS_LIST_RATE_LIMIT_MAX: positiveInteger("PUBLIC_TUTORS_LIST_RATE_LIMIT_MAX").default(60),
   PUBLIC_TUTOR_DETAIL_RATE_LIMIT_MAX: positiveInteger("PUBLIC_TUTOR_DETAIL_RATE_LIMIT_MAX").default(120),
   MESSAGING_READ_RATE_LIMIT_MAX: positiveInteger("MESSAGING_READ_RATE_LIMIT_MAX").default(120),
   MESSAGING_SEND_RATE_LIMIT_MAX: positiveInteger("MESSAGING_SEND_RATE_LIMIT_MAX").default(30),
+  AUTH_SIGN_IN_RATE_LIMIT_MAX: positiveInteger("AUTH_SIGN_IN_RATE_LIMIT_MAX", 60).default(10),
+  AUTH_SIGN_IN_WINDOW_MS: positiveInteger("AUTH_SIGN_IN_WINDOW_MS", 600_000).default(60_000),
+  HEALTH_READYZ_RATE_LIMIT_MAX: positiveInteger("HEALTH_READYZ_RATE_LIMIT_MAX", 600).default(60),
   REQUEST_TIMEOUT_MS: positiveInteger("REQUEST_TIMEOUT_MS", 300_000).default(15_000),
   KEEP_ALIVE_TIMEOUT_MS: positiveInteger("KEEP_ALIVE_TIMEOUT_MS", 300_000).default(5_000),
   BODY_LIMIT_BYTES: positiveInteger("BODY_LIMIT_BYTES", 10_485_760).default(16_384),
@@ -81,6 +86,12 @@ const schema = z.object({
   }
   const vnpayFields = [value.VNPAY_TMN_CODE, value.VNPAY_HASH_SECRET, value.VNPAY_RETURN_URL, value.VNPAY_IPN_URL];
   if (vnpayFields.some(Boolean) && vnpayFields.some((field) => !field)) context.addIssue({ code: "custom", path: ["VNPAY_TMN_CODE"], message: "VNPay configuration must be complete when enabled" });
+  // Production must have a service-role key for the dashboard, request log
+  // sink, and worker heartbeats. The health and auth-bff routes are
+  // designed to run without one, but admin/dashboard surfaces are not.
+  if (value.TUTORIA_ENVIRONMENT === "production" && !value.SUPABASE_SERVICE_ROLE_KEY) {
+    context.addIssue({ code: "custom", path: ["SUPABASE_SERVICE_ROLE_KEY"], message: "SUPABASE_SERVICE_ROLE_KEY is required in production" });
+  }
 });
 
 export type AppConfig = z.infer<typeof schema>;

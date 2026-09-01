@@ -1,18 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
 import type { AuthService } from "./auth-service.js";
 import { logServiceError } from "../lib/service-error.js";
+import { safeHttpUrl } from "../lib/sanitize.js";
 
 const authOptions = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } as const;
 
 export type PostCreateResult =
   | { status: "ok"; data: { id: string; status: string } }
-  | { status: "invalid"; code: "INVALID_BODY" | "BODY_TOO_LARGE" | "INVALID_TYPE" | "INVALID_PERMISSION" | "EMAIL_VERIFICATION_REQUIRED" }
+  | { status: "invalid"; code: "INVALID_BODY" | "BODY_TOO_LARGE" | "INVALID_TYPE" | "INVALID_PERMISSION" | "INVALID_IMAGE_URL" | "EMAIL_VERIFICATION_REQUIRED" }
   | { status: "forbidden" }
   | { status: "unavailable" };
 
 export type PostUpdateResult =
   | { status: "ok"; data: { id: string; status: string } }
-  | { status: "invalid"; code: "BODY_TOO_LARGE" | "EMAIL_VERIFICATION_REQUIRED" }
+  | { status: "invalid"; code: "BODY_TOO_LARGE" | "INVALID_IMAGE_URL" | "EMAIL_VERIFICATION_REQUIRED" }
   | { status: "not_found" }
   | { status: "forbidden" }
   | { status: "unavailable" };
@@ -88,6 +89,13 @@ export function createSupabasePostService(url: string, publishableKey: string, _
       token: string,
       input: { body: string; tags?: string[]; level?: string | null; postType?: string | null; replyPermission?: string | null; communityId?: string | null; imageUrl?: string | null },
     ): Promise<PostCreateResult> {
+      // Reject javascript:/data:/vbscript: URLs and SSRF to internal hosts
+      // before they reach the database. The CHECK constraint on
+      // public.posts.image_url is the authoritative guard, but failing
+      // here gives the caller a clear INVALID_IMAGE_URL code.
+      if (input.imageUrl !== undefined && input.imageUrl !== null && !safeHttpUrl(input.imageUrl)) {
+        return { status: "invalid", code: "INVALID_IMAGE_URL" };
+      }
       try {
         const { data, error } = await caller(token).rpc("create_post", {
           p_body: input.body,
@@ -112,6 +120,9 @@ export function createSupabasePostService(url: string, publishableKey: string, _
       id: string,
       input: { body?: string; tags?: string[]; level?: string | null; postType?: string | null; replyPermission?: string | null; imageUrl?: string | null },
     ): Promise<PostUpdateResult> {
+      if (input.imageUrl !== undefined && input.imageUrl !== null && !safeHttpUrl(input.imageUrl)) {
+        return { status: "invalid", code: "INVALID_IMAGE_URL" };
+      }
       try {
         const { data, error } = await caller(token).rpc("update_post", {
           p_id: id,
