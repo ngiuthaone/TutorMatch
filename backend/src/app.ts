@@ -9,6 +9,8 @@ import { tutorCvRoutes } from "./routes/tutor-cv.js";
 import { publicTutorRoutes } from "./routes/public-tutors.js";
 import { marketplaceRoutes } from "./routes/marketplace.js";
 import { createSupabaseMarketplaceService } from "./services/marketplace-service.js";
+import { createSupabaseEventPublicationService, type EventPublicationService } from "./services/event-publication-service.js";
+import { eventPublicationRoutes } from "./routes/events.js";
 import { createSupabasePaymentService } from "./services/payment-service.js";
 import { paymentRoutes } from "./routes/payments.js";
 import { bookingRoutes } from "./routes/booking.js";
@@ -30,6 +32,7 @@ export function createApp(options: {
   authService: AuthService;
   tutorCvService?: TutorCvService;
   marketplaceService?: ReturnType<typeof createSupabaseMarketplaceService>;
+  eventService?: EventPublicationService;
   bookingService?: BookingService;
   policyService?: ReturnType<typeof createPolicyService>;
   complianceService?: ReturnType<typeof createComplianceService>;
@@ -53,6 +56,7 @@ export function createApp(options: {
     app.register(publicTutorRoutes, { tutorCvService: options.tutorCvService, listMax: options.config.PUBLIC_TUTORS_LIST_RATE_LIMIT_MAX, detailMax: options.config.PUBLIC_TUTOR_DETAIL_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   }
   app.register(marketplaceRoutes, { authService: options.authService, marketplaceService: options.marketplaceService ?? createSupabaseMarketplaceService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY), max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  app.register(eventPublicationRoutes, { authService: options.authService, eventService: options.eventService ?? createSupabaseEventPublicationService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.EVENT_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.EVENT_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.bookingService) app.register(bookingRoutes, { service: options.bookingService });
   if (options.config.VNPAY_TMN_CODE && options.config.VNPAY_HASH_SECRET && options.config.VNPAY_RETURN_URL && options.config.VNPAY_IPN_URL) {
     app.register(paymentRoutes, { service: createSupabasePaymentService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.config.SUPABASE_SERVICE_ROLE_KEY, { tmnCode: options.config.VNPAY_TMN_CODE, hashSecret: options.config.VNPAY_HASH_SECRET, paymentUrl: options.config.VNPAY_PAYMENT_URL, returnUrl: options.config.VNPAY_RETURN_URL, ipnUrl: options.config.VNPAY_IPN_URL }, options.config.VNPAY_API_URL, fetch, { providerRequestTimeoutMs: options.config.VNPAY_REQUEST_TIMEOUT_MS }), vnpay: { tmnCode: options.config.VNPAY_TMN_CODE, hashSecret: options.config.VNPAY_HASH_SECRET, paymentUrl: options.config.VNPAY_PAYMENT_URL, returnUrl: options.config.VNPAY_RETURN_URL, ipnUrl: options.config.VNPAY_IPN_URL }, reconciliationToken: options.config.PAYMENT_RECONCILIATION_TOKEN });
@@ -91,6 +95,15 @@ export function createApp(options: {
     if (typeof error === "object" && error !== null && "statusCode" in error && error.statusCode === 413) {
       request.log.warn({ requestId: request.id }, "Payload too large");
       return reply.code(413).send({ ok: false, error: { code: "PAYLOAD_TOO_LARGE", message: "Request body is too large." }, requestId: request.id });
+    }
+    const code = typeof error === "object" && error !== null && "code" in error ? String((error as { code: unknown }).code) : "";
+    if (code === "FST_ERR_CTP_INVALID_JSON_BODY" || code === "FST_ERR_CTP_EMPTY_JSON_BODY") {
+      request.log.warn({ requestId: request.id, code }, "Malformed JSON body");
+      return reply.code(400).send({ ok: false, error: { code: "INVALID_BODY", message: "Request body is not valid JSON." }, requestId: request.id });
+    }
+    if (code === "FST_ERR_CTP_INVALID_MEDIA_TYPE") {
+      request.log.warn({ requestId: request.id, code }, "Unsupported content type");
+      return reply.code(415).send({ ok: false, error: { code: "UNSUPPORTED_MEDIA_TYPE", message: "Unsupported content type." }, requestId: request.id });
     }
     request.log.error({ err: error, requestId: request.id }, "Unhandled request error");
     return reply.code(500).send({ ok: false, error: { code: "INTERNAL_ERROR", message: "An internal error occurred." }, requestId: request.id });

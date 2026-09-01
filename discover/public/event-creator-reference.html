@@ -518,6 +518,10 @@
                 <span id="arrivalLabel" class="mb-2 block text-xs font-semibold text-soft">Arrival instructions</span>
                 <textarea rows="3" class="field resize-none px-3 py-2.5 text-sm" placeholder="Entrance, parking, check-in, or joining instructions."></textarea>
               </label>
+              <label class="mt-4 block">
+                <span class="mb-2 block text-xs font-semibold text-soft">Google Maps link</span>
+                <input id="mapUrl" type="url" class="field px-3 py-2.5 text-sm" placeholder="https://maps.google.com/...">
+              </label>
             </div>
           </section>
 
@@ -562,6 +566,15 @@
                 </div>
               </div>
 
+              <label>
+                <span class="mb-2 block text-xs font-semibold text-soft">Minimum age</span>
+                <select id="minimumAge" class="field px-3 py-2.5 text-sm">
+                  <option value="">All ages</option>
+                  <option>16+</option>
+                  <option>18+</option>
+                </select>
+              </label>
+
               <div class="grid gap-4 md:grid-cols-2">
                 <label>
                   <span class="mb-2 block text-xs font-semibold text-soft">Cancellation deadline</span>
@@ -585,6 +598,10 @@
                   </select>
                 </label>
               </div>
+              <label class="block">
+                <span class="mb-2 block text-xs font-semibold text-soft">Accessibility</span>
+                <textarea id="accessibilityNote" rows="3" maxlength="500" class="field resize-none px-3 py-2.5 text-sm" placeholder="e.g. Step-free entrance, accessible parking, hearing loop available"></textarea>
+              </label>
             </div>
           </section>
 
@@ -711,7 +728,54 @@
   <div id="toast" class="fixed bottom-6 left-1/2 z-[100] hidden -translate-x-1/2 rounded-md border border-line bg-raised px-4 py-3 text-xs font-semibold shadow-2xl"></div>
 
   <script>
-    const steps = [
+        const __tutoriaIdentityPending = new Map();
+    window.addEventListener("message", (event) => {
+      const data = event && event.data;
+      if (!data || typeof data !== "object") return;
+      if (data.type !== "tutoria-creator-identity") return;
+      const resolver = __tutoriaIdentityPending.get(data.requestId);
+      if (resolver) {
+        __tutoriaIdentityPending.delete(data.requestId);
+        resolver(data.identity || null);
+      }
+    });
+
+    function requestCreatorIdentity(timeoutMs) {
+      const requestId = `creator-identity-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      return new Promise((resolve) => {
+        const empty = { id: "", host: "", role: "", experience: "", bio: "", image: "" };
+        const timer = setTimeout(() => {
+          if (__tutoriaIdentityPending.has(requestId)) {
+            __tutoriaIdentityPending.delete(requestId);
+            resolve(empty);
+          }
+        }, timeoutMs || 2000);
+        __tutoriaIdentityPending.set(requestId, (identity) => {
+          clearTimeout(timer);
+          if (!identity) {
+            resolve(empty);
+            return;
+          }
+          resolve({
+            id: String(identity.id || ""),
+            host: String(identity.host || ""),
+            role: String(identity.role || ""),
+            experience: String(identity.experience || ""),
+            bio: String(identity.bio || ""),
+            image: String(identity.image || ""),
+          });
+        });
+        try {
+          window.parent.postMessage({ type: "tutoria-creator-get-identity", requestId }, "*");
+        } catch {
+          __tutoriaIdentityPending.delete(requestId);
+          clearTimeout(timer);
+          resolve(empty);
+        }
+      });
+    }
+
+const steps = [
       { id: "idea", title: "The idea", subtitle: "Type, format and listing basics" },
       { id: "experience", title: "The experience", subtitle: "Outcome, level and plan" },
       { id: "before-booking", title: "Before booking", subtitle: "Preparation and FAQs" },
@@ -1543,26 +1607,78 @@
       });
     }
 
+    function optimizeDataUrl(value, maxDimension, quality) {
+      if (!value || typeof value !== "string" || !value.startsWith("data:image/")) {
+        return Promise.resolve(value || "");
+      }
+      const limit = typeof maxDimension === "number" ? maxDimension : 1280;
+      const q = typeof quality === "number" ? quality : 0.72;
+      return new Promise((resolve) => {
+        const image = new Image();
+        image.onload = () => {
+          try {
+            const largestSide = Math.max(image.naturalWidth, image.naturalHeight);
+            const scale = Math.min(1, limit / Math.max(largestSide, 1));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+            canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+            const context = canvas.getContext("2d");
+            if (!context) { resolve(value); return; }
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            const optimized = canvas.toDataURL("image/webp", q);
+            resolve(optimized && optimized.length < value.length ? optimized : value);
+          } catch (canvasError) {
+            console.warn("Image optimization failed; keeping original.", canvasError);
+            resolve(value);
+          }
+        };
+        image.onerror = () => resolve(value);
+        image.src = value;
+      });
+    }
+
+    async function optimizeImageList(urls, maxDimension, quality) {
+      if (!Array.isArray(urls) || !urls.length) return [];
+      return Promise.all(urls.map((url) => optimizeDataUrl(url, maxDimension, quality)));
+    }
+
     function createSlug(title) {
       const base = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
       return `${base || "event"}-${Date.now().toString(36)}`;
     }
 
-    function readCreatorProfile() {
+    function readCreatorProfileLocal() {
       let account = {};
       let tutor = {};
       try { account = JSON.parse(localStorage.getItem("tutoria_signup") || "{}"); } catch {}
       try { tutor = JSON.parse(localStorage.getItem("tutoria_tutor_profile_submission") || "{}"); } catch {}
-      const host = tutor.displayName?.trim() || account.name?.trim() || "Tutoria member";
-      const creatorId = account.completed && account.email ? String(account.email).trim().toLowerCase() : "";
+      const tutorName = tutor.displayName?.trim() || "";
+      const accountName = account.name?.trim() || "";
+      const hasSignup = Boolean(account.completed && account.email);
+      const hasTutorProfile = Boolean(tutorName || tutor.role?.trim() || tutor.about?.trim() || tutor.headline?.trim() || tutor.photoUrl);
+      if (!hasSignup && !hasTutorProfile) {
+        return { id: "", host: "", role: "", experience: "", bio: "", image: "" };
+      }
+      const host = tutorName || accountName;
+      const creatorId = hasSignup ? String(account.email).trim().toLowerCase() : "";
       return {
         id: creatorId,
         host,
-        role: tutor.role?.trim() || "Tutoria host and educator",
-        experience: tutor.skills?.length ? `Teaches ${tutor.skills.join(", ")}` : "Community event host",
-        bio: tutor.about?.trim() || tutor.headline?.trim() || `${host} creates practical, welcoming learning experiences on Tutoria.`,
-        image: tutor.photoUrl || `https://picsum.photos/seed/${encodeURIComponent(account.email || host)}/240/240`,
+        role: tutor.role?.trim() || "",
+        experience: tutor.skills?.length ? `Teaches ${tutor.skills.join(", ")}` : "",
+        bio: tutor.about?.trim() || tutor.headline?.trim() || "",
+        image: tutor.photoUrl || "",
       };
+    }
+
+    async function readCreatorProfile() {
+      try {
+        const identity = await requestCreatorIdentity(2000);
+        if (identity && (identity.id || identity.host)) {
+          return identity;
+        }
+      } catch {}
+      return readCreatorProfileLocal();
     }
 
     async function createPublishedEvent() {
@@ -1576,17 +1692,20 @@
       const access = selected("access") || "Free";
       const capacity = Number($("capacity").value || 0);
       const amount = Number($("price").value || 0);
-      const creator = readCreatorProfile();
-      const imageUrls = await Promise.all(state.images.map(fileToDataUrl));
+      const creator = await readCreatorProfile();
+      const rawImageUrls = await Promise.all(state.images.map(fileToDataUrl));
+      const imageUrls = await optimizeImageList(rawImageUrls, 1280, 0.72);
       const cover = imageUrls[0] || "";
       const moments = await Promise.all([...document.querySelectorAll(".moment")].map(async (card) => {
         const inputs = card.querySelectorAll("input");
         const imageFile = card.querySelector(".moment-photo")?.files?.[0];
+        const rawImage = imageFile ? await fileToDataUrl(imageFile) : "";
+        const image = rawImage ? await optimizeDataUrl(rawImage, 960, 0.66) : undefined;
         return {
           title: inputs[0]?.value.trim() || "Workshop activity",
           duration: `${Number(inputs[1]?.value || 0)} min`,
           description: card.querySelector("textarea")?.value.trim() || "Details will be shared before the event.",
-          image: imageFile ? await fileToDataUrl(imageFile) : undefined,
+          image: image || undefined,
         };
       }));
       const totalMinutes = moments.reduce((sum, item) => sum + (Number(item.duration.replace(/[^0-9]/g, "")) || 0), 0);
@@ -1634,26 +1753,85 @@
         timezone: $("timezone").value || undefined,
         type: format, price, attending: 0, capacity, image: cover, topic: category, level,
         subtitle: promise, rating: 0, reviewCount: 0, duration: totalMinutes ? `${totalMinutes} minutes` : "Flexible",
-        languages: splitList($("languages").value), minimumAge: "All ages",
-        accessibility: format === "Online" ? "Join from any device" : "Contact the host for access details",
-        studioName: format === "Online" ? "Online session" : ($("venueName").value.trim() || "Venue to be announced"),
-        address: format === "Online" ? "Joining details shared after booking" : ($("address").value.trim() || "Address to be announced"),
+        languages: splitList($("languages").value), minimumAge: $("minimumAge").value || "",
+        accessibility: $("accessibilityNote").value.trim() || "",
+        studioName: format === "Online" ? "" : $("venueName").value.trim(),
+        address: format === "Online" ? "" : $("address").value.trim(),
         sessions: dates, spotsLeft: capacity, about: [promise, ...outcomes].filter(Boolean),
-        note: arrival || `Suitable for ${level.toLowerCase()} participants.`,
+        note: arrival,
         highlights: [
-          { title: `${capacity} places`, description: "A focused group experience." },
-          { title: totalMinutes ? `${totalMinutes} minutes` : "Flexible timing", description: "A clearly structured programme." },
-          { title: format, description: format === "Online" ? "Join from wherever you are." : "Learn together in person." },
-          { title: level, description: `Designed for ${level.toLowerCase()} participants.` },
+          { title: `${capacity} places`, description: "" },
+          { title: totalMinutes ? `${totalMinutes} minutes` : "Flexible timing", description: "" },
+          { title: format, description: "" },
+          { title: level, description: "" },
         ],
         learn: outcomes, included, bring: bring.length ? bring : ["Nothing special is required"],
         plan: moments, faqs, galleryImage: imageUrls[1] || cover,
         hostRole: creator.role, hostExperience: creator.experience, hostBio: creator.bio, hostImage: creator.image,
-        hostRecommendation: "New host", beforeYouAttend,
-        cancellation: [`${cancellation}. ${refund}.`, "If the host cancels, guests can choose another session or receive a full refund."],
+        hostRecommendation: "", beforeYouAttend,
+        cancellation: [`${cancellation}. ${refund}.`],
+        mapUrl: $("mapUrl").value.trim() || "",
         reviews: [], visibility: selected("visibility") || "Public", experienceType: type,
         packages, pricingMode: access === "Paid" ? pricingMode : "single",
       };
+    }
+
+    // Live publish against the production backend ({base}/api/v1/events).
+    // Runs only when the iframe is opened with ?apiBaseUrl=<base>. The Supabase
+    // access token is read from the first tutoria-auth-* localStorage entry that
+    // carries a non-empty access_token (see discover/src/lib/auth/supabase-client.ts).
+    // Host identity is re-derived backend-side; the payload may carry host fields
+    // but the server overrides them (D5).
+    async function publishLiveEvent(eventPayload, baseUrl) {
+      let token = null;
+      try {
+        for (const key of Object.keys(localStorage)) {
+          if (!key.startsWith("tutoria-auth-")) continue;
+          const parsed = JSON.parse(localStorage.getItem(key) || "{}");
+          if (parsed && typeof parsed.access_token === "string" && parsed.access_token) {
+            token = parsed.access_token;
+            break;
+          }
+        }
+      } catch (tokenError) {
+        console.warn("Could not read the Tutoria session token.", tokenError);
+      }
+      if (!token) {
+        showToast("Sign in to publish this event.");
+        return;
+      }
+      const response = await fetch(`${baseUrl}/api/v1/events`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(eventPayload),
+      });
+      let payload = {};
+      try { payload = await response.json(); } catch (parseError) { /* non-JSON error body */ }
+      if (!response.ok) {
+        if (response.status === 401) {
+          showToast("Sign in to publish this event.");
+        } else {
+          const serverError = payload && typeof payload.error === "string" ? payload.error : "";
+          showToast(serverError || "Could not publish this event. Please try again.");
+        }
+        return;
+      }
+      // The response { slug, status } is authoritative (D4): always use the
+      // returned slug and never re-derive it from the payload.
+      const slug = payload && typeof payload.slug === "string" ? payload.slug : "";
+      const status = payload && typeof payload.status === "string" ? payload.status : "";
+      if (status === "draft") {
+        // Unlisted / Community only: the backend saves a draft. There is no
+        // public page, so keep the user on the creator (D2).
+        showToast("Saved as a draft. Set visibility to Public to publish it.");
+        return;
+      }
+      if (!slug) {
+        throw new Error("The backend did not return a slug.");
+      }
+      showToast("Event published. Opening its public page...");
+      window.parent.postMessage({ type: "tutoria-event-published", slug }, window.location.origin);
+      setTimeout(() => { window.top.location.href = `/events/${slug}`; }, 450);
     }
 
     $("creatorForm").addEventListener("submit", async (event) => {
@@ -1665,13 +1843,31 @@
       } else {
         try {
           const publishedEvent = await createPublishedEvent();
+          const liveBase = new URLSearchParams(window.location.search).get("apiBaseUrl");
+          if (liveBase) {
+            try {
+              await publishLiveEvent(publishedEvent, liveBase.replace(/\/$/, ""));
+            } catch (liveError) {
+              console.error(liveError);
+              showToast("Could not publish this event. Please try again.");
+            }
+            return;
+          }
           const response = await fetch("/api/events", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(publishedEvent),
           });
-          if (!response.ok) throw new Error("The shared event store rejected this listing.");
-          const payload = await response.json();
+          let payload = {};
+          try { payload = await response.json(); } catch (parseError) { /* non-JSON error body */ }
+          if (!response.ok) {
+            const serverMessage = payload && payload.error
+              ? (typeof payload.error === "string" ? payload.error : payload.error.message)
+              : "";
+            const detail = serverMessage || `The shared event store responded with ${response.status}.`;
+            console.error("Publish failed", response.status, payload);
+            throw new Error(detail);
+          }
           const savedEvent = payload?.event || publishedEvent;
           try {
             const key = "tutoria-published-events";
@@ -1686,7 +1882,8 @@
           setTimeout(() => { window.top.location.href = `/events/${savedEvent.slug}`; }, 450);
         } catch (error) {
           console.error(error);
-          showToast("Could not publish this event. Try smaller images.");
+          const detail = error instanceof Error && error.message ? error.message : "Unknown error";
+          showToast(`Could not publish this event: ${detail}`);
         }
       }
     });
