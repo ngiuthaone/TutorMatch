@@ -37,18 +37,26 @@ export function PersonalizedRecs() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     try {
       const raw = localStorage.getItem("tutoria_signup");
-      if (raw) {
+      if (raw && !cancelled) {
         const parsed = JSON.parse(raw);
-        setData({
-          name: parsed.name || "",
-          roles: parsed.roles || [],
-          interests: parsed.interests || [],
+        queueMicrotask(() => {
+          if (!cancelled) {
+            setData({
+              name: parsed.name || "",
+              roles: parsed.roles || [],
+              interests: parsed.interests || [],
+            });
+          }
         });
       }
     } catch {}
-    setLoading(false);
+    queueMicrotask(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) {

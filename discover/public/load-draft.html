@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Load Draft</title>
+</head>
+<body>
+  <h1>Loading draft...</h1>
+  <p>This will pre-fill the workshop creator form so you can click "Review and publish" immediately.</p>
+  <script>
+    const draft = {
+      type: "Workshop",
+      format: "In person",
+      category: "Lifestyle",
+      title: "Test Workshop",
+      promise: "Learn something new and exciting",
+      outcome: ["Make something cool", "Learn new skills"],
+      level: "Beginner",
+      included: ["All materials", "Tools", "Refreshments"],
+      bring: ["Comfortable clothes"],
+      requirements: [],
+      beforeAttendGroups: [
+        { id: "attend-preparation", title: "Preparation", items: ["Wear comfortable clothes"] },
+        { id: "attend-accessibility", title: "Accessibility", items: ["Wheelchair accessible"] },
+        { id: "attend-participation", title: "Participation", items: ["No experience needed"] },
+      ],
+      faqs: [
+        { id: "faq-1", question: "Do I need experience?", answer: "No, beginners welcome!" },
+        { id: "faq-2", question: "What should I bring?", answer: "Just yourself!" },
+      ],
+      languages: ["English", "Vietnamese"],
+      coverImage: "",
+      galleryImages: [],
+      plan: [
+        { id: "plan-1", title: "Welcome", duration: 15, description: "Meet the team and get settled" },
+        { id: "plan-2", title: "Main Activity", duration: 60, description: "Hands-on learning" },
+        { id: "plan-3", title: "Wrap-up", duration: 15, description: "Questions and next steps" },
+      ],
+      sessions: [
+        {
+          id: "date-1",
+          date: "2026-07-26",
+          intervals: [
+            { id: "date-1-interval-1", title: "", start: "09:00", end: "11:30" },
+          ],
+        },
+      ],
+      timezone: "(GMT+7) Bangkok, Hanoi, Jakarta",
+      venueName: "Test Studio",
+      location: "Hoan Kiem, Ha Noi",
+      meetingLink: "",
+      arrival: "Arrive 10 minutes early",
+      capacity: 15,
+      access: "Paid",
+      price: 250000,
+      cancellation: "24 hours before start",
+      refund: "Full refund before deadline",
+      visibility: "Public",
+    };
+    localStorage.setItem("tutoria-event-draft", JSON.stringify(draft));
+    window.location.href = "/events/new";
+  </script>
+</body>
+</html>

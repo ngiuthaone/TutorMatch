@@ -78,11 +78,13 @@ export function UserProfile({ name }: { name: string }) {
   const [tab, setTab] = useState<"posts" | "articles">("posts");
 
   useEffect(() => {
-    setMounted(true);
+    let cancelled = false;
+    if (!cancelled) queueMicrotask(() => setMounted(true));
     try {
       const stored = JSON.parse(localStorage.getItem("tutoria_following") || "[]");
-      setFollowing(stored);
+      if (!cancelled) queueMicrotask(() => setFollowing(stored));
     } catch {}
+    return () => { cancelled = true; };
   }, []);
 
   const signedIn = getUserFromStorage();

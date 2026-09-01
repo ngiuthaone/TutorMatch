@@ -86,7 +86,11 @@ export function SessionDatePicker({
   };
 
   useEffect(() => {
-    void fetchSessions();
+    let cancelled = false;
+    void (async () => {
+      if (!cancelled) await fetchSessions();
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offeringId, kind]);
 

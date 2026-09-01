@@ -57,6 +57,11 @@ export default function RootLayout({
     >
       <body className="tutoria-cosmos min-h-[100dvh] flex flex-col">
         <RuntimeConfigBootstrap />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var p=window.performance;if(p&&typeof p.measure==="function"&&!p.__patched){var o=p.measure.bind(p);p.measure=function(){try{return o.apply(p,arguments)}catch(e){var m=(e&&e.message)||"",n=(e&&e.name)||"";if(m.indexOf("negative time stamp")!==-1||n==="InvalidAccessError"||n==="SyntaxError")return;throw e}};p.__patched=true}}catch(e){}})();`,
+          }}
+        />
         {children}
       </body>
     </html>

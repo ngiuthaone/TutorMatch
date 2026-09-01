@@ -50,6 +50,7 @@ export interface CourseDetail extends CourseListing {
 
 export const PUBLISHED_COURSES_KEY = "tutoria-published-courses";
 export const PUBLISHED_COURSES_EVENT = "tutoria-published-courses-change";
+export const COURSE_DRAFT_KEY = "tutoria-published-courses-draft";
 
 export function readPublishedCourses(): CourseDetail[] {
   if (typeof window === "undefined") return [];
@@ -181,4 +182,28 @@ export function getSimilarCourses(slug: string, limit = 3): CourseListing[] {
     .filter((course) => course.slug !== slug)
     .sort((a, b) => Number(b.category === current?.category) - Number(a.category === current?.category))
     .slice(0, limit);
+}
+
+import { isLiveMode } from "@/lib/auth/config";
+
+/**
+ * Demo catalog accessor. Returns the fabricated `allCourses` list (with
+ * `createDefaultDetail`-style backfill) only when not in live mode. In live
+ * mode the public catalog must be sourced from the real backend course
+ * surface — the demo catalog is intentionally withheld so fabricated
+ * personas and picsum images never reach a real learner.
+ */
+export function getCatalogCourses(): CourseListing[] {
+  if (isLiveMode()) return [];
+  return allCourses;
+}
+
+export function getCatalogCourseBySlug(slug: string): CourseDetail | undefined {
+  if (isLiveMode()) return undefined;
+  return getCourseBySlug(slug);
+}
+
+export function getCatalogSimilarCourses(slug: string, limit = 3): CourseListing[] {
+  if (isLiveMode()) return [];
+  return getSimilarCourses(slug, limit);
 }

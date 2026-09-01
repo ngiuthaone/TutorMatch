@@ -3,7 +3,9 @@ import type { AppConfig } from "./config/env.js";
 import { ApiError } from "./errors/api-error.js";
 import { authenticationPlugin } from "./plugins/authenticate.js";
 import { securityPlugin } from "./plugins/security.js";
+import cookie from "@fastify/cookie";
 import { healthRoutes } from "./routes/health.js";
+import authBffRoutes from "./routes/auth-bff.js";
 import { meRoutes } from "./routes/me.js";
 import { tutorCvRoutes } from "./routes/tutor-cv.js";
 import { publicTutorRoutes } from "./routes/public-tutors.js";
@@ -19,6 +21,14 @@ import { complianceRoutes } from "./routes/compliance.js";
 import { payoutRoutes } from "./routes/payouts.js";
 import { adminRoutes } from "./routes/admin.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
+import { messagingRoutes } from "./routes/messaging.js";
+import { createSupabaseMessagingService, type MessagingService } from "./services/messaging-service.js";
+import { createSupabaseThreadService, type ThreadService } from "./services/thread-service.js";
+import { createSupabaseArticleService, type ArticleService } from "./services/article-service.js";
+import { createSupabaseCommentService, type CommentService } from "./services/comment-service.js";
+import { threadRoutes } from "./routes/threads.js";
+import { articleRoutes } from "./routes/articles.js";
+import { commentRoutes } from "./routes/comments.js";
 import type { AuthService } from "./services/auth-service.js";
 import type { BookingService } from "./services/booking-service.js";
 import type { TutorCvService } from "./types/tutor-cv.js";
@@ -38,6 +48,10 @@ export function createApp(options: {
   complianceService?: ReturnType<typeof createComplianceService>;
   payoutService?: ReturnType<typeof createPayoutService>;
   adminService?: ReturnType<typeof createAdminService>;
+  threadService?: ThreadService;
+  articleService?: ArticleService;
+  commentService?: CommentService;
+  messagingService?: MessagingService;
   requireAdmin?: (request: import("fastify").FastifyRequest, reply: import("fastify").FastifyReply) => Promise<void>;
   logger?: FastifyServerOptions["logger"];
 }) {
@@ -47,9 +61,11 @@ export function createApp(options: {
     keepAliveTimeout: options.config.KEEP_ALIVE_TIMEOUT_MS,
     logController: new LogController({ disableRequestLogging: true })
   });
+  app.register(cookie);
   app.register(securityPlugin, { config: options.config });
   app.register(authenticationPlugin, { authService: options.authService, maxHeaderLength: options.config.MAX_AUTHORIZATION_HEADER_LENGTH });
   app.register(healthRoutes);
+  app.register(authBffRoutes);
   app.register(meRoutes, { authService: options.authService, max: options.config.ME_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.tutorCvService) {
     app.register(tutorCvRoutes, { authService: options.authService, tutorCvService: options.tutorCvService, limits: { get: options.config.TUTOR_CV_GET_RATE_LIMIT_MAX, save: options.config.TUTOR_CV_SAVE_RATE_LIMIT_MAX, publish: options.config.TUTOR_CV_PUBLISH_RATE_LIMIT_MAX }, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
@@ -57,6 +73,9 @@ export function createApp(options: {
   }
   app.register(marketplaceRoutes, { authService: options.authService, marketplaceService: options.marketplaceService ?? createSupabaseMarketplaceService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY), publishMax: options.config.COURSE_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.COURSE_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   app.register(eventPublicationRoutes, { authService: options.authService, eventService: options.eventService ?? createSupabaseEventPublicationService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.EVENT_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.EVENT_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  app.register(threadRoutes, { authService: options.authService, threadService: options.threadService ?? createSupabaseThreadService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.THREAD_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.THREAD_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  app.register(articleRoutes, { authService: options.authService, articleService: options.articleService ?? createSupabaseArticleService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.ARTICLE_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.ARTICLE_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS, allowedImageHosts: options.config.ALLOWED_IMAGE_HOSTS ?? [] });
+  app.register(commentRoutes, { authService: options.authService, commentService: options.commentService ?? createSupabaseCommentService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.COMMENT_RATE_LIMIT_MAX, readMax: options.config.ARTICLE_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.bookingService) app.register(bookingRoutes, { service: options.bookingService });
   if (options.config.VNPAY_TMN_CODE && options.config.VNPAY_HASH_SECRET && options.config.VNPAY_RETURN_URL && options.config.VNPAY_IPN_URL) {
     app.register(paymentRoutes, { service: createSupabasePaymentService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.config.SUPABASE_SERVICE_ROLE_KEY, { tmnCode: options.config.VNPAY_TMN_CODE, hashSecret: options.config.VNPAY_HASH_SECRET, paymentUrl: options.config.VNPAY_PAYMENT_URL, returnUrl: options.config.VNPAY_RETURN_URL, ipnUrl: options.config.VNPAY_IPN_URL }, options.config.VNPAY_API_URL, fetch, { providerRequestTimeoutMs: options.config.VNPAY_REQUEST_TIMEOUT_MS }), vnpay: { tmnCode: options.config.VNPAY_TMN_CODE, hashSecret: options.config.VNPAY_HASH_SECRET, paymentUrl: options.config.VNPAY_PAYMENT_URL, returnUrl: options.config.VNPAY_RETURN_URL, ipnUrl: options.config.VNPAY_IPN_URL }, reconciliationToken: options.config.PAYMENT_RECONCILIATION_TOKEN });
@@ -73,6 +92,8 @@ export function createApp(options: {
   if (options.adminService && options.requireAdmin) {
     app.register(adminRoutes, { authService: options.authService, adminService: options.adminService, requireAdmin: options.requireAdmin, max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   }
+  const messagingService = options.messagingService ?? createSupabaseMessagingService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY);
+  app.register(messagingRoutes, { service: messagingService, readMax: options.config.MESSAGING_READ_RATE_LIMIT_MAX, sendMax: options.config.MESSAGING_SEND_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.requireAdmin) {
     const dashConfig: { SUPABASE_URL: string; SUPABASE_PUBLISHABLE_KEY: string; SUPABASE_SERVICE_ROLE_KEY?: string } = {
       SUPABASE_URL: options.config.SUPABASE_URL,

@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "run_id": "soft-launch-sprint-20260831",
+  "task": "Soft-launch sprint wave 1: apply browse-list migration, delete dead creators, close F1 strip gap, merged recommendations+SEO",
+  "started_at": "2026-08-31T03:50:33Z",
+  "completed_at": null,
+  "final_status": null,
+  "summary": null,
+  "contract_path": null,
+  "contract_changes": [],
+  "activities": [
+    {
+      "id": "f1-strip-gap",
+      "agent": "backend_engineer",
+      "reason": "Close concrete security F1 finding: by-slug DB strip list narrower than service STRIPPED_KEYS",
+      "assignment": "Add phone/phoneNumber/contactPhone/hostPhone/hostName/hostNameOverride to get_public_event_by_slug strip list",
+      "model": null,
+      "started_at": "2026-08-31T03:51:02Z",
+      "completed_at": null,
+      "duration_seconds": null,
+      "status": "running",
+      "acceptance": null,
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [],
+      "files_changed": [],
+      "checks": [],
+      "useful_findings": 0,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": []
+    },
+    {
+      "id": "recs-seo",
+      "agent": "frontend_engineer",
+      "reason": "Approved recommendations algorithm + SEO metadata; same file [slug]/page.tsx so merged into one owner",
+      "assignment": "Rewrite buildRecommendations with scoring; add SEO metadata",
+      "model": null,
+      "started_at": "2026-08-31T03:51:03Z",
+      "completed_at": null,
+      "duration_seconds": null,
+      "status": "running",
+      "acceptance": null,
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [],
+      "files_changed": [],
+      "checks": [],
+      "useful_findings": 0,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": []
+    }
+  ],
+  "tests": [],
+  "qa_verdict": "N/A",
+  "security_verdict": "N/A",
+  "license_verdict": "N/A",
+  "notes": [],
+  "routing_assessment": {
+    "unnecessary_invocations": [],
+    "missing_specialists": [],
+    "recommendation": null
+  }
+}

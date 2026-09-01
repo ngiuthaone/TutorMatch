@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
+import { makeOffering } from "./_fixtures/offering.js";
 
 const url = process.env.SUPABASE_TEST_URL, key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY, dbUrl = process.env.SUPABASE_TEST_DB_URL, serviceKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY;
 if (!url || !key || !dbUrl || !serviceKey) throw new Error("Core 1:1 integration tests require local Supabase environment and service role key.");
@@ -37,7 +38,8 @@ describe.sequential("core 1:1 API read-model RPCs", () => {
     const tutor = await signup("tutor");
     const learner = await signup("student");
     const profile = await sql`insert into public.tutor_profiles(user_id,display_name,headline,bio,hourly_rate_vnd,currency,teaching_format,publication_status,published_at) values(${tutor.user.id},'Read Model Tutor','Available for 1:1 lessons','A sufficiently complete public profile for read model verification.',300000,'VND','online','published',now()) returning id`;
-    const session = await tutor.client.rpc("create_session", { payload: { startsAt: new Date(Date.now() + 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 4 * 3600e3).toISOString(), maxParticipants: 1 } });
+    const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: 300000 });
+    const session = await tutor.client.rpc("create_session", { payload: { offeringId, startsAt: new Date(Date.now() + 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 4 * 3600e3).toISOString(), maxParticipants: 1 } });
     expect(session.error).toBeNull();
     const availability = await learner.client.rpc("list_bookable_sessions", { p_tutor_profile_id: profile[0].id });
     expect(availability.error).toBeNull();
@@ -68,7 +70,8 @@ describe.sequential("core 1:1 API read-model RPCs", () => {
     const tutor = await signup("tutor");
     const learner = await signup("student");
     await sql`insert into public.tutor_profiles(user_id,display_name,hourly_rate_vnd,currency) values(${tutor.user.id},'Phase 4 Tutor',300000,'VND')`;
-    const session = await tutor.client.rpc("create_session", { payload: { startsAt: new Date(Date.now() + 26 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 27 * 3600e3).toISOString(), maxParticipants: 1 } });
+    const offeringId2 = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: 300000 });
+    const session = await tutor.client.rpc("create_session", { payload: { offeringId: offeringId2, startsAt: new Date(Date.now() + 26 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 27 * 3600e3).toISOString(), maxParticipants: 1 } });
     const booking = await learner.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 });
     expect(booking.error).toBeNull();
     expect((await tutor.client.rpc("approve_booking_for_payment", { p_booking_id: booking.data.id })).error).toBeNull();

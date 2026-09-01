@@ -7,6 +7,9 @@ const POST_DRAFTS_KEY = "tutoria_post_drafts";
 const ARTICLE_DRAFTS_KEY = "tutoria_article_drafts";
 const COMMENTS_KEY = "tutoria_comments";
 
+export const TUTOR_DRAFT_KEY = "tutoria_tutor_profile_draft";
+export const TUTOR_SUBMISSION_KEY = "tutoria_tutor_profile_submission";
+
 function read<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);

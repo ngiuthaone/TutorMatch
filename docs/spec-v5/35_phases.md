@@ -52,7 +52,7 @@
 - Go/no-go: security_reviewer + independent_verifier PASS on Alpha loop; no dead-end primary CTAs on alpha surfaces.
 
 ## PH-6+ — Post-Alpha (PURPLE/deferred)
-- Events/classes/courses on shared engine (`08`), social/communities/discussions/articles (`09`), messaging+realtime (`MSG`), full LMS (`CRS`), reviews (`REV`), broad admin/CMS, analytics SDK (`license_guard`). Each promoted only via explicit `DEC-*`.
+- Events/classes/courses on shared engine (`08`), social/communities/discussions/articles (`09`), **messaging realtime + groups/files (`MSG` — the 1:1 host↔learner booking-context core is promoted to Alpha via `DEC-015`, but realtime push, groups/communities, and file attachments stay here)**, full LMS (`CRS`), reviews (`REV`), broad admin/CMS, analytics SDK (`license_guard`). Each promoted only via explicit `DEC-*`.
 - **Notified from the audit (deferred, not alpha blockers):**
   - `GAP-027` (AUD-006) — Notifications are localStorage in live mode too; live bell always 0. Requires backend event→notification producer before it can be truthful; defer to `18_events_notifications` scope.
   - `GAP-029` (AUD-008) — profile version sprawl: 13 identical `/v3..v15` routes + inert Follow/Message + verified-badge-for-all. Cleanup with social surface consolidation; not on the alpha money path.

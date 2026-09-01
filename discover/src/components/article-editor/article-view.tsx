@@ -32,18 +32,27 @@ export function ArticleView({ id }: { id: string }) {
   }, [id]);
 
   useEffect(() => {
+    const cancelled = false;
     const a = getPublishedArticleById(id);
     if (a) {
-      setArticle(a);
-      setAppreciated(a.appreciated);
-      setLikes(a.likes);
-      setCommentCount(a.comments);
-      try {
-        const saves = JSON.parse(localStorage.getItem("tutoria_saves") || "[]");
-        setSaved(saves.includes(a.id));
-      } catch {}
+      queueMicrotask(() => {
+        if (!cancelled) {
+          setArticle(a);
+          setAppreciated(a.appreciated);
+          setLikes(a.likes);
+          setCommentCount(a.comments);
+          try {
+            const saves = JSON.parse(localStorage.getItem("tutoria_saves") || "[]");
+            setSaved(saves.includes(a.id));
+          } catch {}
+        }
+      });
     } else {
-      setNotFound(true);
+      queueMicrotask(() => {
+        if (!cancelled) {
+          setNotFound(true);
+        }
+      });
     }
   }, [id]);
 

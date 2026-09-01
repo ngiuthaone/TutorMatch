@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -10,11 +10,27 @@ import {
   IconBold, IconItalic, IconList, IconListNumbers, IconQuote,
   IconCode, IconLink, IconPhoto, IconMinus, IconHeading,
 } from "@tabler/icons-react";
-import { generateId } from "@/lib/types";
 
 interface ArticleRichTextProps {
   content: Record<string, unknown>;
   onChange: (content: Record<string, unknown>, html: string) => void;
+}
+
+interface ToolBtnProps {
+  onClick: () => void;
+  active?: boolean;
+  label: string;
+  children: React.ReactNode;
+}
+
+function ToolBtn({ onClick, active, label, children }: ToolBtnProps) {
+  return (
+    <button type="button" onClick={onClick}
+      className={`p-1.5 rounded-lg transition-colors ${active ? "bg-primary/10 text-primary-dark dark:text-primary-light" : "text-muted hover:text-foreground hover:bg-surface"}`}
+      aria-label={label} title={label}>
+      {children}
+    </button>
+  );
 }
 
 export function ArticleRichText({ content, onChange }: ArticleRichTextProps) {
@@ -65,16 +81,6 @@ export function ArticleRichText({ content, onChange }: ArticleRichTextProps) {
   }, [editor]);
 
   if (!editor) return null;
-
-  const ToolBtn = ({ onClick, active, label, children }: {
-    onClick: () => void; active?: boolean; label: string; children: React.ReactNode;
-  }) => (
-    <button type="button" onClick={onClick}
-      className={`p-1.5 rounded-lg transition-colors ${active ? "bg-primary/10 text-primary-dark dark:text-primary-light" : "text-muted hover:text-foreground hover:bg-surface"}`}
-      aria-label={label} title={label}>
-      {children}
-    </button>
-  );
 
   return (
     <div className="rounded-2xl border border-border bg-background overflow-hidden">

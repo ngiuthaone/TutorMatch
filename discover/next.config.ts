@@ -8,3 +8,24 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+export async function headers() {
+  return [
+    {
+      source: "/:path*",
+      headers: [
+        {
+          key: "Content-Security-Policy",
+          value: [
+            "default-src 'self'",
+            "script-src 'self'",
+            "connect-src 'self' https://sufjrstewzvzjzvzekry.supabase.co",
+            "frame-ancestors 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+          ].join("; "),
+        },
+      ],
+    },
+  ];
+}

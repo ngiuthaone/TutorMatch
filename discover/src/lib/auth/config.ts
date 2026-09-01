@@ -7,6 +7,7 @@ export interface TutoriaConfig {
   authCallbackUrl: string;
   demoMode: boolean;
   environment: TutoriaEnvironment;
+  useBffAuth: boolean;
 }
 
 const ENVIRONMENTS: TutoriaEnvironment[] = ["development", "test", "staging", "production"];
@@ -40,10 +41,9 @@ function envFallback(): Partial<TutoriaConfig> {
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
     supabasePublishableKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "",
     authCallbackUrl: process.env.NEXT_PUBLIC_TUTORIA_AUTH_CALLBACK_URL || "",
-    // Local development stays in the mock/demo experience unless live auth
-    // is explicitly enabled with NEXT_PUBLIC_TUTORIA_DEMO_MODE=false.
     demoMode: process.env.NEXT_PUBLIC_TUTORIA_DEMO_MODE !== "false",
     environment,
+    useBffAuth: process.env.NEXT_PUBLIC_USE_BFF_AUTH === "true",
   };
 }
 
@@ -63,7 +63,7 @@ function normalizeConfig(input: TutoriaConfig): TutoriaConfig {
   if (authCallbackUrl) {
     const callback = new URL(authCallbackUrl);
     if (callback.pathname !== "/auth/callback" || callback.search || callback.hash) {
-      throw new Error("Invalid Tutoria configuration: authCallbackUrl");
+      throw new Error(`Invalid Tutoria configuration: authCallbackUrl`);
     }
   }
   return Object.freeze({ ...input, environment, apiBaseUrl, supabaseUrl, supabasePublishableKey, authCallbackUrl });
@@ -78,7 +78,7 @@ function browserOverride(): Partial<TutoriaConfig> {
     const globalConfig = (window as unknown as { TUTORIA_CONFIG?: Partial<TutoriaConfig> }).TUTORIA_CONFIG;
     if (!globalConfig || typeof globalConfig !== "object") return {};
     const merged: Partial<TutoriaConfig> = {};
-    for (const key of ["apiBaseUrl", "supabaseUrl", "supabasePublishableKey", "authCallbackUrl", "demoMode", "environment"] as const) {
+    for (const key of ["apiBaseUrl", "supabaseUrl", "supabasePublishableKey", "authCallbackUrl", "demoMode", "environment", "useBffAuth"] as const) {
       const value = globalConfig[key];
       if (value !== undefined) merged[key] = value as never;
     }
@@ -142,6 +142,7 @@ function safeConfig(): TutoriaConfig {
       authCallbackUrl: "",
       demoMode: true,
       environment: "development",
+      useBffAuth: false,
     });
   }
 }

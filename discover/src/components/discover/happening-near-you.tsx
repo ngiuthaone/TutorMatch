@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { IconMapPin, IconWorld, IconCalendar, IconClock, IconUsers } from "@tabler/icons-react";
+import Link from "next/link";
 
 const allEvents = [
   {
@@ -57,9 +58,9 @@ export function HappeningNearYou() {
           <h2 className="text-xl font-semibold tracking-tight text-foreground">
             Happening near you
           </h2>
-          <a href="/events" className="text-sm text-primary hover:text-primary-dark font-medium transition-colors">
+          <Link href="/events" className="text-sm text-primary hover:text-primary-dark font-medium transition-colors">
             See all events
-          </a>
+          </Link>
         </div>
 
         <div className="flex items-center gap-2 mb-6">
@@ -91,9 +92,9 @@ export function HappeningNearYou() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {displayed.map((event) => (
-            <a
+            <Link
               key={event.title}
-href="/events"
+              href="/events"
               className="group rounded-2xl border border-border bg-background hover:shadow-md hover:border-primary/20 transition-all duration-200 overflow-hidden"
             >
               <div className="aspect-[4/3] overflow-hidden bg-surface">
@@ -136,7 +137,7 @@ href="/events"
                   </span>
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

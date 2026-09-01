@@ -31,6 +31,18 @@ function profilePayload(): BackendTutorProfile {
     availability: record.availability as BackendTutorProfile["availability"],
     education: [],
     experience: [],
+    role: "Mathematics tutor",
+    portfolioUrl: null,
+    lessonDescription: null,
+    policies: null,
+    rates: null,
+    displayDuration: null,
+    consultation: null,
+    credentials: [],
+    goals: [],
+    ageGroups: [],
+    teachingStyles: [],
+    faqs: [],
   };
 }
 

@@ -1,0 +1,135 @@
+import type { FastifyPluginAsync } from "fastify";
+import { z } from "zod";
+import { ApiError } from "../errors/api-error.js";
+import type { MessagingService } from "../services/messaging-service.js";
+
+const uuid = z.string().uuid();
+const idParam = z.object({ id: uuid });
+
+const sendBody = z.object({
+  clientMessageId: z.string().trim().min(8).max(128),
+  body: z.string().trim().min(1).max(2000),
+});
+
+const bookingParam = z.object({ bookingId: uuid });
+
+const listMessagesQuery = z.object({
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+  before: z.string().datetime({ offset: true }).optional(),
+});
+
+function failConversation(status: "not_found" | "forbidden" | "unavailable"): never {
+  if (status === "not_found") throw new ApiError(404, "CONVERSATION_NOT_FOUND", "Conversation was not found.");
+  if (status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You are not a member of this conversation.");
+  throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+}
+
+function failSend(status: "forbidden" | "invalid" | "unavailable"): never {
+  if (status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You are not a member of this conversation.");
+  if (status === "invalid") throw new ApiError(400, "INVALID_MESSAGE", "Message is invalid.");
+  throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+}
+
+function failAvailability(status: "unavailable"): never {
+  throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+}
+
+export const messagingRoutes: FastifyPluginAsync<{
+  service: MessagingService;
+  readMax: number;
+  sendMax: number;
+  windowMs: number;
+}> = async (app, options) => {
+  // GET /api/v1/messaging/conversations — list the caller's conversations.
+  app.get("/api/v1/messaging/conversations", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const result = await options.service.listConversations(request.auth.accessToken);
+    if (result.status === "unavailable") failAvailability("unavailable");
+    return { ok: true, conversations: result.data };
+  });
+
+  // GET /api/v1/messaging/conversations/:id — conversation summary from the
+  // caller's perspective. 403 if the caller is not a member.
+  app.get("/api/v1/messaging/conversations/:id", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const parsed = idParam.safeParse(request.params);
+    if (!parsed.success) throw new ApiError(400, "INVALID_ID", "Conversation id is invalid.");
+    const result = await options.service.getConversation(request.auth.accessToken, parsed.data.id);
+    if (result.status !== "ok") failConversation(result.status);
+    return { ok: true, conversation: result.data };
+  });
+
+  // GET /api/v1/messaging/bookings/:bookingId/conversation — returns the
+  // booking's conversation, creating + seeding membership on first call.
+  // This is the entry point used by the booking detail surface so the
+  // learner can talk to the host from the booking context (DEC-015).
+  app.get("/api/v1/messaging/bookings/:bookingId/conversation", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const parsed = bookingParam.safeParse(request.params);
+    if (!parsed.success) throw new ApiError(400, "INVALID_ID", "Booking id is invalid.");
+    const result = await options.service.getOrCreateBookingConversation(request.auth.accessToken, parsed.data.bookingId);
+    if (result.status !== "ok") failConversation(result.status);
+    return { ok: true, conversation: result.data };
+  });
+
+  // GET /api/v1/messaging/conversations/:id/messages — paginated message
+  // history for a conversation the caller belongs to.
+  app.get("/api/v1/messaging/conversations/:id/messages", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const id = idParam.safeParse(request.params);
+    if (!id.success) throw new ApiError(400, "INVALID_ID", "Conversation id is invalid.");
+    const query = listMessagesQuery.safeParse(request.query);
+    if (!query.success) throw new ApiError(400, "INVALID_QUERY", "Query is invalid.");
+    const result = await options.service.listMessages(
+      request.auth.accessToken,
+      id.data.id,
+      query.data.limit,
+      query.data.before,
+    );
+    if (result.status !== "ok") failConversation(result.status);
+    return { ok: true, messages: result.data };
+  });
+
+  // POST /api/v1/messaging/conversations/:id/messages — idempotent send.
+  // clientMessageId is required and is the durable dedupe token for the
+  // caller's retry.
+  app.post("/api/v1/messaging/conversations/:id/messages", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.sendMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const id = idParam.safeParse(request.params);
+    if (!id.success) throw new ApiError(400, "INVALID_ID", "Conversation id is invalid.");
+    const body = sendBody.safeParse(request.body);
+    if (!body.success) throw new ApiError(400, "INVALID_MESSAGE", "Message is invalid.");
+    const result = await options.service.sendMessage(
+      request.auth.accessToken,
+      id.data.id,
+      body.data.clientMessageId,
+      body.data.body,
+    );
+    if (result.status !== "ok") failSend(result.status);
+    return { ok: true, message: result.data, duplicate: result.duplicate };
+  });
+
+  // POST /api/v1/messaging/conversations/:id/read — mark the conversation
+  // as read for the caller; resets unread counts on the next list call.
+  app.post("/api/v1/messaging/conversations/:id/read", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const id = idParam.safeParse(request.params);
+    if (!id.success) throw new ApiError(400, "INVALID_ID", "Conversation id is invalid.");
+    const result = await options.service.markRead(request.auth.accessToken, id.data.id);
+    if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You are not a member of this conversation.");
+    if (result.status !== "ok") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+    return { ok: true, ...result.data };
+  });
+};

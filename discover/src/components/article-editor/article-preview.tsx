@@ -12,18 +12,32 @@ export function ArticlePreview({ id }: { id: string }) {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const published = getPublishedArticleById(id);
+    if (cancelled) return;
     if (published) {
-      setArticle(published);
+      queueMicrotask(() => {
+        if (!cancelled) {
+          setArticle(published);
+        }
+      });
       return;
     }
     const drafts = getArticleDrafts();
     const draft = drafts.find((d) => d.id === id);
+    if (cancelled) return;
     if (draft) {
-      setArticle(draft);
+      queueMicrotask(() => {
+        if (!cancelled) {
+          setArticle(draft);
+        }
+      });
       return;
     }
-    setNotFound(true);
+    queueMicrotask(() => {
+      if (!cancelled) setNotFound(true);
+    });
+    return () => { cancelled = true; };
   }, [id]);
 
   if (notFound) {

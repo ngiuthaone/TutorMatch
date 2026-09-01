@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { IconClock, IconMapPin, IconUsers, IconWorld } from "@tabler/icons-react";
-import type { EventOffering, EventSession, EventWithHost } from "@/lib/event-booking-api";
+import { IconClock, IconUsers, IconWorld } from "@tabler/icons-react";
+import type { EventWithHost } from "@/lib/event-booking-api";
 import {
   isFreeEvent,
   formatEventPriceVnd,
-  formatDuration,
   formatDateShort,
   formatTimeShort,
 } from "@/lib/event-booking-api";
@@ -21,25 +20,29 @@ interface EventLiveGridProps {
 export function EventLiveGrid({ limit = 6 }: EventLiveGridProps) {
   const [events, setEvents] = useState<EventWithHost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
+        setLoading(true);
         const { listBookableEvents } = await import("@/lib/event-booking-api");
         const data = await listBookableEvents();
         if (!cancelled) {
           setEvents(data.slice(0, limit));
+          setError(false);
         }
       } catch {
-        // Silent fail — grid shows empty state
+        if (!cancelled) setError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
     load();
     return () => { cancelled = true; };
-  }, [limit]);
+  }, [limit, retryKey]);
 
   if (loading) {
     return (
@@ -54,6 +57,17 @@ export function EventLiveGrid({ limit = 6 }: EventLiveGridProps) {
             </div>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.grid}>
+        <div className={styles.errorState}>
+          <p>Failed to load events.</p>
+          <button onClick={() => { setError(false); setLoading(true); setRetryKey(k => k + 1); }}>Try again</button>
+        </div>
       </div>
     );
   }

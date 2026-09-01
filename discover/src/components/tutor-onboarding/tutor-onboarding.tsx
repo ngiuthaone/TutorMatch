@@ -7,6 +7,8 @@ import styles from "./tutor-onboarding.module.css";
 import { isLiveMode } from "@/lib/auth/config";
 import { getMyTutorCv, publishMyTutorCv, saveMyTutorCv, TutorCvApiError } from "@/lib/tutor-cv-api";
 import { backendProfileToDraft, draftToBackendProfile } from "@/lib/tutor-cv-mapper";
+import { canUploadMedia, getCurrentUserId, submitTutorPhoto, submitTutorVideo } from "@/lib/tutor-media-api";
+import { TUTOR_DRAFT_KEY, TUTOR_SUBMISSION_KEY } from "@/lib/storage";
 
 /* ═══════════════════════════════════════════
    Icons
@@ -123,8 +125,8 @@ type TutorDraft = {
    Constants
    ═══════════════════════════════════════════ */
 
-const DRAFT_KEY = "tutoria_tutor_profile_draft";
-const SUBMISSION_KEY = "tutoria_tutor_profile_submission";
+const DRAFT_KEY = TUTOR_DRAFT_KEY;
+const SUBMISSION_KEY = TUTOR_SUBMISSION_KEY;
 
 const steps = [
   { title: "Profile", description: "Introduce yourself and build trust" },
@@ -413,13 +415,16 @@ function ValidationNotice({ errors }: { errors: ValidationError[] }) {
    Step Components
    ═══════════════════════════════════════════ */
 
-function ProfileStep({ draft, update, errors }: { draft: TutorDraft; update: DraftUpdater; errors: ValidationError[] }) {
+type MediaUploadState = { kind: "photo" | "video"; status: "uploading" | "pending" | "error"; message?: string };
+
+function ProfileStep({ draft, update, errors, liveMode }: { draft: TutorDraft; update: DraftUpdater; errors: ValidationError[]; liveMode: boolean }) {
   const photoInput = useRef<HTMLInputElement>(null);
   const videoInput = useRef<HTMLInputElement>(null);
   const [provinces, setProvinces] = useState<VietnamProvince[]>([]);
   const [locationsLoading, setLocationsLoading] = useState(true);
   const [locationLoadError, setLocationLoadError] = useState(false);
   const [selectedProvinceCode, setSelectedProvinceCode] = useState("");
+  const [mediaUpload, setMediaUpload] = useState<MediaUploadState | null>(null);
   const set = <K extends keyof TutorDraft>(key: K, value: TutorDraft[K]) => update((current) => ({ ...current, [key]: value }));
   const hasError = (fieldId: string) => errors.some((error) => error.fieldId === fieldId);
   const selectedProvince = provinces.find((province) => String(province.code) === selectedProvinceCode);
@@ -443,6 +448,20 @@ function ProfileStep({ draft, update, errors }: { draft: TutorDraft; update: Dra
   const loadPhoto = (file?: File) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) return;
+    if (liveMode && canUploadMedia()) {
+      set("photoUrl", URL.createObjectURL(file));
+      setMediaUpload({ kind: "photo", status: "uploading" });
+      getCurrentUserId()
+        .then((userId) => submitTutorPhoto(file, userId))
+        .then((submission) => {
+          setMediaUpload({ kind: "photo", status: submission.status === "approved" ? "pending" : "pending", message: submission.status === "pending" ? "Under review — it appears on your profile once approved." : "Uploaded." });
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : "Photo upload failed.";
+          setMediaUpload({ kind: "photo", status: "error", message });
+        });
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       const image = new window.Image();
@@ -462,6 +481,26 @@ function ProfileStep({ draft, update, errors }: { draft: TutorDraft; update: Dra
     reader.readAsDataURL(file);
   };
 
+  const loadVideo = (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("video/")) return;
+    if (liveMode && canUploadMedia()) {
+      set("introVideoName", file.name);
+      setMediaUpload({ kind: "video", status: "uploading" });
+      getCurrentUserId()
+        .then((userId) => submitTutorVideo(file, userId))
+        .then((submission) => {
+          setMediaUpload({ kind: "video", status: "pending", message: "Under review — it appears on your profile once approved." });
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : "Video upload failed.";
+          setMediaUpload({ kind: "video", status: "error", message });
+        });
+      return;
+    }
+    set("introVideoName", file.name);
+  };
+
   return (
     <>
       <SectionHeading step={1} title="Profile" description="Help learners get to know you." />
@@ -472,8 +511,9 @@ function ProfileStep({ draft, update, errors }: { draft: TutorDraft; update: Dra
           <input ref={photoInput} className={styles.hiddenInput} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => loadPhoto(event.target.files?.[0])} />
           <div className={styles.photoActions}>
             <button className={styles.secondaryButton} type="button" onClick={() => photoInput.current?.click()}>Change photo</button>
-            <button className={styles.textButtonMuted} type="button" onClick={() => set("photoUrl", null)}>Remove</button>
+            <button className={styles.textButtonMuted} type="button" onClick={() => { set("photoUrl", null); setMediaUpload(null); }}>Remove</button>
           </div>
+          {mediaUpload?.kind === "photo" && <p className={styles.fieldHint} style={mediaUpload.status === "error" ? { color: "var(--tutoria-error)" } : undefined}>{mediaUpload.status === "uploading" ? "Uploading…" : mediaUpload.message}</p>}
           <FieldError errors={errors} fieldId="profile-photo" />
         </div>
         <div className={styles.profileFields}>
@@ -494,16 +534,17 @@ function ProfileStep({ draft, update, errors }: { draft: TutorDraft; update: Dra
         </div>
         <CredentialAdder onAdd={(credential) => { if (!draft.credentials.some((item) => item.title.toLowerCase() === credential.title.toLowerCase())) set("credentials", [...draft.credentials, credential]); }} />
       </div>
-      <div className={styles.formSection}>
-        <FieldLabel>Introduction video (optional) <Icon.InfoCircle size={16} /></FieldLabel>
-        <input ref={videoInput} className={styles.hiddenInput} type="file" accept="video/*" onChange={(event) => set("introVideoName", event.target.files?.[0]?.name || "")} />
-        <button className={styles.uploadField} type="button" onClick={() => videoInput.current?.click()}>
-          <span className={styles.uploadIcon}>{draft.introVideoName ? <Icon.Check size={21} /> : <Icon.Upload size={21} />}</span>
-          <span className={styles.uploadCopy}><strong>{draft.introVideoName || "Upload a 30-90 second video"}</strong><small>{draft.introVideoName ? "Video selected. Click to replace it." : "Share who you are, what you teach, and how you help."}</small></span>
-          <span className={styles.secondaryButton}>{draft.introVideoName ? "Replace video" : "Upload video"}</span>
-        </button>
-        {draft.introVideoName && <button className={styles.textButtonMuted} type="button" onClick={() => set("introVideoName", "")}>Remove video</button>}
-      </div>
+        <div className={styles.formSection}>
+          <FieldLabel>Introduction video (optional) <Icon.InfoCircle size={16} /></FieldLabel>
+          <input ref={videoInput} className={styles.hiddenInput} type="file" accept="video/mp4,video/webm" onChange={(event) => loadVideo(event.target.files?.[0])} />
+          <button className={styles.uploadField} type="button" onClick={() => videoInput.current?.click()}>
+            <span className={styles.uploadIcon}>{draft.introVideoName ? <Icon.Check size={21} /> : <Icon.Upload size={21} />}</span>
+            <span className={styles.uploadCopy}><strong>{draft.introVideoName || "Upload a 30-90 second video"}</strong><small>{liveMode ? "MP4 (H.264) or WebM, up to 50 MB, under 90 seconds." : draft.introVideoName ? "Video selected. Click to replace it." : "Share who you are, what you teach, and how you help."}</small></span>
+            <span className={styles.secondaryButton}>{draft.introVideoName ? "Replace video" : "Upload video"}</span>
+          </button>
+          {draft.introVideoName && <button className={styles.textButtonMuted} type="button" onClick={() => set("introVideoName", "")}>Remove video</button>}
+          {mediaUpload?.kind === "video" && <p className={styles.fieldHint} style={mediaUpload.status === "error" ? { color: "var(--tutoria-error)" } : undefined}>{mediaUpload.status === "uploading" ? "Uploading…" : mediaUpload.message}</p>}
+        </div>
       <div className={styles.formSection} id="languages" tabIndex={-1} aria-describedby={hasError("languages") ? "languages-error" : undefined}>
         <FieldLabel>Languages</FieldLabel>
         <div className={styles.chipRow}>
@@ -889,13 +930,21 @@ export function TutorOnboarding() {
         window.localStorage.setItem(SUBMISSION_KEY, JSON.stringify(publishedDraft));
         window.dispatchEvent(new CustomEvent("tutoria-tutor-published", { detail: publishedDraft }));
         try {
-          await fetch("/api/tutors", {
+          const response = await fetch("/api/tutors", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...publishedDraft, status: "published" }),
           });
-        } catch {
-          // The profile remains available in this browser if the local demo API is unavailable.
+          if (!response.ok) {
+            const message = await response.text();
+            throw new Error(`Tutor API write failed (${response.status}): ${message || "no body"}`);
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Unknown tutor API error";
+          setSavedAt("Demo save failed");
+          setNotice(`Your profile is saved on this device, but the demo store rejected the publish: ${message}. Reload the page and try again, or check the dev server.`);
+          setLoading(false);
+          return;
         }
         setSavedAt("Your live profile");
         setNotice("Your tutor profile is now live.");
@@ -945,7 +994,7 @@ export function TutorOnboarding() {
 
   /* ─── Render step content ─── */
   let mainContent: React.ReactNode;
-  if (activeStep === 0) mainContent = <ProfileStep draft={draft} update={updateDraft} errors={errors} />;
+  if (activeStep === 0) mainContent = <ProfileStep draft={draft} update={updateDraft} errors={errors} liveMode={liveMode} />;
   else if (activeStep === 1) mainContent = <TeachingStep draft={draft} update={updateDraft} errors={errors} />;
   else if (activeStep === 2) mainContent = <AvailabilityStep draft={draft} update={updateDraft} errors={errors} />;
   else if (activeStep === 3) mainContent = <PricingStep draft={draft} update={updateDraft} errors={errors} />;

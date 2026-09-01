@@ -157,6 +157,7 @@ async function request(path: string, options: { method?: string; body?: unknown;
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     credentials: "omit",
     cache: "no-store",
+    signal: AbortSignal.timeout(15000),
   });
   const payload = await jsonResponse(response);
   if (!response.ok) throw apiError(response, payload);

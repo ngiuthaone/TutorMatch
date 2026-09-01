@@ -27,7 +27,7 @@ export default function EventLiveDetailPage({ params }: { params: Promise<{ slug
 
           if (cancelled) return;
 
-          if (!offeringData || offeringData.offeringType !== "event") {
+          if (!offeringData || offeringData.offeringType !== "event" && offeringData.offeringType !== "workshop") {
             setError("Event not found");
             return;
           }

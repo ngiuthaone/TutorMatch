@@ -6,6 +6,7 @@ import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
 import { createSupabasePaymentService } from "../src/services/payment-service.js";
+import { makeOffering } from "./_fixtures/offering.js";
 
 const url = process.env.SUPABASE_TEST_URL, key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY, dbUrl = process.env.SUPABASE_TEST_DB_URL, serviceKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY;
 if (!url || !key || !dbUrl || !serviceKey) throw new Error("Refund execution/reconciliation integration tests require local Supabase URL, publishable key, DB URL, and service role key.");
@@ -37,7 +38,8 @@ async function signup(role: "student" | "tutor") {
 async function paidSessionCancelled(rate = 300000) {
   const tutor = await signup("tutor"), learner = await signup("student");
   await sql`insert into public.tutor_profiles(user_id,display_name,hourly_rate_vnd,currency) values(${tutor.user.id},'Refund Tutor',${rate},'VND')`;
-  const session = await tutor.client.rpc("create_session", { payload: { startsAt: new Date(Date.now() + 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 4 * 3600e3).toISOString(), maxParticipants: 1 } });
+  const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: rate });
+  const session = await tutor.client.rpc("create_session", { payload: { offeringId, startsAt: new Date(Date.now() + 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 4 * 3600e3).toISOString(), maxParticipants: 1 } });
   if (session.error) throw session.error;
   const booking = await learner.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 });
   if (booking.error) throw booking.error;
@@ -303,7 +305,8 @@ describe.sequential("Refund execution + reconciliation (Phase 3 DB semantics)", 
   it("T: PAYMENT_SUCCEEDED finalize retry sweep completes pending finalization", async () => {
     const tutor = await signup("tutor"), learner = await signup("student");
     await sql`insert into public.tutor_profiles(user_id,display_name,hourly_rate_vnd,currency) values(${tutor.user.id},'Retry Tutor',300000,'VND')`;
-    const session = await tutor.client.rpc("create_session", { payload: { startsAt: new Date(Date.now() + 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 4 * 3600e3).toISOString(), maxParticipants: 1 } });
+    const offeringId2 = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: 300000 });
+    const session = await tutor.client.rpc("create_session", { payload: { offeringId: offeringId2, startsAt: new Date(Date.now() + 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 4 * 3600e3).toISOString(), maxParticipants: 1 } });
     const booking = await learner.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 });
     await sql`update public.bookings b set pricing_amount_vnd = 300000, pricing_currency = 'VND', pricing_hourly_rate_vnd = 300000, pricing_duration_minutes = 60, pricing_model = 'hourly_v1', pricing_snapshotted_at = now() where b.id = ${booking.data.id} and b.pricing_amount_vnd is null`;
     await tutor.client.rpc("approve_booking_for_payment", { p_booking_id: booking.data.id });

@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import type { EventDetail } from "@/lib/event-data";
+import { allEvents, getEventBySlug } from "@/lib/event-data";
+import { getSharedEventBySlug, readSharedEvents } from "@/lib/published-event-store";
+import { toWorkshopData, type WorkshopData, type WorkshopDataRecommendation } from "@/lib/workshop-payload";
 import { isLiveMode } from "@/lib/auth/config";
 import { BookingApiError, createBooking } from "@/lib/booking-api";
 import { ensureSession, signOutLive, useSession } from "@/lib/auth/session";
@@ -12,8 +15,50 @@ interface PizzaWorkshopFrameProps {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+const unwrapVnd = (price?: string | number): number => {
+  if (typeof price === "number") return price;
+  if (typeof price === "string") {
+    const digits = price.replace(/[^0-9]/g, "");
+    return digits ? Number(digits) : 0;
+  }
+  return 0;
+};
+
+async function buildRecommendations(slug: string, host: string): Promise<WorkshopDataRecommendation[]> {
+  const recs: WorkshopDataRecommendation[] = [];
+  const seen = new Set<string>([slug]);
+  const push = (e: { slug: string; title: string; host: string; price: string; duration?: string; location: string; image?: string; topic: string; rating: number; reviewCount: number }) => {
+    if (seen.has(e.slug)) return;
+    seen.add(e.slug);
+    recs.push({
+      slug: e.slug,
+      title: e.title,
+      category: e.topic || "Workshop",
+      host: e.host,
+      rating: e.rating ?? 0,
+      reviewCount: e.reviewCount ?? 0,
+      duration: e.duration || "2 hours",
+      location: e.location,
+      priceFrom: unwrapVnd(e.price),
+      image: e.image,
+      priority: e.host === host ? "host" : "default",
+    });
+  };
+  allEvents.forEach((e) => {
+    const detail = getEventBySlug(e.slug);
+    if (detail) push(detail);
+  });
+  const shared = await readSharedEvents();
+  shared.forEach((e) => {
+    const detail = e as unknown as EventDetail;
+    push(detail);
+  });
+  return recs.slice(0, 6);
+}
+
 export function PizzaWorkshopFrame({ event }: PizzaWorkshopFrameProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const payloadRef = useRef<WorkshopData | null>(null);
   const live = isLiveMode();
   const session = useSession();
   const accountSnapshot = useSyncExternalStore(subscribeToAccount, getAccountSnapshot, () => "");
@@ -23,6 +68,28 @@ export function PizzaWorkshopFrame({ event }: PizzaWorkshopFrameProps) {
     const sessionIds = event.sessions?.map((s) => s.id).join(",") || "";
     return `/pizza-workshop.html${sessionIds ? `?sessionIds=${encodeURIComponent(sessionIds)}` : ""}`;
   }, [event.sessions]);
+
+  const sendData = useCallback(() => {
+    const win = frameRef.current?.contentWindow;
+    const payload = payloadRef.current;
+    if (!win || !payload) return;
+    win.postMessage({ type: "tutoria-workshop-data", payload }, window.location.origin);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void buildRecommendations(event.slug, event.host).then((recs) => {
+      if (cancelled) return;
+      const next = toWorkshopData(event, recs);
+      payloadRef.current = next;
+      sendData();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [event]);
+
+
   const syncEditControls = useCallback(() => {
     const document = frameRef.current?.contentDocument;
     if (!document?.head) return;
@@ -58,6 +125,10 @@ export function PizzaWorkshopFrame({ event }: PizzaWorkshopFrameProps) {
       if (event.source !== frameRef.current?.contentWindow) return;
       const data = event.data as { type?: unknown; requestId?: unknown; sessionId?: unknown; participantCount?: unknown } | null;
       if (!data) return;
+      if (data.type === "tutoria-iframe-ready") {
+        sendData();
+        return;
+      }
       if (data.type === "tutoria-auth-sign-out") {
         void signOutLive().finally(() => window.location.assign("/auth/sign-in"));
         return;
@@ -99,7 +170,7 @@ export function PizzaWorkshopFrame({ event }: PizzaWorkshopFrameProps) {
     };
     window.addEventListener("message", onBookingMessage);
     return () => window.removeEventListener("message", onBookingMessage);
-  }, [live]);
+  }, [live, sendData]);
 
   useEffect(() => {
     if (!live) return;
@@ -114,7 +185,10 @@ export function PizzaWorkshopFrame({ event }: PizzaWorkshopFrameProps) {
       ref={frameRef}
       title={event.title}
       src={iframeSrc}
-      onLoad={syncEditControls}
+      onLoad={() => {
+        syncEditControls();
+        sendData();
+      }}
       style={{ width: "100%", height: "100dvh", border: 0, display: "block", background: "#09090b" }}
     />
   );

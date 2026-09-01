@@ -1,6 +1,7 @@
 "use client";
 
 import { IconHeart, IconMessage2, IconBookmark, IconShare, IconArrowLeft, IconClock } from "@tabler/icons-react";
+import Link from "next/link";
 
 const blogs: Record<string, {
   id: string; title: string; author: string; role: string; avatar: string;
@@ -30,10 +31,10 @@ export function BlogDetail({ id }: { id: string }) {
       <main className="flex-1">
         <div className="max-w-[680px] mx-auto px-4 pt-12 pb-16 text-center">
           <h1 className="text-xl font-semibold text-foreground">Blog not found</h1>
-          <p className="text-sm text-muted mt-2">This blog post may have been removed or doesn't exist.</p>
-          <a href="/discussions" className="inline-flex items-center gap-1.5 mt-6 text-sm font-medium text-primary hover:text-primary-dark transition-colors">
+          <p className="text-sm text-muted mt-2">This blog post may have been removed or doesn&apos;t exist.</p>
+          <Link href="/discussions" className="inline-flex items-center gap-1.5 mt-6 text-sm font-medium text-primary hover:text-primary-dark transition-colors">
             <IconArrowLeft size={14} /> Back to discussions
-          </a>
+          </Link>
         </div>
       </main>
     );
@@ -44,9 +45,9 @@ export function BlogDetail({ id }: { id: string }) {
   return (
     <main className="flex-1">
       <div className="max-w-[680px] mx-auto px-4 pt-12 pb-16">
-        <a href="/discussions" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors mb-6">
+        <Link href="/discussions" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors mb-6">
           <IconArrowLeft size={14} /> All discussions
-        </a>
+        </Link>
 
         <article className="rounded-2xl border border-border bg-background overflow-hidden">
           <div className="aspect-[3/2] overflow-hidden bg-surface">

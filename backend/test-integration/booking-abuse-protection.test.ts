@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
 import { describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
+import { futureWindow, makeOffering } from "./_fixtures/offering.js";
 
 const url = process.env.SUPABASE_TEST_URL;
 const key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY;
@@ -30,9 +31,10 @@ async function account(role: "student" | "tutor") {
 
 async function sessions(tutor: { client: ReturnType<typeof createClient> }, count: number) {
   const ids: string[] = [];
+  const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop");
   for (let i = 0; i < count; i += 1) {
-    const startsAt = new Date(Date.now() + (i + 2) * 3600e3).toISOString();
-    const result = await tutor.client.rpc("create_session", { payload: { startsAt, endsAt: new Date(Date.now() + (i + 2.5) * 3600e3).toISOString(), maxParticipants: 2 } });
+    const { startsAt, endsAt } = futureWindow(2 + i * 0.5);
+    const result = await tutor.client.rpc("create_session", { payload: { offeringId, startsAt, endsAt, maxParticipants: 2 } });
     if (result.error || !result.data?.id) throw result.error ?? new Error("Could not create abuse-protection session");
     ids.push(result.data.id);
   }
@@ -67,3 +69,4 @@ describe.sequential("booking request account quota", () => {
     expect(row[0].count).toBe(10);
   });
 });
+afterAll(async () => { await sql.end(); });

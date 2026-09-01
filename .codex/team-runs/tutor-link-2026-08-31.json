@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "run_id": "tutor-link-2026-08-31",
+  "task": "tutor profile link + production-readiness",
+  "started_at": "2026-08-31T04:19:30Z",
+  "completed_at": "2026-08-31T07:01:40Z",
+  "final_status": "PARTIAL",
+  "summary": "Wave A complete: 5 files modified (tutor-onboarding.tsx, tutor-profile-frame.tsx, storage.ts, tutor-profile-adapter.js, globals.css). Frontend gates: pnpm lint (75 pre-existing errors in unrelated workshop/events files, 0 new), tsc --noEmit clean, pnpm build Compiled successfully in 978ms, pnpm test 188 passed (4 pre-existing events-route failures, 0 new). E2E: published 'E2E Test Tutor' via UI in demo mode; POST /api/tutors returned 201; /api/tutors?source=store correctly returns 3 tutors; /api/tutors returns 400 for invalid payloads, confirming response.ok check works. Pre-existing bug surfaced: TutorProfileFrame has a 'Maximum update depth exceeded' loop from useSession() calling ensureSession() during render (predates Wave A; HEAD also triggers it). Wave B complete: backend pnpm test 366/366 passed; tutor-cv-rls.test.ts 6/6 passed (covers B3, B4, B5, B6-B9, B18, B19-B21, B22, B23, B26); tutor-cv-full-fields-media.test.ts 6/6 passed (covers B28 and field-contract table). tutor-authorization-hardening.test.ts 1 failed because it requires later migrations (create_session + offering_id) not applied by the test's beforeAll — UNVERIFIED-CONDITIONAL on local Supabase; documented, not patched. Live B-checks via curl: B1 (401 anonymous), B19-21 (public read shape clean of user_id/email/exact address), B24 (noStore wired as onSend on all protected routes), B27 (CORS allows http://localhost:3456). Backend production-boundary check confirmed via code review: Bearer-token-only auth, no cookie sessions, global bodyLimit (16KB default), audit log on tutor_profile_events. Status PARTIAL because (1) Wave A surfaced a pre-existing React loop on the profile page that blocks the E2E other-profile scenario in demo mode, and (2) tutor-authorization-hardening test cannot run against current local Supabase state. Backend is production-shaped; frontend fixes are merged and working in demo mode end-to-end up to the iframe load.",
+  "contract_path": null,
+  "contract_changes": [],
+  "activities": [
+    {
+      "id": "frontend_engineer-1",
+      "agent": "frontend_engineer",
+      "reason": "Wave A: frontend fixes (steps 4-8) of tutoria-tutor-profile-link skill, executed by primary",
+      "assignment": "Fix /api/tutors silent POST, move keys to storage.ts, add session bridge, replace JSON import, tokenize hex. Then run pnpm lint/typecheck/test/build + E2E in demo mode.",
+      "model": null,
+      "started_at": "2026-08-31T04:24:10Z",
+      "completed_at": "2026-08-31T06:13:02Z",
+      "duration_seconds": 6532,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [],
+      "files_changed": [],
+      "checks": [
+        "lint:pre-existing-only",
+        "tsc:clean",
+        "build:ok",
+        "e2e:publish-path",
+        "e2e:error-surfacing",
+        "pre-existing-bug:useSession-loop"
+      ],
+      "useful_findings": 0,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": []
+    },
+    {
+      "id": "qa_engineer-1",
+      "agent": "qa_engineer",
+      "reason": "Wave B: backend verification gate (B1-B30 + tests) for tutor flow",
+      "assignment": "Run backend pnpm test, integration suites (tutor-cv-rls, tutor-authorization-hardening, tutor-cv-full-fields-media), curl B-checks against running local backend + Supabase, re-check field-contract table against current migrations. Escalate real failures with evidence; do not patch to force pass.",
+      "model": null,
+      "started_at": "2026-08-31T06:13:53Z",
+      "completed_at": "2026-08-31T06:59:55Z",
+      "duration_seconds": 2762,
+      "status": "completed",
+      "acceptance": "first_pass",
+      "context_readiness": null,
+      "rework_count": 0,
+      "artifacts": [],
+      "files_changed": [],
+      "checks": [
+        "unit:366-pass",
+        "integration:tutor-cv-rls:6-pass",
+        "integration:tutor-cv-full-fields-media:6-pass",
+        "integration:tutor-authorization-hardening:1-fail-migration-gap",
+        "B1:401",
+        "B19-21:public-read-shape",
+        "B24:noStore-wired",
+        "B27:cors-allow-localhost-3456"
+      ],
+      "useful_findings": 0,
+      "invalid_findings": 0,
+      "qa_failures_attributed": 0,
+      "verdict": null,
+      "tokens": {
+        "input": null,
+        "output": null,
+        "total": null,
+        "cost_usd": null,
+        "source": null
+      },
+      "notes": []
+    }
+  ],
+  "tests": [],
+  "qa_verdict": "Wave B qa_engineer ran 366 unit tests + 6 tutor-cv-rls integration + 6 tutor-cv-full-fields-media integration. 1 test (tutor-authorization-hardening) failed due to local-Supabase missing migrations — recorded as evidence, not patched.",
+  "security_verdict": "Verified via code review: auth is Bearer-only, CORS allowlist is config-driven, bodyLimit applied globally, audit log on tutor_profile_events, RLS enabled on all tutor_* tables, contact-info scrub regex covers emails/phones/telegram/wa.me/zalo/verified-by-Tutoria claims. security_reviewer not invoked as a separate agent because production-boundary checks were satisfied by the existing backend design + integration tests.",
+  "license_verdict": "N/A",
+  "notes": [],
+  "routing_assessment": {
+    "unnecessary_invocations": [],
+    "missing_specialists": [],
+    "recommendation": null
+  }
+}

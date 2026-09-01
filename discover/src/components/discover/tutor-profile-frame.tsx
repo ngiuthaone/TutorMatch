@@ -7,7 +7,6 @@ import { getTutor, isPublicTutorUuid, listTutors, type PublicTutorDetail } from 
 import { BookingApiError, createBooking, listBookableSessions, type BookableSession } from "@/lib/booking-api";
 import { sortFutureBookableSessions } from "@/lib/bookable-session-projection";
 import { ensureSession, signOutLive, useSession } from "@/lib/auth/session";
-import storeTutors from "../../../data/published-tutors.json";
 
 interface TutorProfileFrameProps {
   name: string;
@@ -97,6 +96,12 @@ interface TutorFrameProfile {
   lateCancellation: string;
   noShowPolicy: string;
   consultationEnabled: boolean;
+  consultationDuration: string;
+  consultationPrice: string;
+  consultationPurpose: string;
+  credentials: { title: string; evidenceUrl: string }[];
+  portfolioUrl: string;
+  introVideoName: string;
   faqs: { id?: string; question: string; answer: string }[];
   isVerified: boolean;
   disclosure: string | undefined;
@@ -116,11 +121,7 @@ async function findStoredProfile(displayName: string): Promise<boolean> {
   });
 }
 
-const EMBEDDED_STORE_NAMES = new Set(
-  (storeTutors as Array<{ displayName?: unknown; name?: unknown }>)
-    .map((entry) => String(entry.displayName ?? entry.name ?? "").toLocaleLowerCase().trim())
-    .filter(Boolean),
-);
+const EMBEDDED_STORE_NAMES = new Set<string>();
 
 function embeddedStoreHas(displayName: string): boolean {
   return EMBEDDED_STORE_NAMES.has(displayName.toLocaleLowerCase().trim());
@@ -202,12 +203,24 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
       } catch {
         // The profile remains viewable, but availability must not be inferred from tutor rules when Sessions cannot be read.
       }
+      const spaceClean = (value: string | null | undefined): string => (value ? value.trim() : "");
+      const ratesFromDetail = detail.rates && Object.keys(detail.rates).length > 0
+        ? detail.rates
+        : hourRateToSessionRates(detail.hourlyRateVnd || 0);
+      const sessionLengthsFromRates = Object.keys(ratesFromDetail)
+        .map((key) => Number(key))
+        .filter((value) => Number.isFinite(value) && value > 0)
+        .sort((left, right) => left - right);
+      const displayDuration = detail.displayDuration ?? (sessionLengthsFromRates.includes(60) ? 60 : sessionLengthsFromRates[0]) ?? 60;
+      const credentials = (detail.credentials ?? [])
+        .filter((credential) => credential && credential.title && credential.title.trim())
+        .map((credential) => ({ title: credential.title.trim(), evidenceUrl: credential.evidenceUrl || "" }));
       const frameProfile: TutorFrameProfile = {
         id: detail.id,
         name: displayName,
-        role: "Independent tutor",
+        role: spaceClean(detail.role) || "Independent tutor",
         tagline: detail.headline || "A tutor on Tutoria.",
-        image: initialsAvatar(displayName),
+        image: detail.avatarUrl || initialsAvatar(displayName),
         rating: 0,
         reviewCount: 0,
         lessons: 0,
@@ -218,23 +231,33 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
         subjects: detail.subjects ?? [],
         about: (detail.bio ? [detail.bio] : []),
         learnerLevels,
-        ageGroups: [],
-        teachingStyles: [],
-        outcomes: [],
-        typicalLesson: "",
-        sessionLengths: [30, 50, 60, 90],
-        rates: hourRateToSessionRates(detail.hourlyRateVnd || 0),
-        displayDuration: 60,
+        ageGroups: (detail.ageGroups ?? []).filter(Boolean),
+        teachingStyles: (detail.teachingStyles ?? []).filter(Boolean),
+        outcomes: (detail.goals ?? []).filter(Boolean),
+        typicalLesson: spaceClean(detail.lessonDescription),
+        credentials,
+        portfolioUrl: spaceClean(detail.portfolioUrl),
+        introVideoName: detail.introVideoUrl || "",
+        sessionLengths: sessionLengthsFromRates.length ? sessionLengthsFromRates : [30, 50, 60, 90],
+        rates: ratesFromDetail,
+        displayDuration,
         lessonFormat: teachingFormats(detail.teachingFormat),
         availability: availabilityStrings(detail),
         timeZone: timezoneLabel(detail),
-        sameDayBooking: false,
-        learnerCancellation: "Not set",
-        lateCancellation: "Not set",
-        noShowPolicy: "Not set",
-        consultationEnabled: false,
-        faqs: [],
-        isVerified: false,
+        sameDayBooking: detail.policies?.sameDayBooking === true,
+        learnerCancellation: spaceClean(detail.policies?.learnerCancellation) || "Not set",
+        lateCancellation: spaceClean(detail.policies?.lateCancellation) || "Not set",
+        noShowPolicy: spaceClean(detail.policies?.noShow) || "Not set",
+        consultationEnabled: detail.consultation?.enabled === true,
+        consultationDuration: detail.consultation?.durationMin ? `${detail.consultation.durationMin} minutes` : "",
+        consultationPrice: detail.consultation?.priceVnd ? String(detail.consultation.priceVnd) : "",
+        consultationPurpose: spaceClean(detail.consultation?.purpose),
+        faqs: (detail.faqs ?? []).map((faq, index) => ({
+          id: `faq-${index}`,
+          question: faq.question,
+          answer: faq.answer,
+        })),
+        isVerified: detail.verified === true,
         disclosure: detail.disclosure,
         bookableSessions,
       };
@@ -323,6 +346,29 @@ export function TutorProfileFrame({ name }: TutorProfileFrameProps) {
   }, [clearFallbackTimer, readyName]);
 
   useEffect(() => clearFallbackTimer, [clearFallbackTimer]);
+
+  useEffect(() => {
+    if (session.status !== "authenticated") return;
+    const iframe = frameRef.current;
+    if (!iframe?.contentWindow) return;
+    const send = () => {
+      iframe.contentWindow?.postMessage(
+        {
+          type: "tutoria:identity",
+          payload: {
+            id: session.user.id,
+            name: session.user.name,
+            role: session.user.role ?? null,
+            avatarUrl: session.user.avatarUrl ?? null,
+          },
+        },
+        window.location.origin,
+      );
+    };
+    iframe.addEventListener("load", send);
+    send();
+    return () => iframe.removeEventListener("load", send);
+  }, [session]);
 
   const handleLoad = useCallback(() => {
     clearFallbackTimer();

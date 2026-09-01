@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
+import { makeOffering } from "./_fixtures/offering.js";
 
 const url = process.env.SUPABASE_TEST_URL,
   key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY,
@@ -36,7 +37,8 @@ const PAST = {
 };
 
 async function createSession(tutor: any, o: any = {}) {
-  return tutor.client.rpc("create_session", { payload: { ...FUTURE, ...o } });
+  const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop");
+  return tutor.client.rpc("create_session", { payload: { offeringId, ...FUTURE, ...o } });
 }
 async function outbox(type?: string) {
   const rows = await sql`select * from public.event_outbox order by occurred_at, id`;

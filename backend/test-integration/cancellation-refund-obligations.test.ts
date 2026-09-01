@@ -6,6 +6,7 @@ import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
 import { CANCELLATION_REFUND_CUTOFF_HOURS } from "../src/domain/cancellation-refund-policy.js";
+import { makeOffering } from "./_fixtures/offering.js";
 
 const url = process.env.SUPABASE_TEST_URL, key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY, dbUrl = process.env.SUPABASE_TEST_DB_URL, serviceKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY;
 if (!url || !key || !dbUrl || !serviceKey) throw new Error("Cancellation/refund integration tests require local Supabase URL, publishable key, DB URL, and service role key.");
@@ -36,7 +37,8 @@ async function signup(role: "student" | "tutor") {
 }
 
 async function createSession(tutor: { client: SupabaseClient }, startsAt: Date, endsAt: Date, maxParticipants = 4) {
-  const r = await tutor.client.rpc("create_session", { payload: { startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString(), maxParticipants } });
+  const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop");
+  const r = await tutor.client.rpc("create_session", { payload: { offeringId, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString(), maxParticipants } });
   if (r.error) throw r.error;
   return r.data as { id: string; version: number };
 }

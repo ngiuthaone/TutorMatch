@@ -19,31 +19,44 @@ interface WorkshopDataFrameProps {
  */
 export function WorkshopDataFrame({ payload }: WorkshopDataFrameProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const payloadRef = useRef(payload);
+
+  useEffect(() => {
+    payloadRef.current = payload;
+  }, [payload]);
 
   useEffect(() => {
     const frame = frameRef.current;
     if (!frame) return;
 
-    const handleLoad = () => {
+    const sendData = () => {
       const win = frame.contentWindow;
       if (!win) return;
-      win.postMessage({ type: "tutoria-workshop-data", payload }, window.location.origin);
+      win.postMessage({ type: "tutoria-workshop-data", payload: payloadRef.current }, window.location.origin);
     };
 
-    frame.addEventListener("load", handleLoad);
-    return () => frame.removeEventListener("load", handleLoad);
-  }, [payload]);
-
-  useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin || event.source !== frameRef.current?.contentWindow) return;
+      if (event.origin !== window.location.origin || event.source !== frame.contentWindow) return;
       const data = event.data || {};
+      if (data.type === "tutoria-iframe-ready") {
+        sendData();
+      }
       if (data.type === "tutoria-booking-auth-required") {
         window.location.assign(`/auth/sign-in?next=${encodeURIComponent(window.location.href)}`);
       }
     };
+
     window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
+
+    const handleLoad = () => {
+      sendData();
+    };
+    frame.addEventListener("load", handleLoad);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      frame.removeEventListener("load", handleLoad);
+    };
   }, []);
 
   return (

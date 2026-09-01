@@ -122,6 +122,18 @@ describe("backendProfileToDraft", () => {
     ],
     education: [],
     experience: [],
+    role: "Mathematics tutor",
+    portfolioUrl: null,
+    lessonDescription: null,
+    policies: null,
+    rates: null,
+    displayDuration: null,
+    consultation: null,
+    credentials: [],
+    goals: [],
+    ageGroups: [],
+    teachingStyles: [],
+    faqs: [],
   };
 
   it("maps backend levels to learner level labels without inventing codes", () => {
@@ -165,6 +177,67 @@ describe("backendProfileToDraft", () => {
   it("returns empty skill list when subjects are absent", () => {
     const draft = backendProfileToDraft({ ...profile, subjects: [] });
     expect(draft.skills).toEqual([]);
+  });
+
+  it("round-trips the full-field profile without dropping form data", () => {
+    const rich = {
+      ...profile,
+      role: "IB Mathematics & Physics tutor",
+      portfolioUrl: "https://example.com/portfolio",
+      lessonDescription: "Each lesson is 60 minutes with a short warm-up and a guided problem set.",
+      policies: {
+        learnerCancellation: "Free reschedule with 24 hours notice",
+        lateCancellation: "A late fee applies under 12 hours",
+        noShow: "No-show learners are charged the full session",
+        bookingNotice: "12 hours",
+        bookingWindowDays: 30,
+        lessonBufferMin: 15,
+        sameDayBooking: false,
+      },
+      rates: { "30": 150000, "60": 300000, "90": 450000 },
+      displayDuration: 60,
+      consultation: { enabled: true, durationMin: 30, priceVnd: 250000, purpose: "Free 20-minute intro call" },
+      credentials: [
+        { title: "University Teaching Assistant (2019-2021)", evidenceUrl: "", verified: false },
+        { title: "Cambridge CELTA certificate", evidenceUrl: null, verified: false },
+      ],
+      goals: ["IELTS 6.5 in three months", "Confidence for university entry"],
+      ageGroups: ["High school students", "University students"],
+      teachingStyles: ["Socratic questioning", "Spaced practice"],
+      faqs: [
+        { question: "Do you provide materials?", answer: "Yes, I share slides and worksheets." },
+        { question: "Can you help with IELTS?", answer: "I specialize in IELTS writing." },
+      ],
+      avatarUrl: "https://cdn.example.com/avatars/1.jpg",
+      introVideoUrl: "https://cdn.example.com/videos/1.mp4",
+      verified: true,
+      verificationStatus: "verified" as const,
+    };
+    const draft = backendProfileToDraft(rich) as TutorProfileInput;
+    expect(draft.role).toBe("IB Mathematics & Physics tutor");
+    expect(draft.portfolioUrl).toBe("https://example.com/portfolio");
+    expect(draft.lessonDescription).toContain("Each lesson is 60 minutes");
+    expect(draft.learnerCancellation).toContain("24 hours");
+    expect(draft.lateCancellation).toContain("12 hours");
+    expect(draft.noShowPolicy).toContain("full session");
+    expect(draft.bookingWindow).toBe("30 days");
+    expect(draft.lessonBuffer).toBe("15 minutes");
+    expect(draft.consultationEnabled).toBe(true);
+    expect(draft.consultationPrice).toBe("250000 VND");
+    expect(draft.goals).toEqual(["IELTS 6.5 in three months", "Confidence for university entry"]);
+    expect(draft.teachingStyles).toEqual(["Socratic questioning", "Spaced practice"]);
+    expect(draft.faqs?.[0]?.question).toBe("Do you provide materials?");
+    expect(draft.photoUrl).toBe("https://cdn.example.com/avatars/1.jpg");
+
+    const mapped = draftToBackendProfile({ ...draft, ...validDraft(), rates: draft.rates! });
+    expect(mapped.role).toBe("IB Mathematics & Physics tutor");
+    expect(mapped.portfolioUrl).toBe("https://example.com/portfolio");
+    expect(mapped.policies?.bookingWindowDays).toBe(30);
+    expect(mapped.policies?.lessonBufferMin).toBe(15);
+    expect(mapped.rates).toEqual({ "30": 150000, "60": 300000, "90": 450000 });
+    expect(mapped.credentials).toHaveLength(2);
+    expect(mapped.faqs?.[0]?.answer).toBe("Yes, I share slides and worksheets.");
+    expect(mapped.goals).toEqual(["IELTS 6.5 in three months", "Confidence for university entry"]);
   });
 });
 

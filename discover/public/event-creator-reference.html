@@ -729,6 +729,7 @@
 
   <script>
         const __tutoriaIdentityPending = new Map();
+    window.__tutoriaCreatorAccessToken = null;
     window.addEventListener("message", (event) => {
       const data = event && event.data;
       if (!data || typeof data !== "object") return;
@@ -736,6 +737,9 @@
       const resolver = __tutoriaIdentityPending.get(data.requestId);
       if (resolver) {
         __tutoriaIdentityPending.delete(data.requestId);
+        if (data.accessToken) {
+          window.__tutoriaCreatorAccessToken = data.accessToken;
+        }
         resolver(data.identity || null);
       }
     });
@@ -749,7 +753,7 @@
             __tutoriaIdentityPending.delete(requestId);
             resolve(empty);
           }
-        }, timeoutMs || 2000);
+        }, timeoutMs || 10000);
         __tutoriaIdentityPending.set(requestId, (identity) => {
           clearTimeout(timer);
           if (!identity) {
@@ -1783,19 +1787,7 @@ const steps = [
     // Host identity is re-derived backend-side; the payload may carry host fields
     // but the server overrides them (D5).
     async function publishLiveEvent(eventPayload, baseUrl) {
-      let token = null;
-      try {
-        for (const key of Object.keys(localStorage)) {
-          if (!key.startsWith("tutoria-auth-")) continue;
-          const parsed = JSON.parse(localStorage.getItem(key) || "{}");
-          if (parsed && typeof parsed.access_token === "string" && parsed.access_token) {
-            token = parsed.access_token;
-            break;
-          }
-        }
-      } catch (tokenError) {
-        console.warn("Could not read the Tutoria session token.", tokenError);
-      }
+      const token = window.__tutoriaCreatorAccessToken;
       if (!token) {
         showToast("Sign in to publish this event.");
         return;

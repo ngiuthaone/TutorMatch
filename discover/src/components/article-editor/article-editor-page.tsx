@@ -41,24 +41,30 @@ export function ArticleEditorPage({ articleId }: { articleId?: string }) {
   );
 
   useEffect(() => {
+    let cancelled = false;
     if (articleId) {
       const drafts = getArticleDrafts();
       const existing = drafts.find((d) => d.id === articleId);
-      if (existing) {
-        setTitle(existing.title);
-        setSubtitle(existing.subtitle || "");
-        setCoverImage(existing.coverImage?.url || null);
-        setContent(existing.content || { type: "doc", content: [] });
-        setContentHtml(existing.contentHtml || "");
-        setVisibility(existing.visibility);
-        setCommunityId(existing.communityId || "");
-        setTopicName(existing.topicName || "");
-        setSkillNames(existing.skillNames || []);
-        setLevel(existing.level);
-        setCommentsEnabled(existing.commentsEnabled);
-        setExcerpt(existing.excerpt || "");
+      if (existing && !cancelled) {
+        queueMicrotask(() => {
+          if (!cancelled) {
+            setTitle(existing.title);
+            setSubtitle(existing.subtitle || "");
+            setCoverImage(existing.coverImage?.url || null);
+            setContent(existing.content || { type: "doc", content: [] });
+            setContentHtml(existing.contentHtml || "");
+            setVisibility(existing.visibility);
+            setCommunityId(existing.communityId || "");
+            setTopicName(existing.topicName || "");
+            setSkillNames(existing.skillNames || []);
+            setLevel(existing.level);
+            setCommentsEnabled(existing.commentsEnabled);
+            setExcerpt(existing.excerpt || "");
+          }
+        });
       }
     }
+    return () => { cancelled = true; };
   }, [articleId]);
 
   useEffect(() => {

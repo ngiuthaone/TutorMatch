@@ -8,6 +8,22 @@ import { PostComposer } from "@/components/discussion/post-composer";
 import { CommentThread } from "@/components/discussion/comment-thread";
 import { getPublishedPosts, getPublishedArticles } from "@/lib/storage";
 import type { PublishedPost, PublishedArticle } from "@/lib/types";
+
+interface FeedPost {
+  id: string;
+  author: string;
+  role: string;
+  avatar: string;
+  content: string;
+  image?: string | null;
+  likes: number;
+  comments: number;
+  tags: string[];
+  createdAt: string;
+  title?: string;
+  excerpt?: string;
+  readTime?: string;
+}
 import styles from "./discussions.module.css";
 
 const ALL_TAGS = ["Photography", "IELTS", "Languages", "Business", "Technology", "Creative", "Cooking", "Personal development", "Academic", "Community"];
@@ -66,7 +82,7 @@ export function DiscussionsPage() {
 
   useEffect(() => {
     const s = new URLSearchParams(window.location.search);
-    if (s.get("q")) setSearchQuery(s.get("q") || "");
+    queueMicrotask(() => setSearchQuery(s.get("q") || ""));
   }, []);
 
   useEffect(() => {
@@ -198,7 +214,7 @@ function PostsTab({ searchQuery, feedMode }: {
       const raw = localStorage.getItem("tutoria_signup");
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed.name) setUserName(parsed.name);
+        queueMicrotask(() => setUserName(parsed.name));
       }
     } catch {}
   }, []);
@@ -244,7 +260,7 @@ function PostsTab({ searchQuery, feedMode }: {
   const [publishedPosts, setPublishedPosts] = useState<PublishedPost[]>([]);
 
   useEffect(() => {
-    setPublishedPosts(getPublishedPosts());
+    queueMicrotask(() => setPublishedPosts(getPublishedPosts()));
   }, []);
 
   useEffect(() => {
@@ -256,7 +272,7 @@ function PostsTab({ searchQuery, feedMode }: {
     return () => window.removeEventListener("tutoria:create-post", openComposer);
   }, []);
 
-  let feed: any[] = [...publishedPosts.map((p) => ({
+  let feed: FeedPost[] = [...publishedPosts.map((p) => ({
     id: p.id, author: p.authorName, role: p.authorRole || "Learner",
     avatar: p.authorAvatar || `https://picsum.photos/seed/${p.authorName}/60/60`,
     content: p.body, image: p.attachments.find((a) => a.type === "image")?.url || null,
@@ -267,14 +283,14 @@ function PostsTab({ searchQuery, feedMode }: {
   if (feedMode === "following" && following.length > 0) {
     feed = feed.filter(p => following.includes(p.author));
   } else if (feedMode === "communities" && followedTags.length > 0) {
-    feed = feed.filter((p: any) => (p.tags || []).some((t: string) => followedTags.includes(t)));
+    feed = feed.filter((p: FeedPost) => (p.tags || []).some((t: string) => followedTags.includes(t)));
   } else if (feedMode === "questions") {
-    feed = feed.filter((p: any) => (p.content || "").includes("?"));
+    feed = feed.filter((p: FeedPost) => (p.content || "").includes("?"));
   }
 
   if (searchQuery.trim()) {
     const q = searchQuery.trim().toLowerCase();
-    feed = feed.filter((p: any) =>
+    feed = feed.filter((p: FeedPost) =>
       (p.content || "").toLowerCase().includes(q) ||
       (p.tags || []).some((t: string) => t.toLowerCase().includes(q))
     );
@@ -287,7 +303,7 @@ function PostsTab({ searchQuery, feedMode }: {
       <div>
         {feedMode === "following" && following.length === 0 && (
           <div className="text-center py-12 border border-dashed border-border rounded-2xl">
-            <p className="text-sm text-muted">You're not following anyone yet.</p>
+            <p className="text-sm text-muted">You&apos;re not following anyone yet.</p>
             <p className="text-xs text-muted mt-1">Tap the <IconUserPlus size={12} className="inline" /> button on posts to follow creators.</p>
           </div>
         )}
@@ -422,7 +438,7 @@ function PostsTab({ searchQuery, feedMode }: {
   );
 }
 
-function ComposeModal({ userName, onClose, onPost }: { userName: string; onClose: () => void; onPost: (post: any) => void }) {
+function ComposeModal({ userName, onClose, onPost }: { userName: string; onClose: () => void; onPost: (post: { content: string; tags: string[]; createdAt: string }) => void }) {
   const [content, setContent] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
@@ -598,7 +614,7 @@ function BlogsTab({ searchQuery, feedMode }: {
   const [publishedArticles, setPublishedArticles] = useState<PublishedArticle[]>([]);
 
   useEffect(() => {
-    setPublishedArticles(getPublishedArticles());
+    queueMicrotask(() => setPublishedArticles(getPublishedArticles()));
   }, []);
 
   let feed: any[] = [...publishedArticles.map((a) => ({
@@ -614,14 +630,14 @@ function BlogsTab({ searchQuery, feedMode }: {
   if (feedMode === "following" && following.length > 0) {
     feed = feed.filter(b => following.includes(b.author));
   } else if (feedMode === "communities" && followedTags.length > 0) {
-    feed = feed.filter((b: any) => (b.tags || []).some((t: string) => followedTags.includes(t)));
+    feed = feed.filter((b) => (b.tags || []).some((t: string) => followedTags.includes(t)));
   } else if (feedMode === "questions") {
-    feed = feed.filter((b: any) => /^(how|what|why|when|where|can|should)\b/i.test(b.title || ""));
+    feed = feed.filter((b) => /^(how|what|why|when|where|can|should)\b/i.test(b.title || ""));
   }
 
   if (searchQuery.trim()) {
     const q = searchQuery.trim().toLowerCase();
-    feed = feed.filter((b: any) =>
+    feed = feed.filter((b) =>
       (b.title || "").toLowerCase().includes(q) ||
       (b.excerpt || "").toLowerCase().includes(q) ||
       (b.tags || []).some((t: string) => t.toLowerCase().includes(q))
@@ -634,7 +650,7 @@ function BlogsTab({ searchQuery, feedMode }: {
     <div className={styles.postList}>
       {feedMode === "following" && following.length === 0 && (
         <div className="text-center py-12 border border-dashed border-border rounded-2xl">
-          <p className="text-sm text-muted">You're not following anyone yet.</p>
+          <p className="text-sm text-muted">You&apos;re not following anyone yet.</p>
           <p className="text-xs text-muted mt-1">Follow creators on the Posts tab to see their blogs here.</p>
         </div>
       )}

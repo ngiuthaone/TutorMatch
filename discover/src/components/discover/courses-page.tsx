@@ -9,6 +9,7 @@ import { ActiveFilters } from "@/components/ui/active-filters";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
 import { FilterRadio } from "@/components/ui/filter-section";
 import { allCourses, PUBLISHED_COURSES_EVENT, PUBLISHED_COURSES_KEY, readPublishedCourses, type CourseListing } from "@/lib/course-data";
+import { isLiveMode } from "@/lib/auth/config";
 import styles from "./marketplace-pages.module.css";
 
 const allLevels = ["Beginner", "Intermediate", "Advanced", "All levels"];
@@ -37,7 +38,14 @@ export function CoursesPage() {
     window.addEventListener("storage", onStorage);
     return () => { window.removeEventListener(PUBLISHED_COURSES_EVENT, refresh); window.removeEventListener("storage", onStorage); };
   }, []);
-  const courses = useMemo(() => [...publishedCourses, ...allCourses], [publishedCourses]);
+  const courses = useMemo(() => {
+    // In live mode the fabricated demo catalog (picsum images, fake
+    // instructors/reviews/prices) must not appear alongside real published
+    // courses. Only the live, server-authored catalog should reach learners,
+    // and that surface does not exist yet on the demo store.
+    if (isLiveMode()) return publishedCourses;
+    return [...publishedCourses, ...allCourses];
+  }, [publishedCourses]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const params = useFilterParams();
   const query = params.get("q", "");

@@ -95,35 +95,37 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    let active = true;
-    setPage({ status: "loading" });
+    const cancelled = { current: false };
+    queueMicrotask(() => setPage({ status: "loading" }));
 
     (async () => {
       try {
         const listing = await getMarketplaceListing("event", slug);
-        if (!active || controller.signal.aborted) return;
+        if (cancelled.current || controller.signal.aborted) return;
         if (!listing) {
           setPage({ status: "not-found" });
           return;
         }
         const payload = (listing.payload ?? {}) as WorkshopPayload;
-        setPage({ status: "ready", listing, payload });
-        if (payload.faqs?.length) setOpenFaq(payload.faqs[0].question);
+        if (!cancelled.current) setPage({ status: "ready", listing, payload });
+        if (!cancelled.current && payload.faqs?.length) setOpenFaq(payload.faqs[0].question);
       } catch {
-        if (active && !controller.signal.aborted) setPage({ status: "not-found" });
+        if (!cancelled.current && !controller.signal.aborted) setPage({ status: "not-found" });
       }
     })();
 
     return () => {
-      active = false;
+      cancelled.current = true;
       controller.abort();
     };
   }, [slug]);
 
   /* Reset session selection when listing changes */
   useEffect(() => {
-    setSelectedSession(null);
-    setParticipants(1);
+    queueMicrotask(() => {
+      setSelectedSession(null);
+      setParticipants(1);
+    });
   }, [page]);
 
   /* Derived data */
@@ -177,10 +179,11 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
   const handleBooked = useCallback(
     (booking: BookingRecord) => {
       const serverTotal = booking.pricing?.amountVnd;
+      // The booking sheet renders the in-sheet receipt; we only toast here and do
+      // not navigate away (there is no /bookings/[id] page to land on).
       showToast(
-        serverTotal != null ? `Booking created \u00B7 ${formatVnd(serverTotal)}` : "Booking created",
+        serverTotal != null ? `Booking request sent \u00B7 ${formatVnd(serverTotal)}` : "Booking request sent",
       );
-      window.location.assign(`/bookings/${booking.id}`);
     },
     [showToast],
   );
