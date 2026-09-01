@@ -1,6 +1,7 @@
 import "dotenv/config";
 import * as Sentry from "@sentry/node";
 import "@sentry/profiling-node";
+import { createClient } from "@supabase/supabase-js";
 import { createApp } from "./app.js";
 import { parseEnvironment } from "./config/env.js";
 import { createSupabaseAuthService } from "./lib/supabase.js";
@@ -102,8 +103,32 @@ async function main() {
         { tmnCode: config.VNPAY_TMN_CODE, hashSecret: config.VNPAY_HASH_SECRET, paymentUrl: config.VNPAY_PAYMENT_URL, returnUrl: config.VNPAY_RETURN_URL, ipnUrl: config.VNPAY_IPN_URL },
         config.VNPAY_API_URL, fetch, { batchSize: worker.batchSize, leaseSeconds: worker.leaseSeconds, releaseBackoffSeconds: worker.releaseBackoffSeconds, providerRequestTimeoutMs: config.VNPAY_REQUEST_TIMEOUT_MS, signal: shutdownController.signal }
       );
+      const heartbeatClient = config.SUPABASE_SERVICE_ROLE_KEY
+        ? createClient(config.SUPABASE_URL, config.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } })
+        : null;
       const runtime = createFinancialWorkerRuntime({ service, workerId: worker.workerId, intervalMs: worker.intervalMs, logger: (level: "debug" | "info" | "warn" | "error", event: string, fields: Record<string, unknown> = {}) => {
         app.log[level]({ event, workerId: worker.workerId, ...fields }, `worker: ${event}`);
+        if (heartbeatClient && event === "financial_worker_iteration_completed") {
+          const ok = fields.ok === true;
+          const lastError = ok ? null : typeof fields.errorCount === "number" && fields.errorCount > 0
+            ? `${fields.errorCount} sweep error(s); see worker logs for details`
+            : null;
+          void (async () => {
+            try {
+              const writeResult = await heartbeatClient.from("worker_heartbeats").upsert({
+                worker_id: worker.workerId,
+                last_run_at: new Date().toISOString(),
+                last_status: ok ? "ok" : "degraded",
+                last_error: lastError,
+              }, { onConflict: "worker_id" });
+              if (writeResult.error) {
+                app.log.warn({ err: writeResult.error.message, workerId: worker.workerId }, "worker_heartbeat_write_failed");
+              }
+            } catch (writeError) {
+              app.log.warn({ err: writeError instanceof Error ? writeError.message : "unknown", workerId: worker.workerId }, "worker_heartbeat_write_failed");
+            }
+          })();
+        }
       }, onStop: () => shutdownController.abort() });
       await runtime.start();
       app.log.info({ workerId: worker.workerId }, "Financial worker started in-process");

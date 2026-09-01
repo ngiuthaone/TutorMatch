@@ -1,4 +1,5 @@
 import Fastify, { LogController, type FastifyServerOptions } from "fastify";
+import { randomUUID } from "node:crypto";
 import type { AppConfig } from "./config/env.js";
 import { ApiError } from "./errors/api-error.js";
 import { authenticationPlugin } from "./plugins/authenticate.js";
@@ -67,10 +68,20 @@ export function createApp(options: {
     keepAliveTimeout: options.config.KEEP_ALIVE_TIMEOUT_MS,
     logController: new LogController({ disableRequestLogging: true })
   });
+
+  // Request tracing: assign/propagate x-request-id and bind to logger so
+  // downstream log lines are correlated. Honors caller-supplied IDs.
+  app.addHook("onRequest", async (request, reply) => {
+    const incoming = request.headers["x-request-id"];
+    const id = typeof incoming === "string" && incoming.length > 0 && incoming.length <= 128 ? incoming : randomUUID();
+    request.id = id;
+    reply.header("x-request-id", id);
+    request.log = request.log.child({ requestId: id });
+  });
   app.register(cookie);
   app.register(securityPlugin, { config: options.config });
   app.register(authenticationPlugin, { authService: options.authService, maxHeaderLength: options.config.MAX_AUTHORIZATION_HEADER_LENGTH });
-  app.register(healthRoutes);
+  app.register(healthRoutes, { config: options.config });
   app.register(authBffRoutes);
   app.register(meRoutes, { authService: options.authService, max: options.config.ME_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.tutorCvService) {
