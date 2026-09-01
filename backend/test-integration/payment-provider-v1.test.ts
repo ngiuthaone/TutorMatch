@@ -116,3 +116,5 @@ describe.sequential("Payment Provider V1 local proof", () => {
     expect((await sql`select r.status from public.refunds r join public.payments p on p.id=r.payment_id where p.booking_id=${b.data.id}`)[0].status).toBe("obligation");
   });
 });
+
+afterAll(() => sql.end());

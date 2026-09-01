@@ -123,3 +123,5 @@ describe.sequential("local tutor CV full fields, media moderation RLS", () => {
     expect(JSON.stringify(visible.data)).not.toContain("pending.webp");
   });
 });
+
+afterAll(() => sql.end());

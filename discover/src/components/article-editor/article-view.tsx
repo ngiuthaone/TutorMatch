@@ -7,6 +7,7 @@ import { getPublishedArticleById, toggleAppreciate, getComments } from "@/lib/st
 import type { PublishedArticle } from "@/lib/types";
 import { CommentThread } from "@/components/discussion/comment-thread";
 import { getUserFromStorage } from "@/lib/types";
+import { sanitizeRichHtml } from "@/lib/sanitize";
 
 export function ArticleView({ id }: { id: string }) {
   const router = useRouter();
@@ -147,7 +148,7 @@ export function ArticleView({ id }: { id: string }) {
               <span className="flex items-center gap-1"><IconClock size={12} />{article.estimatedReadingMinutes} min read</span>
             </div>
             <div className="mt-8 article-view-content text-sm text-foreground leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: article.contentHtml || "" }} />
+              dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(article.contentHtml || "") }} />
             <div className="flex items-center gap-4 mt-8 pt-4 border-t border-border text-xs text-muted">
               <button onClick={handleAppreciate}
                 className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors ${appreciated ? "text-red-400 bg-red-50 dark:bg-red-900/10" : "hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-400"}`}>

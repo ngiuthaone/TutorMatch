@@ -15,10 +15,11 @@ interface ApiFetchOptions {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   auth?: boolean;
+  timeoutMs?: number;
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
-  const { method = "GET", body, auth = true } = options;
+  const { method = "GET", body, auth = true, timeoutMs = 10_000 } = options;
   const baseUrl = getApiBaseUrl().replace(/\/$/, "");
   const headers: Record<string, string> = { Accept: "application/json" };
 
@@ -35,6 +36,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     body: body !== undefined ? JSON.stringify(body) : undefined,
     credentials: "omit",
     cache: "no-store",
+    signal: AbortSignal.timeout(timeoutMs),
   });
 
   const text = await response.text();

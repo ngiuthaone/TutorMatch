@@ -90,6 +90,7 @@ async function synchronize(session: Session | null, attempt = 0): Promise<void> 
 }
 
 let startPromise: Promise<void> | null = null;
+let unsubscribeAuth: (() => void) | null = null;
 
 export function ensureSession(): Promise<void> {
   if (startPromise) return startPromise;
@@ -105,7 +106,8 @@ export function ensureSession(): Promise<void> {
       return;
     }
     try {
-      client.auth.onAuthStateChange((event, session) => {
+      if (unsubscribeAuth) unsubscribeAuth();
+      const { data: { subscription: { unsubscribe } } } = client.auth.onAuthStateChange((event, session) => {
         if (event === "PASSWORD_RECOVERY") {
           generation++;
           emit({ status: "initializing" });
@@ -113,6 +115,7 @@ export function ensureSession(): Promise<void> {
         }
         void synchronize(session);
       });
+      unsubscribeAuth = unsubscribe;
       const result = await client.auth.getSession();
       if (result.error) throw new Error("SESSION_UNAVAILABLE");
       await synchronize(result.data.session || null);
@@ -227,6 +230,8 @@ export async function updatePasswordWithSession(newPassword: string): Promise<vo
 }
 
 export async function signOutLive(): Promise<void> {
+  unsubscribeAuth?.();
+  unsubscribeAuth = null;
   generation++;
   if (getRuntimeConfig().useBffAuth) {
     try { await bffSignOutRaw(); } catch { /* proceed to clear local state */ }

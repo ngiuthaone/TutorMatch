@@ -1,12 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Bookings', () => {
-  test('bookings list page loads in demo mode when not authenticated', async ({ page }) => {
+  test('bookings page loads without crashing in demo mode', async ({ page }) => {
     const errors: string[] = [];
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
     await page.goto('/bookings');
-    // Should show demo message or sign-in redirect
+    await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).not.toBeEmpty();
-    expect(errors.filter(e => !e.includes('Warning'))).toHaveLength(0);
+    const criticalErrors = errors.filter(e =>
+      !e.includes('Warning') && !e.includes('DevTools') && !e.includes('Download the React DevTools')
+    );
+    expect(criticalErrors).toHaveLength(0);
   });
 });

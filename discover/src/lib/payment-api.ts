@@ -53,6 +53,7 @@ export async function startPayment(bookingId: string): Promise<{ redirectUrl: st
     body: JSON.stringify({ bookingId, idempotencyKey: idempotencyKeyFor(bookingId) }),
     credentials: "omit",
     cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
   });
   const payload = await jsonResponse(response);
   if (!response.ok) throw apiError(response, payload);

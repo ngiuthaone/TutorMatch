@@ -23,6 +23,7 @@ export async function getMarketplaceListing(
     const response = await fetch(`${base}/api/v1/marketplace/${kind}`, {
       cache: "no-store",
       headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) return null;
     const payload = (await response.json()) as {

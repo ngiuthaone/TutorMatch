@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { IconArrowLeft, IconClock, IconHeart, IconMessage2, IconBookmark, IconShare, IconUser } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { getArticleDrafts, getPublishedArticleById } from "@/lib/storage";
+import { sanitizeRichHtml } from "@/lib/sanitize";
 import type { ArticleDraft, PublishedArticle } from "@/lib/types";
 
 export function ArticlePreview({ id }: { id: string }) {
@@ -94,7 +95,7 @@ export function ArticlePreview({ id }: { id: string }) {
               <span className="flex items-center gap-1"><IconClock size={12} />{article.estimatedReadingMinutes} min read</span>
             </div>
             <div className="mt-8 article-view-content text-sm text-foreground leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: article.contentHtml || "" }} />
+              dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(article.contentHtml || "") }} />
             <div className="flex items-center gap-4 mt-8 pt-4 border-t border-border text-xs text-muted">
               <button className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-400 transition-colors">
                 <IconHeart size={15} />

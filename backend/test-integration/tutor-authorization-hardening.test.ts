@@ -70,3 +70,5 @@ describe.sequential("Tutor authorization hardening", () => {
     expect((await learner.client.rpc("approve_booking_for_payment", { p_booking_id: booking.data.id })).error).toBeTruthy();
   });
 });
+
+afterAll(() => sql.end());

@@ -39,3 +39,5 @@ describe.sequential("local profiles RLS", () => {
   });
   it("cascades profile deletion with the auth user", async () => { const { user } = await signup(); await sql`delete from auth.users where id = ${user.id}`; const rows = await sql`select id from public.profiles where id = ${user.id}`; expect(rows).toHaveLength(0); });
 });
+
+afterAll(() => sql.end());

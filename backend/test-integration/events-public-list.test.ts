@@ -120,3 +120,5 @@ describe.sequential("events public browse listing (additive migration)", () => {
     expect(json).not.toContain("creatorEmail");
   });
 });
+
+afterAll(() => sql.end());

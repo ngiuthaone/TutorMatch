@@ -12,3 +12,5 @@ describe.sequential("local tutor CV RPC and RLS",()=>{
  it.each(["Tutor at tutor@example.com","Call 0901 234 567","See https://example.com"])("rejects contact information: %s",async bio=>{const t=await signup("tutor");const result=await t.client.rpc("save_my_tutor_cv",{payload:{...complete,bio},expected_version:null});expect(result.error).toBeTruthy()});
  it("rejects stale versions without partial child replacement",async()=>{const t=await signup("tutor");const saved=await t.client.rpc("save_my_tutor_cv",{payload:complete,expected_version:null});const stale=await t.client.rpc("save_my_tutor_cv",{payload:{...complete,subjects:["english"]},expected_version:saved.data.version+1});expect(stale.error).toBeTruthy();expect((await t.client.rpc("get_my_tutor_cv")).data.subjects).toEqual(["mathematics"])});
 });
+
+afterAll(() => sql.end());

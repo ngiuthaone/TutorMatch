@@ -5,7 +5,6 @@ import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
-import { makeOffering } from "./_fixtures/offering.js";
 
 const url = process.env.SUPABASE_TEST_URL;
 const key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY;
@@ -36,12 +35,12 @@ const FUTURE = { startsAt: new Date(Date.now() + 2 * 3600e3).toISOString(), ends
 type Fixture = Awaited<ReturnType<typeof signup>>;
 
 async function createConfirmedBooking(tutor: Fixture, learner: Fixture) {
-  const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop");
-  const session = await tutor.client.rpc("create_session", { payload: { offeringId, ...FUTURE, maxParticipants: 2 } });
+  const session = await tutor.client.rpc("create_session", { payload: { ...FUTURE, maxParticipants: 2 } });
   if (session.error || !session.data) throw session.error ?? new Error("create_session failed");
   const booking = await learner.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 });
   if (booking.error || !booking.data) throw booking.error ?? new Error("create_booking failed");
-  await tutor.client.rpc("confirm_booking", { booking_id: booking.data.id, expected_version: booking.data.version });
+  const confirm = await tutor.client.rpc("confirm_booking", { booking_id: booking.data.id, expected_version: booking.data.version });
+  if (confirm.error) throw confirm.error;
   return { bookingId: booking.data.id, sessionId: session.data.id };
 }
 
@@ -49,10 +48,13 @@ describe.sequential("messaging Alpha (MSG-010 / DEC-015): RLS, idempotency, memb
   beforeAll(async () => {
     for (const n of [
       "0001_create_profiles.sql",
+      "0002_create_tutor_cvs.sql",
+      "0003_create_marketplace_listings.sql",
       "0004_create_sessions_and_bookings.sql",
       "0005_create_booking_session_rpcs.sql",
       "0006_create_event_outbox.sql",
       "0007_emit_domain_events_from_booking_session_rpcs.sql",
+      "20260815150540_tutor_authorization_hardening.sql",
       "20260904120000_messaging_alpha_v1.sql",
     ]) {
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
@@ -92,7 +94,9 @@ describe.sequential("messaging Alpha (MSG-010 / DEC-015): RLS, idempotency, memb
     const learner = await signup("student");
     const { bookingId } = await createConfirmedBooking(tutor, learner);
     const a = await learner.client.rpc("get_or_create_booking_conversation", { p_booking_id: bookingId });
+    expect(a.error).toBeNull();
     const b = await learner.client.rpc("get_or_create_booking_conversation", { p_booking_id: bookingId });
+    expect(b.error).toBeNull();
     expect((a.data as { id: string }).id).toBe((b.data as { id: string }).id);
   });
 
@@ -216,3 +220,4 @@ describe.sequential("messaging Alpha (MSG-010 / DEC-015): RLS, idempotency, memb
     expect(JSON.stringify(learnerList.data)).toContain(conv.id);
   });
 });
+afterAll(() => sql.end());
