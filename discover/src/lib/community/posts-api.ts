@@ -15,6 +15,7 @@ export interface Post {
   reply_permission: string;
   like_count: number;
   repost_count: number;
+  comment_count: number;
   created_at: string;
   updated_at: string;
   is_author?: boolean;

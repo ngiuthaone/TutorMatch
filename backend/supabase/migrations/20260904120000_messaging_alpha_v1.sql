@@ -142,13 +142,10 @@ declare
   b public.bookings%rowtype;
   s public.sessions%rowtype;
 begin
-  raise notice 'open_or_get: uid=%, booking_id=%', uid, p_booking_id;
   if uid is null then raise insufficient_privilege; end if;
   select * into b from public.bookings where id = p_booking_id;
-  raise notice 'open_or_get: b.id=%, b.learner_id=%, b.session_id=%', b.id, b.learner_id, b.session_id;
   if b.id is null then raise insufficient_privilege; end if;
   select * into s from public.sessions where id = b.session_id;
-  raise notice 'open_or_get: s.id=%, s.host_id=%', s.id, s.host_id;
   if s.id is null then raise insufficient_privilege; end if;
   if uid <> b.learner_id and uid <> s.host_id then raise insufficient_privilege; end if;
   select id into cid from public.conversations where booking_id = p_booking_id;
@@ -173,11 +170,14 @@ revoke all on function public.open_or_get_booking_conversation(uuid) from public
 create or replace function public.get_or_create_booking_conversation(p_booking_id uuid) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
-  cid uuid := public.open_or_get_booking_conversation(p_booking_id);
-  caller uuid := auth.uid();
+  viewer uuid := auth.uid();
+  cid uuid;
 begin
-  raise notice 'get_or_create_booking_conversation: p_booking_id=%, caller=%', p_booking_id, caller;
-  return public.conversation_summary(cid, caller);
+  if viewer is null then raise insufficient_privilege; end if;
+  -- open_or_get_booking_conversation authorizes the caller against
+  -- bookings.learner_id / sessions.host_id and seeds the membership.
+  cid := public.open_or_get_booking_conversation(p_booking_id);
+  return public.conversation_summary(cid, viewer);
 end;
 $$;
 revoke all on function public.get_or_create_booking_conversation(uuid) from public, anon, authenticated;
@@ -191,8 +191,6 @@ declare
   conv public.conversations%rowtype;
   booking public.bookings%rowtype;
   session_row public.sessions%rowtype;
-  host_p public.profiles%rowtype;
-  learner_p public.profiles%rowtype;
   viewer_role text;
   other_user uuid;
   other_role text;
@@ -215,10 +213,10 @@ begin
   else
     other_user := booking.learner_id; other_role := 'learner';
   end if;
-  select name into host_p from public.profiles where id = session_row.host_id;
-  select name into learner_p from public.profiles where id = booking.learner_id;
-  if other_role = 'host' then other_name := host_p.name;
-  else other_name := learner_p.name; end if;
+  -- Display name lookup runs as the SECURITY DEFINER owner (postgres),
+  -- which bypasses RLS, so the cross-party read is allowed.
+  select p.name into other_name from public.profiles p where p.id = other_user;
+  if other_name is null or btrim(other_name) = '' then other_name := 'Your conversation partner'; end if;
   select count(*) into unread from public.messages
     where conversation_id = cid and sender_id <> viewer
       and created_at > coalesce((

@@ -121,6 +121,7 @@ begin
     'reply_permission', p.reply_permission,
     'like_count', p.like_count,
     'repost_count', p.repost_count,
+    'comment_count', (select count(*) from public.comments c where c.owner_type = 'post' and c.owner_id = p.id and c.status = 'published'),
     'created_at', p.created_at,
     'updated_at', p.updated_at,
     'is_author', (p.author_id = v_auth_uid),
@@ -171,6 +172,7 @@ begin
       'reply_permission', p.reply_permission,
       'like_count', p.like_count,
       'repost_count', p.repost_count,
+      'comment_count', (select count(*) from public.comments c where c.owner_type = 'post' and c.owner_id = p.id and c.status = 'published'),
       'created_at', p.created_at,
       'author', jsonb_build_object('name', pr.name, 'avatar_url', pr.avatar_url, 'role', pr.role)
     ) obj, p.created_at
@@ -225,7 +227,7 @@ begin
     select jsonb_build_object('posts', coalesce(jsonb_agg(
       jsonb_build_object(
         'id', p.id, 'body', p.body, 'tags', p.tags, 'status', p.status,
-        'repost_count', p.repost_count, 'created_at', p.created_at, 'updated_at', p.updated_at
+        'like_count', p.like_count, 'repost_count', p.repost_count, 'comment_count', p.comment_count, 'created_at', p.created_at, 'updated_at', p.updated_at
       ) order by p.created_at desc
     ), '[]'::jsonb))
     from public.posts p

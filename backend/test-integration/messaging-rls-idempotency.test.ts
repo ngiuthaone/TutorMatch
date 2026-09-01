@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
 
 const url = process.env.SUPABASE_TEST_URL;
@@ -18,8 +18,11 @@ const password = "Local-test-only-Password1!";
 
 async function signup(role: "student" | "tutor") {
   const email = `msg-${randomUUID()}@example.test`;
+  // Each signup gets its own anon client so the second signIn does not race
+  // against the first (the shared anon client kept overwriting the cached
+  // session and the second signIn returned no session).
   return signUpConfirmed({
-    anon,
+    anon: createClient(url!, key!, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }),
     url: url!,
     publishableKey: key!,
     serviceRoleKey: serviceKey!,

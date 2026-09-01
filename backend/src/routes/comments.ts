@@ -47,7 +47,7 @@ export const commentRoutes: FastifyPluginAsync<{
       body: body.body,
       parentId: body.parentId ?? null,
     });
-    if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Thread, article, or parent comment not found.");
+    if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Article or parent comment not found.");
     if (result.status === "invalid") {
       if (result.code === "EMAIL_VERIFICATION_REQUIRED") throw new ApiError(403, "EMAIL_VERIFICATION_REQUIRED", "Please confirm your email before posting.");
       if (result.code === "OWNER_CLOSED") throw new ApiError(409, "OWNER_CLOSED", "This content is closed for comments.");

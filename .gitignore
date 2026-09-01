@@ -20,3 +20,11 @@ discover/test-results/.last-run.json
 .env
 .env.local
 .env.*.local
+
+# Local runtime / dev artifacts and agent run logs — never publish
+data/
+.codex/team-runs/
+.DS_Store
+
+# Local content persistence with PII-like sample data — keep out of the repo
+discover/data/

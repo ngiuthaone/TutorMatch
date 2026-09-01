@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
 import { futureWindow, makeOffering } from "./_fixtures/offering.js";
 
