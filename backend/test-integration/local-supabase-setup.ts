@@ -1,4 +1,22 @@
 import { createHmac } from "node:crypto";
+import { execSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+if (process.env.SKIP_DB_RESET !== "1") {
+  try {
+    const repoRoot = resolve(__dirname, "..", "..");
+    execSync("supabase db reset --local --no-seed", {
+      cwd: repoRoot,
+      stdio: "ignore",
+    });
+  } catch (err) {
+    console.error("supabase db reset failed; tests will likely fail:", (err as Error).message);
+    throw err;
+  }
+}
 
 // Supabase CLI can print a legacy anon token that is stale after a local reset.
 // The repository pins the local JWT secret in supabase/config.toml; generate the
