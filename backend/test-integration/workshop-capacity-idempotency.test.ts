@@ -227,7 +227,7 @@ describe.sequential("workshop capacity and idempotency invariants", () => {
     expect(await reserved(s.id)).toBe(2);
 
     // One authoritative pricing snapshot: amount = 2 × 500000 = 1000000
-    const pricing = await sql`select pricing_amount_vnd::bigint as amt, pricing_price_per_participant_vnd::bigint as ppv, pricing_model as model from public.bookings where id = ${bookingId}`;
+    const pricing = await sql`select pricing_amount_vnd::bigint as amt, pricing_unit_price_vnd::bigint as ppv, pricing_model as model from public.bookings where id = ${bookingId}`;
     expect(Number(pricing[0].amt)).toBe(1000000);
     expect(Number(pricing[0].ppv)).toBe(500000);
     expect(pricing[0].model).toBe("flat_per_participant_v1");

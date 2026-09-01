@@ -75,7 +75,7 @@ async function bookingRow(bid: string) {
 }
 
 async function sessionCapacity(sid: string) {
-  const rows = await sql`select max_participants::int as max, spots_left::int as spots from public.sessions where id = ${sid}`;
+  const rows = await sql`select max_participants::int as max, (max_participants - coalesce((select sum(participant_count) from public.bookings where session_id = s.id and status in ('requested','confirmed')), 0))::int as spots from public.sessions s where id = ${sid}`;
   return rows[0];
 }
 
