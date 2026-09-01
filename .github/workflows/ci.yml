@@ -36,14 +36,11 @@ jobs:
         working-directory: discover
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "pnpm"
-          cache-dependency-path: discover/package.json
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test
-      - run: pnpm build
+          cache: "npm"
+          cache-dependency-path: discover/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
