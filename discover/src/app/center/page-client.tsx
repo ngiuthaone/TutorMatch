@@ -99,7 +99,12 @@ function TutorDashboardSection({ summary, onRefresh }: TutorDashboardSectionProp
         </nav>
 
         {tab === "overview" && (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 space-y-4">
+            <div className="rounded-2xl border border-white/[.1] bg-white/[.025] p-4 text-sm text-white/65">
+              <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-white/40">Payouts</p>
+              <p className="mt-2 text-white/80">Payouts are processed manually every Friday. You'll receive an email when your payout has been sent.</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Today" value={String(summary.todayCount)} />
             <Stat label="Upcoming" value={String(summary.upcomingCount)} />
             <Stat label="Month earnings" value={formatVnd(summary.monthEarningsVnd)} />
@@ -110,6 +115,7 @@ function TutorDashboardSection({ summary, onRefresh }: TutorDashboardSectionProp
             />
             <Stat label="Pending bookings" value={String(summary.pendingBookingsCount)} />
             <Stat label="Month completed" value={String(summary.monthCompletedCount)} />
+            </div>
           </div>
         )}
 
