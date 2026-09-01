@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { ApiClientError, getApiClient } from "./api-client";
 import { getAuthCallbackUrl, getRuntimeConfig, isLiveMode } from "./config";
@@ -136,7 +136,12 @@ export function subscribeSession(listener: () => void): () => void {
 }
 
 export function useSession(): LiveSessionState {
-  void ensureSession();
+  const initRef = useRef(false);
+  useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
+    void ensureSession();
+  }, []);
   return useSyncExternalStore(subscribeSession, getSessionSnapshot, () => SERVER_SESSION_SNAPSHOT);
 }
 
