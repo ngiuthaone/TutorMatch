@@ -30,11 +30,7 @@ BEGIN
         'status', s.status,
         'min_participants', s.min_participants,
         'max_participants', s.max_participants,
-        'spots_left', LEAST(s.max_participants, s.max_participants) - COALESCE((
-          SELECT SUM(b.participant_count)
-          FROM bookings b
-          WHERE b.session_id = s.id AND b.status IN ('requested', 'confirmed')
-        ), 0)
+        'spots_left', greatest(0, s.max_participants - public.session_hard_reserved(s.id))
       ) ORDER BY s.starts_at)
       FROM sessions s
       WHERE s.offering_id = o.id

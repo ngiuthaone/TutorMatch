@@ -27,37 +27,29 @@ alter table public.course_lessons enable row level security;
 
 revoke all on table public.course_lessons from public, anon, authenticated;
 
--- Public read: lessons for published courses or course creator
+-- Public/creator read: course is published OR user is creator
 drop policy if exists course_lessons_public_read on public.course_lessons;
 create policy course_lessons_public_read on public.course_lessons
-  for select to anon, authenticated
+  for select to authenticated
   using (
     exists (
-      select 1 from public.course_sections cs
-      join public.courses c on c.id = cs.course_id
+      select 1 from public.courses c
+      join public.course_sections cs on cs.course_id = c.id
       where cs.id = course_lessons.section_id
-        and (c.status = 'published' or c.creator_id = auth.uid())
+      and (c.status = 'published' or c.creator_id = auth.uid())
     )
   );
 
--- Only course creator can insert/update/delete
-drop policy if exists course_lessons_creator_write on public.course_lessons;
-create policy course_lessons_creator_write on public.course_lessons
+-- Creator full access
+drop policy if exists course_lessons_creator_all on public.course_lessons;
+create policy course_lessons_creator_all on public.course_lessons
   for all to authenticated
   using (
     exists (
-      select 1 from public.course_sections cs
-      join public.courses c on c.id = cs.course_id
+      select 1 from public.courses c
+      join public.course_sections cs on cs.course_id = c.id
       where cs.id = course_lessons.section_id
-        and c.creator_id = auth.uid()
-    )
-  )
-  with check (
-    exists (
-      select 1 from public.course_sections cs
-      join public.courses c on c.id = cs.course_id
-      where cs.id = course_lessons.section_id
-        and c.creator_id = auth.uid()
+      and c.creator_id = auth.uid()
     )
   );
 

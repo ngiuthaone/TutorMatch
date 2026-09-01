@@ -357,6 +357,24 @@ begin
     raise exception 'INVALID_MESSAGE' using errcode = '22023';
   end if;
   if not public.is_conversation_member(cid) then raise insufficient_privilege; end if;
+
+  -- Block enforcement (server-authoritative, both directions):
+  -- A may not send a message to B if A blocked B OR B blocked A.
+  -- Deterministic error code: 'BLOCKED' / errcode 42501 (insufficient_privilege).
+  -- The check happens BEFORE the idempotency lookup so a blocked caller
+  -- cannot probe a known client_message_id. It happens AFTER the membership
+  -- check so the error is for "blocked" not "forbidden-not-a-member".
+  if exists (
+    select 1 from public.conversation_members cm
+    where cm.conversation_id = cid and cm.user_id <> uid
+      and (
+        public.is_blocked(uid, cm.user_id)  -- I blocked them
+        or public.is_blocked(cm.user_id, uid) -- they blocked me
+      )
+  ) then
+    raise exception 'BLOCKED' using errcode = '42501';
+  end if;
+
   -- Idempotency: a retry re-uses the same persisted message.
   select * into existing from public.messages
     where sender_id = uid and client_message_id = btrim(p_client_message_id);
