@@ -8,6 +8,7 @@ import { ensureSession, useSession } from "@/lib/auth/session";
 import { BookingApiError, cancelLearnerBooking, getCancellationPreview, getLearnerBooking, type BookingRecord, type CancellationPreview } from "@/lib/booking-api";
 import { PaymentApiError, startPayment } from "@/lib/payment-api";
 import { bookingAmount, bookingPaymentLabel, bookingSubtitle, bookingTitle, canCancelBooking, canStartPayment, refundAmount, refundStatusLabel } from "@/lib/booking-payment-state";
+import { getOrCreateBookingConversation } from "@/lib/messaging-api";
 
 function money(amount: number): string { return `${new Intl.NumberFormat("vi-VN").format(amount)}₫`; }
 function schedule(booking: BookingRecord): string {
@@ -70,9 +71,22 @@ function CancelDialog({ booking, onClose, onCancelled, onConflict }: { booking: 
 }
 
 function BookingCard({ booking, onRefresh }: { booking: BookingRecord; onRefresh: (bookingId: string) => Promise<void> }) {
+  const router = useRouter();
   const [starting, setStarting] = useState(false); const [error, setError] = useState(""); const [cancelOpen, setCancelOpen] = useState(false); const startingRef = useRef(false);
+  const [messaging, setMessaging] = useState<"idle" | "opening" | "error">("idle");
   const amount = bookingAmount(booking); const canPay = canStartPayment(booking); const accepted = booking.paymentReady || booking.status === "confirmed"; const paid = booking.payment?.status === "succeeded"; const confirmed = booking.status === "confirmed" && paid;
   const pay = async () => { if (!canPay || amount === null || startingRef.current) return; startingRef.current = true; setStarting(true); setError(""); try { const result = await startPayment(booking.id); window.location.assign(result.redirectUrl); } catch (cause) { startingRef.current = false; setStarting(false); if (cause instanceof PaymentApiError) await onRefresh(booking.id); setError(cause instanceof Error ? cause.message : "Payment could not be started. Refresh and try again."); } };
+  const openConversation = async () => {
+    if (messaging === "opening") return;
+    setMessaging("opening"); setError("");
+    try {
+      const conversation = await getOrCreateBookingConversation(booking.id);
+      router.push(`/messages?conversationId=${encodeURIComponent(conversation.id)}`);
+    } catch (cause) {
+      setMessaging("error");
+      setError(cause instanceof Error ? cause.message : "Messaging is temporarily unavailable. Please try again.");
+    }
+  };
   const duration = booking.pricing?.durationMinutes ?? Math.round((new Date(booking.session.endsAt).getTime() - new Date(booking.session.startsAt).getTime()) / 60000);
   return <article className="overflow-hidden rounded-[28px] border border-white/[.13] bg-[#171717] shadow-[0_28px_100px_rgba(0,0,0,.42)]">
     <div className="border-b border-white/[.12] px-5 py-6 sm:px-8"><p className="text-[11px] font-semibold uppercase tracking-[.22em] text-white/40">Booking</p><div className="mt-3 flex flex-wrap items-center gap-3"><h2 className="text-[30px] font-semibold tracking-[-.035em] text-white">{bookingTitle(booking)}</h2><span className="rounded-full border border-white/[.16] px-3 py-1 text-[10px] tracking-[.14em]">{booking.status === "cancelled" ? "CANCELLED" : booking.status === "rejected" ? "REJECTED" : confirmed ? "CONFIRMED" : booking.paymentReady ? "PAYMENT REQUIRED" : "REQUESTED"}</span></div><p className="mt-3 text-sm text-white/45">{bookingSubtitle(booking)}</p></div>
@@ -80,6 +94,7 @@ function BookingCard({ booking, onRefresh }: { booking: BookingRecord; onRefresh
       <section className="rounded-2xl border border-white/[.12] bg-[#111111] p-5"><p className="text-[11px] font-semibold tracking-[.18em] text-white/38">TIMELINE</p><div className="mt-6 space-y-4 text-sm"><p className="text-white">✓ Request submitted</p><p className={accepted ? "text-white" : booking.status === "cancelled" || booking.status === "rejected" ? "text-white/55" : "text-white/35"}>{accepted ? "✓ Tutor accepted" : booking.status === "rejected" ? "✓ Tutor declined" : booking.status === "cancelled" ? "✓ Booking cancelled" : "● Waiting for tutor approval"}</p><p className={paid || accepted ? "text-white" : "text-white/35"}>{paid ? "✓ Payment complete" : accepted ? "● Payment required" : "○ Payment"}</p><p className={confirmed ? "text-white" : "text-white/35"}>{confirmed ? "✓ Booking confirmed" : "○ Booking confirmed"}</p></div></section></div>
     {canPay && amount !== null && <div className="mx-5 mb-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[.10] bg-white/[.025] p-5 sm:mx-8 sm:mb-8"><div><p className="text-[10px] tracking-[.18em] text-white/36">AMOUNT DUE</p><p className="mt-2 text-2xl font-semibold text-white">{money(amount)}</p><p className="mt-2 text-xs text-white/40">Your booking will be confirmed after payment is verified.</p></div><button type="button" onClick={() => void pay()} disabled={starting || booking.paymentInFlight} className="rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-black disabled:cursor-wait disabled:opacity-50">{booking.paymentInFlight ? "Payment processing…" : starting ? "Starting payment…" : booking.payment?.status === "pending" ? `Continue payment · ${money(amount)}` : `Pay ${money(amount)}`}</button></div>}
     {canCancelBooking(booking) && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[.1] px-5 py-4 sm:px-8"><p className="text-xs text-white/45">Need to change your plans?</p><button type="button" onClick={() => setCancelOpen(true)} className="rounded-xl border border-white/20 px-4 py-2.5 text-sm text-white/80">{booking.status === "requested" && !booking.paymentReady ? "Cancel request" : "Cancel booking"}</button></div>}
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[.1] px-5 py-4 sm:px-8"><p className="text-xs text-white/45">Need to send a note to {booking.host?.displayName ?? booking.tutor?.displayName ?? "the host"}?</p><button type="button" onClick={() => void openConversation()} disabled={messaging === "opening"} className="rounded-xl border border-white/20 px-4 py-2.5 text-sm text-white/80 disabled:cursor-wait disabled:opacity-50">{messaging === "opening" ? "Opening…" : messaging === "error" ? "Try again" : "Message"}</button></div>
     {booking.payment?.status === "succeeded" && booking.status !== "confirmed" && <p className="mx-5 mb-5 rounded-2xl border border-amber-300/20 bg-amber-300/[.06] p-4 text-sm leading-6 text-amber-100 sm:mx-8 sm:mb-8">Payment received, but this session could not be confirmed. {booking.refund?.status === "processing" ? "A refund is being processed." : "Tutoria is checking the booking state."}</p>}
     {error && <p role="alert" className="mx-5 mb-5 text-sm text-red-300 sm:mx-8 sm:mb-8">{error}</p>}{cancelOpen && <CancelDialog booking={booking} onClose={() => setCancelOpen(false)} onConflict={() => onRefresh(booking.id)} onCancelled={async (next) => { setCancelOpen(false); await onRefresh(next.id); }} />}
   </article>;

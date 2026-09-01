@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { isLiveMode } from "@/lib/auth/config";
 import { evaluateAuthGate } from "@/lib/auth/gate";
 import { useSession } from "@/lib/auth/session";
@@ -415,9 +415,20 @@ export default function MessagesPage() {
 }
 
 function LiveMessages() {
+  const searchParams = useSearchParams();
+  const deepLinkId = searchParams.get("conversationId");
   const [conversations, setConversations] = useState<MessagingConversation[] | null>(null);
   const [loadError, setLoadError] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  const isActiveCandidate = useCallback(
+    (id: string | null): boolean => {
+      if (!id) return false;
+      if (deepLinkId) return id === deepLinkId;
+      return true;
+    },
+    [deepLinkId],
+  );
 
   const refreshConversations = useCallback(async () => {
     try {
@@ -425,13 +436,17 @@ function LiveMessages() {
       setConversations(list);
       setLoadError("");
       setActiveId((current) => {
-        if (current && list.some((conversation) => conversation.id === current)) return current;
-        return list[0]?.id ?? null;
+        // A deep-linked conversationId (from a booking) wins; otherwise prefer
+        // the already-open conversation; otherwise default to the newest.
+        if (current && (list.some((conversation) => conversation.id === current) || isActiveCandidate(current))) return current;
+        const target = deepLinkId ?? list[0]?.id ?? null;
+        if (target && list.some((conversation) => conversation.id === target)) return target;
+        return null;
       });
     } catch (caught) {
       setLoadError(summarizeError(caught));
     }
-  }, []);
+  }, [deepLinkId, isActiveCandidate]);
 
   useEffect(() => {
     void (async () => {

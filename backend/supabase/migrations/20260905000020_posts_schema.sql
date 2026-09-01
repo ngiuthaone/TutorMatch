@@ -28,12 +28,14 @@ create index idx_posts_community on public.posts (community_id);
 alter table public.posts enable row level security;
 
 -- RLS: public can read published posts
+drop policy if exists "posts_public_read" on public.posts;
 create policy "posts_public_read"
   on public.posts for select
   to public
   using (status = 'published');
 
 -- RLS: author can read/write own posts
+drop policy if exists "posts_author_write" on public.posts;
 create policy "posts_author_write"
   on public.posts for all
   to authenticated
@@ -54,11 +56,13 @@ create index idx_post_reposts_user on public.post_reposts (user_id);
 
 alter table public.post_reposts enable row level security;
 
+drop policy if exists "post_reposts_public_read" on public.post_reposts;
 create policy "post_reposts_public_read"
   on public.post_reposts for select
   to public
   using (true);
 
+drop policy if exists "post_reposts_user_write" on public.post_reposts;
 create policy "post_reposts_user_write"
   on public.post_reposts for all
   to authenticated
@@ -79,11 +83,13 @@ create index idx_post_likes_user on public.post_likes (user_id);
 
 alter table public.post_likes enable row level security;
 
+drop policy if exists "post_likes_public_read" on public.post_likes;
 create policy "post_likes_public_read"
   on public.post_likes for select
   to public
   using (true);
 
+drop policy if exists "post_likes_user_write" on public.post_likes;
 create policy "post_likes_user_write"
   on public.post_likes for all
   to authenticated
@@ -104,11 +110,13 @@ create index idx_comment_appreciations_user on public.comment_appreciations (use
 
 alter table public.comment_appreciations enable row level security;
 
+drop policy if exists "comment_appreciations_public_read" on public.comment_appreciations;
 create policy "comment_appreciations_public_read"
   on public.comment_appreciations for select
   to public
   using (true);
 
+drop policy if exists "comment_appreciations_user_write" on public.comment_appreciations;
 create policy "comment_appreciations_user_write"
   on public.comment_appreciations for all
   to authenticated
