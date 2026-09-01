@@ -85,7 +85,7 @@ export function createSupabasePostService(url: string, publishableKey: string, _
   return {
     async create(
       token: string,
-      input: { body: string; tags?: string[]; level?: string | null; postType?: string | null; replyPermission?: string | null; communityId?: string | null },
+      input: { body: string; tags?: string[]; level?: string | null; postType?: string | null; replyPermission?: string | null; communityId?: string | null; imageUrl?: string | null },
     ): Promise<PostCreateResult> {
       try {
         const { data, error } = await caller(token).rpc("create_post", {
@@ -95,6 +95,7 @@ export function createSupabasePostService(url: string, publishableKey: string, _
           p_post_type: input.postType ?? null,
           p_reply_permission: input.replyPermission ?? "everyone",
           p_community_id: input.communityId ?? null,
+          p_image_url: input.imageUrl ?? null,
         });
         if (error) return mapCreateError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; status?: string };
@@ -107,7 +108,7 @@ export function createSupabasePostService(url: string, publishableKey: string, _
     async update(
       token: string,
       id: string,
-      input: { body?: string; tags?: string[]; level?: string | null; postType?: string | null; replyPermission?: string | null },
+      input: { body?: string; tags?: string[]; level?: string | null; postType?: string | null; replyPermission?: string | null; imageUrl?: string | null },
     ): Promise<PostUpdateResult> {
       try {
         const { data, error } = await caller(token).rpc("update_post", {
@@ -117,6 +118,7 @@ export function createSupabasePostService(url: string, publishableKey: string, _
           p_level: input.level ?? null,
           p_post_type: input.postType ?? null,
           p_reply_permission: input.replyPermission ?? null,
+          p_image_url: input.imageUrl ?? null,
         });
         if (error) return mapUpdateError(error.code ?? "", error.message ?? "");
         const row = data as { id?: string; status?: string };

@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 import { TopNav } from "@/components/discover/top-nav";
 import { CollapsibleHeader } from "@/components/discover/collapsible-header";
 import { DiscussionsPage } from "@/components/discover/posts-page";

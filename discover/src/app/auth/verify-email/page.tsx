@@ -1,4 +1,6 @@
 import { VerifyEmailScreen } from "@/components/auth/verify-email-screen";
+
+export const dynamic = "force-dynamic";
 import { safeRedirectPath } from "@/lib/auth/redirect";
 
 export default async function VerifyEmailPage({ searchParams }: { searchParams: Promise<{ next?: string | string[]; email?: string | string[] }> }) {

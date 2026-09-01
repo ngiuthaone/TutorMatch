@@ -179,6 +179,15 @@
 .empty { margin: 20px 18px; border: 1px dashed var(--discussion-border); border-radius: 16px; padding: 42px 18px; color: var(--discussion-muted); text-align: center; font-size: 14px; }
 .loadMore { display: flex; min-height: 44px; align-items: center; justify-content: center; margin: 18px auto 28px; border: 1px solid var(--discussion-border); border-radius: 999px; padding: 0 22px; background: transparent; color: #fff; cursor: pointer; }
 
+.followBtn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid var(--discussion-border); border-radius: 999px; background: transparent; color: #fff; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 180ms ease; margin-left: auto; }
+.followBtn:hover { background: var(--discussion-hover); border-color: #fff; }
+
+.notifBadge { position: absolute; top: -2px; right: -2px; min-width: 18px; height: 18px; border-radius: 9px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+
+.postImage { width: 100%; max-height: 400px; object-fit: cover; border-radius: 12px; margin-top: 12px; }
+
+.navButton { position: relative; }
+
 .mobileNav { display: none; }
 
 @media (max-width: 1080px) {

@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { safeRedirectPath } from "@/lib/auth/redirect";
 import "./auth-screen-v3.css";

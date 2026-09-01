@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { signUpConfirmed } from "./auth-helpers.js";
+import { makeOffering } from "./_fixtures/offering.js";
 
 const url = process.env.SUPABASE_TEST_URL;
 const key = process.env.SUPABASE_TEST_PUBLISHABLE_KEY;
@@ -38,7 +39,8 @@ const FUTURE = { startsAt: new Date(Date.now() + 2 * 3600e3).toISOString(), ends
 type Fixture = Awaited<ReturnType<typeof signup>>;
 
 async function createConfirmedBooking(tutor: Fixture, learner: Fixture) {
-  const session = await tutor.client.rpc("create_session", { payload: { ...FUTURE, maxParticipants: 2 } });
+  const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: 200000 });
+  const session = await tutor.client.rpc("create_session", { payload: { offeringId, ...FUTURE, maxParticipants: 2 } });
   if (session.error || !session.data) throw session.error ?? new Error("create_session failed");
   const booking = await learner.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 });
   if (booking.error || !booking.data) throw booking.error ?? new Error("create_booking failed");

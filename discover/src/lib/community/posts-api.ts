@@ -16,9 +16,11 @@ export interface Post {
   like_count: number;
   repost_count: number;
   comment_count: number;
+  image_url?: string | null;
   created_at: string;
   updated_at: string;
   is_author?: boolean;
+  is_following?: boolean;
   liked_by_me?: boolean;
   reposted_by_me?: boolean;
   author: PostAuthor;
@@ -31,6 +33,7 @@ export interface CreatePostInput {
   postType?: string | null;
   replyPermission?: string | null;
   communityId?: string | null;
+  imageUrl?: string | null;
 }
 
 export async function createPost(input: CreatePostInput) {
@@ -43,6 +46,7 @@ export async function createPost(input: CreatePostInput) {
       postType: input.postType ?? null,
       replyPermission: input.replyPermission ?? "everyone",
       communityId: input.communityId ?? null,
+      imageUrl: input.imageUrl ?? null,
     },
   });
 }
@@ -56,6 +60,7 @@ export async function updatePost(id: string, input: Partial<CreatePostInput>) {
       level: input.level,
       postType: input.postType,
       replyPermission: input.replyPermission,
+      imageUrl: input.imageUrl,
     },
   });
 }

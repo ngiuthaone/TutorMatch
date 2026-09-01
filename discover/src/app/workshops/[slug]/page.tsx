@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
 import { WorkshopDetailPage } from "@/components/workshop/workshop-detail-page";
 
 type Props = { params: Promise<{ slug: string }> };

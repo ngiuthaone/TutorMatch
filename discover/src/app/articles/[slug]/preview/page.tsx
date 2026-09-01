@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 import { ArticlePreview } from "@/components/article-editor/article-preview";
 
 export default async function PreviewArticle({ params }: { params: Promise<{ slug: string }> }) {

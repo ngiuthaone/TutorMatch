@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
 import { EventsLiveListing } from "./events-live-listing";
 
 export const metadata: Metadata = {

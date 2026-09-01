@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 import { TopNav } from "@/components/discover/top-nav";
 import { Footer } from "@/components/discover/footer";
 import { SearchResults } from "./search-results";

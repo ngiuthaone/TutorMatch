@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 import { AuthCallbackPage } from "@/components/auth/auth-callback";
 
 export default function AuthCallbackRoute() {

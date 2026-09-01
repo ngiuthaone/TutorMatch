@@ -11,7 +11,8 @@ create or replace function public.create_post(
   p_level text default null,
   p_post_type text default null,
   p_reply_permission text default 'everyone',
-  p_community_id uuid default null
+  p_community_id uuid default null,
+  p_image_url text default null
 ) returns jsonb
 language plpgsql
 security definer
@@ -30,15 +31,15 @@ begin
     raise exception 'INVALID_PERMISSION' using errcode = '22023';
   end if;
 
-  insert into public.posts(author_id, body, tags, level, post_type, reply_permission, community_id, status)
-  values (uid, btrim(p_body), coalesce(p_tags, '{}'), p_level, p_post_type, coalesce(p_reply_permission, 'everyone'), p_community_id, 'published')
+  insert into public.posts(author_id, body, tags, level, post_type, reply_permission, community_id, status, image_url)
+  values (uid, btrim(p_body), coalesce(p_tags, '{}'), p_level, p_post_type, coalesce(p_reply_permission, 'everyone'), p_community_id, 'published', p_image_url)
   returning id into v_id;
 
   return jsonb_build_object('id', v_id, 'status', 'published');
 end $$;
 
-revoke all on function public.create_post(text, text[], text, text, text, uuid) from public, anon, authenticated;
-grant execute on function public.create_post(text, text[], text, text, text, uuid) to authenticated;
+revoke all on function public.create_post(text, text[], text, text, text, uuid, text) from public, anon, authenticated;
+grant execute on function public.create_post(text, text[], text, text, text, uuid, text) to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────
 -- update_post — author only, published posts can update body/tags/metadata
@@ -49,7 +50,8 @@ create or replace function public.update_post(
   p_tags text[] default null,
   p_level text default null,
   p_post_type text default null,
-  p_reply_permission text default null
+  p_reply_permission text default null,
+  p_image_url text default null
 ) returns jsonb
 language plpgsql
 security definer
@@ -72,14 +74,15 @@ begin
     tags = coalesce(p_tags, tags),
     level = coalesce(p_level, level),
     post_type = coalesce(p_post_type, post_type),
-    reply_permission = coalesce(p_reply_permission, reply_permission)
+    reply_permission = coalesce(p_reply_permission, reply_permission),
+    image_url = coalesce(p_image_url, image_url)
   where id = p_id;
 
   return jsonb_build_object('id', p_id, 'status', 'published');
 end $$;
 
-revoke all on function public.update_post(uuid, text, text[], text, text, text) from public, anon, authenticated;
-grant execute on function public.update_post(uuid, text, text[], text, text, text) to authenticated;
+revoke all on function public.update_post(uuid, text, text[], text, text, text, text) from public, anon, authenticated;
+grant execute on function public.update_post(uuid, text, text[], text, text, text, text) to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────
 -- delete_post — author only, soft-delete
@@ -122,6 +125,7 @@ begin
     'like_count', p.like_count,
     'repost_count', p.repost_count,
     'comment_count', (select count(*) from public.comments c where c.owner_type = 'post' and c.owner_id = p.id and c.status = 'published'),
+    'image_url', p.image_url,
     'created_at', p.created_at,
     'updated_at', p.updated_at,
     'is_author', (p.author_id = v_auth_uid),
@@ -173,6 +177,7 @@ begin
       'like_count', p.like_count,
       'repost_count', p.repost_count,
       'comment_count', (select count(*) from public.comments c where c.owner_type = 'post' and c.owner_id = p.id and c.status = 'published'),
+      'image_url', p.image_url,
       'created_at', p.created_at,
       'author', jsonb_build_object('name', pr.name, 'avatar_url', pr.avatar_url, 'role', pr.role)
     ) obj, p.created_at

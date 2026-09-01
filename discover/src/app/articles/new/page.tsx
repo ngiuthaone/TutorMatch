@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Suspense } from "react";
 import { RequireAuth } from "@/components/auth/require-auth";
 import { ArticleEditorPage } from "@/components/community/article-editor";

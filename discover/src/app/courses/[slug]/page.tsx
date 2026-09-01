@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
 import { getCatalogCourseBySlug, getCatalogSimilarCourses } from "@/lib/course-data";
 import { CourseProfileFrame } from "./course-profile-frame";
 import { PublishedCourseFallback } from "./published-course-fallback";

@@ -1,4 +1,6 @@
 import { SignUpFlow } from "@/components/auth/sign-up-flow";
+
+export const dynamic = "force-dynamic";
 import { safeRedirectPath } from "@/lib/auth/redirect";
 import "./sign-up-screen.css";
 

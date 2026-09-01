@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { IconMessage2, IconShare, IconRepeat, IconX, IconPlus, IconSearch, IconHome, IconBell, IconUser, IconMenu2, IconDots, IconLink, IconBookmark, IconHeart, IconHeartFilled } from "@tabler/icons-react";
+import { IconMessage2, IconShare, IconRepeat, IconX, IconPlus, IconSearch, IconHome, IconBell, IconUser, IconMenu2, IconDots, IconLink, IconBookmark, IconHeart, IconHeartFilled, IconUserPlus, IconUserMinus } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { listPosts, createPost, repostPost, unrepostPost, likePost, unlikePost, type Post } from "@/lib/community/posts-api";
 import { listComments, createComment, appreciateComment, unappreciateComment, type Comment } from "@/lib/community/comments-api";
+import { followUser, unfollowUser } from "@/lib/community/follows-api";
 import styles from "./discussions.module.css";
 
 const ALL_TAGS = ["Photography", "IELTS", "Languages", "Business", "Technology", "Creative", "Cooking", "Personal development", "Academic", "Community"];
@@ -169,6 +170,23 @@ function PostsTab({ searchQuery, feedMode }: {
     }
   }, [posts]);
 
+  const handleFollow = useCallback(async (authorName: string, postId: string) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const isFollowing = post.is_following;
+    try {
+      if (isFollowing) {
+        await unfollowUser(authorName);
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, is_following: false } : p));
+      } else {
+        await followUser(authorName);
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, is_following: true } : p));
+      }
+    } catch {
+      // silently fail
+    }
+  }, [posts]);
+
   const handleLike = useCallback(async (postId: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
@@ -274,6 +292,13 @@ function PostsTab({ searchQuery, feedMode }: {
                       className={styles.author}>{authorName}</button>
                     <span className={styles.role}>· {authorRole}</span>
                     <span className={styles.time}>· {formatTimeAgo(post.created_at)}</span>
+                    {post.is_author !== true && (
+                      <button onClick={(e) => { e.stopPropagation(); handleFollow(authorName, post.id); }}
+                        className={styles.followBtn} aria-label="Follow">
+                        {post.is_following ? <IconUserMinus size={14} /> : <IconUserPlus size={14} />}
+                        <span>{post.is_following ? "Unfollow" : "Follow"}</span>
+                      </button>
+                    )}
                     <button className={styles.moreButton} aria-label={`More options for ${authorName}`}>
                       <IconDots size={20} />
                     </button>

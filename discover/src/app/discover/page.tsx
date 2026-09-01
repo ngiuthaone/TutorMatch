@@ -1,4 +1,6 @@
 import { TopNav } from "@/components/discover/top-nav";
+
+export const dynamic = "force-dynamic";
 import { CollapsibleHeader } from "@/components/discover/collapsible-header";
 import { DiscoverHome } from "@/components/discover/discover-home";
 import { Footer } from "@/components/discover/footer";

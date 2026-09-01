@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import { EventNewFrame } from "./event-new-frame";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Create an event or workshop | Tutoria",
   description: "Plan, price, preview, and publish a learning experience on Tutoria.",

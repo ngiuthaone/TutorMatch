@@ -1,4 +1,6 @@
 import { TopNav } from "@/components/discover/top-nav";
+
+export const dynamic = "force-dynamic";
 import { Footer } from "@/components/discover/footer";
 import { UserProfileV2 } from "@/components/discover/user-profile-v2";
 
