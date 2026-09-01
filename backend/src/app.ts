@@ -31,11 +31,13 @@ import { createSupabasePostService, type PostService } from "./services/post-ser
 import { createSupabaseCommentService, type CommentService } from "./services/comment-service.js";
 import { createSupabaseFollowService, type FollowService } from "./services/follow-service.js";
 import { createSupabaseNotificationService, type NotificationService } from "./services/notification-service.js";
+import { createSupabaseThreadService, type ThreadService } from "./services/thread-service.js";
 import { articleRoutes } from "./routes/articles.js";
 import { postRoutes } from "./routes/posts.js";
 import { commentRoutes } from "./routes/comments.js";
 import { followRoutes } from "./routes/follows.js";
 import { notificationRoutes } from "./routes/notifications.js";
+import { threadRoutes } from "./routes/threads.js";
 import type { AuthService } from "./services/auth-service.js";
 import type { BookingService } from "./services/booking-service.js";
 import type { TutorCvService } from "./types/tutor-cv.js";
