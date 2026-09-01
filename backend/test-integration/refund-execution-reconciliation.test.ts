@@ -86,6 +86,7 @@ describe.sequential("Refund execution + reconciliation (Phase 3 DB semantics)", 
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
       await sql.unsafe(m);
     }
+    await sql`drop function if exists public.create_booking(uuid, integer)`;
   });
 
   it("A/B: accepted request (00 + processing) -> pending, no credit; authoritative reconcile -> succeeded with credit", async () => {

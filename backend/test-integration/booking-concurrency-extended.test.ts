@@ -42,6 +42,7 @@ describe.sequential("sessions + bookings extended concurrency invariants", () =>
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
       await sql.unsafe(m);
     }
+    await sql`drop function if exists public.create_booking(uuid, integer)`;
   });
 
   it("A. multi-seat race: remaining=3, A requests 2, B requests 2 concurrently, exactly one wins", async () => {

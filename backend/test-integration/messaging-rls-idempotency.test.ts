@@ -65,6 +65,7 @@ describe.sequential("messaging Alpha (MSG-010 / DEC-015): RLS, idempotency, memb
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
       await sql.unsafe(m);
     }
+    await sql`drop function if exists public.create_booking(uuid, integer)`;
   });
 
   it("denies direct table access to anon and authenticated", async () => {

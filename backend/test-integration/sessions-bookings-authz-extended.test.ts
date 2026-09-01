@@ -36,6 +36,7 @@ describe.sequential("sessions + bookings extended authorization", () => {
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
       await sql.unsafe(m);
     }
+    await sql`drop function if exists public.create_booking(uuid, integer)`;
   });
 
   it("learner A cannot read private Booking of learner B", async () => {

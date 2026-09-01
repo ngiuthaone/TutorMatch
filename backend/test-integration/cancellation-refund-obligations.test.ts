@@ -133,6 +133,7 @@ describe.sequential("Cancellation refund obligations (Phase 2)", () => {
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
       await sql.unsafe(m);
     }
+    await sql`drop function if exists public.create_booking(uuid, integer)`;
   });
 
   it("keeps the SQL cutoff in sync with the pure TS policy oracle", async () => {

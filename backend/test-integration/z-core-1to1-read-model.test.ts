@@ -41,7 +41,7 @@ describe.sequential("core 1:1 API read-model RPCs", () => {
     const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: 300000 });
     const session = await tutor.client.rpc("create_session", { payload: { offeringId, startsAt: new Date(Date.now() + 3 * 3600e3).toISOString(), endsAt: new Date(Date.now() + 4 * 3600e3).toISOString(), maxParticipants: 1 } });
     expect(session.error).toBeNull();
-    const availability = await learner.client.rpc("list_bookable_sessions", { p_tutor_profile_id: profile[0].id });
+    const availability = await learner.client.rpc("list_bookable_sessions", { p_tutor_profile_id: profile[0].id, p_offering_id: null, p_kind: null });
     expect(availability.error).toBeNull();
     expect(availability.data).toHaveLength(1);
     expect(availability.data[0]).toMatchObject({ tutorProfileId: profile[0].id, spotsLeft: 1, hourlyRateVnd: 300000 });

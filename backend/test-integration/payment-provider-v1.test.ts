@@ -54,6 +54,7 @@ describe.sequential("Payment Provider V1 local proof", () => {
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
       await sql.unsafe(m);
     }
+    await sql`drop function if exists public.create_booking(uuid, integer)`;
   });
 
   it("snapshots server pricing, gates approval, deduplicates attempts, and finalizes only after verified success", async () => {
