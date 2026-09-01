@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const centerHtml = readFileSync(resolve(process.cwd(), "public/center.html"), "utf8");
-const centerPage = readFileSync(resolve(process.cwd(), "src/app/center/page.tsx"), "utf8");
+const centerPage = readFileSync(resolve(process.cwd(), "src/app/center/page-client.tsx"), "utf8");
 
 describe("Center tutor decision bridge contract", () => {
   it("uses the parent bridge action name for the visible Decline control", () => {

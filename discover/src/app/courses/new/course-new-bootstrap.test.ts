@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const courseCreatorHtml = readFileSync(resolve(process.cwd(), "public/course-creator-reference.html"), "utf8");
-const courseNewPage = readFileSync(resolve(process.cwd(), "src/app/courses/new/page.tsx"), "utf8");
+const courseNewPage = readFileSync(resolve(process.cwd(), "src/app/courses/new/page-client.tsx"), "utf8");
 
 describe("Course creator iframe ?apiBaseUrl= bootstrap", () => {
   it("appends ?apiBaseUrl=<encoded> when live mode is active", () => {
