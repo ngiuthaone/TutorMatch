@@ -7,6 +7,7 @@ import { securityPlugin } from "./plugins/security.js";
 import cookie from "@fastify/cookie";
 import { healthRoutes } from "./routes/health.js";
 import authBffRoutes from "./routes/auth-bff.js";
+import securityAlertRoutes from "./routes/auth.js";
 import { meRoutes } from "./routes/me.js";
 import { tutorCvRoutes } from "./routes/tutor-cv.js";
 import { publicTutorRoutes } from "./routes/public-tutors.js";
@@ -83,6 +84,7 @@ export function createApp(options: {
   app.register(authenticationPlugin, { authService: options.authService, maxHeaderLength: options.config.MAX_AUTHORIZATION_HEADER_LENGTH });
   app.register(healthRoutes, { config: options.config });
   app.register(authBffRoutes);
+  app.register(securityAlertRoutes);
   app.register(meRoutes, { authService: options.authService, max: options.config.ME_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.tutorCvService) {
     app.register(tutorCvRoutes, { authService: options.authService, tutorCvService: options.tutorCvService, limits: { get: options.config.TUTOR_CV_GET_RATE_LIMIT_MAX, save: options.config.TUTOR_CV_SAVE_RATE_LIMIT_MAX, publish: options.config.TUTOR_CV_PUBLISH_RATE_LIMIT_MAX }, windowMs: options.config.RATE_LIMIT_WINDOW_MS });

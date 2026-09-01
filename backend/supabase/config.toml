@@ -261,6 +261,8 @@ otp_expiry = 3600
 # [auth.email.smtp]
 # enabled = true
 # host = "smtp.sendgrid.net"
+# Tutoria: For Resend SMTP, set in Supabase dashboard:
+# SMTP host=smtp.resend.com, port=465, user=resend, password=RESEND_API_KEY, sender=RESEND_FROM
 # port = 587
 # user = "apikey"
 # pass = "env(SENDGRID_API_KEY)"
