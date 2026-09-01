@@ -116,6 +116,15 @@ export async function cancelTutorBooking(bookingId: string, expectedVersion: num
   return payload.booking as TutorBookingRecord;
 }
 
+export async function recordTutorAttendance(bookingId: string, outcome: "attended" | "learner_no_show", expectedVersion: number): Promise<TutorBookingRecord> {
+  const payload = await request(`/api/v1/tutor/bookings/${encodeURIComponent(bookingId)}/attendance`, {
+    method: "POST",
+    body: { outcome, expectedVersion },
+  }) as { ok?: unknown; booking?: unknown };
+  if (payload.ok !== true || !payload.booking || typeof payload.booking !== "object") throw new TutorBookingApiError("INVALID_RESPONSE", 500);
+  return payload.booking as TutorBookingRecord;
+}
+
 /* ── Host booking functions ────────────────────────────────────────── */
 
 export interface HostBookingRecord extends TutorBookingRecord {

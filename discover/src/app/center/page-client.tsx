@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ensureSession, getSessionAccessToken, getSessionSnapshot } from "@/lib/auth/session";
 import { isLiveMode } from "@/lib/auth/config";
-import { cancelTutorBooking, decideTutorBooking, listTutorBookings, TutorBookingApiError } from "@/lib/tutor-booking-api";
+import { cancelTutorBooking, decideTutorBooking, listTutorBookings, recordTutorAttendance, TutorBookingApiError } from "@/lib/tutor-booking-api";
 import { cancelWorkshopBooking, listWorkshopBookings, TutorWorkshopBookingApiError } from "@/lib/tutor-workshop-booking-api";
 import { getMyTutorDashboard, TutorDashboardApiError, type TutorDashboardSummary } from "@/lib/tutor-dashboard-api";
 
@@ -17,28 +17,46 @@ function formatVnd(amount: number): string {
 }
 
 function TutorDashboardSection({ summary, onRefresh }: TutorDashboardSectionProps) {
-  const [pending, setPending] = useState<{ id: string; learner: string; startsAt: string }[] | null>(null);
+  const [pending, setPending] = useState<{ id: string; learner: string; startsAt: string; endsAt: string; version: number; status: "confirmed" | "requested" }[] | null>(null);
   const [pendingError, setPendingError] = useState<string | null>(null);
   const [reviews, setReviews] = useState<{ id: string; rating: number; body: string; publishedAt: string; learnerName: string | null }[] | null>(null);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
   const [tab, setTab] = useState<"overview" | "schedule" | "sessions">("overview");
 
+  const [actionError, setActionError] = useState<string | null>(null);
+  const handleAttendance = async (bookingId: string, outcome: "attended" | "learner_no_show") => {
+    setActionError(null);
+    try {
+      const row = pending?.find((b) => b.id === bookingId);
+      if (!row) return;
+      await recordTutorAttendance(bookingId, outcome, row.version);
+      await onRefresh();
+      setPending((prev) => prev?.filter((b) => b.id !== bookingId) ?? null);
+    } catch (error) {
+      setActionError(error instanceof TutorBookingApiError ? error.message : "Could not record attendance.");
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
     setPendingError(null);
     setReviewsError(null);
+    setActionError(null);
     if (tab === "schedule") {
       void listTutorBookings()
         .then((bookings) => {
           if (cancelled) return;
-          const upcoming = bookings
+          const rows = bookings
             .filter((booking) => booking.status === "confirmed" || booking.status === "requested")
             .map((booking) => ({
               id: booking.id,
               learner: booking.learner?.displayName ?? "Learner",
               startsAt: booking.session.startsAt,
+              endsAt: booking.session.endsAt,
+              version: booking.version,
+              status: booking.status as "confirmed" | "requested",
             }));
-          setPending(upcoming);
+          setPending(rows);
         })
         .catch((error: unknown) => {
           if (cancelled) return;
@@ -48,7 +66,7 @@ function TutorDashboardSection({ summary, onRefresh }: TutorDashboardSectionProp
     return () => {
       cancelled = true;
     };
-  }, [tab]);
+  }, [tab, onRefresh]);
 
   return (
     <section className="mx-auto max-w-5xl px-5 pb-12 pt-10 sm:px-10">
@@ -104,15 +122,27 @@ function TutorDashboardSection({ summary, onRefresh }: TutorDashboardSectionProp
             ) : pending.length === 0 ? (
               <p className="text-sm text-white/55">No upcoming sessions on the schedule.</p>
             ) : (
+              <>
               <ul className="space-y-3">
-                {pending.map((row) => (
-                  <li key={row.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/[.08] bg-white/[.025] p-4 text-sm text-white/80">
-                    <span>{new Date(row.startsAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" })}</span>
-                    <span>{row.learner}</span>
-                    <a href={`/bookings/${encodeURIComponent(row.id)}`} className="rounded-xl border border-white/15 px-3 py-1.5 text-xs">View booking</a>
-                  </li>
-                ))}
+                {pending.map((row) => {
+                  const past = new Date(row.endsAt).getTime() <= Date.now();
+                  return (
+                    <li key={row.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[.08] bg-white/[.025] p-4 text-sm text-white/80">
+                      <span>{new Date(row.startsAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" })}</span>
+                      <span>{row.learner}</span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <a href={`/bookings/${encodeURIComponent(row.id)}`} className="rounded-xl border border-white/15 px-3 py-1.5 text-xs">View booking</a>
+                        {past && row.status === "confirmed" && <>
+                          <button type="button" onClick={() => void handleAttendance(row.id, "attended")} className="rounded-xl border border-white/15 px-3 py-1.5 text-xs">Mark complete</button>
+                          <button type="button" onClick={() => void handleAttendance(row.id, "learner_no_show")} className="rounded-xl border border-white/15 px-3 py-1.5 text-xs">Mark no-show</button>
+                        </>}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
+              {actionError && <p role="alert" className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/[.06] p-4 text-sm text-amber-100">{actionError}</p>}
+              </>
             )}
           </div>
         )}

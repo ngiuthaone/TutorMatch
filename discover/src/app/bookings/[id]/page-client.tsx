@@ -5,7 +5,7 @@ import { startTransition, useCallback, useEffect, useRef, useState } from "react
 import { useParams, useRouter } from "next/navigation";
 import { isLiveMode } from "@/lib/auth/config";
 import { ensureSession, useSession } from "@/lib/auth/session";
-import { BookingApiError, cancelLearnerBooking, getCancellationPreview, getLearnerBooking, type BookingRecord, type CancellationPreview } from "@/lib/booking-api";
+import { BookingApiError, cancelLearnerBooking, createLearnerRescheduleRequest, getCancellationPreview, getLearnerBooking, listBookableSessions, type BookableSession, type BookingRecord, type CancellationPreview } from "@/lib/booking-api";
 import { PaymentApiError, startPayment } from "@/lib/payment-api";
 import { bookingAmount, bookingPaymentLabel, bookingSubtitle, bookingTitle, canCancelBooking, canStartPayment, refundAmount, refundStatusLabel } from "@/lib/booking-payment-state";
 import { getOrCreateBookingConversation } from "@/lib/messaging-api";
@@ -145,11 +145,67 @@ function CancelDialog({ booking, onClose, onCancelled, onConflict }: { booking: 
     </div>
   </div>;
 }
+function RescheduleDialog({ booking, onClose, onRescheduled }: { booking: BookingRecord; onClose: () => void; onRescheduled: (booking: BookingRecord) => Promise<void> }) {
+  const tutorProfileId = booking.session.tutorProfileId ?? null;
+  const [sessions, setSessions] = useState<BookableSession[] | null>(null);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!tutorProfileId) { setSessions([]); return; }
+    listBookableSessions({ tutorProfileId }).then((rows) => setSessions(rows.filter((row) => new Date(row.startsAt).getTime() > Date.now()))).catch(() => setSessions([]));
+  }, [tutorProfileId]);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    dialogRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); onClose(); } };
+    document.addEventListener("keydown", onKeyDown);
+    return () => { document.removeEventListener("keydown", onKeyDown); previous?.focus(); };
+  }, [onClose]);
+  const pick = async (session: BookableSession) => {
+    if (submitting) return;
+    setSubmitting(session.id); setError("");
+    try {
+      await createLearnerRescheduleRequest(booking.id, session.id, booking.version);
+      await onRescheduled(booking);
+      onClose();
+    } catch (cause) {
+      setError(cause instanceof BookingApiError ? cause.message : "Could not create reschedule request. Try again later.");
+      setSubmitting(null);
+    }
+  };
+  return (
+    <div role="dialog" aria-modal="true" aria-labelledby="reschedule-title" className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-5">
+      <div ref={dialogRef} tabIndex={-1} className="w-full max-w-md rounded-3xl border border-white/15 bg-[#191919] p-6 text-[#e8e6df] shadow-2xl">
+        <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-white/40">Reschedule</p>
+        <h2 id="reschedule-title" className="mt-3 text-2xl font-semibold">Pick a new time</h2>
+        <p className="mt-2 text-xs text-white/55">Choose a session from this tutor. The tutor will confirm or decline.</p>
+        <div className="mt-5 max-h-72 space-y-2 overflow-y-auto">
+          {sessions === null && <p className="text-sm text-white/55">Loading available times…</p>}
+          {sessions !== null && sessions.length === 0 && <p className="text-sm text-white/55">No upcoming times available.</p>}
+          {sessions?.map((row) => (
+            <button key={row.id} type="button" disabled={submitting !== null} onClick={() => void pick(row)} className="flex w-full items-center justify-between rounded-xl border border-white/15 bg-black/30 p-3 text-left text-sm text-white/85 hover:border-white/40 disabled:opacity-50">
+              <span>{new Date(row.startsAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" })}</span>
+              <span className="text-xs text-white/45">{submitting === row.id ? "Requesting…" : "Request"}</span>
+            </button>
+          ))}
+        </div>
+        {error && <p role="alert" className="mt-4 text-sm text-red-300">{error}</p>}
+        <div className="mt-6 flex justify-end">
+          <button type="button" onClick={onClose} className="rounded-xl border border-white/15 px-4 py-3 text-sm text-white/70">Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 
 function BookingCard({ booking, onRefresh }: { booking: BookingRecord; onRefresh: (bookingId: string) => Promise<void> }) {
   const router = useRouter();
   const [starting, setStarting] = useState(false); const [error, setError] = useState(""); const [cancelOpen, setCancelOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const canReview = booking.status === "completed"; const startingRef = useRef(false);
   const [messaging, setMessaging] = useState<"idle" | "opening" | "error">("idle");
   const amount = bookingAmount(booking); const canPay = canStartPayment(booking); const accepted = booking.paymentReady || booking.status === "confirmed"; const paid = booking.payment?.status === "succeeded"; const confirmed = booking.status === "confirmed" && paid;
@@ -171,11 +227,12 @@ function BookingCard({ booking, onRefresh }: { booking: BookingRecord; onRefresh
     <div className="grid gap-5 p-5 sm:p-8 md:grid-cols-[1.2fr_.8fr]"><section className="rounded-2xl border border-white/[.12] bg-white/[.025] p-5"><p className="text-[11px] font-semibold tracking-[.18em] text-white/38">SESSION DETAILS</p><p className="mt-4 text-lg font-semibold text-white">{schedule(booking)}</p><p className="mt-2 text-sm text-white/60">Online · {duration} minutes</p><div className="mt-7 grid grid-cols-2 gap-5 border-t border-white/[.12] pt-5">        <div><p className="text-[11px] text-white/36">Host</p><p className="mt-1 text-sm text-white/80">{booking.host?.displayName ?? booking.tutor?.displayName ?? "Tutor"}</p></div><div><p className="text-[11px] text-white/36">Price</p><p className="mt-1 text-sm text-white/80">{amount === null ? "—" : money(amount)}</p></div></div><div className="mt-5 border-t border-white/[.12] pt-5"><p className="text-[11px] text-white/36">Payment</p><p className="mt-1 text-sm text-white/80">{bookingPaymentLabel(booking)}</p>{booking.paymentInFlight && <p className="mt-2 text-xs text-amber-200/80">Payment is still processing. Refresh for the latest result.</p>}</div>{refundStatusLabel(booking) && <p className="mt-5 rounded-xl border border-white/10 bg-white/[.03] p-3 text-sm text-white/70">{refundStatusLabel(booking)}{refundAmount(booking) !== null && refundAmount(booking)! > 0 ? ` · ${money(refundAmount(booking)!)}` : ""}</p>}</section>
       <section className="rounded-2xl border border-white/[.12] bg-[#111111] p-5"><p className="text-[11px] font-semibold tracking-[.18em] text-white/38">TIMELINE</p><div className="mt-6 space-y-4 text-sm"><p className="text-white">✓ Request submitted</p><p className={accepted ? "text-white" : booking.status === "cancelled" || booking.status === "rejected" ? "text-white/55" : "text-white/35"}>{accepted ? "✓ Tutor accepted" : booking.status === "rejected" ? "✓ Tutor declined" : booking.status === "cancelled" ? "✓ Booking cancelled" : "● Waiting for tutor approval"}</p><p className={paid || accepted ? "text-white" : "text-white/35"}>{paid ? "✓ Payment complete" : accepted ? "● Payment required" : "○ Payment"}</p><p className={confirmed ? "text-white" : "text-white/35"}>{confirmed ? "✓ Booking confirmed" : "○ Booking confirmed"}</p></div></section></div>
     {canPay && amount !== null && <div className="mx-5 mb-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[.10] bg-white/[.025] p-5 sm:mx-8 sm:mb-8"><div><p className="text-[10px] tracking-[.18em] text-white/36">AMOUNT DUE</p><p className="mt-2 text-2xl font-semibold text-white">{money(amount)}</p><p className="mt-2 text-xs text-white/40">Your booking will be confirmed after payment is verified.</p></div><button type="button" onClick={() => void pay()} disabled={starting || booking.paymentInFlight} className="rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-black disabled:cursor-wait disabled:opacity-50">{booking.paymentInFlight ? "Payment processing…" : starting ? "Starting payment…" : booking.payment?.status === "pending" ? `Continue payment · ${money(amount)}` : `Pay ${money(amount)}`}</button></div>}
-    {canCancelBooking(booking) && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[.1] px-5 py-4 sm:px-8"><p className="text-xs text-white/45">Need to change your plans?</p><button type="button" onClick={() => setCancelOpen(true)} className="rounded-xl border border-white/20 px-4 py-2.5 text-sm text-white/80">{booking.status === "requested" && !booking.paymentReady ? "Cancel request" : "Cancel booking"}</button></div>}
+    {canCancelBooking(booking) && (<div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[.1] px-5 py-4 sm:px-8"><p className="text-xs text-white/45">Need a different time?</p><button type="button" onClick={() => setCancelOpen(true)} className="rounded-xl border border-white/20 px-4 py-2.5 text-sm text-white/80">{booking.status === "requested" && !booking.paymentReady ? "Cancel request" : "Cancel booking"}</button></div>)}
+    {(booking.status === "requested" || booking.status === "confirmed") && (<div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[.1] px-5 py-4 sm:px-8"><p className="text-xs text-white/45">Need a different time?</p><button type="button" onClick={() => setRescheduleOpen(true)} className="rounded-xl border border-white/20 px-4 py-2.5 text-sm text-white/80">Reschedule</button></div>)}
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[.1] px-5 py-4 sm:px-8"><p className="text-xs text-white/45">Need to send a note to {booking.host?.displayName ?? booking.tutor?.displayName ?? "the host"}?</p><button type="button" onClick={() => void openConversation()} disabled={messaging === "opening"} className="rounded-xl border border-white/20 px-4 py-2.5 text-sm text-white/80 disabled:cursor-wait disabled:opacity-50">{messaging === "opening" ? "Opening…" : messaging === "error" ? "Try again" : "Message"}</button></div>
     {booking.payment?.status === "succeeded" && booking.status !== "confirmed" && <p className="mx-5 mb-5 rounded-2xl border border-amber-300/20 bg-amber-300/[.06] p-4 text-sm leading-6 text-amber-100 sm:mx-8 sm:mb-8">Payment received, but this session could not be confirmed. {booking.refund?.status === "processing" ? "A refund is being processed." : "Tutoria is checking the booking state."}</p>}
     {canReview && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[.1] px-5 py-4 sm:px-8"><p className="text-xs text-white/55">This lesson is complete.</p><button type="button" onClick={() => setReviewOpen(true)} className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black">Leave a review</button></div>}
-    {error && <p role="alert" className="mx-5 mb-5 text-sm text-red-300 sm:mx-8 sm:mb-8">{error}</p>}{cancelOpen && <CancelDialog booking={booking} onClose={() => setCancelOpen(false)} onConflict={() => onRefresh(booking.id)} onCancelled={async (next) => { setCancelOpen(false); await onRefresh(next.id); }} />}{reviewOpen && <ReviewDialog booking={booking} onClose={() => setReviewOpen(false)} onSubmitted={async () => { await onRefresh(booking.id); }} />}
+    {error && <p role="alert" className="mx-5 mb-5 text-sm text-red-300 sm:mx-8 sm:mb-8">{error}</p>}{cancelOpen && <CancelDialog booking={booking} onClose={() => setCancelOpen(false)} onConflict={() => onRefresh(booking.id)} onCancelled={async (next) => { setCancelOpen(false); await onRefresh(next.id); }} />}{rescheduleOpen && <RescheduleDialog booking={booking} onClose={() => setRescheduleOpen(false)} onRescheduled={async (next) => { setRescheduleOpen(false); await onRefresh(next.id); }} />}{reviewOpen && <ReviewDialog booking={booking} onClose={() => setReviewOpen(false)} onSubmitted={async () => { await onRefresh(booking.id); }} />}
   </article>;
 }
 

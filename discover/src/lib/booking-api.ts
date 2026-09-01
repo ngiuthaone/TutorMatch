@@ -230,6 +230,16 @@ export async function cancelLearnerBooking(bookingId: string, expectedVersion: n
   return bookingFrom(payload.booking);
 }
 
+export async function createLearnerRescheduleRequest(bookingId: string, targetSessionId: string, expectedVersion: number, reason?: string): Promise<unknown> {
+  const payload = await request(`/api/v1/bookings/${encodeURIComponent(bookingId)}/reschedule-requests`, {
+    method: "POST",
+    body: { targetSessionId, expectedVersion, ...(reason ? { reason } : {}) },
+    authenticated: true,
+  }) as { ok?: unknown; request?: unknown };
+  if (payload.ok !== true) throw new BookingApiError("INVALID_RESPONSE", 500);
+  return payload.request;
+}
+
 export async function listHostBookings(): Promise<BookingRecord[]> {
   const payload = await request("/api/v1/me/host-bookings", { authenticated: true }) as { ok?: unknown; bookings?: unknown };
   if (payload.ok !== true || !Array.isArray(payload.bookings)) throw new BookingApiError("INVALID_RESPONSE", 500);

@@ -23,6 +23,7 @@ export type BookingService = {
   cancelReschedule(token: string, requestId: string): Promise<BookingServiceResult>;
   cancelSession(token: string, sessionId: string, expectedVersion: number, reason?: string): Promise<BookingServiceResult>;
   rescheduleSession(token: string, sessionId: string, startsAt: string, endsAt: string, expectedVersion: number): Promise<BookingServiceResult>;
+  recordAttendance(token: string, bookingId: string, outcome: "attended" | "learner_no_show", expectedVersion: number, source?: string): Promise<BookingServiceResult>;
   // Offering RPCs
   getOffering(offeringId: string): Promise<BookingServiceResult>;
   getOfferingBySlug(slug: string): Promise<BookingServiceResult>;
@@ -70,6 +71,7 @@ export function createSupabaseBookingService(url: string, publishableKey: string
     cancelReschedule: (token, requestId) => rpc("cancel_reschedule_request", { request_id: requestId }, token),
     cancelSession: (token, sessionId, expectedVersion, reason) => rpc("cancel_session", { sid: sessionId, expected_version: expectedVersion, cause: "host", reason: reason ?? null }, token),
     rescheduleSession: (token, sessionId, startsAt, endsAt, expectedVersion) => rpc("reschedule_session", { sid: sessionId, starts_at: startsAt, ends_at: endsAt, expected_version: expectedVersion }, token),
+    recordAttendance: (token, bookingId, outcome, expectedVersion, source) => rpc("record_attendance", { booking_id: bookingId, outcome, expected_version: expectedVersion, source: source ?? null }, token),
     // Offering RPCs
     getOffering: (offeringId) => rpc("get_offering", { p_offering_id: offeringId }),
     getOfferingBySlug: (slug) => rpc("get_offering_with_sessions_by_slug", { p_slug: slug }),

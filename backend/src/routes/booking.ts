@@ -211,6 +211,15 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService; authSe
     return { ok: true, session: result.data };
   });
 
+  app.post("/api/v1/tutor/bookings/:bookingId/attendance", { preHandler: app.authenticate }, async (request) => {
+    const bookingId = routeId((request.params as { bookingId?: unknown }).bookingId, "bookingId");
+    const body = z.object({ outcome: z.enum(["attended", "learner_no_show"]), expectedVersion: version, source: z.string().trim().max(100).optional() }).safeParse(request.body);
+    if (!body.success) throw new ApiError(400, "ATTENDANCE_INVALID", "Attendance details are invalid.");
+    const result = await options.service.recordAttendance(request.auth.accessToken, bookingId, body.data.outcome, body.data.expectedVersion, body.data.source);
+    if (result.error) fail(result);
+    return { ok: true, booking: await readAfterMutation(options.service, request.auth.accessToken, bookingId, result.data) };
+  });
+
   app.post("/api/v1/sessions/:sessionId/reschedule", { preHandler: app.authenticate }, async (request) => {
     const sessionId = routeId((request.params as { sessionId?: unknown }).sessionId, "sessionId");
     const body = rescheduleSessionBody.safeParse(request.body);
