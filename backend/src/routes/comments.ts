@@ -86,6 +86,7 @@ export const commentRoutes: FastifyPluginAsync<{
     const idParsed = idParamSchema.safeParse((request.params as { id?: string }).id ?? "");
     if (!idParsed.success) throw new ApiError(404, "NOT_FOUND", "Comment not found.");
     const result = await options.commentService.unappreciate(request.auth.accessToken, idParsed.data);
+    if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Comment not found.");
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Comments are temporarily unavailable.");
     return result.data;
   });

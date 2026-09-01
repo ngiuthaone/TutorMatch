@@ -130,6 +130,7 @@ export const postRoutes: FastifyPluginAsync<{
     const parsed = idParamSchema.safeParse((request.params as { id?: string }).id ?? "");
     if (!parsed.success) throw new ApiError(404, "NOT_FOUND", "Post not found.");
     const result = await options.postService.unrepost(request.auth.accessToken, parsed.data);
+    if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Post not found.");
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Unrepost is temporarily unavailable.");
     return result.data;
   });
@@ -149,6 +150,7 @@ export const postRoutes: FastifyPluginAsync<{
     const parsed = idParamSchema.safeParse((request.params as { id?: string }).id ?? "");
     if (!parsed.success) throw new ApiError(404, "NOT_FOUND", "Post not found.");
     const result = await options.postService.unlike(request.auth.accessToken, parsed.data);
+    if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Post not found.");
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Unlike is temporarily unavailable.");
     return result.data;
   });

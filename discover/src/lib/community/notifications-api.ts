@@ -30,7 +30,7 @@ export async function getUnreadCount() {
 }
 
 export async function markNotificationRead(id: string) {
-  return apiFetch<{ id: string; read: boolean }>(`/api/v1/notifications/${id}/read`, { method: "PATCH" });
+  return apiFetch<{ id: string; read: boolean }>(`/api/v1/notifications/${encodeURIComponent(id)}/read`, { method: "PATCH" });
 }
 
 export async function markAllNotificationsRead() {
