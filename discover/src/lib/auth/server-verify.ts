@@ -33,6 +33,17 @@ export function isServerLiveMode(): boolean {
   return serverLiveConfig().live;
 }
 
+export interface ServerSupabaseEnv {
+  url: string;
+  publishableKey: string;
+}
+
+export function getServerSupabaseEnv(): ServerSupabaseEnv | null {
+  const { live, supabaseUrl, publishableKey } = serverLiveConfig();
+  if (!live) return null;
+  return { url: supabaseUrl, publishableKey };
+}
+
 const tokenCache = new Map<string, { expiresAt: number; user: VerifiedServerUser | null }>();
 const TOKEN_CACHE_MS = 60_000;
 
