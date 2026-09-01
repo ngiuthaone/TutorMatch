@@ -60,6 +60,13 @@ describe.sequential("messaging Alpha (MSG-010 / DEC-015): RLS, idempotency, memb
       "0006_create_event_outbox.sql",
       "0007_emit_domain_events_from_booking_session_rpcs.sql",
       "20260815150540_tutor_authorization_hardening.sql",
+      "20260819120000_shared_booking_engine.sql",
+      "20260820100000_workshop_booking_v1_schema.sql",
+      "20260820100001_workshop_booking_v1_rpcs.sql",
+      "20260820100002_fix_booking_read_json_workshop.sql",
+      "20260820120000_host_authorization_consistency.sql",
+      "20260820130000_alpha_contract_cleanup.sql",
+      "20260831130000_drop_7arg_create_booking_overload.sql",
       "20260904120000_messaging_alpha_v1.sql",
     ]) {
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
