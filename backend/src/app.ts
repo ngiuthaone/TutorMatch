@@ -80,6 +80,41 @@ export function createApp(options: {
     reply.header("x-request-id", id);
     request.log = request.log.child({ requestId: id });
   });
+  // SLO measurement: capture per-request route, status, latency. Fire-and-forget
+  // to request_logs (added in W4.A). Skipped when service role key is absent (dev).
+  const supabaseUrl = options.config.SUPABASE_URL;
+  const supabaseServiceKey = options.config.SUPABASE_SERVICE_ROLE_KEY;
+  if (supabaseServiceKey) {
+    app.addHook("onResponse", async (request, reply) => {
+      try {
+        const url = new URL(request.url, `http://${request.headers.host ?? "localhost"}`);
+        const route = (request as unknown as { routerPath?: string }).routerPath ?? url.pathname;
+        const elapsed = (reply as unknown as { elapsedTime?: number }).elapsedTime;
+        const latency = typeof elapsed === "number" ? Math.round(elapsed) : 0;
+        const auth = (request as unknown as { auth?: { userId?: string } }).auth;
+        const userId = auth?.userId ?? null;
+        void fetch(`${supabaseUrl}/rest/v1/request_logs`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseServiceKey}`,
+            "apikey": supabaseServiceKey,
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify({
+            request_id: request.id,
+            method: request.method,
+            route,
+            status: reply.statusCode,
+            latency_ms: latency,
+            user_id: userId
+          })
+        }).catch(() => { /* swallow */ });
+      } catch {
+        /* never block the response */
+      }
+    });
+  }
   app.register(cookie);
   app.register(securityPlugin, { config: options.config });
   app.register(authenticationPlugin, { authService: options.authService, maxHeaderLength: options.config.MAX_AUTHORIZATION_HEADER_LENGTH });
