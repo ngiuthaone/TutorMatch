@@ -419,7 +419,7 @@ describe.sequential("course service (integration)", () => {
       const service = createSupabaseCourseService(url!, key!);
       await service.updateLessonProgress(learnerToken, learnerUser.id, lesson1.id, true);
       await service.updateLessonProgress(learnerToken, learnerUser.id, lesson2.id, true);
-      const progressResult = await service.getCourseProgress(learnerUser.id, course.id);
+      const progressResult = await service.getCourseProgress(learnerToken, learnerUser.id, course.id);
       expect(progressResult.status).toBe("ok");
       if (progressResult.status !== "ok") return;
       expect(progressResult.data.total_lessons).toBe(2);
@@ -439,7 +439,7 @@ describe.sequential("course service (integration)", () => {
       expect(first.status).toBe("ok");
       const second = await service.updateLessonProgress(learnerToken, learnerUser.id, lesson.id, true);
       expect(second.status).toBe("ok");
-      const progress = await service.getCourseProgress(learnerUser.id, course.id);
+      const progress = await service.getCourseProgress(learnerToken, learnerUser.id, course.id);
       expect(progress.status).toBe("ok");
       if (progress.status !== "ok") return;
       expect(progress.data.completed_lessons).toBe(1);
@@ -491,7 +491,7 @@ describe.sequential("course service (integration)", () => {
       const lessonA = await createTestLesson(tutorA.token, sectionA.id, "Tutor A Lesson", "text");
       await enrollLearner(tutorB.user.id, courseA.id);
       const service = createSupabaseCourseService(url!, key!);
-      const canAccess = await service.canAccessLesson(tutorB.user.id, lessonA.id);
+      const canAccess = await service.canAccessLesson(tutorB.token, tutorB.user.id, lessonA.id);
       expect(canAccess).toBe(true);
     });
 
@@ -502,7 +502,7 @@ describe.sequential("course service (integration)", () => {
       const section = await createTestSection(tutor.token, course.id, "Test Section");
       const lesson = await createTestLesson(tutor.token, section.id, "Test Lesson", "text");
       const service = createSupabaseCourseService(url!, key!);
-      const canAccess = await service.canAccessLesson(stranger.user.id, lesson.id);
+      const canAccess = await service.canAccessLesson(stranger.token, stranger.user.id, lesson.id);
       expect(canAccess).toBe(false);
     });
 
@@ -512,19 +512,19 @@ describe.sequential("course service (integration)", () => {
       const section = await createTestSection(token, course.id, "Test Section");
       const lesson = await createTestLesson(token, section.id, "Test Lesson", "text");
       const service = createSupabaseCourseService(url!, key!);
-      const canAccess = await service.canAccessLesson(user.id, lesson.id);
+      const canAccess = await service.canAccessLesson(token, user.id, lesson.id);
       expect(canAccess).toBe(true);
     });
 
     it("enrolled learner can access course content", async () => {
       const { user: tutorUser, token: tutorToken } = await signupTutor();
-      const { user: learnerUser } = await signupLearner();
+      const { user: learnerUser, token: learnerToken } = await signupLearner();
       const course = await createTestCourse(tutorToken, tutorUser.id);
       const section = await createTestSection(tutorToken, course.id, "Test Section");
       const lesson = await createTestLesson(tutorToken, section.id, "Test Lesson", "text");
       await enrollLearner(learnerUser.id, course.id);
       const service = createSupabaseCourseService(url!, key!);
-      const canAccess = await service.canAccessLesson(learnerUser.id, lesson.id);
+      const canAccess = await service.canAccessLesson(learnerToken, learnerUser.id, lesson.id);
       expect(canAccess).toBe(true);
     });
 
@@ -532,16 +532,16 @@ describe.sequential("course service (integration)", () => {
       const { user, token } = await signupTutor();
       const course = await createTestCourse(token, user.id);
       const service = createSupabaseCourseService(url!, key!);
-      const result = await service.isCourseOwner(user.id, course.id);
+      const result = await service.isCourseOwner(token, user.id, course.id);
       expect(result).toBe(true);
     });
 
     it("isCourseOwner returns false for non-owner", async () => {
       const { user: tutorUser, token: tutorToken } = await signupTutor();
-      const { user: otherUser } = await signupLearner();
+      const { user: otherUser, token: otherToken } = await signupLearner();
       const course = await createTestCourse(tutorToken, tutorUser.id);
       const service = createSupabaseCourseService(url!, key!);
-      const result = await service.isCourseOwner(otherUser.id, course.id);
+      const result = await service.isCourseOwner(otherToken, otherUser.id, course.id);
       expect(result).toBe(false);
     });
   });

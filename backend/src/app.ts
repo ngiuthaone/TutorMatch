@@ -39,6 +39,7 @@ import { createSupabaseFollowService, type FollowService } from "./services/foll
 import { createSupabaseNotificationService, type NotificationService } from "./services/notification-service.js";
 import { createSupabaseThreadService, type ThreadService } from "./services/thread-service.js";
 import { createSupabaseCommunityService, type CommunityService } from "./services/community-service.js";
+import { type SearchService } from "./services/search-service.js";
 import { createSupabaseBookmarkService, type BookmarkService, createSupabaseReportService, type ReportService } from "./services/bookmark-service.js";
 import { createSupabaseModerationService, type ModerationService } from "./services/moderation-service.js";
 import { articleRoutes } from "./routes/articles.js";
@@ -81,6 +82,7 @@ export function createApp(options: {
   bookmarkService?: BookmarkService;
   reportService?: ReportService;
   moderationService?: ModerationService;
+  searchService?: SearchService;
   messagingService?: MessagingService;
   hostCenterService?: HostCenterService;
   requireAdmin?: (request: import("fastify").FastifyRequest, reply: import("fastify").FastifyReply) => Promise<void>;

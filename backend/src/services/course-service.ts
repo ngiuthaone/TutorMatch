@@ -320,17 +320,17 @@ export interface CourseService {
   addQuizQuestion(token: string, quizId: string, input: QuestionInput): Promise<CourseResult<Question>>;
   deleteQuizQuestion(token: string, questionId: string): Promise<CourseResult<void>>;
 
-  getEnrollment(userId: string, courseId: string): Promise<CourseResult<Enrollment | null>>;
-  listMyEnrollments(userId: string): Promise<CourseResult<Enrollment[]>>;
+  getEnrollment(token: string, userId: string, courseId: string): Promise<CourseResult<Enrollment | null>>;
+  listMyEnrollments(token: string, userId: string): Promise<CourseResult<Enrollment[]>>;
 
   updateLessonProgress(token: string, userId: string, lessonId: string, completed: boolean): Promise<CourseResult<LessonProgress>>;
-  getCourseProgress(userId: string, courseId: string): Promise<CourseResult<CourseProgress>>;
+  getCourseProgress(token: string, userId: string, courseId: string): Promise<CourseResult<CourseProgress>>;
 
-  canAccessLesson(userId: string, lessonId: string): Promise<boolean>;
-  isCourseOwner(userId: string, courseId: string): Promise<boolean>;
+  canAccessLesson(token: string, userId: string, lessonId: string): Promise<boolean>;
+  isCourseOwner(token: string, userId: string, courseId: string): Promise<boolean>;
 
-  getSignedVideoUrl(courseId: string, lessonId: string, userId: string): Promise<CourseResult<string>>;
-  getSignedResourceUrl(courseId: string, resourceId: string, userId: string): Promise<CourseResult<string>>;
+  getSignedVideoUrl(token: string, courseId: string, lessonId: string, userId: string): Promise<CourseResult<string>>;
+  getSignedResourceUrl(token: string, courseId: string, resourceId: string, userId: string): Promise<CourseResult<string>>;
 }
 
 export function createSupabaseCourseService(
@@ -532,7 +532,7 @@ export function createSupabaseCourseService(
           .single();
         if (courseError || !course) return { status: "not_found" };
 
-        const { data: enrollments } = await caller()
+        const { data: enrollments } = await caller(token)
           .from("course_enrollments")
           .select("id")
           .eq("course_id", courseId)
@@ -1088,9 +1088,9 @@ export function createSupabaseCourseService(
       }
     },
 
-    async getEnrollment(userId: string, courseId: string): Promise<CourseResult<Enrollment | null>> {
+    async getEnrollment(token: string, userId: string, courseId: string): Promise<CourseResult<Enrollment | null>> {
       try {
-        const { data, error } = await caller()
+        const { data, error } = await caller(token)
           .from("course_enrollments")
           .select()
           .eq("user_id", userId)
@@ -1105,9 +1105,9 @@ export function createSupabaseCourseService(
       }
     },
 
-    async listMyEnrollments(userId: string): Promise<CourseResult<Enrollment[]>> {
+    async listMyEnrollments(token: string, userId: string): Promise<CourseResult<Enrollment[]>> {
       try {
-        const { data, error } = await caller()
+        const { data, error } = await caller(token)
           .from("course_enrollments")
           .select()
           .eq("user_id", userId)
@@ -1133,7 +1133,7 @@ export function createSupabaseCourseService(
         const courseId = await getLessonCourseId(lessonId);
         if (!courseId) return { status: "not_found" };
 
-        const { data: enrollment } = await caller()
+        const { data: enrollment } = await caller(token)
           .from("course_enrollments")
           .select("id")
           .eq("user_id", userId)
@@ -1169,9 +1169,9 @@ export function createSupabaseCourseService(
       }
     },
 
-    async getCourseProgress(userId: string, courseId: string): Promise<CourseResult<CourseProgress>> {
+    async getCourseProgress(token: string, userId: string, courseId: string): Promise<CourseResult<CourseProgress>> {
       try {
-        const { data: enrollment } = await caller()
+        const { data: enrollment } = await caller(token)
           .from("course_enrollments")
           .select("id")
           .eq("user_id", userId)
@@ -1181,14 +1181,14 @@ export function createSupabaseCourseService(
 
         const enrollmentRecord = enrollment as { id: string };
 
-        const { data: totalLessonsData } = await caller()
+        const { data: totalLessonsData } = await caller(token)
           .from("course_lessons")
           .select("id, course_sections!inner(course_id)")
           .eq("course_sections.course_id", courseId);
 
         const totalLessons = totalLessonsData?.length ?? 0;
 
-        const { data: progressData, error: progressError } = await caller()
+        const { data: progressData, error: progressError } = await caller(token)
           .from("course_lesson_progress")
           .select()
           .eq("enrollment_id", enrollmentRecord.id);
@@ -1219,15 +1219,15 @@ export function createSupabaseCourseService(
       }
     },
 
-    async canAccessLesson(userId: string, lessonId: string): Promise<boolean> {
+    async canAccessLesson(token: string, userId: string, lessonId: string): Promise<boolean> {
       try {
         const courseId = await getLessonCourseId(lessonId);
         if (!courseId) return false;
 
-        const { data: course } = await caller().from("courses").select("creator_id").eq("id", courseId).single();
+        const { data: course } = await caller(token).from("courses").select("creator_id").eq("id", courseId).single();
         if (course && (course as { creator_id: string }).creator_id === userId) return true;
 
-        const { data: enrollment } = await caller()
+        const { data: enrollment } = await caller(token)
           .from("course_enrollments")
           .select("id")
           .eq("user_id", userId)
@@ -1239,9 +1239,9 @@ export function createSupabaseCourseService(
       }
     },
 
-    async isCourseOwner(userId: string, courseId: string): Promise<boolean> {
+    async isCourseOwner(token: string, userId: string, courseId: string): Promise<boolean> {
       try {
-        const { data } = await caller().from("courses").select("creator_id").eq("id", courseId).single();
+        const { data } = await caller(token).from("courses").select("creator_id").eq("id", courseId).single();
         if (!data) return false;
         return (data as { creator_id: string }).creator_id === userId;
       } catch {
@@ -1249,12 +1249,12 @@ export function createSupabaseCourseService(
       }
     },
 
-    async getSignedVideoUrl(courseId: string, lessonId: string, userId: string): Promise<CourseResult<string>> {
+    async getSignedVideoUrl(token: string, courseId: string, lessonId: string, userId: string): Promise<CourseResult<string>> {
       try {
-        const canAccess = await this.canAccessLesson(userId, lessonId);
+        const canAccess = await this.canAccessLesson(token, userId, lessonId);
         if (!canAccess) return { status: "forbidden" };
 
-        const { data: lesson } = await caller()
+        const { data: lesson } = await caller(token)
           .from("course_lessons")
           .select("video_url")
           .eq("id", lessonId)
@@ -1265,7 +1265,7 @@ export function createSupabaseCourseService(
         const videoPath = lessonRecord.video_url?.replace(/^.*\/course-videos\//, "");
         if (!videoPath) return { status: "not_found" };
 
-        const { data, error } = await caller()
+        const { data, error } = await caller(token)
           .storage.from("course-videos")
           .createSignedUrl(videoPath, 3600);
         if (error || !data) return { status: "unavailable" };
@@ -1276,15 +1276,15 @@ export function createSupabaseCourseService(
       }
     },
 
-    async getSignedResourceUrl(courseId: string, resourceId: string, userId: string): Promise<CourseResult<string>> {
+    async getSignedResourceUrl(token: string, courseId: string, resourceId: string, userId: string): Promise<CourseResult<string>> {
       try {
         const lessonId = await getResourceLessonId(resourceId);
         if (!lessonId) return { status: "not_found" };
 
-        const canAccess = await this.canAccessLesson(userId, lessonId);
+        const canAccess = await this.canAccessLesson(token, userId, lessonId);
         if (!canAccess) return { status: "forbidden" };
 
-        const { data: resource } = await caller()
+        const { data: resource } = await caller(token)
           .from("course_resources")
           .select("file_path")
           .eq("id", resourceId)
@@ -1295,7 +1295,7 @@ export function createSupabaseCourseService(
         const filePath = resourceRecord.file_path.replace(/^.*\/course-resources\//, "");
         if (!filePath) return { status: "not_found" };
 
-        const { data, error } = await caller()
+        const { data, error } = await caller(token)
           .storage.from("course-resources")
           .createSignedUrl(filePath, 3600);
         if (error || !data) return { status: "unavailable" };
