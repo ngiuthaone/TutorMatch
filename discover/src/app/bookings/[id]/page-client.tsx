@@ -10,6 +10,7 @@ import { PaymentApiError, startPayment } from "@/lib/payment-api";
 import { bookingAmount, bookingPaymentLabel, bookingSubtitle, bookingTitle, canCancelBooking, canStartPayment, refundAmount, refundStatusLabel } from "@/lib/booking-payment-state";
 import { getOrCreateBookingConversation } from "@/lib/messaging-api";
 import { submitTutorReview, TutorDashboardApiError } from "@/lib/tutor-dashboard-api";
+import { RatingStars } from "@/components/rating-stars";
 
 function money(amount: number): string { return `${new Intl.NumberFormat("vi-VN").format(amount)}₫`; }
 function schedule(booking: BookingRecord): string {
@@ -65,6 +66,7 @@ function ReviewDialog({ booking, onClose, onSubmitted }: { booking: BookingRecor
         <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-white/40">Leave a review</p>
         <h2 id="review-title" className="mt-3 text-2xl font-semibold">How was your lesson?</h2>
         <p className="mt-2 text-xs text-white/55">Reviews help other learners choose the right tutor.</p>
+        <div className="mt-3"><RatingStars value={rating} size="sm" /></div>
         <fieldset className="mt-5 flex items-center gap-2">
           {[1, 2, 3, 4, 5].map((value) => (
             <button

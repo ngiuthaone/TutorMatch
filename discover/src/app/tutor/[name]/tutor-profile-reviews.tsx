@@ -1,3 +1,4 @@
+import { RatingStars } from "@/components/rating-stars";
 import { callTutorRpc } from "@/lib/tutor-profile-rpc";
 
 interface TutorProfileReviewsProps {
@@ -38,11 +39,14 @@ export async function TutorProfileReviews({ tutorProfileId }: TutorProfileReview
         <h2 id="tutor-reviews-heading" className="text-lg font-semibold tracking-tight">
           Learner reviews
         </h2>
-        <p className="text-xs text-white/45">
-          {count === 0
-            ? "No reviews yet"
-            : `${average !== null ? average.toFixed(1) : "—"} ★ · ${count} ${count === 1 ? "review" : "reviews"}`}
-        </p>
+        {count > 0 && average !== null ? (
+          <div className="inline-flex items-center gap-2 text-xs text-white/65">
+            <RatingStars value={average} size="sm" />
+            <span>{average.toFixed(1)} · {count} {count === 1 ? "review" : "reviews"}</span>
+          </div>
+        ) : (
+          <p className="text-xs text-white/45">No reviews yet</p>
+        )}
       </header>
       {(!reviews || reviews.length === 0) ? (
         <p className="mt-4 text-sm text-white/55">Completed bookings may leave a review.</p>
@@ -54,10 +58,9 @@ export async function TutorProfileReviews({ tutorProfileId }: TutorProfileReview
                 <span className="font-medium text-white/80">{review.learner?.name ?? "Anonymous learner"}</span>
                 <span>{formatDate(review.publishedAt)}</span>
               </div>
-              <p className="mt-2 text-sm text-amber-300" aria-label={`Rating ${review.rating} of 5`}>
-                {"★".repeat(review.rating)}
-                <span className="text-white/20">{"★".repeat(5 - review.rating)}</span>
-              </p>
+              <div className="mt-2" aria-label={`Rating ${review.rating} of 5`}>
+                <RatingStars value={review.rating} size="sm" />
+              </div>
               <p className="mt-3 whitespace-pre-line text-sm leading-6 text-white/75">{review.body}</p>
             </li>
           ))}

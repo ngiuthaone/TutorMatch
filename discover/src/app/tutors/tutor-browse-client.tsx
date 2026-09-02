@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { listTutorCards, type TutorCardSummary, type TutorDiscoveryFilters } from "@/lib/tutor-discovery-api";
+import { RatingStars } from "@/components/rating-stars";
 
 interface TutorBrowseClientProps {
   initialItems: TutorCardSummary[];
@@ -69,8 +70,8 @@ function Stars({ rating }: { rating: { count: number; average: number | null } }
     return <span className="text-xs text-white/45">New tutor</span>;
   }
   return (
-    <span className="inline-flex items-center gap-1 text-xs text-white/70">
-      <span aria-hidden className="text-amber-300">★</span>
+    <span className="inline-flex items-center gap-2 text-xs text-white/70">
+      <RatingStars value={rating.average} size="sm" />
       <span>{rating.average.toFixed(1)}</span>
       <span className="text-white/40">({rating.count})</span>
     </span>
