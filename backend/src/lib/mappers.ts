@@ -48,7 +48,7 @@ export function createMapper<T>(): {
         const result = {} as { [K in keyof M & keyof T]: T[K] };
         for (const [destKey, srcKey] of Object.entries(mapping)) {
           const key = destKey as keyof M;
-          result[key] = row[srcKey as string] as unknown as T[keyof T];
+          (result as any)[key] = row[srcKey as string];
         }
         return result;
       };
