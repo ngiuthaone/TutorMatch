@@ -7,9 +7,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 if (process.env.SKIP_DB_RESET !== "1") {
   try {
-    const repoRoot = resolve(__dirname, "..", "..");
+    const backendRoot = resolve(__dirname, "..");
     execSync("supabase db reset --local --no-seed", {
-      cwd: repoRoot,
+      cwd: backendRoot,
       stdio: "ignore",
     });
   } catch (err) {
