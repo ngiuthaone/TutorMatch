@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IconArrowLeft, IconUsers, IconLock, IconCheck, IconMessageCircle, IconAlertCircle } from "@tabler/icons-react";

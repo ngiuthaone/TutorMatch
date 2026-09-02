@@ -68,6 +68,10 @@ export async function updateCommunity(id: string, input: { name?: string; descri
   return apiFetch<{ id: string; updated: boolean }>(`/api/v1/communities/${encodeURIComponent(id)}`, { method: "PATCH", body: input });
 }
 
+export async function archiveCommunity(id: string) {
+  return apiFetch<{ id: string; archived: boolean }>(`/api/v1/communities/${encodeURIComponent(id)}/archive`, { method: "POST" });
+}
+
 export async function joinCommunity(id: string) {
   return apiFetch<{ community_id: string; status: "active" | "pending" }>(`/api/v1/communities/${encodeURIComponent(id)}/join`, { method: "POST" });
 }

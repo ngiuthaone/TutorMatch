@@ -38,7 +38,7 @@ export function CommunitySettingsPage({ slug }: { slug: string }) {
       setJoinPolicy(c.join_policy);
       setIsOwner(c.membership?.is_owner ?? false);
       if (c.membership?.is_moderator && c.id) {
-        const m = await listCommunityMembers(c.id, {}, 100);
+        const m = await listCommunityMembers(c.id, {});
         setMembers(m.members);
       }
     } catch {

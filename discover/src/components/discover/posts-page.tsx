@@ -143,6 +143,27 @@ function PostsTab({ searchQuery, feedMode }: {
     }
   }, [feedMode, searchQuery]);
 
+  const loadPosts = useCallback(async () => {
+    if (!cursor) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await listPosts({
+        cursor,
+        limit: 20,
+        tag: feedMode === "communities" ? searchQuery || null : null,
+        postType: feedMode === "questions" ? "question" : null,
+      });
+      setPosts((prev) => [...prev, ...result.posts]);
+      setCursor(result.nextCursor);
+      setHasMore(result.nextCursor !== null);
+    } catch {
+      setError("Posts are temporarily unavailable. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [cursor, feedMode, searchQuery]);
+
   const loadPostsResetRef = useRef(loadPostsReset);
   // eslint-disable-next-line react-hooks/refs
   loadPostsResetRef.current = loadPostsReset;
@@ -711,7 +732,7 @@ function BlogsTab({ searchQuery, feedMode }: {
   const router = useRouter();
   const [visibleCount, setVisibleCount] = useState(8);
 
-  interface BlogItem { id: string; title: string; author: string; role: string; excerpt: string; likes: number; comments: number; tags: string[]; createdAt: string; readTime: string; image: string; }
+  interface BlogItem { id: string; title: string; author: string; role: string; excerpt: string; likes: number; comments: number; tags: string[]; createdAt: string; readTime: string; image: string; avatar?: string; }
   const BLOGS: BlogItem[] = [
     { id: "b1", title: "Five mistakes beginners make when learning photography", author: "Duc Pham", role: "Photography Artist", excerpt: "After teaching photography workshops for 5 years, I've seen the same patterns. Here's what holds beginners back.", likes: 234, comments: 18, tags: ["Photography"], createdAt: "2h ago", readTime: "8 min read", image: "https://picsum.photos/seed/post-photo/400/240" },
     { id: "b2", title: "How I improved my IELTS speaking from 6.0 to 7.5", author: "Linh Nguyen", role: "English & IELTS Coach", excerpt: "Three months of consistent practice. The key insight that changed everything for me.", likes: 412, comments: 37, tags: ["IELTS", "Languages"], createdAt: "5h ago", readTime: "6 min read", image: "https://picsum.photos/seed/post-ielts/400/240" },
