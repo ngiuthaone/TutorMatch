@@ -1,4 +1,11 @@
 import { Resend } from "resend";
+import { render } from "@react-email/render";
+import { PasswordResetEmail } from "../emails/password-reset.js";
+import { EmailVerificationEmail } from "../emails/email-verification.js";
+import { SecurityAlertEmail } from "../emails/security-alert.js";
+import { BookingConfirmedEmail } from "../emails/booking-confirmed.js";
+import { PaymentReceivedEmail } from "../emails/payment-received.js";
+import { RefundIssuedEmail } from "../emails/refund-issued.js";
 
 let cached: Resend | null = null;
 function getClient(): Resend | null {
@@ -36,52 +43,75 @@ export async function sendEmail(msg: EmailMessage): Promise<{ id: string } | { e
   return { id: data!.id };
 }
 
+interface RenderedEmail {
+  subject: string;
+  html: string;
+  text: string;
+}
+
+export async function renderPasswordReset(resetLink: string): Promise<RenderedEmail> {
+  const html = await render(PasswordResetEmail({ resetLink }));
+  return {
+    subject: "Reset your Tutoria password",
+    html,
+    text: `Reset your password: ${resetLink} (expires in 1 hour)`,
+  };
+}
+
+export async function renderEmailVerification(verifyLink: string, displayName: string): Promise<RenderedEmail> {
+  const html = await render(EmailVerificationEmail({ verifyLink, displayName }));
+  return {
+    subject: "Verify your Tutoria email",
+    html,
+    text: `Hi ${displayName}, verify your email: ${verifyLink}`,
+  };
+}
+
+export async function renderSecurityAlert(event: string, when: string, ip?: string): Promise<RenderedEmail> {
+  const html = await render(SecurityAlertEmail({ event, when, ip }));
+  return {
+    subject: `Security alert: ${event}`,
+    html,
+    text: `Security alert: ${event} on ${when}${ip ? ` from ${ip}` : ""}`,
+  };
+}
+
+export async function renderBookingConfirmed(props: { learnerName: string; tutorName: string; sessionDate: string; sessionTime: string; manageUrl: string }): Promise<RenderedEmail> {
+  const html = await render(BookingConfirmedEmail(props));
+  return {
+    subject: `Your lesson with ${props.tutorName} is confirmed`,
+    html,
+    text: `Your lesson with ${props.tutorName} on ${props.sessionDate} at ${props.sessionTime} is confirmed. Manage: ${props.manageUrl}`,
+  };
+}
+
+export async function renderPaymentReceived(props: { displayName: string; amount: string; currency: string; receiptUrl: string }): Promise<RenderedEmail> {
+  const html = await render(PaymentReceivedEmail(props));
+  return {
+    subject: `Payment received: ${props.amount} ${props.currency}`,
+    html,
+    text: `Payment of ${props.amount} ${props.currency} received. View: ${props.receiptUrl}`,
+  };
+}
+
+export async function renderRefundIssued(props: { displayName: string; amount: string; currency: string; bookingUrl: string; etaDays?: number }): Promise<RenderedEmail> {
+  const html = await render(RefundIssuedEmail(props));
+  return {
+    subject: `Refund issued: ${props.amount} ${props.currency}`,
+    html,
+    text: `Refund of ${props.amount} ${props.currency} issued. View: ${props.bookingUrl}`,
+  };
+}
+
 // Pattern adapted from BookBarber's event-driven template registry: every user-visible lifecycle
 // event (booking confirmed, payment received, refund issued) gets a small, single-purpose
 // template function so the call sites stay readable. Reimplemented under Tutoria's own copy
 // and HTML structure — BookBarber source is unlicensed, no code was copied.
 export const EmailTemplates = {
-  passwordReset: (link: string) => ({
-    subject: "Reset your Tutoria password",
-    html: `<p>Click the link below to reset your password. It expires in 1 hour.</p><p><a href="${link}">${link}</a></p>`,
-    text: `Reset your password: ${link} (expires in 1 hour)`,
-  }),
-  emailVerification: (link: string) => ({
-    subject: "Verify your Tutoria email",
-    html: `<p>Welcome to Tutoria. Verify your email to finish signup.</p><p><a href="${link}">${link}</a></p>`,
-    text: `Verify your email: ${link}`,
-  }),
-  securityAlert: (event: string) => ({
-    subject: `Security alert: ${event}`,
-    html: `<p>A ${event} was detected on your account. If this wasn't you, change your password immediately.</p>`,
-    text: `Security alert: ${event} detected. If this wasn't you, change your password.`,
-  }),
-  bookingConfirmed: (name: string, date: string, tutorName: string, manageUrl: string) => ({
-    subject: `Your lesson with ${tutorName} is confirmed`,
-    html: `<p>Hi ${escapeHtml(name)},</p><p>Your lesson on <strong>${escapeHtml(date)}</strong> with ${escapeHtml(tutorName)} is confirmed.</p><p><a href="${escapeAttr(manageUrl)}">View booking</a></p>`,
-    text: `Hi ${name}, your lesson on ${date} with ${tutorName} is confirmed. Manage: ${manageUrl}`,
-  }),
-  paymentReceived: (name: string, amount: string, bookingUrl: string) => ({
-    subject: `Payment received: ${amount}`,
-    html: `<p>Hi ${escapeHtml(name)},</p><p>We received your payment of <strong>${escapeHtml(amount)}</strong>.</p><p><a href="${escapeAttr(bookingUrl)}">View receipt</a></p>`,
-    text: `Hi ${name}, we received your payment of ${amount}. View: ${bookingUrl}`,
-  }),
-  refundIssued: (name: string, amount: string, bookingUrl: string) => ({
-    subject: `Refund issued: ${amount}`,
-    html: `<p>Hi ${escapeHtml(name)},</p><p>We've issued a refund of <strong>${escapeHtml(amount)}</strong>. It may take 3-5 business days to appear on your statement.</p><p><a href="${escapeAttr(bookingUrl)}">View refund</a></p>`,
-    text: `Hi ${name}, we've issued a refund of ${amount}. It may take 3-5 business days. View: ${bookingUrl}`,
-  }),
+  passwordReset: async (link: string) => renderPasswordReset(link),
+  emailVerification: async (link: string, displayName: string) => renderEmailVerification(link, displayName),
+  securityAlert: async (event: string, when: string, ip?: string) => renderSecurityAlert(event, when, ip),
+  bookingConfirmed: renderBookingConfirmed,
+  paymentReceived: renderPaymentReceived,
+  refundIssued: renderRefundIssued,
 };
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function escapeAttr(value: string): string {
-  return escapeHtml(value);
-}

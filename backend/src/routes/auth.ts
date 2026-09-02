@@ -20,7 +20,7 @@ const securityAlertRoutes: FastifyPluginAsync = async (app) => {
     const email = request.auth.email;
     const userId = request.auth.userId;
     if (!email) return reply.status(400).send({ error: "user has no email" });
-    const tpl = EmailTemplates.securityAlert(event);
+    const tpl = await EmailTemplates.securityAlert(event, new Date().toISOString());
     const result = await sendEmail({ to: email, ...tpl });
     if ("error" in result) {
       request.log.error({ err: result.error, event, userId }, "security alert email failed");
