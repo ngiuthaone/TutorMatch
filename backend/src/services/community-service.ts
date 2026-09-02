@@ -114,7 +114,7 @@ export function createSupabaseCommunityService(url: string, publishableKey: stri
       } catch (err) { logServiceError({ service: "community", operation: "create.exception", error: err }); return { status: "unavailable" }; }
     },
 
-    async update(token: string, id: string, input: { name?: string | null; description?: string | null; visibility?: string | null; joinPolicy?: string | null }): Promise<CommunityUpdateResult> {
+    async update(token: string, id: string, input: { name?: string | null | undefined; description?: string | null | undefined; visibility?: string | null | undefined; joinPolicy?: string | null | undefined }): Promise<CommunityUpdateResult> {
       try {
         const { data, error } = await caller(token).rpc("update_community", {
           p_id: id,

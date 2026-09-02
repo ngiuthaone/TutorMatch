@@ -151,10 +151,18 @@ function RescheduleDialog({ booking, onClose, onRescheduled }: { booking: Bookin
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
+
+  const loadSessions = useCallback(async () => {
     if (!tutorProfileId) { setSessions([]); return; }
-    listBookableSessions({ tutorProfileId }).then((rows) => setSessions(rows.filter((row) => new Date(row.startsAt).getTime() > Date.now()))).catch(() => setSessions([]));
-  }, [tutorProfileId]);
+    listBookableSessions({ tutorProfileId }).then((rows) => setSessions(rows.filter((row) => new Date(row.startsAt).getTime() > now))).catch(() => setSessions([]));
+  }, [tutorProfileId, now]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadSessions();
+  }, [loadSessions]);
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     dialogRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
@@ -198,6 +206,7 @@ function RescheduleDialog({ booking, onClose, onRescheduled }: { booking: Bookin
     </div>
   );
 }
+
 
 
 

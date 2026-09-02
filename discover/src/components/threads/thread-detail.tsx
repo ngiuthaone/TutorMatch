@@ -12,6 +12,8 @@ import {
   unappreciateReference, reportReferenceContent, deleteThread, deleteThreadReply,
   type ReferenceThread, type ThreadReply, type AnchorType,
 } from "@/lib/community/threads-api";
+import { BookmarkButton } from "@/components/community/bookmark-button";
+import { ReportDialog } from "@/components/community/report-dialog";
 import { getSessionAccessToken } from "@/lib/auth/session";
 
 const ANCHOR_LABELS: Record<AnchorType, string> = {
@@ -43,6 +45,7 @@ export function ThreadDetailPage({ threadId }: { threadId: string }) {
   const [reportOpenFor, setReportOpenFor] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState("");
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -57,6 +60,7 @@ export function ThreadDetailPage({ threadId }: { threadId: string }) {
     }
   }, [threadId]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
   const handleAppreciate = useCallback(async (targetType: "thread" | "reply", targetId: string) => {
@@ -239,6 +243,8 @@ export function ThreadDetailPage({ threadId }: { threadId: string }) {
             >
               <IconLink size={14} /> Share
             </button>
+            {!thread.is_creator && <ThreadReportButton threadId={thread.id} />}
+            <BookmarkButton targetType="thread" targetId={thread.id} iconOnly />
           </div>
         </div>
 
@@ -397,5 +403,21 @@ function ReplyItem({
         </div>
       )}
     </div>
+  );
+}
+
+function ThreadReportButton({ threadId }: { threadId: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-muted hover:text-red-400 transition-colors"
+        aria-label="Report thread"
+      >
+        <IconFlag size={14} />
+      </button>
+      <ReportDialog targetType="thread" targetId={threadId} open={open} onClose={() => setOpen(false)} />
+    </>
   );
 }

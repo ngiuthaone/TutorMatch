@@ -24,7 +24,7 @@ const createBookingSchema = z.object({
   learnerNote: z.string().trim().max(500).optional()
 });
 const createOfferingSchema = z.object({
-  offeringType: z.enum(["tutor", "workshop", "class", "event"]),
+  kind: z.enum(["tutor", "workshop", "class", "event"]),
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).optional(),
   pricingModel: z.enum(["hourly_v1", "flat_per_participant_v1"]),
@@ -262,8 +262,8 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService; authSe
     const body = createOfferingSchema.safeParse(request.body);
     if (!body.success) throw new ApiError(400, "OFFERING_INVALID", "Offering details are invalid.");
     const d = body.data;
-    const params: { offeringType: string; title: string; pricingModel: string; pricePerParticipantVnd?: number; hourlyRateVnd?: number; bookingMode?: string; description?: string } = {
-      offeringType: d.offeringType,
+    const params: { kind: string; title: string; pricingModel: string; pricePerParticipantVnd?: number; hourlyRateVnd?: number; bookingMode?: string; description?: string } = {
+      kind: d.kind,
       title: d.title,
       pricingModel: d.pricingModel
     };
@@ -302,5 +302,32 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService; authSe
     const result = await options.service.cancelWorkshopBooking(request.auth.accessToken, bookingId, body.data.expectedVersion, body.data.reason);
     if (result.error) fail(result);
     return { ok: true, booking: await readAfterMutation(options.service, request.auth.accessToken, bookingId, result.data) };
+  });
+
+  // ============================================================
+  // Course Purchase routes (Phase 7)
+  // ============================================================
+
+  app.get("/api/v1/courses/:slug/offering", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
+    const slug = (request.params as { slug?: unknown }).slug;
+    if (typeof slug !== "string" || slug.length === 0) throw new ApiError(400, "INVALID_SLUG", "Course slug is required.");
+    const result = await options.service.getCourseOfferingBySlug(request.auth.accessToken, slug);
+    if (result.error) fail(result);
+    if (!result.data) throw new ApiError(404, "COURSE_NOT_FOUND", "Course not found.");
+    return { ok: true, ...result.data as object };
+  });
+
+  app.get("/api/v1/courses/:courseId/enrollment", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
+    const courseId = routeId((request.params as { courseId?: unknown }).courseId, "courseId");
+    const result = await options.service.getCourseEnrollment(request.auth.accessToken, courseId);
+    if (result.error) fail(result);
+    if (!result.data) throw new ApiError(404, "NOT_ENROLLED", "Not enrolled in this course.");
+    return { ok: true, item: result.data };
+  });
+
+  app.get("/api/v1/courses/mine/enrollments", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
+    const result = await options.service.listMyCourseEnrollments(request.auth.accessToken);
+    if (result.error) fail(result);
+    return { ok: true, items: result.data };
   });
 };

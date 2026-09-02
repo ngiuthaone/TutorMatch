@@ -1,6 +1,7 @@
 "use client";
 
 import { IconUsers } from "@tabler/icons-react";
+import Link from "next/link";
 
 const communities = [
   {
@@ -57,12 +58,12 @@ export function CommunitiesSection() {
           <h2 className="text-xl font-semibold tracking-tight text-foreground">
             Communities to explore
           </h2>
-          <a
+          <Link
             href="/communities"
             className="text-sm text-primary hover:text-primary-dark font-medium transition-colors"
           >
             Explore communities
-          </a>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

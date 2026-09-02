@@ -47,6 +47,7 @@ const listQuerySchema = z.object({
   tag: z.string().optional(),
   level: z.string().optional(),
   anchorType: z.string().optional(),
+  communityId: z.string().uuid().optional(),
 });
 
 export const threadRoutes: FastifyPluginAsync<{
@@ -61,7 +62,7 @@ export const threadRoutes: FastifyPluginAsync<{
     const parsed = listQuerySchema.safeParse(request.query);
     if (!parsed.success) throw new ApiError(400, "INVALID_QUERY", "Invalid thread query parameters.");
     const q = parsed.data;
-    const result = await options.threadService.listPublic(q.cursor ?? null, q.limit ?? 20, q.tag ?? null, q.level ?? null, q.anchorType ?? null);
+    const result = await options.threadService.listPublic(q.cursor ?? null, q.limit ?? 20, q.tag ?? null, q.level ?? null, q.anchorType ?? null, q.communityId ?? null);
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Threads are temporarily unavailable.");
     return { threads: result.data.threads, nextCursor: result.data.nextCursor };
   });

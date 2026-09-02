@@ -12,6 +12,8 @@ import { meRoutes } from "./routes/me.js";
 import { tutorCvRoutes } from "./routes/tutor-cv.js";
 import { publicTutorRoutes } from "./routes/public-tutors.js";
 import { marketplaceRoutes } from "./routes/marketplace.js";
+import { courseRoutes } from "./routes/courses.js";
+import { createSupabaseCourseService } from "./services/course-service.js";
 import { createSupabaseMarketplaceService } from "./services/marketplace-service.js";
 import { createSupabaseEventPublicationService, type EventPublicationService } from "./services/event-publication-service.js";
 import { eventPublicationRoutes } from "./routes/events.js";
@@ -27,6 +29,8 @@ import { dashboardRoutes } from "./routes/dashboard.js";
 import { tutorDashboardRoutes } from "./routes/tutor-dashboard.js";
 import { messagingRoutes } from "./routes/messaging.js";
 import { createSupabaseMessagingService, type MessagingService } from "./services/messaging-service.js";
+import { createSupabaseHostCenterService, type HostCenterService } from "./services/host-center-service.js";
+import { hostCenterRoutes } from "./routes/host.js";
 import { createSupabaseArticleService, type ArticleService } from "./services/article-service.js";
 import { createSupabasePostService, type PostService } from "./services/post-service.js";
 import { createSupabaseCommentService, type CommentService } from "./services/comment-service.js";
@@ -35,6 +39,7 @@ import { createSupabaseNotificationService, type NotificationService } from "./s
 import { createSupabaseThreadService, type ThreadService } from "./services/thread-service.js";
 import { createSupabaseCommunityService, type CommunityService } from "./services/community-service.js";
 import { createSupabaseBookmarkService, type BookmarkService, createSupabaseReportService, type ReportService } from "./services/bookmark-service.js";
+import { createSupabaseModerationService, type ModerationService } from "./services/moderation-service.js";
 import { articleRoutes } from "./routes/articles.js";
 import { postRoutes } from "./routes/posts.js";
 import { commentRoutes } from "./routes/comments.js";
@@ -43,6 +48,7 @@ import { notificationRoutes } from "./routes/notifications.js";
 import { threadRoutes } from "./routes/threads.js";
 import { communityRoutes } from "./routes/communities.js";
 import { bookmarkRoutes } from "./routes/bookmarks.js";
+import { moderationRoutes } from "./routes/moderation.js";
 import type { AuthService } from "./services/auth-service.js";
 import type { BookingService } from "./services/booking-service.js";
 import type { TutorCvService } from "./types/tutor-cv.js";
@@ -71,7 +77,9 @@ export function createApp(options: {
   communityService?: CommunityService;
   bookmarkService?: BookmarkService;
   reportService?: ReportService;
+  moderationService?: ModerationService;
   messagingService?: MessagingService;
+  hostCenterService?: HostCenterService;
   requireAdmin?: (request: import("fastify").FastifyRequest, reply: import("fastify").FastifyReply) => Promise<void>;
   logger?: FastifyServerOptions["logger"];
 }) {
@@ -138,6 +146,9 @@ export function createApp(options: {
     app.register(publicTutorRoutes, { tutorCvService: options.tutorCvService, listMax: options.config.PUBLIC_TUTORS_LIST_RATE_LIMIT_MAX, detailMax: options.config.PUBLIC_TUTOR_DETAIL_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   }
   app.register(marketplaceRoutes, { authService: options.authService, marketplaceService: options.marketplaceService ?? createSupabaseMarketplaceService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY), publishMax: options.config.COURSE_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.COURSE_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  if (options.courseService) {
+    app.register(courseRoutes, { courseService: options.courseService, authService: options.authService });
+  }
   app.register(eventPublicationRoutes, { authService: options.authService, eventService: options.eventService ?? createSupabaseEventPublicationService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.EVENT_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.EVENT_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   app.register(articleRoutes, { authService: options.authService, articleService: options.articleService ?? createSupabaseArticleService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.ARTICLE_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.ARTICLE_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS, allowedImageHosts: options.config.ALLOWED_IMAGE_HOSTS ?? [] });
   app.register(postRoutes, { authService: options.authService, postService: options.postService ?? createSupabasePostService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.POST_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.POST_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
@@ -167,6 +178,12 @@ export function createApp(options: {
   const messagingService = options.messagingService ?? createSupabaseMessagingService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY);
   app.register(messagingRoutes, { service: messagingService, readMax: options.config.MESSAGING_READ_RATE_LIMIT_MAX, sendMax: options.config.MESSAGING_SEND_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   app.register(tutorDashboardRoutes, { authService: options.authService, config: options.config, max: options.config.RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  app.register(hostCenterRoutes, {
+    authService: options.authService,
+    service: options.hostCenterService ?? createSupabaseHostCenterService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY),
+    max: options.config.HOST_CENTER_RATE_LIMIT_MAX,
+    windowMs: options.config.RATE_LIMIT_WINDOW_MS,
+  });
   if (options.requireAdmin) {
     const dashConfig: { SUPABASE_URL: string; SUPABASE_PUBLISHABLE_KEY: string; SUPABASE_SERVICE_ROLE_KEY?: string } = {
       SUPABASE_URL: options.config.SUPABASE_URL,

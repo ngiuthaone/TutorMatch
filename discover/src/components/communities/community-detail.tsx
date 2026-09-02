@@ -11,6 +11,7 @@ export function CommunityDetailPage({ slug }: { slug: string }) {
   const router = useRouter();
   const [community, setCommunity] = useState<Community | null>(null);
   const [membership, setMembership] = useState<CommunityMembership | null>(null);
+  const [tab, setTab] = useState<"posts" | "threads" | "about">("posts");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -30,7 +31,13 @@ export function CommunityDetailPage({ slug }: { slug: string }) {
     }
   }, [slug]);
 
-  useEffect(() => { load(); }, [load]);
+  const loadRef = useRef(load);
+  // eslint-disable-next-line react-hooks/refs
+  loadRef.current = load;
+
+  useEffect(() => {
+    loadRef.current();
+  }, []);
 
   const handleJoin = useCallback(async () => {
     if (!getSessionAccessToken()) {
@@ -159,17 +166,138 @@ export function CommunityDetailPage({ slug }: { slug: string }) {
 
         {/* Tabs */}
         <div className="flex items-center gap-4 border-b border-border mb-4">
-          <button className="px-3 py-2 text-sm font-medium border-b-2 border-primary text-primary">Posts</button>
-          <button className="px-3 py-2 text-sm text-muted hover:text-foreground">Threads</button>
-          <button className="px-3 py-2 text-sm text-muted hover:text-foreground">About</button>
+          <button onClick={() => setTab("posts")} className={`px-3 py-2 text-sm font-medium border-b-2 ${tab === "posts" ? "border-primary text-primary" : "border-transparent text-muted hover:text-foreground"}`}>Posts</button>
+          <button onClick={() => setTab("threads")} className={`px-3 py-2 text-sm font-medium border-b-2 ${tab === "threads" ? "border-primary text-primary" : "border-transparent text-muted hover:text-foreground"}`}>Threads</button>
+          <button onClick={() => setTab("about")} className={`px-3 py-2 text-sm font-medium border-b-2 ${tab === "about" ? "border-primary text-primary" : "border-transparent text-muted hover:text-foreground"}`}>About</button>
+          {isMember && (
+            <div className="ml-auto flex items-center gap-2">
+              <Link href={`/discussions/new?community=${community.id}`} className="px-3 py-1.5 text-xs font-medium rounded-lg bg-primary text-white hover:bg-primary-dark">
+                New post
+              </Link>
+              <Link href={`/threads/new?community=${community.id}`} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border hover:border-primary/30">
+                New thread
+              </Link>
+            </div>
+          )}
         </div>
 
-        <div className="text-center py-12 text-sm text-muted">
-          {isMember
-            ? "Community posts will appear here. Use the create button to start a discussion."
-            : "Join this community to see and create posts."}
-        </div>
+        {tab === "posts" && (
+          <CommunityPostsTab communityId={community.id} communitySlug={community.slug} isMember={isMember} canModerate={!!isMod} />
+        )}
+        {tab === "threads" && (
+          <CommunityThreadsTab communityId={community.id} communitySlug={community.slug} isMember={isMember} canModerate={!!isMod} />
+        )}
+        {tab === "about" && (
+          <div className="rounded-2xl border border-border bg-surface p-5 text-sm text-muted">
+            <p>Community slug: <span className="text-foreground font-mono">/{community.slug}</span></p>
+            <p className="mt-2">Visibility: <span className="text-foreground">{community.visibility}</span></p>
+            <p className="mt-2">Join policy: <span className="text-foreground">{community.join_policy}</span></p>
+            <p className="mt-2">Created: <span className="text-foreground">{new Date(community.created_at).toLocaleDateString()}</span></p>
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function CommunityPostsTab({ communityId, communitySlug, isMember, canModerate }: { communityId: string; communitySlug: string; isMember?: boolean; canModerate: boolean }) {
+  const [posts, setPosts] = useState<import("@/lib/community/posts-api").Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true);
+    setError(null);
+    import("@/lib/community/posts-api").then(({ listPosts }) => {
+      listPosts({ communityId, limit: 20 })
+        .then((r) => { if (!cancelled) { setPosts(r.posts); setLoading(false); } })
+        .catch(() => { if (!cancelled) { setError("Posts are temporarily unavailable."); setLoading(false); } });
+    });
+    return () => { cancelled = true; };
+  }, [communityId]);
+
+  if (loading) return <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="animate-pulse h-24 rounded-2xl bg-surface" />)}</div>;
+  if (error) return <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200 text-sm p-4">{error}</div>;
+  if (posts.length === 0) {
+    return (
+      <div className="text-center py-12 text-sm text-muted">
+        {isMember ? "No posts yet. Be the first to share something." : "Join this community to see posts."}
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      {posts.map((p) => (
+        <Link key={p.id} href={`/discussions?post=${p.id}`} className="block rounded-2xl border border-border bg-surface p-4 hover:border-primary/30 transition-colors">
+          <div className="flex items-center gap-2 mb-1.5 text-xs text-muted">
+            <span className="font-medium text-foreground">{p.author.name}</span>
+            {p.author.role && <span>· {p.author.role}</span>}
+            <span>· {new Date(p.created_at).toLocaleDateString()}</span>
+          </div>
+          <p className="text-sm text-foreground line-clamp-3">{p.body}</p>
+          {p.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {p.tags.slice(0, 3).map(t => <span key={t} className="px-1.5 py-0.5 text-[10px] rounded bg-border/30 text-muted">#{t}</span>)}
+            </div>
+          )}
+          <div className="flex items-center gap-3 mt-2 text-xs text-muted">
+            <span>♥ {p.like_count}</span>
+            <span>💬 {p.comment_count}</span>
+            <span>↻ {p.repost_count}</span>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function CommunityThreadsTab({ communityId, communitySlug, isMember, canModerate }: { communityId: string; communitySlug: string; isMember?: boolean; canModerate: boolean }) {
+  const [threads, setThreads] = useState<import("@/lib/community/threads-api").ReferenceThread[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true);
+    setError(null);
+    import("@/lib/community/threads-api").then(({ listThreads }) => {
+      listThreads({ communityId, limit: 20 })
+        .then((r) => { if (!cancelled) { setThreads(r.threads); setLoading(false); } })
+        .catch(() => { if (!cancelled) { setError("Threads are temporarily unavailable."); setLoading(false); } });
+    });
+    return () => { cancelled = true; };
+  }, [communityId]);
+
+  if (loading) return <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="animate-pulse h-24 rounded-2xl bg-surface" />)}</div>;
+  if (error) return <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200 text-sm p-4">{error}</div>;
+  if (threads.length === 0) {
+    return (
+      <div className="text-center py-12 text-sm text-muted">
+        {isMember ? "No threads yet. Start a reference thread to discuss a resource." : "Join this community to see threads."}
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      {threads.map((t) => (
+        <Link key={t.id} href={`/threads/${t.id}`} className="block rounded-2xl border border-border bg-surface p-4 hover:border-primary/30 transition-colors">
+          <div className="flex items-center gap-2 mb-1.5 text-xs text-muted">
+            <span className="font-medium text-foreground">{t.creator.name}</span>
+            {t.creator.role && <span>· {t.creator.role}</span>}
+            <span>· {new Date(t.created_at).toLocaleDateString()}</span>
+            {t.status === "closed" && <span className="px-1.5 py-0.5 text-[10px] rounded bg-amber-500/10 text-amber-400">Closed</span>}
+          </div>
+          <h3 className="text-sm font-semibold">{t.title}</h3>
+          {t.body && <p className="text-xs text-muted line-clamp-2 mt-1">{t.body}</p>}
+          <div className="flex items-center gap-3 mt-2 text-xs text-muted">
+            <span>♥ {t.appreciated_count}</span>
+            <span>↩ {t.reply_count}</span>
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }

@@ -183,17 +183,19 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
           id: s.id,
           startsAt: s.startsAt,
           endsAt: s.endsAt,
-          status: s.status,
+          status: s.status as BookableSession["status"],
           minParticipants: s.minParticipants,
           maxParticipants: s.maxParticipants,
           spotsLeft: s.spotsLeft,
           unitPriceVnd: offering.pricePerParticipantVnd ?? null,
-          host: null,
+          host: undefined,
           offering: {
             id: offering.id,
             title: offering.title,
             kind: offering.kind,
           },
+          hardReservedCapacity: 0,
+          version: 1,
         }));
 
         if (!cancelled.current) setPage({ status: "ready", offering, sessions: bookableSessions });
@@ -468,6 +470,7 @@ export function WorkshopDetailPage({ slug }: WorkshopDetailPageProps) {
           participants={participants}
           onParticipants={setParticipants}
           onBooked={handleBooked}
+          sessions={sessions}
         />
       )}
 

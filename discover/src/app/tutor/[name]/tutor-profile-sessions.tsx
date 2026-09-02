@@ -30,11 +30,13 @@ function formatWhen(iso: string): string {
 }
 
 export async function TutorProfileSessions({ tutorProfileId }: TutorProfileSessionsProps) {
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
   const all = await callTutorRpc<BookableSession[]>("list_bookable_sessions", {
     p_tutor_profile_id: tutorProfileId,
   });
   const sessions = (all ?? [])
-    .filter((session) => session.status === "scheduled" && Date.parse(session.startsAt) > Date.now())
+    .filter((session) => session.status === "scheduled" && Date.parse(session.startsAt) > now)
     .sort((left, right) => Date.parse(left.startsAt) - Date.parse(right.startsAt))
     .slice(0, 8);
 

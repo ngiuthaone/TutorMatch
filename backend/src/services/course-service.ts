@@ -289,7 +289,7 @@ function generateSlug(title: string): string {
 
 export interface CourseService {
   createCourse(token: string, creatorId: string, input: CourseInput): Promise<CourseResult<Course>>;
-  getCourse(courseId: string): Promise<CourseResult<Course>>;
+  getCourse(courseId: string, userId?: string): Promise<CourseResult<Course>>;
   getCourseBySlug(slug: string): Promise<CourseResult<Course>>;
   updateCourse(token: string, courseId: string, expectedVersion: number, patch: Partial<CourseInput>): Promise<CourseResult<Course>>;
   deleteCourse(token: string, courseId: string): Promise<CourseResult<void>>;
@@ -444,8 +444,14 @@ export function createSupabaseCourseService(
       }
     },
 
-    async getCourse(courseId: string): Promise<CourseResult<Course>> {
-      return getCourseByIdInternal(courseId);
+    async getCourse(courseId: string, userId?: string): Promise<CourseResult<Course>> {
+      const result = await getCourseByIdInternal(courseId);
+      if (result.status !== "ok") return result;
+      const course = result.data;
+      if (course.status !== "published" && course.creator_id !== userId) {
+        return { status: "not_found" };
+      }
+      return result;
     },
 
     async getCourseBySlug(slug: string): Promise<CourseResult<Course>> {
@@ -510,6 +516,24 @@ export function createSupabaseCourseService(
 
     async deleteCourse(token: string, courseId: string): Promise<CourseResult<void>> {
       try {
+        const { data: course, error: courseError } = await caller(token)
+          .from("courses")
+          .select("id, status")
+          .eq("id", courseId)
+          .single();
+        if (courseError || !course) return { status: "not_found" };
+
+        const { data: enrollments } = await caller()
+          .from("course_enrollments")
+          .select("id")
+          .eq("course_id", courseId)
+          .limit(1);
+
+        const courseRecord = course as { id: string; status: string };
+        if (enrollments && enrollments.length > 0 && courseRecord.status === "published") {
+          return { status: "forbidden", error: "Cannot delete a published course with existing enrollments" };
+        }
+
         const { error } = await caller(token).from("courses").delete().eq("id", courseId);
         if (error) {
           if (error.code === "42501") return { status: "forbidden" };

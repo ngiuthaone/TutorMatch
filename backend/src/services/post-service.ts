@@ -166,7 +166,7 @@ export function createSupabasePostService(url: string, publishableKey: string, _
       }
     },
 
-    async listPublic(cursor: string | null, limit: number, tag?: string | null, postType?: string | null, authorName?: string | null): Promise<PublicPostListResult> {
+    async listPublic(cursor: string | null, limit: number, tag?: string | null, postType?: string | null, authorName?: string | null, communityId?: string | null): Promise<PublicPostListResult> {
       try {
         const { data, error } = await caller().rpc("list_public_posts", {
           p_cursor: cursor,
@@ -174,6 +174,7 @@ export function createSupabasePostService(url: string, publishableKey: string, _
           p_tag: tag ?? null,
           p_post_type: postType ?? null,
           p_author_name: authorName ?? null,
+          p_community_id: communityId ?? null,
         });
         if (error) return { status: "unavailable" };
         const row = data as { posts?: Record<string, unknown>[]; next_cursor?: string | null };

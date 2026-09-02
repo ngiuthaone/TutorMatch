@@ -28,11 +28,15 @@ export type BookingService = {
   getOffering(offeringId: string): Promise<BookingServiceResult>;
   getOfferingBySlug(slug: string): Promise<BookingServiceResult>;
   listSessionsByOffering(offeringId: string): Promise<BookingServiceResult>;
-  createOffering(token: string, params: { offeringType: string; title: string; pricingModel: string; pricePerParticipantVnd?: number; hourlyRateVnd?: number; bookingMode?: string; description?: string }): Promise<BookingServiceResult>;
+  createOffering(token: string, params: { kind: string; title: string; pricingModel: string; pricePerParticipantVnd?: number; hourlyRateVnd?: number; bookingMode?: string; description?: string }): Promise<BookingServiceResult>;
   updateOfferingStatus(token: string, offeringId: string, expectedVersion: number, status: string): Promise<BookingServiceResult>;
   // Workshop Booking RPCs
   listWorkshopBookings(token: string): Promise<BookingServiceResult>;
   cancelWorkshopBooking(token: string, bookingId: string, expectedVersion: number, reason?: string): Promise<BookingServiceResult>;
+  // Course Purchase RPCs
+  getCourseOfferingBySlug(token: string, slug: string): Promise<BookingServiceResult>;
+  getCourseEnrollment(token: string, courseId: string): Promise<BookingServiceResult>;
+  listMyCourseEnrollments(token: string): Promise<BookingServiceResult>;
 };
 
 export function createSupabaseBookingService(url: string, publishableKey: string): BookingService {
@@ -77,7 +81,7 @@ export function createSupabaseBookingService(url: string, publishableKey: string
     getOfferingBySlug: (slug) => rpc("get_offering_with_sessions_by_slug", { p_slug: slug }),
     listSessionsByOffering: (offeringId) => rpc("list_sessions_by_offering_id", { p_offering_id: offeringId }),
     createOffering: (token, params) => rpc("create_offering", {
-      p_offering_type: params.offeringType,
+      p_offering_type: params.kind,
       p_title: params.title,
       p_pricing_model: params.pricingModel,
       p_price_per_participant_vnd: params.pricePerParticipantVnd ?? null,
@@ -96,6 +100,10 @@ export function createSupabaseBookingService(url: string, publishableKey: string
       p_booking_id: bookingId,
       p_expected_version: expectedVersion,
       p_reason: reason ?? null
-    }, token)
+    }, token),
+    // Course Purchase RPCs
+    getCourseOfferingBySlug: (token, slug) => rpc("get_course_offering_by_slug", { p_course_slug: slug }, token),
+    getCourseEnrollment: (token, courseId) => rpc("get_course_enrollment", { p_course_id: courseId }, token),
+    listMyCourseEnrollments: (token) => rpc("list_my_course_enrollments", {}, token)
   };
 }

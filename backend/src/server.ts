@@ -8,6 +8,7 @@ import { createSupabaseAuthService } from "./lib/supabase.js";
 import { createSupabaseTutorCvService } from "./services/tutor-cv-service.js";
 import { createSupabaseBookingService } from "./services/booking-service.js";
 import { createSupabasePaymentService } from "./services/payment-service.js";
+import { createSupabaseCourseService } from "./services/course-service.js";
 import { createPolicyService } from "./services/policy-service.js";
 import { createComplianceService } from "./services/compliance-service.js";
 import { createPayoutService } from "./services/payout-service.js";
@@ -44,12 +45,13 @@ async function main() {
   );
   const complianceService = createComplianceService(config.SUPABASE_URL, config.SUPABASE_PUBLISHABLE_KEY);
   const payoutService = createPayoutService(config.SUPABASE_URL, config.SUPABASE_PUBLISHABLE_KEY);
+  const courseService = createSupabaseCourseService(config.SUPABASE_URL, config.SUPABASE_PUBLISHABLE_KEY);
   const adminService = createAdminService(
     config.SUPABASE_URL,
     config.SUPABASE_SERVICE_ROLE_KEY ?? config.SUPABASE_PUBLISHABLE_KEY,
   );
   const requireAdmin = createRequireAdmin(config.SUPABASE_URL, config.SUPABASE_PUBLISHABLE_KEY);
-  const app = createApp({ config, authService, tutorCvService, bookingService, policyService, complianceService, payoutService, adminService, requireAdmin, logger: {
+  const app = createApp({ config, authService, tutorCvService, bookingService, policyService, complianceService, payoutService, adminService, courseService, requireAdmin, logger: {
     level: config.NODE_ENV === "production" ? "info" : "debug",
     redact: { paths: ["req.headers.authorization", "req.headers.cookie", "res.headers.set-cookie", "*.accessToken", "*.refreshToken", "*.password", "*.secretKey", "*.email"], censor: "[REDACTED]" }
   } });

@@ -119,6 +119,7 @@ interface WorkshopBookingSheetProps {
   participants: number;
   onParticipants: (qty: number) => void;
   onBooked: (booking: BookingRecord) => void;
+  sessions?: BookableSession[];
 }
 
 /* ── Component ── */
@@ -134,6 +135,7 @@ export function WorkshopBookingSheet({
   participants,
   onParticipants,
   onBooked,
+  sessions,
 }: WorkshopBookingSheetProps) {
   const session = useSession();
   const sessionUser = session.status === "authenticated" ? session.user : null;
@@ -432,6 +434,7 @@ export function WorkshopBookingSheet({
                 kind={kind}
                 onSelect={onSelectSession}
                 selected={selectedSession}
+                initialSessions={sessions}
               />
             </div>
           )}

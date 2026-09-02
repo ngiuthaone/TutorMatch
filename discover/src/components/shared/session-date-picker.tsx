@@ -11,6 +11,8 @@ interface SessionDatePickerProps {
   onSelect: (session: BookableSession) => void;
   selected?: BookableSession | null;
   disabled?: boolean;
+  /** Pre-loaded sessions to display without fetching. If not provided, fetches from the API. */
+  initialSessions?: BookableSession[];
 }
 
 interface DateGroup {
@@ -66,6 +68,7 @@ export function SessionDatePicker({
   onSelect,
   selected,
   disabled,
+  initialSessions,
 }: SessionDatePickerProps) {
   const [sessions, setSessions] = useState<BookableSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,11 +91,17 @@ export function SessionDatePicker({
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      if (!cancelled) await fetchSessions();
+      if (!cancelled) {
+        if (initialSessions !== undefined) {
+          setSessions(sortFutureBookableSessions(initialSessions));
+          setLoading(false);
+        } else {
+          await fetchSessions();
+        }
+      }
     })();
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [offeringId, kind]);
+  }, [offeringId, kind, initialSessions]);
 
   const groups = useMemo(() => groupByDate(sessions), [sessions]);
   const allSessionCount = sessions.length;

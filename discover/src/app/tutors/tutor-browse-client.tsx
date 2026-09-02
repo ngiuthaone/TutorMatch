@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { listTutorCards, type TutorCardSummary, type TutorDiscoveryFilters } from "@/lib/tutor-discovery-api";
@@ -149,6 +149,14 @@ export function TutorBrowseClient({ initialItems, initialCursor, initialFilters 
   const maxRateValue = filters.maxRate ?? "";
   const sortValue = filters.sort;
 
+  const applyFiltersRef = useRef(applyFilters);
+  // eslint-disable-next-line react-hooks/refs
+  applyFiltersRef.current = applyFilters;
+
+  const filtersRef = useRef(filters);
+  // eslint-disable-next-line react-hooks/refs
+  filtersRef.current = filters;
+
   useEffect(() => {
     const current = new URLSearchParams(params?.toString() ?? "");
     const next: typeof filters = {
@@ -159,9 +167,11 @@ export function TutorBrowseClient({ initialItems, initialCursor, initialFilters 
       maxRate: current.get("maxRate") ? Number(current.get("maxRate")) : null,
       sort: current.get("sort") === "recent" ? "recent" : "rating",
     };
-    const same = JSON.stringify(next) === JSON.stringify(filters);
-    if (!same) void applyFilters(next);
-  }, [params, applyFilters, filters]);
+    const same = JSON.stringify(next) === JSON.stringify(filtersRef.current);
+    if (!same) {
+      applyFiltersRef.current(next);
+    }
+  }, [params]);
 
   const isEmpty = useMemo(() => items.length === 0, [items]);
 

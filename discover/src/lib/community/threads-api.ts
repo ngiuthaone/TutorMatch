@@ -61,13 +61,14 @@ export interface CreateThreadInput {
   replyPermission?: ReplyPermission;
 }
 
-export async function listThreads(params: { cursor?: string | null; limit?: number; tag?: string | null; level?: string | null; anchorType?: string | null } = {}) {
+export async function listThreads(params: { cursor?: string | null; limit?: number; tag?: string | null; level?: string | null; anchorType?: string | null; communityId?: string | null } = {}) {
   const q = new URLSearchParams();
   if (params.cursor) q.set("cursor", params.cursor);
   if (params.limit) q.set("limit", String(params.limit));
   if (params.tag) q.set("tag", params.tag);
   if (params.level) q.set("level", params.level);
   if (params.anchorType) q.set("anchorType", params.anchorType);
+  if (params.communityId) q.set("communityId", params.communityId);
   const qs = q.toString();
   return apiFetch<{ threads: ReferenceThread[]; nextCursor: string | null }>(`/api/v1/threads${qs ? `?${qs}` : ""}`, { auth: false });
 }

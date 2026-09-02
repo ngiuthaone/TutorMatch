@@ -30,6 +30,12 @@ function setup(overrides: Partial<MessagingService> = {}, authenticated = true) 
     listMessages: async (...args) => { calls.push({ name: "listMessages", args }); return { status: "ok", data: [{ id: "55555555-5555-4555-8555-555555555555", senderId: CONVERSATION.participant.userId, mine: false, body: "Hi", createdAt: "2026-08-31T10:05:00.000Z", moderationStatus: "approved" }] }; },
     sendMessage: async (...args) => { calls.push({ name: "sendMessage", args }); return { status: "ok", data: { id: "66666666-6666-4666-8666-666666666666", senderId: "11111111-1111-4111-8111-111111111111", mine: true, body: args[3] as string, createdAt: "2026-08-31T10:06:00.000Z", moderationStatus: "approved" }, duplicate: false }; },
     markRead: async (...args) => { calls.push({ name: "markRead", args }); return { status: "ok", data: { conversationId: args[1] as string, lastReadAt: "2026-08-31T10:06:30.000Z" } }; },
+    searchConversations: async (token, query) => { calls.push({ name: "searchConversations", args: [token, query] }); return { status: "ok", data: [] as any }; },
+    editMessage: async (...args) => { calls.push({ name: "editMessage", args }); return { status: "ok", data: { id: "66666666-6666-4666-8666-666666666666", senderId: "11111111-1111-4111-8111-111111111111", mine: false, body: args[2] as string, createdAt: "2026-08-31T10:06:00.000Z", moderationStatus: "approved" } }; },
+    deleteMessage: async (...args) => { calls.push({ name: "deleteMessage", args }); return { status: "ok", data: { id: "66666666-6666-4666-8666-666666666666", senderId: "11111111-1111-4111-8111-111111111111", mine: false, body: "deleted", createdAt: "2026-08-31T10:06:00.000Z", moderationStatus: "approved" } }; },
+    reportMessage: async (...args) => { calls.push({ name: "reportMessage", args }); return { status: "ok", data: { id: "66666666-6666-4666-8666-666666666666", status: "reported" } }; },
+    blockUser: async (...args) => { calls.push({ name: "blockUser", args }); return { status: "ok", data: { blocker: "11111111-1111-4111-8111-111111111111", blocked: "44444444-4444-4444-8444-444444444444" } }; },
+    unblockUser: async (...args) => { calls.push({ name: "unblockUser", args }); return { status: "ok", data: { blocker: "11111111-1111-4111-8111-111111111111", blocked: "44444444-4444-4444-8444-444444444444" } }; },
     ...overrides,
   };
   const authService = new FakeAuthService();

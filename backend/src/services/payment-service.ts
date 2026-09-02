@@ -64,7 +64,7 @@ export function createSupabasePaymentService(url: string, publishableKey: string
     async observe(fields: { eventKey: string; merchantReference: string; outcome: string; providerTransactionNo: string | null; amountVnd: number; payload: Record<string, unknown> }) {
       if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
       const result = await trusted.rpc("record_vnpay_observation", { p_provider_event_key: fields.eventKey, p_merchant_reference: fields.merchantReference, p_outcome: fields.outcome, p_provider_transaction_no: fields.providerTransactionNo, p_amount_vnd: fields.amountVnd, p_payload: fields.payload });
-      if (!result.error && result.data?.status === "succeeded" && result.data.bookingId) await trusted.rpc("finalize_paid_booking", { p_booking_id: result.data.bookingId });
+      if (!result.error && result.data?.status === "succeeded" && result.data.bookingId) { await trusted.rpc("finalize_paid_booking", { p_booking_id: result.data.bookingId }); await trusted.rpc("enroll_learner_in_course", { p_booking_id: result.data.bookingId }); }
       return result;
     },
     async reconcile(merchantReference: string) {

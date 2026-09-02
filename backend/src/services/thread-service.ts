@@ -124,7 +124,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
       }
     },
 
-    async listPublic(cursor: string | null, limit: number, tag?: string | null, level?: string | null, anchorType?: string | null): Promise<ThreadListResult> {
+    async listPublic(cursor: string | null, limit: number, tag?: string | null, level?: string | null, anchorType?: string | null, communityId?: string | null): Promise<ThreadListResult> {
       try {
         const { data, error } = await caller().rpc("list_reference_threads", {
           p_cursor: cursor,
@@ -132,6 +132,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
           p_tag: tag ?? null,
           p_level: level ?? null,
           p_anchor_type: anchorType ?? null,
+          p_community_id: communityId ?? null,
         });
         if (error) { logServiceError({ service: "thread", operation: "list", error }); return { status: "unavailable" }; }
         const row = data as { threads?: Record<string, unknown>[]; next_cursor?: string | null };
@@ -238,7 +239,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
       try {
         const { data, error } = await caller(token).rpc("delete_thread_reply", { p_id: id });
         if (error) {
-          logServiceError("thread.deleteReply", error);
+          logServiceError({ service: "thread", operation: "deleteReply", error });
           const mapped = mapThreadError(error.code ?? "", error.message ?? "");
           if (mapped.status === "not_found") return { status: "not_found" };
           if (mapped.status === "forbidden") return { status: "forbidden" };
@@ -246,7 +247,7 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
         }
         const row = data as { id?: string; status?: string };
         return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "deleted") } };
-      } catch (err) { logServiceError("thread.deleteReply.exception", err); return { status: "unavailable" }; }
+      } catch (err) { logServiceError({ service: "thread", operation: "deleteReply.exception", error: err }); return { status: "unavailable" }; }
     },
 
     async appreciate(token: string, targetType: string, targetId: string): Promise<ThreadAppreciateResult> {

@@ -166,3 +166,36 @@ export function getUserFromStorage(): { id: string; name: string; avatarUrl?: st
   } catch {}
   return null;
 }
+
+export type LessonType = "video" | "text" | "quiz" | "resource";
+
+export interface LessonDraft {
+  id: string;
+  section_id: string;
+  title: string;
+  lesson_type: LessonType;
+  position: number;
+  video_url?: string;
+  text_content?: string;
+  is_preview: boolean;
+}
+
+export interface SectionDraft {
+  id: string;
+  title: string;
+  position: number;
+  lessons: LessonDraft[];
+}
+
+export interface CourseDraft {
+  id: string;
+  title: string;
+  slug?: string;
+  description?: string;
+  cover_url?: string;
+  status: "draft" | "published";
+  sections: SectionDraft[];
+  version: number;
+  created_at: string;
+  updated_at: string;
+}

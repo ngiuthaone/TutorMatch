@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 type Submission = {
   id: string;
@@ -37,6 +37,10 @@ export default function ModerationQueue({ initialStatus, adminEmail }: { initial
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
+  const statusRef = useRef(status);
+  // eslint-disable-next-line react-hooks/refs
+  statusRef.current = status;
+
   const reload = useCallback(async (s: string) => {
     setError(null);
     const res = await fetch(`/api/admin/moderation/media?status=${encodeURIComponent(s)}&limit=100`, { cache: "no-store" });
@@ -49,7 +53,7 @@ export default function ModerationQueue({ initialStatus, adminEmail }: { initial
     setSubmissions((body.submissions ?? []) as Submission[]);
   }, []);
 
-  useEffect(() => { void reload(status); }, [reload, status]);
+  useEffect(() => { void reload(statusRef.current); }, [status]);
 
   const decide = useCallback(async (id: string, decision: "approved" | "rejected" | "removed") => {
     setPendingId(id);

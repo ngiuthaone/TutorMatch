@@ -103,7 +103,8 @@ export const communityRoutes: FastifyPluginAsync<{
     if (!idParsed.success) throw new ApiError(404, "NOT_FOUND", "Community not found.");
     const bodyParsed = updateCommunitySchema.safeParse(request.body);
     if (!bodyParsed.success) throw new ApiError(400, "INVALID_BODY", "Update is invalid.");
-    const result = await options.communityService.update(request.auth.accessToken, idParsed.data, bodyParsed.data);
+    const updateData = { name: bodyParsed.data.name ?? null, description: bodyParsed.data.description ?? null, visibility: bodyParsed.data.visibility ?? null, joinPolicy: bodyParsed.data.joinPolicy ?? null };
+    const result = await options.communityService.update(request.auth.accessToken, idParsed.data, updateData);
     if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "Only moderators can update the community.");
     if (result.status === "invalid") {
       if (result.code === "EMAIL_VERIFICATION_REQUIRED") throw new ApiError(403, "EMAIL_VERIFICATION_REQUIRED", "Please confirm your email first.");

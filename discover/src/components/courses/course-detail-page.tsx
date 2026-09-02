@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -21,6 +21,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import type { CourseDetail, CourseListing } from "@/lib/course-data";
+import { CourseEnrollButton, CoursePricingBadge } from "./course-enroll-button";
 import styles from "./course-detail-page.module.css";
 
 interface CourseDetailPageProps {
@@ -37,10 +38,22 @@ export function CourseDetailPage({ course, similarCourses }: CourseDetailPagePro
   const [openModules, setOpenModules] = useState(() => new Set([0]));
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(() => new Set());
   const [email, setEmail] = useState("");
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   const lessonsTotal = course.curriculum.reduce((total, section) => total + section.lessons.length, 0) || course.lessons;
   const enrollLabel = course.price === "Free" ? "Start course" : "Enroll now";
   const allModulesOpen = openModules.size === course.curriculum.length;
+
+  const priceVnd = course.price === "Free" ? 0 : parseInt(course.price.replace(/[^\d]/g, ""), 10) || null;
+
+  useEffect(() => {
+    const enrollmentKey = `tutoria_enrollment_${course.slug}`;
+    const stored = localStorage.getItem(enrollmentKey);
+    if (stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsEnrolled(true);
+    }
+  }, [course.slug]);
 
   const categoryTrail = useMemo(() => {
     const normalized = course.category.toLowerCase();
@@ -111,6 +124,10 @@ export function CourseDetailPage({ course, similarCourses }: CourseDetailPagePro
     }
     setOpenModal(null);
     showToast(course.price === "Free" ? "Your first lesson is ready" : "Checkout demo complete");
+  };
+
+  const handleEnrolled = () => {
+    setIsEnrolled(true);
   };
 
   return (
@@ -313,9 +330,15 @@ export function CourseDetailPage({ course, similarCourses }: CourseDetailPagePro
 
           <aside className={styles.sidebar} aria-label="Course enrollment">
             <div className={styles.purchaseCard}>
-              <p className={styles.price}>{course.price}</p>
+              <CoursePricingBadge priceVnd={priceVnd} priceDisplay={course.price} />
               <p>Full lifetime access</p>
-              <button type="button" className={styles.enrollButton} onClick={() => setOpenModal("enroll")}>{enrollLabel}</button>
+              <CourseEnrollButton
+                slug={course.slug}
+                courseId={course.slug}
+                priceVnd={priceVnd}
+                priceDisplay={course.price}
+                isEnrolled={isEnrolled}
+              />
               <button type="button" className={styles.tryButton} onClick={() => setOpenModal("preview")}><IconPlayerPlay size={16} fill="currentColor" /> Try a free lesson</button>
               <p className={styles.guarantee}>30-day satisfaction guarantee</p>
               <div className={styles.includes}>

@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { ApiError } from "../errors/api-error.js";
 import type { AuthService } from "../services/auth-service.js";
-import type { CourseService } from "../services/course-service.js";
+import type { CourseService, CourseInput, SectionInput, LessonInput } from "../services/course-service.js";
 
 const noStore = async (_request: unknown, reply: any, payload: unknown) => {
   reply.header("Cache-Control", "no-store").header("Pragma", "no-cache");
@@ -59,19 +59,6 @@ const listQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).optional(),
 });
 
-async function requireTutor(authService: AuthService, request: any) {
-  const profile = await authService.getOwnProfile(request.auth.accessToken, request.auth.userId);
-  if (profile.status === "unavailable") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Profile service is temporarily unavailable.");
-  if (profile.status !== "found" || profile.profile.id !== request.auth.userId || profile.profile.role !== "tutor")
-    throw new ApiError(403, "TUTOR_ROLE_REQUIRED", "A tutor account is required.");
-}
-
-async function requireEnrollment(courseService: CourseService, userId: string, courseId: string) {
-  const result = await courseService.getEnrollment(userId, courseId);
-  if (result.status === "unavailable") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
-  if (result.status === "ok" && result.data === null) throw new ApiError(403, "NOT_ENROLLED", "You are not enrolled in this course.");
-}
-
 function parseUuid(value: unknown, name: string): string {
   const parsed = uuidParamSchema.safeParse(value);
   if (!parsed.success) throw new ApiError(400, "INVALID_ID", `${name} is invalid.`);
@@ -84,7 +71,10 @@ export const courseRoutes: FastifyPluginAsync<{ courseService: CourseService; au
 ) => {
   app.get("/api/v1/courses", { onSend: noStore }, async (request) => {
     const query = listQuerySchema.safeParse(request.query);
-    const filters = query.success ? { limit: query.data.limit, offset: query.data.offset } : undefined;
+    const filters = query.success ? {
+      ...(query.data.limit !== undefined && { limit: query.data.limit }),
+      ...(query.data.offset !== undefined && { offset: query.data.offset }),
+    } : undefined;
     const result = await options.courseService.listPublicCourses(filters);
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
     return { ok: true, items: result.data };
@@ -98,16 +88,21 @@ export const courseRoutes: FastifyPluginAsync<{ courseService: CourseService; au
 
   app.get("/api/v1/courses/:courseId", { onSend: noStore }, async (request) => {
     const courseId = parseUuid((request.params as { courseId?: unknown }).courseId, "courseId");
-    const result = await options.courseService.getCourse(courseId);
+    const userId = (request as any).auth?.userId;
+    const result = await options.courseService.getCourse(courseId, userId);
     if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Course not found.");
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
     return { ok: true, item: result.data };
   });
 
-  app.post("/api/v1/courses", { preHandler: app.authenticate }, async (request) => {
+  app.post("/api/v1/courses", { preHandler: app.authenticate }, async (request, reply) => {
     const body = courseInputSchema.safeParse(request.body);
     if (!body.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid course data.");
-    const result = await options.courseService.createCourse(request.auth.accessToken, request.auth.userId, body.data);
+    const result = await options.courseService.createCourse(
+      request.auth.accessToken,
+      request.auth.userId,
+      body.data as unknown as CourseInput,
+    );
     if (result.status === "conflict") throw new ApiError(409, "SLUG_CONFLICT", "A course with that URL slug already exists.");
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
     return reply.code(201).send({ ok: true, item: result.data });
@@ -123,7 +118,7 @@ export const courseRoutes: FastifyPluginAsync<{ courseService: CourseService; au
       request.auth.accessToken,
       courseId,
       body.data.version,
-      body.data,
+      body.data as unknown as Partial<CourseInput>,
     );
     if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Course not found.");
     if (result.status === "conflict") throw new ApiError(409, "VERSION_CONFLICT", "The course was modified by another request. Reload and try again.");
@@ -142,13 +137,17 @@ export const courseRoutes: FastifyPluginAsync<{ courseService: CourseService; au
     return { ok: true };
   });
 
-  app.post("/api/v1/courses/:courseId/sections", { preHandler: app.authenticate }, async (request) => {
+  app.post("/api/v1/courses/:courseId/sections", { preHandler: app.authenticate }, async (request, reply) => {
     const courseId = parseUuid((request.params as { courseId?: unknown }).courseId, "courseId");
     const isOwner = await options.courseService.isCourseOwner(request.auth.userId, courseId);
     if (!isOwner) throw new ApiError(403, "FORBIDDEN", "You do not own this course.");
     const body = sectionInputSchema.safeParse(request.body);
     if (!body.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid section data.");
-    const result = await options.courseService.createSection(request.auth.accessToken, courseId, body.data);
+    const result = await options.courseService.createSection(
+      request.auth.accessToken,
+      courseId,
+      body.data as unknown as SectionInput,
+    );
     if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Course not found.");
     if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You do not own this course.");
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
@@ -162,7 +161,11 @@ export const courseRoutes: FastifyPluginAsync<{ courseService: CourseService; au
     if (!isOwner) throw new ApiError(403, "FORBIDDEN", "You do not own this course.");
     const body = sectionPatchSchema.safeParse(request.body);
     if (!body.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid section data.");
-    const result = await options.courseService.updateSection(request.auth.accessToken, sectionId, body.data);
+    const result = await options.courseService.updateSection(
+      request.auth.accessToken,
+      sectionId,
+      body.data as unknown as Partial<SectionInput>,
+    );
     if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Section not found.");
     if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You do not own this course.");
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
@@ -181,36 +184,43 @@ export const courseRoutes: FastifyPluginAsync<{ courseService: CourseService; au
     return { ok: true };
   });
 
-  app.post("/api/v1/courses/:courseId/lessons", { preHandler: app.authenticate }, async (request) => {
+  app.post("/api/v1/courses/:courseId/sections/:sectionId/lessons", { preHandler: app.authenticate }, async (request, reply) => {
     const courseId = parseUuid((request.params as { courseId?: unknown }).courseId, "courseId");
+    const sectionId = parseUuid((request.params as { sectionId?: unknown }).sectionId, "sectionId");
     const isOwner = await options.courseService.isCourseOwner(request.auth.userId, courseId);
     if (!isOwner) throw new ApiError(403, "FORBIDDEN", "You do not own this course.");
     const body = lessonInputSchema.safeParse(request.body);
     if (!body.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid lesson data.");
-    const sectionId = body.data.section_id;
-    if (!sectionId) throw new ApiError(400, "VALIDATION_ERROR", "section_id is required.");
-    const result = await options.courseService.createLesson(request.auth.accessToken, sectionId, body.data);
+    const result = await options.courseService.createLesson(
+      request.auth.accessToken,
+      sectionId,
+      body.data as unknown as LessonInput,
+    );
     if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Section not found.");
     if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You do not own this course.");
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
     return reply.code(201).send({ ok: true, item: result.data });
   });
 
-  app.patch("/api/v1/courses/:courseId/lessons/:lessonId", { preHandler: app.authenticate }, async (request) => {
+  app.patch("/api/v1/courses/:courseId/sections/:sectionId/lessons/:lessonId", { preHandler: app.authenticate }, async (request) => {
     const courseId = parseUuid((request.params as { courseId?: unknown }).courseId, "courseId");
     const lessonId = parseUuid((request.params as { lessonId?: unknown }).lessonId, "lessonId");
     const isOwner = await options.courseService.isCourseOwner(request.auth.userId, courseId);
     if (!isOwner) throw new ApiError(403, "FORBIDDEN", "You do not own this course.");
     const body = lessonPatchSchema.safeParse(request.body);
     if (!body.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid lesson data.");
-    const result = await options.courseService.updateLesson(request.auth.accessToken, lessonId, body.data);
+    const result = await options.courseService.updateLesson(
+      request.auth.accessToken,
+      lessonId,
+      body.data as unknown as Partial<LessonInput>,
+    );
     if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Lesson not found.");
     if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You do not own this course.");
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
     return { ok: true, item: result.data };
   });
 
-  app.delete("/api/v1/courses/:courseId/lessons/:lessonId", { preHandler: app.authenticate }, async (request) => {
+  app.delete("/api/v1/courses/:courseId/sections/:sectionId/lessons/:lessonId", { preHandler: app.authenticate }, async (request) => {
     const courseId = parseUuid((request.params as { courseId?: unknown }).courseId, "courseId");
     const lessonId = parseUuid((request.params as { lessonId?: unknown }).lessonId, "lessonId");
     const isOwner = await options.courseService.isCourseOwner(request.auth.userId, courseId);
@@ -248,8 +258,9 @@ export const courseRoutes: FastifyPluginAsync<{ courseService: CourseService; au
   app.get("/api/v1/courses/:courseId/progress", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
     const courseId = parseUuid((request.params as { courseId?: unknown }).courseId, "courseId");
     const enrollmentResult = await options.courseService.getEnrollment(request.auth.userId, courseId);
-    if (enrollmentResult.status === "unavailable") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
-    if (enrollmentResult.status === "ok" && enrollmentResult.data === null) {
+    if (enrollmentResult.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
+    const enrollmentData = enrollmentResult.data;
+    if (enrollmentData === null) {
       const isOwner = await options.courseService.isCourseOwner(request.auth.userId, courseId);
       if (!isOwner) throw new ApiError(403, "NOT_ENROLLED", "You are not enrolled in this course.");
     }
@@ -266,8 +277,9 @@ export const courseRoutes: FastifyPluginAsync<{ courseService: CourseService; au
     const body = progressUpdateSchema.safeParse(request.body);
     if (!body.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid progress data.");
     const enrollmentResult = await options.courseService.getEnrollment(request.auth.userId, courseId);
-    if (enrollmentResult.status === "unavailable") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
-    if (enrollmentResult.status === "ok" && enrollmentResult.data === null) {
+    if (enrollmentResult.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
+    const enrollmentData = enrollmentResult.data;
+    if (enrollmentData === null) {
       const isOwner = await options.courseService.isCourseOwner(request.auth.userId, courseId);
       if (!isOwner) throw new ApiError(403, "NOT_ENROLLED", "You are not enrolled in this course.");
     }
@@ -286,16 +298,16 @@ export const courseRoutes: FastifyPluginAsync<{ courseService: CourseService; au
   app.get("/api/v1/courses/:courseId/enrollments", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
     const courseId = parseUuid((request.params as { courseId?: unknown }).courseId, "courseId");
     const result = await options.courseService.getEnrollment(request.auth.userId, courseId);
-    if (result.status === "unavailable") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
-    if (result.status === "ok" && result.data === null) throw new ApiError(404, "NOT_FOUND", "Enrollment not found.");
+    if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
+    if (result.data === null) throw new ApiError(404, "NOT_FOUND", "Enrollment not found.");
     return { ok: true, item: result.data };
   });
 
   app.get("/api/v1/courses/:courseId/enrollments/mine", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
     const courseId = parseUuid((request.params as { courseId?: unknown }).courseId, "courseId");
     const result = await options.courseService.getEnrollment(request.auth.userId, courseId);
-    if (result.status === "unavailable") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
-    if (result.status === "ok" && result.data === null) throw new ApiError(404, "NOT_FOUND", "Enrollment not found.");
+    if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
+    if (result.data === null) throw new ApiError(404, "NOT_FOUND", "Enrollment not found.");
     return { ok: true, item: result.data };
   });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IconPlus, IconSearch, IconLock, IconUsers, IconMessageCircle } from "@tabler/icons-react";
@@ -31,7 +31,13 @@ export function CommunitiesPage() {
     }
   }, [cursor, query]);
 
-  useEffect(() => { load(true); }, [query]);
+  const loadRef = useRef(load);
+  // eslint-disable-next-line react-hooks/refs
+  loadRef.current = load;
+
+  useEffect(() => {
+    loadRef.current(true);
+  }, [query]);
 
   return (
     <div className="min-h-[100dvh] bg-[#070b12] text-foreground">

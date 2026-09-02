@@ -73,13 +73,14 @@ export async function getPost(id: string) {
   return apiFetch<Post>(`/api/v1/posts/${encodeURIComponent(id)}`, { auth: false });
 }
 
-export async function listPosts(params: { cursor?: string | null; limit?: number; tag?: string | null; postType?: string | null; authorName?: string | null } = {}) {
+export async function listPosts(params: { cursor?: string | null; limit?: number; tag?: string | null; postType?: string | null; authorName?: string | null; communityId?: string | null } = {}) {
   const q = new URLSearchParams();
   if (params.cursor) q.set("cursor", params.cursor);
   if (params.limit) q.set("limit", String(params.limit));
   if (params.tag) q.set("tag", params.tag);
   if (params.postType) q.set("postType", params.postType);
   if (params.authorName) q.set("authorName", params.authorName);
+  if (params.communityId) q.set("communityId", params.communityId);
   const qs = q.toString();
   return apiFetch<{ posts: Post[]; nextCursor: string | null }>(`/api/v1/posts${qs ? `?${qs}` : ""}`, { auth: false });
 }

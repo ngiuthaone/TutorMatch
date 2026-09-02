@@ -322,6 +322,15 @@
   line-height: 1.8;
 }
 
+
+/* ── Description ── */
+.descriptionSection {
+  max-width: 48rem;
+  margin-top: 2rem;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.8;
+}
 /* ── Details section ── */
 .detailsSection {
   display: grid;

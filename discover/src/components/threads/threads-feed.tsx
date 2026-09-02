@@ -2,12 +2,11 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import {
-  IconMessageCircle, IconHeart, IconHeartFilled, IconShare, IconLink,
-  IconExternalLink, IconPlus, IconBookmark, IconDots, IconFlag,
-} from "@tabler/icons-react";
+import { IconMessageCircle, IconHeart, IconHeartFilled, IconShare, IconLink, IconExternalLink, IconPlus, IconDots, IconFlag } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { listThreads, appreciateReference, unappreciateReference, reportReferenceContent, type ReferenceThread, type AnchorType } from "@/lib/community/threads-api";
+import { BookmarkButton } from "@/components/community/bookmark-button";
+import { ReportDialog } from "@/components/community/report-dialog";
 import { getSessionAccessToken } from "@/lib/auth/session";
 
 const ANCHOR_LABELS: Record<AnchorType, string> = {
@@ -56,12 +55,14 @@ export function ThreadsFeedPage() {
       setHasMore(result.nextCursor !== null);
     } catch {
       setError("Threads are temporarily unavailable. Please try again.");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     } finally {
       setLoading(false);
     }
   }, [cursor, filterTag, filterAnchor]);
 
   useEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect
     load(true);
   }, [filterTag, filterAnchor]);
 
@@ -276,20 +277,28 @@ function ThreadCard({ thread, onAppreciate }: { thread: ReferenceThread; onAppre
               <button onClick={(e) => { e.preventDefault(); handleShare(); setReportOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface">
                 <IconLink size={13} /> Copy link
               </button>
-              <button onClick={(e) => { e.preventDefault(); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-foreground hover:bg-surface">
-                <IconBookmark size={13} /> Save
-              </button>
-              {!thread.is_creator && (
-                <div className="border-t border-border mt-1 pt-1">
-                  <button onClick={(e) => { e.preventDefault(); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10">
-                    <IconFlag size={13} /> Report
-                  </button>
-                </div>
-              )}
+              <BookmarkButton targetType="thread" targetId={thread.id} showLabel />
+              <ReportDialogLauncher targetType="thread" targetId={thread.id} disabled={!!thread.is_creator} />
             </div>
           )}
         </div>
       </div>
     </article>
+  );
+}
+
+function ReportDialogLauncher({ targetType, targetId, disabled }: { targetType: "thread" | "reply"; targetId: string; disabled?: boolean }) {
+  const [open, setOpen] = useState(false);
+  if (disabled) return null;
+  return (
+    <>
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(true); }}
+        className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 border-t border-border mt-1 pt-1"
+      >
+        <IconFlag size={13} /> Report
+      </button>
+      <ReportDialog targetType={targetType} targetId={targetId} open={open} onClose={() => setOpen(false)} />
+    </>
   );
 }

@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { IconMessage2, IconShare, IconRepeat, IconX, IconPlus, IconSearch, IconHome, IconBell, IconUser, IconMenu2, IconDots, IconLink, IconBookmark, IconHeart, IconHeartFilled, IconUserPlus, IconUserMinus } from "@tabler/icons-react";
+import { IconMessage2, IconShare, IconRepeat, IconX, IconPlus, IconSearch, IconHome, IconBell, IconUser, IconMenu2, IconDots, IconLink, IconBookmark, IconHeart, IconHeartFilled, IconUserPlus, IconUserMinus, IconFlag } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { listPosts, createPost, repostPost, unrepostPost, likePost, unlikePost, type Post } from "@/lib/community/posts-api";
 import { listComments, createComment, appreciateComment, unappreciateComment, type Comment } from "@/lib/community/comments-api";
 import { getSessionAccessToken } from "@/lib/auth/session";
 import { followUser, unfollowUser } from "@/lib/community/follows-api";
+import { BookmarkButton } from "@/components/community/bookmark-button";
+import { ReportDialog } from "@/components/community/report-dialog";
 import styles from "./discussions.module.css";
 
 const ALL_TAGS = ["Photography", "IELTS", "Languages", "Business", "Technology", "Creative", "Cooking", "Personal development", "Academic", "Community"];
@@ -121,17 +123,17 @@ function PostsTab({ searchQuery, feedMode }: {
   const [shareOpen, setShareOpen] = useState<string | null>(null);
   const shareRef = useRef<HTMLDivElement>(null);
 
-  const loadPosts = useCallback(async (reset = false) => {
+  const loadPostsReset = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const result = await listPosts({
-        cursor: reset ? null : cursor,
+        cursor: null,
         limit: 20,
         tag: feedMode === "communities" ? searchQuery || null : null,
         postType: feedMode === "questions" ? "question" : null,
       });
-      setPosts(prev => reset ? result.posts : [...prev, ...result.posts]);
+      setPosts(result.posts);
       setCursor(result.nextCursor);
       setHasMore(result.nextCursor !== null);
     } catch {
@@ -139,10 +141,14 @@ function PostsTab({ searchQuery, feedMode }: {
     } finally {
       setLoading(false);
     }
-  }, [cursor, feedMode, searchQuery]);
+  }, [feedMode, searchQuery]);
+
+  const loadPostsResetRef = useRef(loadPostsReset);
+  // eslint-disable-next-line react-hooks/refs
+  loadPostsResetRef.current = loadPostsReset;
 
   useEffect(() => {
-    loadPosts(true);
+    loadPostsResetRef.current();
   }, [feedMode, searchQuery]);
 
   useEffect(() => {
@@ -360,6 +366,8 @@ function PostsTab({ searchQuery, feedMode }: {
                         </div>
                       )}
                     </div>
+                    <PostBookmarkButton postId={post.id} />
+                    {!post.is_author && <PostReportButton postId={post.id} />}
                   </div>
                 </div>
               </div>
@@ -703,13 +711,14 @@ function BlogsTab({ searchQuery, feedMode }: {
   const router = useRouter();
   const [visibleCount, setVisibleCount] = useState(8);
 
-  const BLOGS = [
+  interface BlogItem { id: string; title: string; author: string; role: string; excerpt: string; likes: number; comments: number; tags: string[]; createdAt: string; readTime: string; image: string; }
+  const BLOGS: BlogItem[] = [
     { id: "b1", title: "Five mistakes beginners make when learning photography", author: "Duc Pham", role: "Photography Artist", excerpt: "After teaching photography workshops for 5 years, I've seen the same patterns. Here's what holds beginners back.", likes: 234, comments: 18, tags: ["Photography"], createdAt: "2h ago", readTime: "8 min read", image: "https://picsum.photos/seed/post-photo/400/240" },
     { id: "b2", title: "How I improved my IELTS speaking from 6.0 to 7.5", author: "Linh Nguyen", role: "English & IELTS Coach", excerpt: "Three months of consistent practice. The key insight that changed everything for me.", likes: 412, comments: 37, tags: ["IELTS", "Languages"], createdAt: "5h ago", readTime: "6 min read", image: "https://picsum.photos/seed/post-ielts/400/240" },
     { id: "b3", title: "What I wish I knew before starting a small business", author: "Huy Tran", role: "Full-stack Developer", excerpt: "Four years in, here are the hard lessons about regulations, hiring, and why co-founders matter.", likes: 189, comments: 24, tags: ["Business"], createdAt: "1d ago", readTime: "10 min read", image: "https://picsum.photos/seed/post-business/400/240" },
   ];
 
-  let feed: any[] = [...BLOGS];
+  let feed: BlogItem[] = [...BLOGS];
 
   if (searchQuery.trim()) {
     const q = searchQuery.trim().toLowerCase();
@@ -768,5 +777,30 @@ function BlogsTab({ searchQuery, feedMode }: {
         </div>
       )}
     </div>
+  );
+}
+
+function PostBookmarkButton({ postId }: { postId: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <BookmarkButton targetType="post" targetId={postId} iconOnly />
+    </>
+  );
+}
+
+function PostReportButton({ postId }: { postId: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+        className={styles.action}
+        aria-label="Report post"
+      >
+        <IconFlag size={18} />
+      </button>
+      <ReportDialog targetType="post" targetId={postId} open={open} onClose={() => setOpen(false)} />
+    </>
   );
 }

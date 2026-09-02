@@ -35,7 +35,11 @@ function setup(overrides: Partial<BookingService> = {}, authenticated = false) {
     updateOfferingStatus: async (...args) => { calls.push({ name: "updateOfferingStatus", args }); return ok({ id: "offering-1" }); },
     listWorkshopBookings: async (...args) => { calls.push({ name: "listWorkshopBookings", args }); return ok([]); },
     cancelWorkshopBooking: async (...args) => { calls.push({ name: "cancelWorkshopBooking", args }); return ok({ id: "booking-1" }); },
+    getCourseOfferingBySlug: async (...args) => { calls.push({ name: "getCourseOfferingBySlug", args }); return ok(null); },
+    getCourseEnrollment: async (...args) => { calls.push({ name: "getCourseEnrollment", args }); return ok(null); },
+    listMyCourseEnrollments: async (...args) => { calls.push({ name: "listMyCourseEnrollments", args }); return ok([]); },
     recordAttendance: async (...args) => { calls.push({ name: "recordAttendance", args }); return ok({ id: "booking-1" }); },
+    getOfferingBySlug: async (slug) => { calls.push({ name: "getOfferingBySlug", args: [slug] }); return { data: null, error: null }; },
     ...overrides
   };
   const authService = new FakeAuthService();

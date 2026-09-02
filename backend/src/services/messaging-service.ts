@@ -48,7 +48,10 @@ export type MessagingReadResult<T> =
 
 export type MessagingSendResult =
   | { status: "ok"; data: MessagingMessage; duplicate: boolean }
-  | { status: "forbidden" | "invalid" | "unavailable" };
+  | { status: "forbidden" }
+  | { status: "blocked" }
+  | { status: "invalid" }
+  | { status: "unavailable" };
 
 export function defaultClientFactory(url: string, publishableKey: string): (token?: string) => SupabaseClient {
   return (token?: string) => createClient(url, publishableKey, {
@@ -138,6 +141,15 @@ export function createSupabaseMessagingService(
           p_body: body,
         });
         if (error) {
+          // Distinguish "blocked by user_blocks" (deterministic, the
+          // sender or recipient has a row in public.user_blocks) from
+          // generic "not a member" (insufficient_privilege). The BLOCKED
+          // error code from the RPC is mapped to a dedicated `blocked`
+          // status so the route can return a specific 403 with code
+          // BLOCKED.
+          if (/BLOCKED/i.test(error.message)) {
+            return { status: "blocked" };
+          }
           if (error.code === "42501" || /insufficient_privilege|forbidden/i.test(error.message)) {
             return { status: "forbidden" };
           }
