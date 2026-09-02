@@ -36,6 +36,10 @@ export async function sendEmail(msg: EmailMessage): Promise<{ id: string } | { e
   return { id: data!.id };
 }
 
+// Pattern adapted from BookBarber's event-driven template registry: every user-visible lifecycle
+// event (booking confirmed, payment received, refund issued) gets a small, single-purpose
+// template function so the call sites stay readable. Reimplemented under Tutoria's own copy
+// and HTML structure — BookBarber source is unlicensed, no code was copied.
 export const EmailTemplates = {
   passwordReset: (link: string) => ({
     subject: "Reset your Tutoria password",
@@ -52,4 +56,32 @@ export const EmailTemplates = {
     html: `<p>A ${event} was detected on your account. If this wasn't you, change your password immediately.</p>`,
     text: `Security alert: ${event} detected. If this wasn't you, change your password.`,
   }),
+  bookingConfirmed: (name: string, date: string, tutorName: string, manageUrl: string) => ({
+    subject: `Your lesson with ${tutorName} is confirmed`,
+    html: `<p>Hi ${escapeHtml(name)},</p><p>Your lesson on <strong>${escapeHtml(date)}</strong> with ${escapeHtml(tutorName)} is confirmed.</p><p><a href="${escapeAttr(manageUrl)}">View booking</a></p>`,
+    text: `Hi ${name}, your lesson on ${date} with ${tutorName} is confirmed. Manage: ${manageUrl}`,
+  }),
+  paymentReceived: (name: string, amount: string, bookingUrl: string) => ({
+    subject: `Payment received: ${amount}`,
+    html: `<p>Hi ${escapeHtml(name)},</p><p>We received your payment of <strong>${escapeHtml(amount)}</strong>.</p><p><a href="${escapeAttr(bookingUrl)}">View receipt</a></p>`,
+    text: `Hi ${name}, we received your payment of ${amount}. View: ${bookingUrl}`,
+  }),
+  refundIssued: (name: string, amount: string, bookingUrl: string) => ({
+    subject: `Refund issued: ${amount}`,
+    html: `<p>Hi ${escapeHtml(name)},</p><p>We've issued a refund of <strong>${escapeHtml(amount)}</strong>. It may take 3-5 business days to appear on your statement.</p><p><a href="${escapeAttr(bookingUrl)}">View refund</a></p>`,
+    text: `Hi ${name}, we've issued a refund of ${amount}. It may take 3-5 business days. View: ${bookingUrl}`,
+  }),
 };
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function escapeAttr(value: string): string {
+  return escapeHtml(value);
+}

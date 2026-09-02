@@ -2,6 +2,7 @@ import { TutorProfileFrame } from "@/components/discover/tutor-profile-frame";
 import { listTutors, isPublicTutorUuid, getTutor } from "@/lib/tutor-cv-api";
 import { TutorProfileReviews } from "./tutor-profile-reviews";
 import { TutorProfileSessions } from "./tutor-profile-sessions";
+import { TutorActivitySparkline } from "@/components/tutor/tutor-activity-sparkline";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,13 @@ export default async function TutorProfilePage({ params }: { params: Promise<{ n
             <TutorProfileSessions tutorProfileId={resolved.id} />
           </div>
         </aside>
+      )}
+      {resolved && (
+        <section className="bg-white px-5 py-10 sm:px-10">
+          <div className="mx-auto max-w-6xl">
+            <TutorActivitySparkline tutorProfileId={resolved.id} />
+          </div>
+        </section>
       )}
     </div>
   );

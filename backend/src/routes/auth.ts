@@ -1,9 +1,11 @@
 import type { FastifyPluginAsync } from "fastify";
 import { sendEmail, EmailTemplates } from "../services/email.js";
+import { rateLimit, RATE_LIMIT_PRESETS } from "../lib/rate-limit.js";
 
 const securityAlertRoutes: FastifyPluginAsync = async (app) => {
   app.post("/api/v1/auth/security-alert", {
     preHandler: [app.authenticate],
+    ...rateLimit(RATE_LIMIT_PRESETS.securityAlert),
     schema: {
       body: {
         type: "object",

@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { listTutorCards, type TutorCardSummary, type TutorDiscoveryFilters } from "@/lib/tutor-discovery-api";
-import { RatingStars } from "@/components/rating-stars";
+import { TutorCard, type TutorCardData } from "@/components/tutor/tutor-card";
+
 
 interface TutorBrowseClientProps {
   initialItems: TutorCardSummary[];
@@ -40,43 +40,6 @@ const SORT_OPTIONS: { value: "rating" | "recent"; label: string }[] = [
   { value: "rating", label: "Top rated" },
   { value: "recent", label: "Recently updated" },
 ];
-
-function money(amount: number | null): string {
-  if (amount === null) return "—";
-  return `${new Intl.NumberFormat("vi-VN").format(amount)}₫/hr`;
-}
-
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .map((part) => part[0])
-    .filter(Boolean)
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) || "T";
-}
-
-function Avatar({ name, url }: { name: string; url: string | null }) {
-  if (url) return <img src={url} alt={name} className="h-12 w-12 rounded-full object-cover" />;
-  return (
-    <div aria-hidden className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-sm font-semibold text-white/70">
-      {initials(name)}
-    </div>
-  );
-}
-
-function Stars({ rating }: { rating: { count: number; average: number | null } }) {
-  if (rating.count === 0 || rating.average === null) {
-    return <span className="text-xs text-white/45">New tutor</span>;
-  }
-  return (
-    <span className="inline-flex items-center gap-2 text-xs text-white/70">
-      <RatingStars value={rating.average} size="sm" />
-      <span>{rating.average.toFixed(1)}</span>
-      <span className="text-white/40">({rating.count})</span>
-    </span>
-  );
-}
 
 export function TutorBrowseClient({ initialItems, initialCursor, initialFilters }: TutorBrowseClientProps) {
   const router = useRouter();
@@ -288,34 +251,23 @@ export function TutorBrowseClient({ initialItems, initialCursor, initialFilters 
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((tutor) => (
-            <li key={tutor.id}>
-              <article className="flex h-full flex-col gap-4 rounded-2xl border border-white/[.12] bg-[#17181c] p-5">
-                <div className="flex items-start gap-3">
-                  <Avatar name={tutor.displayName} url={tutor.avatarUrl} />
-                  <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-base font-semibold text-white">{tutor.displayName || "Tutor"}</h2>
-                    <p className="mt-1 line-clamp-2 text-xs text-white/55">{tutor.headline || "Independent tutor on Tutoria"}</p>
-                  </div>
-                </div>
-                <Stars rating={tutor.rating} />
-                <p className="text-sm font-semibold text-white">{money(tutor.hourlyRateVnd)}</p>
-                {tutor.subjects.length > 0 && (
-                  <p className="line-clamp-1 text-xs text-white/55">
-                    {tutor.subjects.slice(0, 3).join(" · ")}
-                  </p>
-                )}
-                {tutor.languages.length > 0 && (
-                  <p className="line-clamp-1 text-xs text-white/40">
-                    Speaks {tutor.languages.slice(0, 2).map((language) => language.displayName).join(", ")}
-                  </p>
-                )}
-                <Link
-                  href={`/tutor/${encodeURIComponent(tutor.displayName)}`}
-                  className="mt-auto rounded-xl border border-white/15 px-4 py-2.5 text-center text-sm font-medium text-white/85 hover:bg-white/[.06]"
-                >
-                  View profile
-                </Link>
-              </article>
+            <li key={tutor.id} className="h-full">
+              <TutorCard
+                tutor={
+                  {
+                    id: tutor.id,
+                    displayName: tutor.displayName,
+                    headline: tutor.headline,
+                    avatarUrl: tutor.avatarUrl,
+                    hourlyRateVnd: tutor.hourlyRateVnd,
+                    ratingAvg: tutor.rating.average,
+                    ratingCount: tutor.rating.count,
+                    subjects: tutor.subjects,
+                    languages: tutor.languages,
+                    href: `/tutor/${encodeURIComponent(tutor.displayName)}`,
+                  } satisfies TutorCardData
+                }
+              />
             </li>
           ))}
         </ul>
