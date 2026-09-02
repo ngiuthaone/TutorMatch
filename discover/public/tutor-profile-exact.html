@@ -2637,6 +2637,48 @@
       updateDateAndTimeUI();
     }
 
+
+    let rpcAvailabilityByDate = new Map();
+    let rpcAvailabilityLoading = false;
+    let rpcAvailabilityError = "";
+
+    async function fetchRpcAvailability(tutorProfileId) {
+      rpcAvailabilityLoading = true;
+      rpcAvailabilityError = "";
+      const map = new Map();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const horizonDays = 60;
+      const requests = [];
+      for (let i = 0; i < horizonDays; i += 14) {
+        const fromDate = new Date(today);
+        fromDate.setDate(fromDate.getDate() + i);
+        const fromStr = fromDate.toISOString().slice(0, 10);
+        requests.push(
+          fetch('/api/v1/tutors/' + encodeURIComponent(tutorProfileId) + '/available-slots?date=' + fromStr + '&days=' + Math.min(14, horizonDays - i), { cache: 'no-store' })
+            .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+            .then((payload) => {
+              const slots = Array.isArray(payload && payload.slots) ? payload.slots : [];
+              for (const slot of slots) {
+                if (!slot || typeof slot.date !== 'string') continue;
+                if (!map.has(slot.date)) map.set(slot.date, []);
+                map.get(slot.date).push(slot);
+              }
+            })
+            .catch(() => {}),
+        );
+      }
+      try {
+        await Promise.all(requests);
+        rpcAvailabilityByDate = map;
+      } catch (err) {
+        rpcAvailabilityError = err instanceof Error ? err.message : String(err);
+      } finally {
+        rpcAvailabilityLoading = false;
+        renderAuthoritativeAvailability();
+      }
+    }
+
     function requestAuthoritativeSessions() {
       const tutorProfileId = activeTutorProfile?.id;
       sessionsLoading = true;
@@ -2651,6 +2693,7 @@
       const requestId = `sessions-${++requestSequence}`;
       activeRequestId = requestId;
       window.parent?.postMessage({ type: "tutoria-booking-load-sessions", requestId, tutorProfileId }, window.location.origin);
+      void fetchRpcAvailability(tutorProfileId);
     }
 
     function submitBookingRequest() {
