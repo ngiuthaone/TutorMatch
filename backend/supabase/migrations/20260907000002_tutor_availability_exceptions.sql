@@ -19,6 +19,7 @@ create index if not exists tutor_availability_exceptions_tutor_date_idx
   on public.tutor_availability_exceptions(tutor_profile_id, exception_date);
 
 alter table public.tutor_availability_exceptions enable row level security;
+drop policy if exists tutor_availability_exceptions_owner_all on public.tutor_availability_exceptions;
 create policy tutor_availability_exceptions_owner_all on public.tutor_availability_exceptions
   for all to authenticated using (
     exists (select 1 from public.tutor_profiles tp where tp.id = tutor_availability_exceptions.tutor_profile_id and tp.user_id = auth.uid())
@@ -26,6 +27,7 @@ create policy tutor_availability_exceptions_owner_all on public.tutor_availabili
     exists (select 1 from public.tutor_profiles tp where tp.id = tutor_availability_exceptions.tutor_profile_id and tp.user_id = auth.uid())
   );
 -- Public read of extras/modified (so booking UI can show real availability)
+drop policy if exists tutor_availability_exceptions_public_read_extras on public.tutor_availability_exceptions;
 create policy tutor_availability_exceptions_public_read_extras on public.tutor_availability_exceptions
   for select to anon, authenticated using (exception_type in ('extra','modified'));
 
