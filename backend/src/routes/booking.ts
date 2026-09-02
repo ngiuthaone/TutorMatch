@@ -324,10 +324,4 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService; authSe
     if (!result.data) throw new ApiError(404, "NOT_ENROLLED", "Not enrolled in this course.");
     return { ok: true, item: result.data };
   });
-
-  app.get("/api/v1/courses/mine/enrollments", { preHandler: app.authenticate, onSend: noStore }, async (request) => {
-    const result = await options.service.listMyCourseEnrollments(request.auth.accessToken);
-    if (result.error) fail(result);
-    return { ok: true, items: result.data };
-  });
 };
