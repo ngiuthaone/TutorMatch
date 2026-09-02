@@ -7,6 +7,7 @@ import { isLiveMode } from "@/lib/auth/config";
 import { cancelTutorBooking, decideTutorBooking, listTutorBookings, recordTutorAttendance, TutorBookingApiError } from "@/lib/tutor-booking-api";
 import { cancelWorkshopBooking, listWorkshopBookings, TutorWorkshopBookingApiError } from "@/lib/tutor-workshop-booking-api";
 import { getMyTutorDashboard, TutorDashboardApiError, type TutorDashboardSummary } from "@/lib/tutor-dashboard-api";
+import { TutorScheduleCalendar, type ScheduledSession } from "@/components/tutor/tutor-schedule-calendar";
 import {
   type HostAnalytics,
   type HostCheckInLogRow,
@@ -51,6 +52,7 @@ function TutorDashboardSection({ summary, onRefresh }: TutorDashboardSectionProp
   const [pendingError, setPendingError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [tab, setTab] = useState<"overview" | "schedule" | "sessions">("overview");
+  const [allBookings, setAllBookings] = useState<ScheduledSession[] | null>(null);
 
   const handleAttendance = async (bookingId: string, outcome: "attended" | "learner_no_show") => {
     setActionError(null);
@@ -85,10 +87,21 @@ function TutorDashboardSection({ summary, onRefresh }: TutorDashboardSectionProp
               status: booking.status as "confirmed" | "requested",
             }));
           setPending(rows);
+          const calendarSessions: ScheduledSession[] = bookings.map((booking) => ({
+            id: booking.id,
+            title: booking.learner?.displayName ?? "Booking",
+            start: new Date(booking.session.startsAt),
+            end: new Date(booking.session.endsAt),
+            learnerName: booking.learner?.displayName ?? undefined,
+            status: (booking.status === "rejected" ? "cancelled" : booking.status) as ScheduledSession["status"],
+            href: `/bookings/${booking.id}`,
+          }));
+          setAllBookings(calendarSessions);
         })
         .catch((error: unknown) => {
           if (cancelled) return;
           setPendingError(error instanceof TutorBookingApiError ? error.message : "Bookings are temporarily unavailable.");
+          setAllBookings([]);
         });
     }
     return () => {
@@ -149,7 +162,20 @@ function TutorDashboardSection({ summary, onRefresh }: TutorDashboardSectionProp
         )}
 
         {tab === "schedule" && (
-          <div className="mt-6">
+          <div className="mt-6 space-y-6">
+            <div className="rounded-2xl border border-white/[.08] bg-white/[.02] p-4">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-white/55">Calendar</h3>
+              {allBookings === null ? (
+                <p className="text-sm text-white/55">Loading calendar…</p>
+              ) : (
+                <TutorScheduleCalendar
+                  sessions={allBookings}
+                  onSessionClick={(s) => {
+                      if (typeof window !== "undefined") window.location.href = s.href;
+                    }}
+                />
+              )}
+            </div>
             {pendingError ? (
               <p className="rounded-2xl border border-amber-300/20 bg-amber-300/[.06] p-4 text-sm text-amber-100">{pendingError}</p>
             ) : pending === null ? (
