@@ -24,8 +24,9 @@ function failConversation(status: "not_found" | "forbidden" | "unavailable"): ne
   throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
 }
 
-function failSend(status: "forbidden" | "invalid" | "unavailable"): never {
+function failSend(status: "forbidden" | "blocked" | "invalid" | "unavailable"): never {
   if (status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You are not a member of this conversation.");
+  if (status === "blocked") throw new ApiError(403, "BLOCKED", "You have blocked this conversation or the other party has blocked you.");
   if (status === "invalid") throw new ApiError(400, "INVALID_MESSAGE", "Message is invalid.");
   throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
 }

@@ -7,17 +7,22 @@ import { evaluateAuthGate } from "@/lib/auth/gate";
 import { useSession } from "@/lib/auth/session";
 import {
   MessagingApiError,
+  createMessageWithAttachments,
   deleteMessage,
   editMessage,
   generateClientMessageId,
+  getAttachmentSignedUrl,
   getConversation,
   listConversations,
   listMessages,
+  loadOlderMessages,
   markConversationRead,
   reportMessage,
   searchConversations,
   sendMessage,
   subscribeToConversationMessages,
+  uploadMessageAttachment,
+  validateAttachment,
   type MessagingConversation,
   type MessagingMessage,
 } from "@/lib/messaging-api";
@@ -204,6 +209,9 @@ function MessageList({
   onEdit,
   onDelete,
   onReport,
+  hasMore,
+  onLoadOlder,
+  loadingOlder,
 }: {
   messages: MessagingMessage[];
   viewerRole: MessagingConversation["viewerRole"];
@@ -211,6 +219,9 @@ function MessageList({
   onEdit: (id: string, body: string) => Promise<void> | void;
   onDelete: (id: string) => Promise<void> | void;
   onReport: (id: string) => Promise<void> | void;
+  hasMore: boolean;
+  onLoadOlder: () => void;
+  loadingOlder: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -229,6 +240,19 @@ function MessageList({
   }
   return (
     <div ref={scrollRef} className="flex h-full flex-col gap-3 overflow-y-auto px-4 py-4" aria-live="polite" aria-relevant="additions">
+      {hasMore ? (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={onLoadOlder}
+            disabled={loadingOlder}
+            className="rounded-full border border-[#1c1d20] bg-[#0f0f12] px-3 py-1 text-[11px] text-[#9c9ca3] hover:border-[#3a3a3f] hover:text-[#f4f4f2] disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Load older messages"
+          >
+            {loadingOlder ? "Loading…" : "Load older messages"}
+          </button>
+        </div>
+      ) : null}
       {messages.map((message) => {
         const mine = message.mine;
         const edited = message.editedAt != null;
@@ -335,6 +359,9 @@ function Composer({
 }) {
   const [draft, setDraft] = useState("");
   const [sendState, setSendState] = useState<SendState>({ status: "idle" });
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [validationError, setValidationError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const clientMessageIdRef = useRef<string | null>(null);
 
   const trimmed = draft.trim();
@@ -342,23 +369,90 @@ function Composer({
   const tooShort = trimmed.length < MIN_BODY_LENGTH;
   const disabled = tooShort || tooLong || sendState.status === "sending";
 
+  const onFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const result = validateAttachment(file);
+    if (result.status === "too_large") {
+      setValidationError("File exceeds 100 MB limit.");
+    } else if (result.status === "unsupported_type") {
+      setValidationError("This file type isn't supported for messages.");
+    } else {
+      setPendingFile(file);
+      setValidationError("");
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
+
+  const clearPendingFile = useCallback(() => {
+    setPendingFile(null);
+    setValidationError("");
+  }, []);
+
   const submit = useCallback(async () => {
     if (disabled) return;
-    const body = trimmed;
+    if (!pendingFile && tooShort) return;
     if (!clientMessageIdRef.current) clientMessageIdRef.current = generateClientMessageId();
     const clientMessageId = clientMessageIdRef.current;
     setSendState({ status: "sending" });
     try {
-      const message = await sendMessage(conversationId, body, clientMessageId);
-      onSent(message, clientMessageId);
+      if (!pendingFile) {
+        // Text-only path uses the legacy send_message RPC.
+        const message = await sendMessage(conversationId, trimmed, clientMessageId);
+        onSent(message, clientMessageId);
+      } else {
+        // Attachment path: 1) create the message row (server returns its id);
+        // 2) upload the file to the conversation's storage path; 3) record
+        // the attachment metadata. Failure at any step is reported to the UI.
+        const file = pendingFile;
+        const placeholder = await createMessageWithAttachments(
+          conversationId,
+          clientMessageId,
+          {
+            body: trimmed || file.name,
+            messageType: file.type.startsWith("image/") ? "image" : "file",
+            attachments: [],
+          },
+        );
+        if (placeholder.status !== "ok") {
+          throw new Error("Could not create message");
+        }
+        const messageId = placeholder.data.id;
+        const upload = await uploadMessageAttachment(conversationId, messageId, file);
+        if (upload.status !== "ok") {
+          throw new Error(upload.status === "forbidden" ? "Upload not allowed" : "Upload failed");
+        }
+        const finalize = await createMessageWithAttachments(
+          conversationId,
+          clientMessageId,
+          {
+            body: trimmed || file.name,
+            messageType: file.type.startsWith("image/") ? "image" : "file",
+            attachments: [
+              {
+                storage_path: upload.storagePath,
+                storage_bucket: "message-attachments",
+                filename: file.name,
+                mime_type: file.type,
+                size_bytes: file.size,
+              },
+            ],
+          },
+        );
+        if (finalize.status !== "ok") throw new Error("Could not record attachment");
+        onSent(finalize.data, clientMessageId);
+        // Warm up the signed URL for the next render
+        void getAttachmentSignedUrl(upload.storagePath, 60 * 60 * 24);
+      }
       setDraft("");
+      setPendingFile(null);
       clientMessageIdRef.current = null;
+      setValidationError("");
       setSendState({ status: "idle" });
     } catch (error) {
-      const message = summarizeError(error);
-      setSendState({ status: "error", message });
+      setSendState({ status: "error", message: summarizeError(error) });
     }
-  }, [conversationId, disabled, onSent, trimmed]);
+  }, [conversationId, disabled, onSent, pendingFile, tooShort, trimmed]);
 
   const onSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
@@ -382,10 +476,42 @@ function Composer({
 
   return (
     <form className="border-t border-[#1c1d20] bg-[#0b0b0c] px-4 py-3" onSubmit={onSubmit} aria-label="Send a message">
+      {pendingFile ? (
+        <div className="mb-2 flex items-center gap-2 rounded-lg border border-[#1c1d20] bg-[#111114] px-3 py-1.5 text-xs">
+          <span className="truncate text-[#f4f4f2]">{pendingFile.name}</span>
+          <span className="text-[#7a7a80]">{Math.round(pendingFile.size / 1024)} KB</span>
+          <button
+            type="button"
+            onClick={clearPendingFile}
+            className="ml-auto text-[#9c9ca3] hover:text-[#f4f4f2]"
+            aria-label="Remove attachment"
+          >
+            ×
+          </button>
+        </div>
+      ) : null}
       <label htmlFor={`composer-${conversationId}`} className="sr-only">
         Message
       </label>
-      <div className="flex items-end gap-3">
+      <div className="flex items-end gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={onFileChange}
+          aria-label="Attach a file"
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={sendState.status === "sending"}
+          aria-label="Attach a file"
+          className="rounded-xl border border-[#1c1d20] bg-[#111114] px-2.5 py-2 text-sm text-[#cfcfd4] hover:border-[#3a3a3f] hover:text-[#f4f4f2] disabled:opacity-40"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+          </svg>
+        </button>
         <textarea
           id={`composer-${conversationId}`}
           value={draft}
@@ -409,7 +535,9 @@ function Composer({
       <p id={`composer-help-${conversationId}`} className="mt-2 flex items-center justify-between text-[11px] text-[#7a7a80]">
         <span>Enter to send · Shift+Enter for newline</span>
         <span aria-live="polite">
-          {sendState.status === "error" ? (
+          {validationError ? (
+            <span className="text-[#f4a8a8]">{validationError}</span>
+          ) : sendState.status === "error" ? (
             <span className="text-[#f4a8a8]">{sendState.message}</span>
           ) : tooLong ? (
             <span className="text-[#f4a8a8]">{remaining} over the limit</span>
@@ -435,10 +563,13 @@ function ConversationView({
   const [error, setError] = useState("");
   const lastReadAtRef = useRef<string | null>(null);
   const [actionError, setActionError] = useState("");
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
     lastReadAtRef.current = null;
+    setHasMore(false);
     void (async () => {
       setState("loading");
       setError("");
@@ -452,6 +583,7 @@ function ConversationView({
         if (controller.signal.aborted) return;
         setConversation(conv);
         setMessages(list);
+        setHasMore(list.length === 200);
         setState("ready");
       } catch (caught) {
         if (controller.signal.aborted) return;
@@ -548,6 +680,26 @@ function ConversationView({
     }
   }, []);
 
+  const handleLoadOlder = useCallback(async () => {
+    if (loadingOlder || !hasMore || messages.length === 0) return;
+    setLoadingOlder(true);
+    try {
+      const oldestCreatedAt = messages[0].createdAt;
+      const result = await loadOlderMessages(conversationId, oldestCreatedAt, 50);
+      if (result.status === "ok") {
+        setMessages((current) => {
+          // Dedup by id; older messages go to the front.
+          const seen = new Set(current.map((m) => m.id));
+          const merged = [...result.messages.filter((m) => !seen.has(m.id)).reverse(), ...current];
+          return merged;
+        });
+        setHasMore(result.hasMore);
+      }
+    } finally {
+      setLoadingOlder(false);
+    }
+  }, [conversationId, hasMore, loadingOlder, messages]);
+
   if (state === "loading") {
     return (
       <div className="grid h-full place-items-center px-6" aria-busy="true">
@@ -587,6 +739,9 @@ function ConversationView({
           onEdit={handleEdit}
           onDelete={handleDelete}
           onReport={handleReport}
+          hasMore={hasMore}
+          onLoadOlder={() => void handleLoadOlder()}
+          loadingOlder={loadingOlder}
         />
       </div>
       <Composer

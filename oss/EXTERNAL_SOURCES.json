@@ -481,7 +481,7 @@
       "id": "tutorstartup-messaging-pattern",
       "name": "TutorStartup chat hooks and components (pattern only)",
       "source": "https://github.com/tise-genene/tutorstartup",
-      "ref": "main@2026-09-01",
+      "ref": "fd6887b28ee39b51e20b4fbb545a43c18e1f35da",
       "license": "MIT",
       "status": "PASS",
       "scope": [
@@ -516,7 +516,7 @@
       "id": "modernchattingwebsite-chatinput-typing-presence",
       "name": "ModernChattingWebsite chat input + typing + presence (pattern only)",
       "source": "https://github.com/zainshah3464/ModernChattingWebsite",
-      "ref": "main@2026-09-01",
+      "ref": "456c7dfa65b481b932a69341b805396c1bafe24c",
       "license": "MIT",
       "status": "PASS",
       "scope": [
@@ -547,7 +547,7 @@
       "id": "chatly-message-attachments-rls",
       "name": "chatly message_attachments storage RLS (pattern only)",
       "source": "https://github.com/shravzzv/chatly",
-      "ref": "main@2026-09-01",
+      "ref": "762453127c3d3763ad4b15e85d89f0f0c519ea10",
       "license": "MIT",
       "status": "PASS",
       "scope": [
@@ -575,7 +575,7 @@
       "id": "zingle-message-actions-pattern",
       "name": "zingle MessageActions + ListMessages (pattern only, study-only)",
       "source": "https://github.com/ayushn2/zingle",
-      "ref": "main@2026-09-01",
+      "ref": "main@STUDY_ONLY_NO_LICENSE_PIN",
       "license": "UNLICENSED",
       "status": "STUDY_ONLY",
       "scope": [
@@ -600,7 +600,7 @@
       "id": "private-chat-app-supabase-rls-lessons",
       "name": "Private-Chat-App-Supabase-NextJS RLS self-reference lessons (pattern only, study-only)",
       "source": "https://github.com/Sangramjeet-Kumar/Private-Chat-App-Supabase-NextJS",
-      "ref": "main@2026-09-01",
+      "ref": "main@STUDY_ONLY_NO_LICENSE_PIN",
       "license": "UNLICENSED",
       "status": "STUDY_ONLY",
       "scope": [

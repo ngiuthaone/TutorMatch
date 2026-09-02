@@ -343,6 +343,42 @@ export function subscribeToConversationMessages(
             }
           },
         )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+          (payload) => {
+            try {
+              const row = payload.new as Record<string, unknown>;
+              onMessage(messageFrom(row));
+            } catch (error) {
+              console.error("subscribeToConversationMessages: failed to parse update", error);
+            }
+          },
+        )
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+          (payload) => {
+            try {
+              const row = payload.old as Record<string, unknown>;
+              // Dispatch a synthetic message with deletedAt to allow the
+              // UI to remove it without an extra round-trip.
+              onMessage({
+                id: ensureUuid(row.id, "deleted.message.id"),
+                senderId: "00000000-0000-0000-0000-000000000000",
+                mine: false,
+                body: "",
+                createdAt: new Date().toISOString(),
+                editedAt: null,
+                deletedAt: new Date().toISOString(),
+                messageType: "text",
+                moderationStatus: "approved",
+              });
+            } catch (error) {
+              console.error("subscribeToConversationMessages: failed to parse delete", error);
+            }
+          },
+        )
         .subscribe();
       unsubscribe = () => {
         void supabase.removeChannel(channel);
@@ -362,4 +398,198 @@ export function subscribeToConversationMessages(
     cancelled = true;
     unsubscribe();
   };
+}
+
+// ── Attachments ────────────────────────────────────────────────────────
+//
+// Adapted from tutorstartup's useFileUpload (MIT, fd6887b). The pattern is:
+//   1. Pick a file via the file picker.
+//   2. Validate type + size client-side.
+//   3. Upload to Supabase Storage at <conversation_id>/<message_id>/<file>.
+//   4. POST the metadata to the conversation (via create_message_with_attachments).
+//   5. The RLS policy on storage.objects grants read access to conversation
+//      members; signed URLs are obtained at read time.
+//
+// Tutoria uses a dedicated path layout per Tutoria's storage RLS policy:
+//   <conversation_id>/<message_id>/<filename>
+//   1st segment = conversation UUID (must be a member)
+//   2nd segment = message UUID (must be the sender)
+//   3rd segment = filename
+//
+// 100 MB cap, 15 allowed MIME types (image/*, pdf, text/*, zip, MS Office).
+export type MessageAttachment = {
+  id: string;
+  messageId: string;
+  storagePath: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  signedUrl: string | null;
+  createdAt: string;
+};
+
+const MAX_FILE_BYTES = 100 * 1024 * 1024;
+const ALLOWED_MIME = new Set<string>([
+  "image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif",
+  "application/pdf", "text/plain", "text/csv",
+  "application/zip", "application/x-zip-compressed",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+
+export type AttachmentValidationResult =
+  | { status: "ok"; detectedType: "image" | "file" | "video" | "audio" }
+  | { status: "too_large" }
+  | { status: "unsupported_type" };
+
+export function validateAttachment(file: File): AttachmentValidationResult {
+  if (file.size > MAX_FILE_BYTES) return { status: "too_large" };
+  if (!ALLOWED_MIME.has(file.type)) return { status: "unsupported_type" };
+  let detectedType: "image" | "file" | "video" | "audio" = "file";
+  if (file.type.startsWith("image/")) detectedType = "image";
+  else if (file.type.startsWith("video/")) detectedType = "video";
+  else if (file.type.startsWith("audio/")) detectedType = "audio";
+  return { status: "ok", detectedType };
+}
+
+export async function uploadMessageAttachment(
+  conversationId: string,
+  messageId: string,
+  file: File,
+  signal?: AbortSignal,
+): Promise<{ status: "ok"; storagePath: string } | { status: "unavailable" } | { status: "forbidden" }> {
+  if (typeof window === "undefined") return { status: "unavailable" };
+  const { getSupabaseClient } = await import("@/lib/auth/supabase-client");
+  const supabase = getSupabaseClient();
+  if (!supabase) return { status: "unavailable" };
+  const storagePath = `${conversationId}/${messageId}/${crypto.randomUUID()}-${file.name}`;
+  const init: RequestInit = {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: file.type,
+    ...(signal ? { signal } : {}),
+  } as unknown as RequestInit;
+  // supabase storage does not pass through a RequestInit cacheControl;
+  // use the typed builder instead
+  const { error } = await supabase.storage
+    .from("message-attachments")
+    .upload(storagePath, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+  if (error) {
+    if (error.message.toLowerCase().includes("policy") || /42501|forbidden/.test(error.message)) {
+      return { status: "forbidden" };
+    }
+    return { status: "unavailable" };
+  }
+  return { status: "ok", storagePath };
+}
+
+export async function getAttachmentSignedUrl(
+  storagePath: string,
+  ttlSeconds = 60 * 60 * 24, // 24 hours
+  signal?: AbortSignal,
+): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  const { getSupabaseClient } = await import("@/lib/auth/supabase-client");
+  const supabase = getSupabaseClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase.storage
+    .from("message-attachments")
+    .createSignedUrl(storagePath, ttlSeconds);
+  if (error || !data) return null;
+  void signal; // signal is not directly supported on the storage SDK; the
+  // browser will close the network connection when AbortSignal fires.
+  return data.signedUrl;
+}
+
+export type CreateMessageWithAttachmentsPayload = {
+  body: string;
+  messageType: "text" | "image" | "file" | "media";
+  attachments: Array<{
+    storage_path: string;
+    storage_bucket: string;
+    filename: string;
+    mime_type: string;
+    size_bytes: number;
+  }>;
+};
+
+export type CreateMessageResult =
+  | { status: "ok"; data: MessagingMessage; duplicate: boolean }
+  | { status: "invalid" | "forbidden" | "not_found" | "unavailable" };
+
+export async function createMessageWithAttachments(
+  conversationId: string,
+  clientMessageId: string,
+  payload: CreateMessageWithAttachmentsPayload,
+  signal?: AbortSignal,
+): Promise<CreateMessageResult> {
+  try {
+    const supabase = (await import("@/lib/auth/supabase-client")).getSupabaseClient();
+    if (!supabase) return { status: "unavailable" };
+    const { data, error } = await supabase.rpc("create_message_with_attachments", {
+      p_conversation_id: conversationId,
+      p_client_message_id: clientMessageId,
+      p_body: payload.body,
+      p_message_type: payload.messageType,
+      p_attachments: payload.attachments,
+    });
+    if (error) {
+      if (error.code === "42501" || /insufficient_privilege|forbidden/i.test(error.message)) {
+        return { status: "forbidden" };
+      }
+      if (error.code === "22023") return { status: "invalid" };
+      if (error.code === "P0001") return { status: "not_found" };
+      return { status: "unavailable" };
+    }
+    if (!data) return { status: "unavailable" };
+    const row = data as Record<string, unknown> & { duplicate?: boolean };
+    return { status: "ok", data: messageFrom(row), duplicate: Boolean(row.duplicate) };
+  } catch (error) {
+    void signal;
+    return { status: "unavailable" };
+  }
+}
+
+// ── Cursor pagination (cursor-based) ────────────────────────────────────
+//
+// Replaces offset-based pagination. The server already supports a `before`
+// cursor (timestamps). The client appends older messages on demand.
+//
+// Adapted from zingle's LoadMoreMessages (STUDY_ONLY repo, no license;
+// pattern re-implemented from public behavior): a sentinel that indicates
+// whether more pages exist, and a dedup-by-id map that merges older pages
+// into the existing list without disturbing scroll position.
+
+export type MessagesPage =
+  | { status: "ok"; messages: MessagingMessage[]; hasMore: boolean; oldestCreatedAt: string | null }
+  | { status: "forbidden" | "not_found" | "unavailable" };
+
+export async function loadOlderMessages(
+  conversationId: string,
+  oldestCreatedAt: string,
+  limit = 50,
+  signal?: AbortSignal,
+): Promise<MessagesPage> {
+  try {
+    const url = `${BASE}/conversations/${encodeURIComponent(conversationId)}/messages?limit=${limit}&before=${encodeURIComponent(oldestCreatedAt)}`;
+    const payload = await request<{ ok?: unknown; messages?: unknown[] }>(url, { authenticated: true, ...(signal ? { signal } : {}) });
+    if (payload.ok !== true || !Array.isArray(payload.messages)) {
+      throw new MessagingApiError("INVALID_RESPONSE", 500);
+    }
+    const messages = payload.messages.map(messageFrom);
+    const hasMore = messages.length === limit;
+    return {
+      status: "ok",
+      messages,
+      hasMore,
+      oldestCreatedAt: messages.length > 0 ? messages[0].createdAt : null,
+    };
+  } catch (caught) {
+    if (caught instanceof MessagingApiError && caught.code === "FORBIDDEN") {
+      return { status: "forbidden" };
+    }
+    return { status: "unavailable" };
+  }
 }
