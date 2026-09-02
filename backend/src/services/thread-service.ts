@@ -276,6 +276,40 @@ export function createSupabaseThreadService(url: string, publishableKey: string,
       } catch (err) { logServiceError({ service: "thread", operation: "unappreciate.exception", error: err }); return { status: "unavailable" }; }
     },
 
+    async update(
+      token: string,
+      id: string,
+      input: {
+        title?: string;
+        body?: string;
+        tags?: string[];
+        level?: string;
+        visibility?: string;
+        replyPermission?: string;
+      },
+    ): Promise<ThreadMutationResult> {
+      try {
+        const { data, error } = await caller(token).rpc("update_reference_thread", {
+          p_id: id,
+          p_title: input.title ?? null,
+          p_body: input.body ?? null,
+          p_tags: input.tags ?? null,
+          p_level: input.level ?? null,
+          p_visibility: input.visibility ?? null,
+          p_reply_permission: input.replyPermission ?? null,
+        });
+        if (error) {
+          logServiceError({ service: "thread", operation: "update", error });
+          const mapped = mapThreadError(error.code ?? "", error.message ?? "");
+          if (mapped.status === "not_found") return { status: "not_found" };
+          if (mapped.status === "forbidden") return { status: "forbidden" };
+          return { status: "unavailable" };
+        }
+        const row = data as { id?: string; status?: string };
+        return { status: "ok", data: { id: String(row.id ?? ""), status: String(row.status ?? "updated") } };
+      } catch (err) { logServiceError({ service: "thread", operation: "update.exception", error: err }); return { status: "unavailable" }; }
+    },
+
     async report(token: string, targetType: string, targetId: string, reason: string): Promise<ThreadReportResult> {
       try {
         const { data, error } = await caller(token).rpc("report_reference_content", {

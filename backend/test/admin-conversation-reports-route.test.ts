@@ -32,17 +32,20 @@ function setup(overrides: Record<string, unknown> = {}, authenticated = true) {
   // moderation surface and the new conversation-report surface. The two
   // surfaces share the same adminService instance in production.
   const adminService = {
-    listMediaSubmissions: async (...args) => { calls.push({ name: "listMediaSubmissions", args }); return { status: "ok", data: [] }; },
-    decideMediaSubmission: async (...args) => { calls.push({ name: "decideMediaSubmission", args }); return { status: "ok", data: { id: "media-id", status: "approved", decidedAt: "2026-09-02T12:00:00Z" } }; },
-    listConversationReports: async (...args) => { calls.push({ name: "listConversationReports", args }); return { status: "ok", data: [REPORT] }; },
-    resolveConversationReport: async (...args) => { calls.push({ name: "resolveConversationReport", args }); return { status: "ok", data: { id: REPORT.id, status: "resolved", resolvedBy: ADMIN_USER.id, resolvedAt: "2026-09-02T12:30:00.000Z" } }; },
-    logAction: async (...args) => { calls.push({ name: "logAction", args }); return { status: "ok", data: { id: 42 } }; },
+    listMediaSubmissions: async (...args: unknown[]) => { calls.push({ name: "listMediaSubmissions", args }); return { status: "ok" as const, data: [] }; },
+    decideMediaSubmission: async (...args: unknown[]) => { calls.push({ name: "decideMediaSubmission", args }); return { status: "ok" as const, data: { id: "media-id", status: "approved", decidedAt: "2026-09-02T12:00:00Z" } }; },
+    listConversationReports: async (...args: unknown[]) => { calls.push({ name: "listConversationReports", args }); return { status: "ok" as const, data: [REPORT] }; },
+    resolveConversationReport: async (...args: unknown[]) => { calls.push({ name: "resolveConversationReport", args }); return { status: "ok" as const, data: { id: REPORT.id, status: "resolved", resolvedBy: ADMIN_USER.id, resolvedAt: "2026-09-02T12:30:00.000Z" } }; },
+    logAction: async (...args: unknown[]) => { calls.push({ name: "logAction", args }); return { status: "ok" as const, data: { id: 42 } }; },
+    searchAuditLog: async (...args: unknown[]) => { calls.push({ name: "searchAuditLog", args }); return { status: "ok" as const, data: [] }; },
+    searchUsers: async (...args: unknown[]) => { calls.push({ name: "searchUsers", args }); return { status: "ok" as const, data: [] }; },
+    searchDisputes: async (...args: unknown[]) => { calls.push({ name: "searchDisputes", args }); return { status: "ok" as const, data: [] }; },
+    searchHostCancellations: async (...args: unknown[]) => { calls.push({ name: "searchHostCancellations", args }); return { status: "ok" as const, data: [] }; },
     ...overrides,
   };
   const authService = new FakeAuthService();
   if (authenticated) {
     authService.authentication = { status: "authenticated", user: ADMIN_USER };
-    authService.user = ADMIN_USER;
   }
   // requireAdmin is the app's admin guard, but the test bypasses it by
   // faking the user with role=admin and the auth service's hasRole.

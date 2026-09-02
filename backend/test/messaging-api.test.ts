@@ -36,6 +36,7 @@ function setup(overrides: Partial<MessagingService> = {}, authenticated = true) 
     reportMessage: async (...args) => { calls.push({ name: "reportMessage", args }); return { status: "ok", data: { id: "66666666-6666-4666-8666-666666666666", status: "reported" } }; },
     blockUser: async (...args) => { calls.push({ name: "blockUser", args }); return { status: "ok", data: { blocker: "11111111-1111-4111-8111-111111111111", blocked: "44444444-4444-4444-8444-444444444444" } }; },
     unblockUser: async (...args) => { calls.push({ name: "unblockUser", args }); return { status: "ok", data: { blocker: "11111111-1111-4111-8111-111111111111", blocked: "44444444-4444-4444-8444-444444444444" } }; },
+    listAttachments: async (...args: unknown[]) => { calls.push({ name: "listAttachments", args }); return { status: "ok", data: [] }; },
     ...overrides,
   };
   const authService = new FakeAuthService();
