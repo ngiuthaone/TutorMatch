@@ -9,5 +9,5 @@ interface PageProps {
 
 export default async function Page({ params }: PageProps) {
   await requireServerSession();
-  return <Client {...params} />;
+  return <Client />;
 }

@@ -38,3 +38,25 @@ export function createSupabaseAuthService(url: string, publishableKey: string): 
     }
   };
 }
+
+/**
+ * Create a Supabase client for service-to-service calls.
+ * Does not persist session; used for backend services calling Supabase.
+ */
+export function createServiceClient(
+  url: string,
+  key: string,
+  token?: string
+) {
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    ...(token ? { global: { headers: { Authorization: `Bearer ${token}` } } } : {}),
+  });
+}
+
+/**
+ * Create a service client factory (curried for service construction).
+ */
+export function createServiceClientFactory(url: string, key: string) {
+  return (token?: string) => createServiceClient(url, key, token);
+}

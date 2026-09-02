@@ -3,9 +3,10 @@ export const dynamic = "force-dynamic";
 import Client from "./page-client";
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
-export default function Page({ params }: PageProps) {
-  return <Client {...params} />;
+export default async function Page({ params }: PageProps) {
+  const { slug } = await params;
+  return <Client params={Promise.resolve({ slug })} />;
 }
