@@ -5,6 +5,67 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { listTutorCards, type TutorCardSummary, type TutorDiscoveryFilters } from "@/lib/tutor-discovery-api";
 import { TutorCard, type TutorCardData } from "@/components/tutor/tutor-card";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function asStringValue(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+function asNumberValue(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function normalizeLanguages(value: unknown): { displayName: string; proficiency: string }[] {
+  if (!Array.isArray(value)) return [];
+  return (value as { displayName?: unknown; proficiency?: unknown }[]).map((lang) => ({
+    displayName: asStringValue(lang.displayName) ?? "",
+    proficiency: asStringValue(lang.proficiency) ?? "",
+  }));
+}
+
+function getApiBase(): string {
+  if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL;
+  }
+  return "";
+}
+
+async function fetchTutorCardsBySearch(q: string): Promise<TutorCardSummary[]> {
+  const base = getApiBase().replace(/\/$/, "");
+  const params = new URLSearchParams();
+  params.set("q", q);
+  params.set("limit", "24");
+  try {
+    const response = await fetch(`${base}/api/v1/tutors/search?${params.toString()}`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) return [];
+    const payload = (await response.json()) as { tutors?: unknown };
+    if (!Array.isArray(payload.tutors)) return [];
+    return (payload.tutors as Record<string, unknown>[])
+      .filter((item) => {
+        const id = asStringValue(item.id);
+        return id !== null && UUID.test(id);
+      })
+      .map((item) => ({
+        id: asStringValue(item.id) as string,
+        displayName: asStringValue(item.display_name) ?? "",
+        headline: asStringValue(item.headline),
+        avatarUrl: asStringValue(item.avatar_object_path),
+        hourlyRateVnd: asNumberValue(item.hourly_rate_vnd),
+        subjects: [],
+        languages: normalizeLanguages(item.languages),
+        teachingFormat: asStringValue(item.teaching_format),
+        regions: [],
+        publishedAt: asStringValue(item.published_at),
+        rating: { count: 0, average: null },
+      }));
+  } catch {
+    return [];
+  }
+}
+
 
 interface TutorBrowseClientProps {
   initialItems: TutorCardSummary[];
@@ -16,6 +77,7 @@ interface TutorBrowseClientProps {
     minRate: number | null;
     maxRate: number | null;
     sort: "rating" | "recent";
+    q: string;
   };
 }
 
@@ -54,6 +116,7 @@ export function TutorBrowseClient({ initialItems, initialCursor, initialFilters 
     minRate: initialFilters.minRate,
     maxRate: initialFilters.maxRate,
     sort: initialFilters.sort,
+    q: initialFilters.q,
   });
 
   const buildFilterPayload = useCallback(
@@ -72,6 +135,7 @@ export function TutorBrowseClient({ initialItems, initialCursor, initialFilters 
   const syncQueryString = useCallback(
     (current: typeof filters) => {
       const next = new URLSearchParams();
+      if (current.q) next.set("q", current.q);
       if (current.subject) next.set("subject", current.subject);
       if (current.level) next.set("level", current.level);
       if (current.format) next.set("format", current.format);
@@ -88,6 +152,12 @@ export function TutorBrowseClient({ initialItems, initialCursor, initialFilters 
     async (next: typeof filters) => {
       setFilters(next);
       syncQueryString(next);
+      if (next.q) {
+        const search = await fetchTutorCardsBySearch(next.q);
+        setItems(search);
+        setCursor(null);
+        return;
+      }
       const payload = buildFilterPayload(next);
       const result = await listTutorCards(payload, null);
       setItems(result.items);
@@ -112,6 +182,7 @@ export function TutorBrowseClient({ initialItems, initialCursor, initialFilters 
   const minRateValue = filters.minRate ?? "";
   const maxRateValue = filters.maxRate ?? "";
   const sortValue = filters.sort;
+  const qValue = filters.q;
 
   const applyFiltersRef = useRef(applyFilters);
   // eslint-disable-next-line react-hooks/refs
@@ -124,6 +195,7 @@ export function TutorBrowseClient({ initialItems, initialCursor, initialFilters 
   useEffect(() => {
     const current = new URLSearchParams(params?.toString() ?? "");
     const next: typeof filters = {
+      q: current.get("q") ?? "",
       subject: current.get("subject") ?? "",
       level: current.get("level") ?? "",
       format: current.get("format") ?? "",
@@ -142,10 +214,46 @@ export function TutorBrowseClient({ initialItems, initialCursor, initialFilters 
   return (
     <div>
       <form
+        className="mb-6 flex gap-3 rounded-2xl border border-white/[.12] bg-white/[.03] p-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void applyFilters({
+            q: qValue.trim(),
+            subject: subjectValue.trim(),
+            level: levelValue,
+            format: formatValue,
+            minRate: minRateValue === "" ? null : Number(minRateValue),
+            maxRate: maxRateValue === "" ? null : Number(maxRateValue),
+            sort: sortValue,
+          });
+        }}
+      >
+        <label className="flex flex-1 flex-col gap-1 text-xs text-white/50">
+          <span>Search</span>
+          <input
+            type="search"
+            value={qValue}
+            onChange={(event) => setFilters((prev) => ({ ...prev, q: event.target.value }))}
+            placeholder="Search tutors by name, subject, or bio…"
+            className="rounded-xl border border-white/[.12] bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-white/30"
+          />
+        </label>
+        <div className="flex items-end">
+          <button
+            type="submit"
+            className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black"
+          >
+            Search
+          </button>
+        </div>
+      </form>
+
+      <form
         className="mb-6 grid gap-3 rounded-2xl border border-white/[.12] bg-white/[.03] p-4 sm:grid-cols-2 lg:grid-cols-5"
         onSubmit={(event) => {
           event.preventDefault();
           void applyFilters({
+            q: qValue.trim(),
             subject: subjectValue.trim(),
             level: levelValue,
             format: formatValue,
@@ -242,7 +350,7 @@ export function TutorBrowseClient({ initialItems, initialCursor, initialFilters 
           <p className="text-sm text-white/60">No tutors match these filters yet.</p>
           <button
             type="button"
-            onClick={() => void applyFilters({ subject: "", level: "", format: "", minRate: null, maxRate: null, sort: "rating" })}
+            onClick={() => void applyFilters({ q: "", subject: "", level: "", format: "", minRate: null, maxRate: null, sort: "rating" })}
             className="mt-4 inline-block rounded-xl border border-white/15 px-4 py-2 text-sm text-white/80"
           >
             Reset filters

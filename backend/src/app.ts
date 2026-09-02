@@ -11,6 +11,7 @@ import securityAlertRoutes from "./routes/auth.js";
 import { meRoutes } from "./routes/me.js";
 import { tutorCvRoutes } from "./routes/tutor-cv.js";
 import { publicTutorRoutes } from "./routes/public-tutors.js";
+import tutorSearchRoutes from "./routes/tutor-search.js";
 import { marketplaceRoutes } from "./routes/marketplace.js";
 import { courseRoutes } from "./routes/courses.js";
 import { createSupabaseCourseService } from "./services/course-service.js";
@@ -145,6 +146,7 @@ export function createApp(options: {
   if (options.tutorCvService) {
     app.register(tutorCvRoutes, { authService: options.authService, tutorCvService: options.tutorCvService, limits: { get: options.config.TUTOR_CV_GET_RATE_LIMIT_MAX, save: options.config.TUTOR_CV_SAVE_RATE_LIMIT_MAX, publish: options.config.TUTOR_CV_PUBLISH_RATE_LIMIT_MAX }, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
     app.register(publicTutorRoutes, { tutorCvService: options.tutorCvService, listMax: options.config.PUBLIC_TUTORS_LIST_RATE_LIMIT_MAX, detailMax: options.config.PUBLIC_TUTOR_DETAIL_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+    app.register(tutorSearchRoutes, { config: options.config, max: options.config.PUBLIC_TUTORS_LIST_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   }
   app.register(marketplaceRoutes, { authService: options.authService, marketplaceService: options.marketplaceService ?? createSupabaseMarketplaceService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY), publishMax: options.config.COURSE_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.COURSE_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.courseService) {
