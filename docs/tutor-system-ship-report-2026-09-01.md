@@ -94,3 +94,108 @@ Captured from `pnpm build`. Top-level routes (full manifest has 70+):
 **PARTIAL** — all in-scope W4 phases shipped and verified. Blockers are
 out-of-scope dirty-tree work (W2/W3) and a test-infra hardening item
 that should be tracked separately.
+
+---
+
+## W8 + REUSE-4 follow-up (2026-09-02) — honest status, NOT green
+
+**Status: PARTIAL → still PARTIAL.** The task description for this wrap-up
+asserted a clean W8+REUSE-4 finish (513/513 tests, clean discover build,
+green db reset), but the actual repository state on disk contradicts
+every one of those claims. Per `AGENTS.md` ("Never say production-ready
+unless production persistence, authorization, operational controls, and
+release checks actually support it" and the PASS / PARTIAL / UNVERIFIED /
+BLOCKED status labels), this report records the real state.
+
+### Committed (already on main, no further action needed)
+- `40ba6a2` W8: messaging realtime/edit/delete/blocking/reports/search
+- `23230f8` W8: ship readiness — supabase db reset in integration setup
+- `1043316` W8: rename duplicate `20260901000000` migration to free slot
+- `5f80f1e` W8: move pre-existing broken W2/W3 migrations to `_disabled/`
+- `6b95d74` W8: add `drop policy if exists` guards to recent migrations
+- `294a9ab` W8: session_published self-notification trigger
+- `d765c44` fix(deploy): release-gate blockers for messaging + discover build
+- `740058c` W9: RatingStars shared component + EXCLUDE USING gist
+  no-double-booking constraint + THIRD_PARTY_NOTICES.md attribution
+- `REPO_REUSE_MATRIX.md`, `THIRD_PARTY_NOTICES.md`, `.codex/CENTER_*_*.md`
+  all present and tracked
+
+### Uncommitted dirty W8 workstream (BLOCKED — not shipped)
+The working tree contains a second, uncommitted W8 workstream that is
+**not in a shippable state**. 9 modified files + 7 untracked files,
+~611 insertions, with the following concrete defects that the requested
+"verifications" surfaced:
+
+| Check | Actual result | Root cause |
+|---|---|---|
+| `pnpm typecheck` (backend) | **FAIL** — 3 errors | `threads.ts:159` references undeclared `updateThreadSchema`; `test/search-and-update.test.ts:5` imports `../src/services/search-service.js` which does not exist; `searchService` is not in the `createApp` options type |
+| `pnpm test` (backend) | **FAIL** — 2 failed / 513 passed of 515 | The two PATCH `/api/v1/threads/:id` tests in `search-and-update.test.ts` return 500 because the schema is missing |
+| `pnpm build` (discover) | **FAIL** | `community-settings.tsx` imports `archiveCommunity` from `@/lib/community/communities-api` but that export does not exist |
+| `supabase db reset --local --no-seed` | **BLOCKED** | `supabase start is not running` — local Supabase container is not up in this environment |
+
+No commit is being made. Committing broken code would regress the green
+deploy state that the W7/W8 commits on `main` already achieved, and
+would silently weaken the W7 ship report ("`pnpm typecheck` clean").
+
+### Files in the dirty W8 workstream (uncommitted)
+Modified:
+- `backend/src/app.ts` (+4: `searchService` wiring)
+- `backend/src/routes/host.ts` (+128: host-center routes)
+- `backend/src/routes/threads.ts` (+20: PATCH route, missing schema)
+- `backend/src/services/host-center-service.ts` (+178)
+- `backend/supabase/migrations/20260907000001_tutor_reviews.sql` (+6)
+- `backend/test/helpers/config.ts` (+1)
+- `backend/test/threads.test.ts` (+1)
+- `discover/public/center.html` (+277)
+- `discover/src/components/header/user-menu.tsx` (+6/-?)
+
+Untracked:
+- `.codex/CENTER_FIXTURE_REMOVAL_REPORT.md`
+- `.codex/CENTER_SOURCE_REUSE_AUDIT.md`
+- `REPO_REUSE_MATRIX.md` (already present on main via W9 commit)
+- `backend/src/routes/search.ts`
+- `backend/test/search-and-update.test.ts`
+- `discover/src/components/notifications/notification-center-live.tsx`
+- `discover/src/lib/host-center-api.ts`
+
+### What needs to happen to actually ship this W8 workstream
+1. Add `updateThreadSchema` in `backend/src/routes/threads.ts` covering
+   `title? / body? / tags? / level? / visibility? / replyPermission?`
+   with min/max validators matching `createThreadSchema`.
+2. Create `backend/src/services/search-service.ts` exporting the
+   `SearchService` type referenced by `search-and-update.test.ts:5`
+   and `app.ts:43`. The route at `backend/src/routes/search.ts` and
+   the app wiring at `app.ts:163` are already in place; the service
+   is the missing piece.
+3. Add the `archiveCommunity` export to
+   `discover/src/lib/community/communities-api.ts` (or remove the
+   import from `community-settings.tsx` until the API exists).
+4. Then re-run `pnpm typecheck`, `pnpm test`, `pnpm build` and
+   `supabase db reset --local --no-seed` (requires `supabase start`).
+5. Then commit and update the ship report with the **actual** passing
+   numbers — not the numbers in the task description.
+
+### REPO_REUSE_MATRIX.md / THIRD_PARTY_NOTICES.md status
+Both files exist and are tracked on `main` via commit `740058c`
+(W9: RatingStars + EXCLUDE USING gist + third-party notices). The
+`THIRD_PARTY_NOTICES.md` content verified above confirms MIT
+attribution for `actions/checkout` and the OSS policy ledger is live.
+No additional work required for the reuse gate in this wrap-up.
+
+### Production status
+**YELLOW → YELLOW (unchanged).** W7 blockers still stand: Resend
+domain verification, VNPay merchant onboarding, staging environment,
+`pg_dump` backup. The W8 workstream in the working tree would add
+search, host center, and thread PATCH endpoints once the four
+defects above are resolved — but it does not change production
+status because none of it is merged or verified.
+
+### Final status
+**PARTIAL.** The requested ship-report update cannot be appended
+verbatim because the assertions in the task (513/513 tests, clean
+discover build, green db reset) are contradicted by the verifications
+run in step 1 of this task. Per `AGENTS.md` release-truthfulness
+rules, this report records the real state and the four concrete
+defects that must be fixed before the W8 workstream can be committed.
+No commit is made in this wrap-up; the `git status` remains dirty
+intentionally so the next session can pick it up.
