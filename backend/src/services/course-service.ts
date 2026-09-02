@@ -1,5 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { logServiceError } from "../lib/service-error.js";
+import { applyPagination } from '../lib/pagination.js';
+import { checkVersion, buildVersionIncrement, isCasError } from '../lib/optimistic-lock.js';
+import { isValidSlug } from '../lib/slug.js';
 
 export interface Course {
   id: string;
@@ -413,6 +416,9 @@ export function createSupabaseCourseService(
     async createCourse(token: string, creatorId: string, input: CourseInput): Promise<CourseResult<Course>> {
       try {
         const slug = input.slug || generateSlug(input.title);
+        if (input.slug && !isValidSlug(input.slug)) {
+          return { status: "validation_error", error: "invalid slug format" };
+        }
 
         const { data: existing } = await caller(token).from("courses").select("id, slug").eq("slug", slug).single();
         if (existing) return { status: "conflict", error: "slug already exists" };
@@ -483,13 +489,16 @@ export function createSupabaseCourseService(
           .eq("id", courseId)
           .single();
         if (readError || !existing) return { status: "not_found" };
-        if (Number(existing.version) !== expectedVersion) return { status: "conflict" };
+        if (!checkVersion(existing, expectedVersion)) return { status: "conflict" };
 
-        const update: Record<string, unknown> = { version: expectedVersion + 1 };
+        const update: Record<string, unknown> = buildVersionIncrement(expectedVersion);
         if (patch.title !== undefined) update.title = patch.title;
         if (patch.description !== undefined) update.description = patch.description ?? null;
         if (patch.cover_url !== undefined) update.cover_url = patch.cover_url ?? null;
-        if (patch.slug !== undefined) update.slug = patch.slug;
+        if (patch.slug !== undefined) {
+          if (!isValidSlug(patch.slug)) return { status: "validation_error", error: "invalid slug format" };
+          update.slug = patch.slug;
+        }
 
         const { data, error } = await caller(token)
           .from("courses")
@@ -500,7 +509,7 @@ export function createSupabaseCourseService(
           .single();
 
         if (error) {
-          if (error.code === "PGRST116") return { status: "conflict" };
+          if (isCasError(error)) return { status: "conflict" };
           if (error.code === "23505") return { status: "conflict", error: "slug already exists" };
           if (error.code === "42501") return { status: "forbidden" };
           logServiceError({ service: "course-service", operation: "updateCourse", error });
@@ -567,13 +576,14 @@ export function createSupabaseCourseService(
 
     async listPublicCourses(filters?: { limit?: number; offset?: number }): Promise<CourseResult<Course[]>> {
       try {
-        let q = caller()
-          .from("courses")
-          .select("*, sections(*, lessons(*))")
-          .eq("status", "published")
-          .order("published_at", { ascending: false })
-          .limit(filters?.limit ?? 50);
-        if (filters?.offset) q = q.range(filters.offset, filters.offset + (filters?.limit ?? 50) - 1);
+        const q = applyPagination(
+          caller()
+            .from("courses")
+            .select("*, sections(*, lessons(*))")
+            .eq("status", "published")
+            .order("published_at", { ascending: false }),
+          filters
+        );
         const { data, error } = await q;
         if (error) {
           logServiceError({ service: "course-service", operation: "listPublicCourses", error });
@@ -610,7 +620,7 @@ export function createSupabaseCourseService(
           .single();
 
         if (error) {
-          if (error.code === "PGRST116") return { status: "conflict" };
+          if (isCasError(error)) return { status: "conflict" };
           logServiceError({ service: "course-service", operation: "publishCourse", error });
           return { status: "unavailable" };
         }
@@ -642,7 +652,7 @@ export function createSupabaseCourseService(
           .single();
 
         if (error) {
-          if (error.code === "PGRST116") return { status: "conflict" };
+          if (isCasError(error)) return { status: "conflict" };
           logServiceError({ service: "course-service", operation: "unpublishCourse", error });
           return { status: "unavailable" };
         }

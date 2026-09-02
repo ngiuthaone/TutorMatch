@@ -17,6 +17,10 @@ export interface Post {
   repost_count: number;
   comment_count: number;
   image_url?: string | null;
+  community_id?: string | null;
+  is_pinned?: boolean;
+  is_locked?: boolean;
+  is_removed?: boolean;
   created_at: string;
   updated_at: string;
   is_author?: boolean;

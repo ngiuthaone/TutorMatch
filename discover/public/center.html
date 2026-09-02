@@ -176,6 +176,19 @@ p,td,li,label,input,select,textarea,button{line-height:1.45}
         </div>
         <button data-page="quality" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">♡</span>Quality & Trust</button>
 
+        <div class="pt-3 pb-1 px-3 text-[9px] font-bold tracking-[.1em] uppercase text-[#aaa]">Host Center</div>
+        <button data-page="host-dashboard" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">◈</span>Dashboard</button>
+        <button data-page="host-offerings" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">□</span>Offerings</button>
+        <button data-page="host-sessions" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">◷</span>Sessions</button>
+        <button data-page="host-attendees" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">☰</span>Attendees</button>
+        <button data-page="host-earnings" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">₫</span>Earnings</button>
+        <button data-page="host-analytics" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">▥</span>Analytics</button>
+        <button data-page="host-team" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">⊕</span>Team</button>
+        <button data-page="host-promocodes" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">%</span>Promo Codes</button>
+        <button data-page="host-checkin" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">✓</span>Check-in</button>
+        <button data-page="host-payout-failures" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">⚠</span>Payout failures</button>
+        <button data-page="host-payout-statements" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">≡</span>Payout statements</button>
+
         <div class="pt-3 pb-1 px-3 text-[9px] font-bold tracking-[.1em] uppercase text-[#aaa]">Support</div>
         <button data-page="academy" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">?</span>Host Academy</button>
         <button data-page="settings" class="nav-row w-full h-9 px-3 rounded-md flex items-center gap-3 text-[11px] text-[#444] hover:bg-[#f4f4f4]"><span class="nav-glyph w-4 text-center">⚙</span>Settings</button>
@@ -830,6 +843,141 @@ $$('.campaign-join').forEach(b=>b.addEventListener('click',()=>{b.textContent='J
 })();
 </script>
 
+<!-- HOST CENTER PAGE CONTAINERS (populated by _hc.render* bridge) -->
+<section id="page-host-dashboard" class="page" style="display:none">
+  <div id="hc-dashboard" class="p-5">
+    <div class="flex items-center justify-between mb-4"><h1 class="text-[20px] font-semibold">Host Dashboard</h1><button id="hc-dashboard-refresh" class="btn">↻ Refresh</button></div>
+    <div id="hc-dashboard-content"></div>
+  </div>
+</section>
+
+<section id="page-host-offerings" class="page" style="display:none">
+  <div id="hc-offerings" class="p-5">
+    <div class="flex items-center justify-between mb-4"><h1 class="text-[20px] font-semibold">Offerings</h1><div class="flex gap-2"><select id="hc-offerings-status" class="input"><option value="">All statuses</option><option value="published">Published</option><option value="draft">Draft</option><option value="archived">Archived</option></select><select id="hc-offerings-kind" class="input"><option value="">All types</option><option value="tutor">Tutor</option><option value="workshop">Workshop</option><option value="class">Class</option><option value="event">Event</option><option value="course">Course</option></select></div></div>
+    <div id="hc-offerings-content"></div>
+    <div id="hc-offerings-empty" class="hidden text-center py-16 text-[#777] text-[11px]">No offerings found.</div>
+    <div id="hc-offerings-loading" class="text-center py-16 text-[#aaa] text-[11px]">Loading…</div>
+  </div>
+</section>
+
+<section id="page-host-sessions" class="page" style="display:none">
+  <div id="hc-sessions" class="p-5">
+    <div class="flex items-center justify-between mb-4"><h1 class="text-[20px] font-semibold">Sessions</h1><div class="flex gap-2"><input id="hc-sessions-from" type="date" class="input"/><input id="hc-sessions-to" type="date" class="input"/></div></div>
+    <div id="hc-sessions-content"></div>
+    <div id="hc-sessions-empty" class="hidden text-center py-16 text-[#777] text-[11px]">No sessions found.</div>
+    <div id="hc-sessions-loading" class="text-center py-16 text-[#aaa] text-[11px]">Loading…</div>
+  </div>
+</section>
+
+<section id="page-host-attendees" class="page" style="display:none">
+  <div id="hc-attendees" class="p-5">
+    <div class="flex items-center justify-between mb-4"><h1 class="text-[20px] font-semibold">Attendees</h1><div class="flex gap-2"><input id="hc-attendees-search" class="input w-48" placeholder="Search attendees"/><button id="hc-attendees-export" class="btn">Export CSV</button></div></div>
+    <div id="hc-attendees-content"></div>
+    <div id="hc-attendees-empty" class="hidden text-center py-16 text-[#777] text-[11px]">No attendees found.</div>
+    <div id="hc-attendees-loading" class="text-center py-16 text-[#aaa] text-[11px]">Loading…</div>
+  </div>
+</section>
+
+<section id="page-host-earnings" class="page" style="display:none">
+  <div id="hc-earnings" class="p-5">
+    <div class="flex items-center justify-between mb-4"><h1 class="text-[20px] font-semibold">Earnings</h1><div class="flex gap-2"><input id="hc-earnings-from" type="date" class="input"/><input id="hc-earnings-to" type="date" class="input"/><button id="hc-earnings-export" class="btn">Export CSV</button></div></div>
+    <div id="hc-earnings-content"></div>
+    <div id="hc-earnings-loading" class="text-center py-16 text-[#aaa] text-[11px]">Loading…</div>
+  </div>
+</section>
+
+<section id="page-host-analytics" class="page" style="display:none">
+  <div id="hc-analytics" class="p-5">
+    <div class="flex items-center justify-between mb-4"><h1 class="text-[20px] font-semibold">Analytics</h1><button id="hc-analytics-refresh" class="btn">↻ Refresh</button></div>
+    <div id="hc-analytics-content"></div>
+    <div id="hc-analytics-loading" class="text-center py-16 text-[#aaa] text-[11px]">Loading…</div>
+  </div>
+</section>
+
+<section id="page-host-team" class="page" style="display:none">
+  <div id="hc-team" class="p-5">
+    <div class="flex items-center justify-between mb-4"><h1 class="text-[20px] font-semibold">Team</h1><button id="hc-team-invite" class="btn btn-dark">+ Invite member</button></div>
+    <div id="hc-team-content"></div>
+    <div id="hc-team-empty" class="hidden text-center py-16 text-[#777] text-[11px]">No team members found.</div>
+    <div id="hc-team-loading" class="text-center py-16 text-[#aaa] text-[11px]">Loading…</div>
+  </div>
+</section>
+
+<section id="page-host-promocodes" class="page" style="display:none">
+  <div id="hc-promocodes" class="p-5">
+    <div class="flex items-center justify-between mb-4"><h1 class="text-[20px] font-semibold">Promo Codes</h1><button id="hc-promocodes-create" class="btn btn-dark">+ Create code</button></div>
+    <div id="hc-promocodes-content"></div>
+    <div id="hc-promocodes-empty" class="hidden text-center py-16 text-[#777] text-[11px]">No promo codes found.</div>
+    <div id="hc-promocodes-loading" class="text-center py-16 text-[#aaa] text-[11px]">Loading…</div>
+  </div>
+</section>
+
+<section id="page-host-checkin" class="page" style="display:none">
+  <div id="hc-checkin" class="p-5">
+    <div class="flex items-center justify-between mb-4"><h1 class="text-[20px] font-semibold">Check-in</h1></div>
+    <div class="panel overflow-hidden">
+      <div class="flex border-b border-[#eee]">
+        <button class="ci-tab subtab active py-3 px-5 text-[10px] font-semibold" data-ci-tab="issue">Issue token</button>
+        <button class="ci-tab subtab py-3 px-5 text-[10px]" data-ci-tab="redeem">Redeem</button>
+        <button class="ci-tab subtab py-3 px-5 text-[10px]" data-ci-tab="undo">Undo</button>
+        <button class="ci-tab subtab py-3 px-5 text-[10px]" data-ci-tab="logs">Logs</button>
+      </div>
+      <div id="ci-issue" class="ci-panel p-5">
+        <div class="text-[11px] text-[#777] mb-3">Issue a check-in token for a learner to redeem at the session.</div>
+        <div class="flex gap-2 items-center mb-4">
+          <input id="ci-issue-session" class="input flex-1" placeholder="Session ID"/>
+          <button id="ci-issue-btn" class="btn btn-dark">Issue token</button>
+        </div>
+        <div id="ci-issue-result" class="hidden">
+          <div class="text-[11px] font-semibold mb-1">Token issued</div>
+          <div id="ci-issue-token" class="font-mono text-[22px] font-bold tracking-widest my-2"></div>
+          <div class="text-[10px] text-[#777]">Share this code with the learner.</div>
+        </div>
+        <div id="ci-issue-error" class="hidden text-[11px] text-[#b72b3a]"></div>
+      </div>
+      <div id="ci-redeem" class="ci-panel p-5 hidden">
+        <div class="text-[11px] text-[#777] mb-3">Redeem a check-in token presented by the learner.</div>
+        <div class="flex gap-2 items-center mb-4">
+          <input id="ci-redeem-token" class="input flex-1 font-mono" placeholder="Token code"/>
+          <button id="ci-redeem-btn" class="btn btn-dark">Redeem</button>
+        </div>
+        <div id="ci-redeem-result" class="hidden"></div>
+        <div id="ci-redeem-error" class="hidden text-[11px] text-[#b72b3a]"></div>
+      </div>
+      <div id="ci-undo" class="ci-panel p-5 hidden">
+        <div class="text-[11px] text-[#777] mb-3">Undo a check-in to mark it as not redeemed.</div>
+        <div class="flex gap-2 items-center mb-4">
+          <input id="ci-undo-token" class="input flex-1 font-mono" placeholder="Token code"/>
+          <button id="ci-undo-btn" class="btn">Undo check-in</button>
+        </div>
+        <div id="ci-undo-result" class="hidden"></div>
+        <div id="ci-undo-error" class="hidden text-[11px] text-[#b72b3a]"></div>
+      </div>
+      <div id="ci-logs" class="ci-panel p-5 hidden">
+        <div id="hc-checkin-loading" class="text-center py-8 text-[#aaa] text-[11px]">Loading…</div>
+        <div id="hc-checkin-content"></div>
+        <div id="hc-checkin-empty" class="hidden text-center py-8 text-[#777] text-[11px]">No check-in logs yet.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="page-host-payout-failures" class="page" style="display:none">
+  <div id="hc-payout-failures" class="p-5">
+    <div class="flex items-center justify-between mb-4"><h1 class="text-[20px] font-semibold">Payout failures</h1><button id="hc-payout-failures-refresh" class="btn">↻ Refresh</button></div>
+    <div id="hc-payout-failures-content"></div>
+    <div id="hc-payout-failures-loading" class="text-center py-16 text-[#aaa] text-[11px]">Loading…</div>
+  </div>
+</section>
+
+<section id="page-host-payout-statements" class="page" style="display:none">
+  <div id="hc-payout-statements" class="p-5">
+    <div class="flex items-center justify-between mb-4"><h1 class="text-[20px] font-semibold">Payout statements</h1><button id="hc-payout-statements-refresh" class="btn">↻ Refresh</button></div>
+    <div id="hc-payout-statements-content"></div>
+    <div id="hc-payout-statements-loading" class="text-center py-16 text-[#aaa] text-[11px]">Loading…</div>
+  </div>
+</section>
+
 <script id="tutoria-center-live-tutor-adapter">
 (()=>{
   if(window.parent===window||!window.postMessage)return;
@@ -852,6 +1000,451 @@ $$('.campaign-join').forEach(b=>b.addEventListener('click',()=>{b.textContent='J
   window.addEventListener('message',event=>{if(event.origin!==origin||event.source!==window.parent)return;const message=event.data||{};if(message.type==='tutoria-center-parent-ready'){loadWorkshops();return}if(message.type==='tutoria-center-workshop-bookings'&&Array.isArray(message.bookings)){window.setWorkshopBookingLiveData?.(message.bookings,message.host);return}if(message.type==='tutoria-center-workshop-bookings-error'){window.tutoriaWorkshopBookingsError?.();return}if(message.type==='tutoria-center-workshop-booking-cancellation'||message.type==='tutoria-center-workshop-booking-cancellation-error'){const entry=pending.get(message.requestId);if(!entry)return;pending.delete(message.requestId);if(message.type.endsWith('-error'))entry.reject(new Error(typeof message.message==='string'?message.message:'This workshop booking changed. Reload and try again.'));else entry.resolve(message.booking)}});
 })();
 </script>
+
+<script id="tutoria-center-host-bridge">
+(()=>{
+  if(window.parent===window||!window.postMessage)return;
+  var origin=window.location.origin;
+  var _hcPending=new Map();
+  function _hcRid(){'center-'+Date.now()+'-'+Math.random().toString(36).slice(2)}
+
+  // ── helpers ──────────────────────────────────────────────────────────
+  function _show(el){$$('.page').forEach(p=>p.style.display='none');if(el)el.style.display='block'}
+  function _html(id,h){var x=document.getElementById(id);if(x)x.innerHTML=h}
+  function _text(id,t){var x=document.getElementById(id);if(x)x.textContent=t}
+  function _toggleShow(id,show){var x=document.getElementById(id);if(x)x.style.display=show?'block':'none'}
+  function _vnd(n){if(n==null)return'—';return new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(n).replace('₫','₫')}
+  function _date(d){if(!d)return'—';return new Date(d).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'})}
+  function _esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function _pill(status){var map={active:'pill-ok',published:'pill-ok',draft:'pill-neutral',archived:'pill-neutral',confirmed:'pill-ok',cancelled:'pill-bad',completed:'pill-neutral',pending:'pill-warn'};return'<span class="pill '+(_hcPillClass(status))+'">'+_esc(status)+'</span>'}
+  function _hcPillClass(s){var m={active:'pill-ok',published:'pill-ok',draft:'pill-neutral',archived:'pill-neutral',confirmed:'pill-ok',cancelled:'pill-bad',completed:'pill-neutral',pending:'pill-warn'};return m[String(s).toLowerCase()]||'pill-neutral'}
+  function _err(msg){return'<div class="p-4 text-[11px] text-[#b72b3a]">'+_esc(msg)+'</div>'}
+  function _loading(id){_html(id+'-loading','');_toggleShow(id+'-loading',true);_toggleShow(id+'-empty',false)}
+  function _doneLoading(id){_toggleShow(id+'-loading',false)}
+  function _table(rows,cols){
+    if(!rows||!rows.length)return'<div class="text-[11px] text-[#aaa] text-center py-8">No data</div>';
+    var th='';cols.forEach(function(c){th+='<th class="text-left">'+_esc(c.label)+'</th>'});
+    var trs=rows.map(function(row){var td='';cols.forEach(function(c){var v=typeof c.fn==='function'?c.fn(row):row[c.key];td+='<td class="text-[11px]">'+v+'</td>'});return'<tr>'+td+'</tr>'});
+    return'<div class="overflow-x-auto"><table class="dense-table w-full min-w-[560px]"><thead><tr>'+th+'</tr></thead><tbody>'+trs.join('')+'</tbody></table></div>';
+  }
+  function _metricRow(label,value){return'<div class="metric-card"><div class="text-[10px] text-[#777]">'+_esc(label)+'</div><div class="text-[22px] font-semibold mt-2">'+value+'</div></div>'}
+
+  // ── render functions ─────────────────────────────────────────────────
+  var _hc=window._hc={};
+  _hc.renderDashboard=function(d){
+    _doneLoading('hc-dashboard');
+    if(!d){_html('hc-dashboard-content',_err('Dashboard unavailable.'));return}
+    var h='<div class="grid grid-cols-2 xl:grid-cols-5 gap-3 mb-4">';
+    h+=_metricRow('Total offerings',d.totalOfferings??0);
+    h+=_metricRow('Active sessions',d.activeSessions??0);
+    h+=_metricRow("Today's bookings",d.todayBookings??0);
+    h+=_metricRow('This month',_vnd(d.monthlyGross));
+    h+=_metricRow('Check-in rate',(d.checkInRate!=null?d.checkInRate+'%':'—'));
+    h+='</div>';
+    if(d.recentActivity&&d.recentActivity.length){
+      var acts=d.recentActivity.map(function(a){
+        return'<tr><td class="text-[11px]">'+_date(a.at)+'</td><td class="text-[11px]">'+_esc(a.message)+'</td><td class="text-[11px]">'+_pill(a.type)+'</td></tr>';
+      });
+      h+='<div class="panel overflow-hidden"><div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">Recent activity</div></div>';
+      h+='<div class="overflow-x-auto"><table class="dense-table w-full min-w-[420px]"><thead><tr><th class="text-left">Time</th><th class="text-left">Event</th><th class="text-left">Status</th></tr></thead><tbody>'+acts.join('')+'</tbody></table></div></div>';
+    }
+    _html('hc-dashboard-content',h);
+  };
+  _hc.renderOfferings=function(rows){
+    _doneLoading('hc-offerings');
+    _toggleShow('hc-offerings-loading',false);
+    if(!rows||!rows.length){_toggleShow('hc-offerings-empty',true);_html('hc-offerings-content','');return}
+    _toggleShow('hc-offerings-empty',false);
+    var cols=[
+      {label:'Title',key:'title'},
+      {label:'Type',key:'kind'},
+      {label:'Status',key:'status',fn:function(r){return _pill(r.status)}},
+      {label:'Price',key:'pricePerSession',fn:function(r){return _vnd(r.pricePerSession)}},
+      {label:'Bookings',key:'totalBookings'},
+      {label:'Rating',key:'rating',fn:function(r){return r.rating!=null?r.rating+' ★':'—'}}
+    ];
+    _html('hc-offerings-content',_table(rows,cols));
+  };
+  _hc.renderSessions=function(rows){
+    _doneLoading('hc-sessions');
+    _toggleShow('hc-sessions-loading',false);
+    if(!rows||!rows.length){_toggleShow('hc-sessions-empty',true);_html('hc-sessions-content','');return}
+    _toggleShow('hc-sessions-empty',false);
+    var cols=[
+      {label:'Date',key:'dateTime',fn:function(r){return _date(r.dateTime)}},
+      {label:'Offering',key:'offeringTitle'},
+      {label:'Location',key:'location'},
+      {label:'Booked',key:'bookedCount'},
+      {label:'Capacity',key:'minCapacity'},
+      {label:'Gross',key:'grossAmount',fn:function(r){return _vnd(r.grossAmount)}},
+      {label:'Status',key:'status',fn:function(r){return _pill(r.status)}}
+    ];
+    _html('hc-sessions-content',_table(rows,cols));
+  };
+  _hc.renderAttendees=function(rows){
+    _doneLoading('hc-attendees');
+    _toggleShow('hc-attendees-loading',false);
+    if(!rows||!rows.length){_toggleShow('hc-attendees-empty',true);_html('hc-attendees-content','');return}
+    _toggleShow('hc-attendees-empty',false);
+    var cols=[
+      {label:'Name',key:'name'},
+      {label:'Email',key:'email'},
+      {label:'Total bookings',key:'totalBookings'},
+      {label:'Lifetime value',key:'lifetimeValue',fn:function(r){return _vnd(r.lifetimeValue)}},
+      {label:'Last booking',key:'lastBookingAt',fn:function(r){return _date(r.lastBookingAt)}}
+    ];
+    _html('hc-attendees-content',_table(rows,cols));
+  };
+  _hc.renderEarnings=function(e){
+    _doneLoading('hc-earnings');
+    if(!e){_html('hc-earnings-content',_err('Earnings unavailable.'));return}
+    var h='<div class="grid lg:grid-cols-3 gap-3 mb-4">';
+    h+=_metricRow('Available balance',_vnd(e.availableBalance));
+    h+=_metricRow('Pending settlement',_vnd(e.pendingSettlement));
+    h+=_metricRow('This period',_vnd(e.thisPeriod));
+    h+='</div>';
+    if(e.transactions&&e.transactions.length){
+      var txns=e.transactions.map(function(t){
+        return'<tr><td class="text-[11px]">'+_date(t.date)+'</td><td class="text-[11px]">'+_esc(t.description)+'</td><td class="text-[11px] text-right">'+_vnd(t.amount)+'</td><td class="text-[11px]">'+_pill(t.status)+'</td></tr>';
+      });
+      h+='<div class="panel overflow-hidden"><div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">Transactions</div></div>';
+      h+='<div class="overflow-x-auto"><table class="dense-table w-full min-w-[420px]"><thead><tr><th class="text-left">Date</th><th class="text-left">Description</th><th class="text-left">Amount</th><th class="text-left">Status</th></tr></thead><tbody>'+txns.join('')+'</tbody></table></div></div>';
+    }
+    _html('hc-earnings-content',h);
+  };
+  _hc.renderAnalytics=function(a){
+    _doneLoading('hc-analytics');
+    if(!a){_html('hc-analytics-content',_err('Analytics unavailable.'));return}
+    var h='<div class="grid grid-cols-2 xl:grid-cols-5 gap-3 mb-4">';
+    h+=_metricRow('Impressions',a.impressions!=null?a.impressions.toLocaleString():'—');
+    h+=_metricRow('Page visits',a.pageVisits!=null?a.pageVisits.toLocaleString():'—');
+    h+=_metricRow('Bookings',a.totalBookings!=null?a.totalBookings.toLocaleString():'0');
+    h+=_metricRow('Avg value',_vnd(a.avgBookingValue||0));
+    h+=_metricRow('Gross',_vnd(a.totalGross||0));
+    h+='</div>';
+
+    h+='<div class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">';
+    h+=_metricRow('Booking growth',a.bookingGrowth!=null?(a.bookingGrowth>=0?'+':'')+a.bookingGrowth.toFixed(1)+'%':'—');
+    h+=_metricRow('Revenue growth',a.revenueGrowth!=null?(a.revenueGrowth>=0?'+':'')+a.revenueGrowth.toFixed(1)+'%':'—');
+    h+=_metricRow('Capacity used',a.capacityUtilization!=null?a.capacityUtilization+'%':'—');
+    h+=_metricRow('Conversion','—');
+    h+='</div>';
+
+    if(a.daily&&a.daily.length){
+      var dailyRows=a.daily.map(function(d){
+        return'<tr><td class="text-[11px]">'+d.date+'</td><td class="text-[11px] text-right">'+d.bookings+'</td><td class="text-[11px] text-right">'+_vnd(d.gross)+'</td></tr>';
+      });
+      h+='<div class="panel overflow-hidden mb-4"><div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">Daily</div></div>';
+      h+='<div class="overflow-x-auto"><table class="dense-table w-full min-w-[280px]"><thead><tr><th class="text-left">Date</th><th class="text-right">Bookings</th><th class="text-right">Gross</th></tr></thead><tbody>'+dailyRows.join('')+'</tbody></table></div></div>';
+    }
+
+    if(a.weekly&&a.weekly.length){
+      var weeklyRows=a.weekly.map(function(w){
+        return'<tr><td class="text-[11px]">'+w.weekStart+'</td><td class="text-[11px] text-right">'+w.bookings+'</td><td class="text-[11px] text-right">'+_vnd(w.gross)+'</td></tr>';
+      });
+      h+='<div class="panel overflow-hidden mb-4"><div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">Weekly</div></div>';
+      h+='<div class="overflow-x-auto"><table class="dense-table w-full min-w-[280px]"><thead><tr><th class="text-left">Week starting</th><th class="text-right">Bookings</th><th class="text-right">Gross</th></tr></thead><tbody>'+weeklyRows.join('')+'</tbody></table></div></div>';
+    }
+
+    if(a.topOfferings&&a.topOfferings.length){
+      var tops=a.topOfferings.map(function(o){
+        var g=o.growthPct||0;
+        return'<tr><td class="font-semibold text-[11px]">'+_esc(o.title)+'</td><td class="text-[11px]">'+o.bookings+'</td><td class="text-[11px]">'+_vnd(o.gross)+'</td><td class="text-[11px] text-[#247356]">'+(g>0?'↑ +'+g+'%':(g<0?'↓ '+Math.abs(g)+'%':'—'))+'</td></tr>';
+      });
+      h+='<div class="panel overflow-hidden"><div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">Top offerings</div></div>';
+      h+='<div class="overflow-x-auto"><table class="dense-table w-full min-w-[420px]"><thead><tr><th class="text-left">Offering</th><th class="text-left">Bookings</th><th class="text-left">Gross</th><th class="text-left">Trend vs last month</th></tr></thead><tbody>'+tops.join('')+'</tbody></table></div></div>';
+    }
+    _html('hc-analytics-content',h);
+  };
+  _hc.renderPayoutSummary=function(p){
+    if(!p)return;
+    var h='<div class="grid lg:grid-cols-3 gap-3 mb-4">';
+    h+=_metricRow('Available',_vnd(p.availableBalance));
+    h+=_metricRow('Next payout',_vnd(p.nextPayoutAmount));
+    h+=_metricRow('Last payout',_vnd(p.lastPayoutAmount));
+    h+='</div>';
+    if(p.recentPayouts&&p.recentPayouts.length){
+      var rps=p.recentPayouts.map(function(r){
+        return'<tr><td class="text-[11px]">'+_date(r.date)+'</td><td class="text-[11px]">'+_vnd(r.amount)+'</td><td class="text-[11px]">'+_pill(r.status)+'</td></tr>';
+      });
+      h+='<div class="panel overflow-hidden"><div class="px-4 py-3 border-b border-[#eee]"><div class="section-title">Recent payouts</div></div>';
+      h+='<div class="overflow-x-auto"><table class="dense-table w-full min-w-[360px]"><thead><tr><th class="text-left">Date</th><th class="text-left">Amount</th><th class="text-left">Status</th></tr></thead><tbody>'+rps.join('')+'</tbody></table></div></div>';
+    }
+    _html('hc-dashboard-content',(_html('hc-dashboard-content','')||'')&&document.getElementById('hc-dashboard-content').innerHTML+h);
+  };
+  _hc.renderTeam=function(rows){
+    _doneLoading('hc-team');
+    _toggleShow('hc-team-loading',false);
+    if(!rows||!rows.length){_toggleShow('hc-team-empty',true);_html('hc-team-content','');return}
+    _toggleShow('hc-team-empty',false);
+    var cols=[
+      {label:'Name',key:'name'},
+      {label:'Email',key:'email'},
+      {label:'Role',key:'role'},
+      {label:'Joined',key:'joinedAt',fn:function(r){return _date(r.joinedAt)}}
+    ];
+    _html('hc-team-content',_table(rows,cols));
+  };
+  _hc.renderPromotionCodes=function(rows){
+    _doneLoading('hc-promocodes');
+    _toggleShow('hc-promocodes-loading',false);
+    if(!rows||!rows.length){_toggleShow('hc-promocodes-empty',true);_html('hc-promocodes-content','');return}
+    _toggleShow('hc-promocodes-empty',false);
+    var cols=[
+      {label:'Code',key:'code',fn:function(r){return'<span class="font-mono font-semibold">'+_esc(r.code)+'</span>'}},
+      {label:'Discount',key:'discount',fn:function(r){return r.discountType==='percent'?r.discountValue+'%':_vnd(r.discountValue)+' off'}},
+      {label:'Uses',key:'uses'},
+      {label:'Expires',key:'expiresAt',fn:function(r){return _date(r.expiresAt)}},
+      {label:'Status',key:'status',fn:function(r){return _pill(r.status)}}
+    ];
+    _html('hc-promocodes-content',_table(rows,cols));
+  };
+  _hc.renderCheckInLogs=function(rows){
+    _doneLoading('hc-checkin');
+    _toggleShow('hc-checkin-loading',false);
+    _hc._checkinLogs=rows||[];
+    if(!rows||!rows.length){
+      _html('hc-checkin-content','<div class="text-[11px] text-[#aaa] text-center py-8">No check-in logs yet.</div>');
+      return;
+    }
+    var cols=[
+      {label:'Token',key:'token',fn:function(r){return'<span class="font-mono text-[10px]">'+_esc(r.token)+'</span>'}},
+      {label:'Session',key:'sessionTitle'},
+      {label:'Learner',key:'learnerName'},
+      {label:'Action',key:'action',fn:function(r){return _pill(r.action)}},
+      {label:'Time',key:'createdAt',fn:function(r){return _date(r.createdAt)}}
+    ];
+    _html('hc-checkin-content',_table(rows,cols));
+  };
+  _hc.renderCheckInIssueResult=function(r){
+    if(!r||!r.token)return;
+    document.getElementById('ci-issue-token').textContent=r.token||'';
+    var resultEl=document.getElementById('ci-issue-result'),errorEl=document.getElementById('ci-issue-error');
+    if(errorEl)errorEl.classList.add('hidden');
+    if(resultEl)resultEl.classList.remove('hidden');
+  };
+  _hc.renderCheckInRedeemResult=function(r){
+    if(!r)return;
+    var cls=r.success?'pill-ok':'pill-bad';
+    var msg=r.success?('Token '+r.token+' redeemed for '+_esc(r.learnerName)):(r.message||'Redemption failed');
+    _html('hc-checkin-content','<div class="p-4"><span class="pill '+cls+'">'+_esc(msg)+'</span></div>');
+  };
+  _hc.renderCheckInUndoResult=function(r){
+    if(!r)return;
+    var cls=r.success?'pill-ok':'pill-bad';
+    var msg=r.success?'Token '+r.token+' undone':(r.message||'Undo failed');
+    _html('hc-checkin-content','<div class="p-4"><span class="pill '+cls+'">'+_esc(msg)+'</span></div>');
+  };
+  _hc.renderPayoutFailures=function(d){
+    _doneLoading('hc-payout-failures');
+    if(!d||!d.failures||!d.failures.length){_html('hc-payout-failures-content','<div class="text-[11px] text-[#aaa] text-center py-8">No payout failures.</div>');return}
+    var rows=d.failures.map(function(f){
+      var statusPill='<span class="inline-block px-1.5 py-0.5 text-[10px] rounded font-medium '+
+        (f.status==='resolved'?'bg-[#d1fae5] text-[#065f46]':
+         f.status==='retrying'?'bg-[#fef3c7] text-[#92400e]':
+         f.status==='failed_permanently'?'bg-[#fee2e2] text-[#991b1b]':'bg-[#e5e7eb] text-[#374151]')+'">'+
+        f.status.replace('_',' ')+'</span>';
+      return'<tr>'+
+        '<td class="text-[11px]">'+_esc(f.period)+'</td>'+
+        '<td class="text-[11px]">'+_vnd(f.amountVnd)+'</td>'+
+        '<td class="text-[11px] max-w-[160px] truncate" title="'+_esc(f.reason)+'">'+_esc(f.reason)+'</td>'+
+        '<td class="text-[11px]">'+f.attemptCount+'/'+f.maxAttempts+'</td>'+
+        '<td class="text-[11px]">'+statusPill+'</td>'+
+        '<td class="text-[11px]">'+(f.lastAttemptAt?_date(f.lastAttemptAt):'—')+'</td>'+
+        '<td class="text-[11px]">'+(f.resolvedAt?_date(f.resolvedAt):'—')+'</td>'+
+        '<td class="text-[11px]">'+(f.resolutionNote?'<span title="'+_esc(f.resolutionNote)+'">'+_esc(f.resolutionNote.substring(0,30))+'</span>':'—')+'</td>'+
+      '</tr>';
+    });
+    _html('hc-payout-failures-content','<div class="overflow-x-auto"><table class="dense-table w-full min-w-[720px]"><thead><tr>'+
+      '<th class="text-left">Period</th><th class="text-right">Amount</th><th class="text-left">Reason</th>'+
+      '<th class="text-center">Attempts</th><th class="text-left">Status</th><th class="text-left">Last attempt</th><th class="text-left">Resolved</th><th class="text-left">Resolution</th>'+
+      '</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>');
+  };
+  _hc.renderPayoutStatements=function(d){
+    _doneLoading('hc-payout-statements');
+    if(!d||!d.statements||!d.statements.length){_html('hc-payout-statements-content','<div class="text-[11px] text-[#aaa] text-center py-8">No payout statements yet.</div>');return}
+    var rows=d.statements.map(function(s){
+      return'<tr>'+
+        '<td class="text-[11px]">'+_esc(s.period)+'</td>'+
+        '<td class="text-[11px] text-right">'+_vnd(s.grossVnd)+'</td>'+
+        '<td class="text-[11px] text-right">'+_vnd(s.refundsVnd)+'</td>'+
+        '<td class="text-[11px] text-right">'+_vnd(s.commissionVnd)+'</td>'+
+        '<td class="text-[11px] text-right font-semibold">'+_vnd(s.netVnd)+'</td>'+
+      '</tr>';
+    });
+    _html('hc-payout-statements-content','<div class="overflow-x-auto"><table class="dense-table w-full min-w-[640px]"><thead><tr>'+
+      '<th class="text-left">Period</th><th class="text-right">Gross (VND)</th><th class="text-right">Refunds (VND)</th><th class="text-right">Commission (VND)</th><th class="text-right">Net payout (VND)</th>'+
+      '</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>');
+  };
+
+  // ── bridge methods (send request → register callback → parent responds → render) ──
+  function _hcSend(type,params,renderFn){
+    _loading(type.replace('hc-',''));
+    var id=_hcRid();
+    _hcPending.set(id,renderFn||function(){});
+    window.parent.postMessage(Object.assign({type:type,requestId:id},params||{}),origin);
+  }
+  function _hcRpc(type,params){
+    return new Promise(function(resolve,reject){
+      var id=_hcRid();
+      _hcPending.set(id,function(data){resolve(data)});
+      window.parent.postMessage(Object.assign({type:type,requestId:id},params||{}),origin);
+    });
+  }
+  window.tutoriaCenterLoadDashboard=function(){_hcSend('tutoria-center-load-host-dashboard',{},function(d){_doneLoading('hc-dashboard');_hc.renderDashboard(d)})};
+  window.tutoriaCenterLoadOfferings=function(p){_hcSend('tutoria-center-load-host-offerings',{status:p&&p.status,kind:p&&p.kind,limit:p&&p.limit,offset:p&&p.offset},function(d){_doneLoading('hc-offerings');_hc.renderOfferings(d)})};
+  window.tutoriaCenterLoadSessions=function(p){_hcSend('tutoria-center-load-host-sessions',{from:p&&p.from,to:p&&p.to,offeringId:p&&p.offeringId,status:p&&p.status,limit:p&&p.limit,offset:p&&p.offset},function(d){_doneLoading('hc-sessions');_hc.renderSessions(d)})};
+  window.tutoriaCenterLoadAttendees=function(p){_hcSend('tutoria-center-load-host-attendees',{q:p&&p.q,offeringId:p&&p.offeringId,limit:p&&p.limit,offset:p&&p.offset},function(d){_doneLoading('hc-attendees');_hc.renderAttendees(d)})};
+  window.tutoriaCenterLoadEarnings=function(p){_hcSend('tutoria-center-load-host-earnings',{from:p&&p.from,to:p&&p.to},function(d){_doneLoading('hc-earnings');_hc.renderEarnings(d)})};
+  window.tutoriaCenterLoadAnalytics=function(){_hcSend('tutoria-center-load-host-analytics',{},function(d){_doneLoading('hc-analytics');_hc.renderAnalytics(d)})};
+  window.tutoriaCenterLoadPayoutSummary=function(){_hcSend('tutoria-center-load-host-payout-summary',{},_hc.renderPayoutSummary)};
+  window.tutoriaCenterLoadTeam=function(p){_hcSend('tutoria-center-load-host-team',{offeringId:p&&p.offeringId,limit:p&&p.limit,offset:p&&p.offset},function(d){_doneLoading('hc-team');_hc.renderTeam(d)})};
+  window.tutoriaCenterLoadPromotionCodes=function(p){_hcSend('tutoria-center-load-host-promotion-codes',{offeringId:p&&p.offeringId,limit:p&&p.limit,offset:p&&p.offset},function(d){_doneLoading('hc-promocodes');_hc.renderPromotionCodes(d)})};
+  window.tutoriaCenterLoadCheckInLogs=function(p){_hcSend('tutoria-center-load-check-in-logs',{sessionId:p&&p.sessionId,limit:p&&p.limit,offset:p&&p.offset},function(d){_doneLoading('hc-checkin');_hc.renderCheckInLogs(d)})};
+  window.tutoriaCenterLoadPayoutFailures=function(p){_hcSend('tutoria-center-load-host-payout-failures',{limit:p&&p.limit,offset:p&&p.offset},function(d){_doneLoading('hc-payout-failures');_hc.renderPayoutFailures(d)})};
+  window.tutoriaCenterLoadPayoutStatements=function(p){_hcSend('tutoria-center-load-host-payout-statements',{limit:p&&p.limit,offset:p&&p.offset},function(d){_doneLoading('hc-payout-statements');_hc.renderPayoutStatements(d)})};
+  window.tutoriaCenterIssueToken=function(p){return _hcRpc('tutoria-center-issue-check-in-token',{sessionId:p&&p.sessionId})};
+  window.tutoriaCenterRedeemToken=function(p){return _hcRpc('tutoria-center-redeem-check-in-token',{token:p&&p.token})};
+  window.tutoriaCenterUndoCheckIn=function(p){return _hcRpc('tutoria-center-undo-check-in',{token:p&&p.token})};
+
+  // ── showPage override ────────────────────────────────────────────────
+  var _origShowPage=window._origShowPage;
+  window._origShowPage=window._origShowPage||window._showPage||null;
+  var __showPage=function(page){
+    var hostPages={host:1,dashboard:1,offerings:1,sessions:1,attendees:1,earnings:1,analytics:1,team:1,promocodes:1,checkin:1,payoutfailures:1,payoutstatements:1};
+    var pageName=page.replace(/^host-/,'');
+    if(page==='host-dashboard'||page==='host-dashboard'){_show(document.getElementById('page-host-dashboard'));window.tutoriaCenterLoadDashboard&&window.tutoriaCenterLoadDashboard();return}
+    if(page==='host-offerings'){_show(document.getElementById('page-host-offerings'));window.tutoriaCenterLoadOfferings&&window.tutoriaCenterLoadOfferings({});return}
+    if(page==='host-sessions'){_show(document.getElementById('page-host-sessions'));window.tutoriaCenterLoadSessions&&window.tutoriaCenterLoadSessions({});return}
+    if(page==='host-attendees'){_show(document.getElementById('page-host-attendees'));window.tutoriaCenterLoadAttendees&&window.tutoriaCenterLoadAttendees({});return}
+    if(page==='host-earnings'){_show(document.getElementById('page-host-earnings'));window.tutoriaCenterLoadEarnings&&window.tutoriaCenterLoadEarnings({});return}
+    if(page==='host-analytics'){_show(document.getElementById('page-host-analytics'));window.tutoriaCenterLoadAnalytics&&window.tutoriaCenterLoadAnalytics();return}
+    if(page==='host-team'){_show(document.getElementById('page-host-team'));window.tutoriaCenterLoadTeam&&window.tutoriaCenterLoadTeam({});return}
+    if(page==='host-promocodes'){_show(document.getElementById('page-host-promocodes'));window.tutoriaCenterLoadPromotionCodes&&window.tutoriaCenterLoadPromotionCodes({});return}
+    if(page==='host-checkin'){_show(document.getElementById('page-host-checkin'));window.tutoriaCenterLoadCheckInLogs&&window.tutoriaCenterLoadCheckInLogs({});return}
+    if(page==='host-payout-failures'){_show(document.getElementById('page-host-payout-failures'));window.tutoriaCenterLoadPayoutFailures&&window.tutoriaCenterLoadPayoutFailures({});return}
+    if(page==='host-payout-statements'){_show(document.getElementById('page-host-payout-statements'));window.tutoriaCenterLoadPayoutStatements&&window.tutoriaCenterLoadPayoutStatements({});return}
+    if(window._origShowPage)window._origShowPage(page);else{_show(document.getElementById('page-'+page));$$('.nav-row[data-page]').forEach(function(n){n.dataset.active=String(n.dataset.page===page)});$$('.nav-sub[data-page]').forEach(function(n){n.dataset.active=String(n.dataset.page===page)})}
+  };
+
+  // patch global showPage and click handler
+  window._showPage=__showPage;
+  document.querySelectorAll('[data-page]').forEach(function(el){el.addEventListener('click',function(e){var page=el.dataset.page;if(page){__showPage(page);e.preventDefault()}},true)});
+
+  // ── message listener ─────────────────────────────────────────────────
+  window.addEventListener('message',function(event){
+    if(event.origin!==origin||event.source!==window.parent)return;
+    var msg=event.data||{};
+    var rid=msg.requestId;
+    if(rid&&_hcPending.has(rid)){var cb=_hcPending.get(rid);_hcPending.delete(rid);try{cb(msg.data);if(msg.type==='tutoria-center-check-in-token')_hc.renderCheckInIssueResult(msg.data);else if(msg.type==='tutoria-center-check-in-redeemed')_hc.renderCheckInRedeemResult(msg.data);else if(msg.type==='tutoria-center-check-in-undone')_hc.renderCheckInUndoResult(msg.data)}catch(e){console.error('[hc] render error',e)}return}
+    if(msg.type==='tutoria-center-host-dashboard'){_doneLoading('hc-dashboard');_hc.renderDashboard(msg.data);}
+    if(msg.type==='tutoria-center-host-offerings'){_doneLoading('hc-offerings');_hc.renderOfferings(msg.data);}
+    if(msg.type==='tutoria-center-host-sessions'){_doneLoading('hc-sessions');_hc.renderSessions(msg.data);}
+    if(msg.type==='tutoria-center-host-attendees'){_doneLoading('hc-attendees');_hc.renderAttendees(msg.data);}
+    if(msg.type==='tutoria-center-host-earnings'){_doneLoading('hc-earnings');_hc.renderEarnings(msg.data);}
+    if(msg.type==='tutoria-center-host-analytics'){_doneLoading('hc-analytics');_hc.renderAnalytics(msg.data);}
+    if(msg.type==='tutoria-center-host-payout-summary'){_hc.renderPayoutSummary(msg.data);}
+    if(msg.type==='tutoria-center-host-payout-failures'){_doneLoading('hc-payout-failures');_hc.renderPayoutFailures(msg.data);}
+    if(msg.type==='tutoria-center-host-payout-statements'){_doneLoading('hc-payout-statements');_hc.renderPayoutStatements(msg.data);}
+    if(msg.type==='tutoria-center-host-team'){_doneLoading('hc-team');_hc.renderTeam(msg.data);}
+    if(msg.type==='tutoria-center-host-promotion-codes'){_doneLoading('hc-promocodes');_hc.renderPromotionCodes(msg.data);}
+    if(msg.type==='tutoria-center-check-in-logs'){_doneLoading('hc-checkin');_hc.renderCheckInLogs(msg.data);}
+  });
+
+  // ── refresh / filter handlers ──────────────────────────────────────
+  document.getElementById('hc-dashboard-refresh')?.addEventListener('click',function(){window.tutoriaCenterLoadDashboard&&window.tutoriaCenterLoadDashboard()});
+  document.getElementById('hc-analytics-refresh')?.addEventListener('click',function(){window.tutoriaCenterLoadAnalytics&&window.tutoriaCenterLoadAnalytics()});
+  document.getElementById('hc-offerings-status')?.addEventListener('change',function(){window.tutoriaCenterLoadOfferings&&window.tutoriaCenterLoadOfferings({status:this.value})});
+  document.getElementById('hc-offerings-kind')?.addEventListener('change',function(){window.tutoriaCenterLoadOfferings&&window.tutoriaCenterLoadOfferings({kind:this.value})});
+  document.getElementById('hc-sessions-from')?.addEventListener('change',function(){
+    var f=this.value,to=document.getElementById('hc-sessions-to').value;
+    window.tutoriaCenterLoadSessions&&window.tutoriaCenterLoadSessions({from:f,to:to});
+  });
+  document.getElementById('hc-sessions-to')?.addEventListener('change',function(){
+    var f=document.getElementById('hc-sessions-from').value,to=this.value;
+    window.tutoriaCenterLoadSessions&&window.tutoriaCenterLoadSessions({from:f,to:to});
+  });
+  document.getElementById('hc-attendees-search')?.addEventListener('input',function(){
+    window.tutoriaCenterLoadAttendees&&window.tutoriaCenterLoadAttendees({q:this.value});
+  });
+  document.getElementById('hc-earnings-from')?.addEventListener('change',function(){
+    var f=this.value,to=document.getElementById('hc-earnings-to').value;
+    window.tutoriaCenterLoadEarnings&&window.tutoriaCenterLoadEarnings({from:f,to:to});
+  });
+  document.getElementById('hc-earnings-to')?.addEventListener('change',function(){
+    var f=document.getElementById('hc-earnings-from').value,to=this.value;
+    window.tutoriaCenterLoadEarnings&&window.tutoriaCenterLoadEarnings({from:f,to:to});
+  });
+  document.getElementById('hc-attendees-export')?.addEventListener('click',function(){
+    var q=document.getElementById('hc-attendees-search')?.value||'';
+    var url='/api/v1/host/attendees/export'+(q?'?q='+encodeURIComponent(q):'');
+    var a=document.createElement('a');a.href=url;a.download='';a.click();
+  });
+  document.getElementById('hc-earnings-export')?.addEventListener('click',function(){
+    var f=document.getElementById('hc-earnings-from')?.value||'',to=document.getElementById('hc-earnings-to')?.value||'';
+    var qs=[];if(f)qs.push('from='+encodeURIComponent(f));if(to)qs.push('to='+encodeURIComponent(to));
+    var url='/api/v1/host/earnings/export'+(qs.length?'?'+qs.join('&'):'');
+    var a=document.createElement('a');a.href=url;a.download='';a.click();
+  });
+
+  document.getElementById('hc-payout-failures-refresh')?.addEventListener('click',function(){window.tutoriaCenterLoadPayoutFailures&&window.tutoriaCenterLoadPayoutFailures()});
+  document.getElementById('hc-payout-statements-refresh')?.addEventListener('click',function(){window.tutoriaCenterLoadPayoutStatements&&window.tutoriaCenterLoadPayoutStatements()});
+
+  // ── check-in tab switching ───────────────────────────────────────────
+  document.querySelectorAll('.ci-tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      var t=tab.dataset.ciTab;
+      document.querySelectorAll('.ci-tab').forEach(function(st){st.classList.toggle('active',st.dataset.ciTab===t)});
+      document.querySelectorAll('.ci-panel').forEach(function(p){p.classList.add('hidden')});
+      var panel=document.getElementById('ci-'+t);if(panel)panel.classList.remove('hidden');
+      if(t==='logs')window.tutoriaCenterLoadCheckInLogs&&window.tutoriaCenterLoadCheckInLogs({});
+    });
+  });
+
+  // ── check-in issue ──────────────────────────────────────────────────
+  document.getElementById('ci-issue-btn')?.addEventListener('click',function(){
+    var sid=document.getElementById('ci-issue-session').value.trim();
+    if(!sid)return;
+    var resultEl=document.getElementById('ci-issue-result'),errorEl=document.getElementById('ci-issue-error');
+    resultEl.classList.add('hidden');errorEl.classList.add('hidden');
+    window.tutoriaCenterIssueToken({sessionId:sid}).then(function(data){
+      document.getElementById('ci-issue-token').textContent=data&&data.token||'';
+      resultEl.classList.remove('hidden');
+    }).catch(function(e){errorEl.textContent=e&&e.message||'Failed to issue token.';errorEl.classList.remove('hidden')});
+  });
+
+  // ── check-in redeem ─────────────────────────────────────────────────
+  document.getElementById('ci-redeem-btn')?.addEventListener('click',function(){
+    var token=document.getElementById('ci-redeem-token').value.trim();
+    if(!token)return;
+    var resultEl=document.getElementById('ci-redeem-result'),errorEl=document.getElementById('ci-redeem-error');
+    resultEl.classList.add('hidden');errorEl.classList.add('hidden');
+    window.tutoriaCenterRedeemToken({token:token}).then(function(data){
+      if(data&&data.success){
+        resultEl.innerHTML='<span class="pill pill-ok">Token '+_esc(token)+' redeemed'+(data.learnerName?' for '+_esc(data.learnerName):'')+'</span>';
+      } else {
+        resultEl.innerHTML='<span class="pill pill-bad">'+(data&&data.message||'Redemption failed')+'</span>';
+      }
+      resultEl.classList.remove('hidden');
+    }).catch(function(e){errorEl.textContent=e&&e.message||'Failed to redeem token.';errorEl.classList.remove('hidden')});
+  });
+
+  // ── check-in undo ───────────────────────────────────────────────────
+  document.getElementById('ci-undo-btn')?.addEventListener('click',function(){
+    var token=document.getElementById('ci-undo-token').value.trim();
+    if(!token)return;
+    var resultEl=document.getElementById('ci-undo-result'),errorEl=document.getElementById('ci-undo-error');
+    resultEl.classList.add('hidden');errorEl.classList.add('hidden');
+    window.tutoriaCenterUndoCheckIn({token:token}).then(function(data){
+      if(data&&data.success){
+        resultEl.innerHTML='<span class="pill pill-ok">Token '+_esc(token)+' undone</span>';
+      } else {
+        resultEl.innerHTML='<span class="pill pill-bad">'+(data&&data.message||'Undo failed')+'</span>';
+      }
+      resultEl.classList.remove('hidden');
+    }).catch(function(e){errorEl.textContent=e&&e.message||'Failed to undo check-in.';errorEl.classList.remove('hidden')});
+  });
+})();
 
 </body>
 </html>

@@ -71,7 +71,7 @@ begin
   select * into s from public.sessions where id = sid for update;
   select * into b from public.bookings where id = booking_id for update;
   if b.id is null then raise insufficient_privilege; end if;
-  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if b.status not in ('requested','confirmed') then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if b.learner_id = uid then
     who := 'attendee';
@@ -123,6 +123,9 @@ begin
     jsonb_build_object('bookingId', booking_id, 'sessionId', sid, 'cancelledBy', who, 'fromStatus', b.status)
     || case when reason is not null then jsonb_build_object('reason', reason) else '{}'::jsonb end);
 
+  -- Auto-promote from waitlist if spots open up
+  perform public.promote_from_waitlist(sid);
+
   -- Terminate the booking's pending reschedule request (at most one per booking).
   update public.reschedule_requests
      set status = 'cancelled', resolved_at = now()
@@ -153,7 +156,7 @@ declare
 begin
   select * into cur from public.sessions where id = sid for update;
   if cur.id is null then raise insufficient_privilege; end if;
-  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if cur.status <> 'scheduled' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if cause is distinct from 'host' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   update public.sessions set status = 'cancelled', version = version + 1 where id = sid;
@@ -186,6 +189,9 @@ begin
     perform public.insert_outbox_event('BOOKING_CANCELLED', 'booking', b.id, b.version + 1,
       jsonb_build_object('bookingId', b.id, 'sessionId', sid, 'cancelledBy', 'host',
         'fromStatus', b.status, 'cancelledBySessionId', sid));
+
+    -- Auto-promote from waitlist if spots open up
+    perform public.promote_from_waitlist(sid);
     if obligation_created then
       perform public.insert_outbox_event('REFUND_OBLIGATION_CREATED', 'payment', p.id, p.version,
         jsonb_build_object('paymentId', p.id, 'refundId', r.id, 'amountVnd', r.amount_vnd));
@@ -227,7 +233,7 @@ begin
   if s.host_id <> uid then raise insufficient_privilege; end if;
   select * into b from public.bookings where id = bid for update;
   if b.id is null then raise insufficient_privilege; end if;
-  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if b.status <> 'requested' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   select * into p from public.payments where public.payments.booking_id = bid for update;
   if p.id is not null and p.status = 'pending' then in_flight_at := now(); end if;

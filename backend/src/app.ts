@@ -50,6 +50,7 @@ import { threadRoutes } from "./routes/threads.js";
 import { communityRoutes } from "./routes/communities.js";
 import { bookmarkRoutes } from "./routes/bookmarks.js";
 import { moderationRoutes } from "./routes/moderation.js";
+import { searchRoutes } from "./routes/search.js";
 import type { AuthService } from "./services/auth-service.js";
 import type { BookingService } from "./services/booking-service.js";
 import type { TutorCvService } from "./types/tutor-cv.js";
@@ -160,6 +161,7 @@ export function createApp(options: {
   app.register(notificationRoutes, { authService: options.authService, notificationService: options.notificationService ?? createSupabaseNotificationService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), readMax: options.config.NOTIFICATION_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   app.register(threadRoutes, { authService: options.authService, threadService: options.threadService ?? createSupabaseThreadService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.THREAD_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.THREAD_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   app.register(communityRoutes, { authService: options.authService, communityService: options.communityService ?? createSupabaseCommunityService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), publishMax: options.config.THREAD_PUBLISH_RATE_LIMIT_MAX, readMax: options.config.THREAD_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
+  if (options.searchService) app.register(searchRoutes, { authService: options.authService, searchService: options.searchService, readMax: options.config.POST_READ_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   app.register(bookmarkRoutes, { authService: options.authService, bookmarkService: options.bookmarkService ?? createSupabaseBookmarkService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), reportService: options.reportService ?? createSupabaseReportService(options.config.SUPABASE_URL, options.config.SUPABASE_PUBLISHABLE_KEY, options.authService), readMax: options.config.NOTIFICATION_READ_RATE_LIMIT_MAX, publishMax: options.config.COMMENT_RATE_LIMIT_MAX, windowMs: options.config.RATE_LIMIT_WINDOW_MS });
   if (options.bookingService) app.register(bookingRoutes, { service: options.bookingService, authService: options.authService, supabaseUrl: options.config.SUPABASE_URL, serviceRoleKey: options.config.SUPABASE_SERVICE_ROLE_KEY });
   if (options.config.VNPAY_TMN_CODE && options.config.VNPAY_HASH_SECRET && options.config.VNPAY_RETURN_URL && options.config.VNPAY_IPN_URL) {

@@ -63,6 +63,20 @@ export function ThreadDetailPage({ threadId }: { threadId: string }) {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
+  // Realtime: live new replies
+  useEffect(() => {
+    let off: (() => void) | undefined;
+    let cancelled = false;
+    void import("@/lib/community/realtime-api").then(({ subscribeToThreadReplies }) => {
+      if (cancelled) return;
+      off = subscribeToThreadReplies(threadId, (reply) => {
+        setReplies(prev => prev.some(r => r.id === reply.id) ? prev : [...prev, reply]);
+        setThread(prev => prev ? { ...prev, reply_count: prev.reply_count + 1 } : prev);
+      });
+    });
+    return () => { cancelled = true; off?.(); };
+  }, [threadId]);
+
   const handleAppreciate = useCallback(async (targetType: "thread" | "reply", targetId: string) => {
     if (!getSessionAccessToken()) {
       router.push(`/auth/sign-in?next=/threads/${threadId}`);

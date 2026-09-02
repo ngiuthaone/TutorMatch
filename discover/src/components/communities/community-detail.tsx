@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IconArrowLeft, IconUsers, IconLock, IconCheck, IconMessageCircle, IconAlertCircle } from "@tabler/icons-react";
@@ -218,6 +218,19 @@ function CommunityPostsTab({ communityId, communitySlug, isMember, canModerate }
     return () => { cancelled = true; };
   }, [communityId]);
 
+  // Realtime: live new posts
+  useEffect(() => {
+    let off: (() => void) | undefined;
+    let cancelled = false;
+    void import("@/lib/community/realtime-api").then(({ subscribeToCommunityPosts }) => {
+      if (cancelled) return;
+      off = subscribeToCommunityPosts(communityId, (post) => {
+        setPosts(prev => prev.some(p => p.id === post.id) ? prev : [post, ...prev]);
+      });
+    });
+    return () => { cancelled = true; off?.(); };
+  }, [communityId]);
+
   if (loading) return <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="animate-pulse h-24 rounded-2xl bg-surface" />)}</div>;
   if (error) return <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200 text-sm p-4">{error}</div>;
   if (posts.length === 0) {
@@ -269,6 +282,19 @@ function CommunityThreadsTab({ communityId, communitySlug, isMember, canModerate
         .catch(() => { if (!cancelled) { setError("Threads are temporarily unavailable."); setLoading(false); } });
     });
     return () => { cancelled = true; };
+  }, [communityId]);
+
+  // Realtime: live new threads
+  useEffect(() => {
+    let off: (() => void) | undefined;
+    let cancelled = false;
+    void import("@/lib/community/realtime-api").then(({ subscribeToCommunityThreads }) => {
+      if (cancelled) return;
+      off = subscribeToCommunityThreads(communityId, (thread) => {
+        setThreads(prev => prev.some(t => t.id === thread.id) ? prev : [thread, ...prev]);
+      });
+    });
+    return () => { cancelled = true; off?.(); };
   }, [communityId]);
 
   if (loading) return <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="animate-pulse h-24 rounded-2xl bg-surface" />)}</div>;

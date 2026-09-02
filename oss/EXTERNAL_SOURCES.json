@@ -8,12 +8,23 @@
       "ref": "2.110.7",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["package.json: @supabase/supabase-js", "backend/package.json: @supabase/supabase-js", "auth.bundle.js"],
+      "scope": [
+        "package.json: @supabase/supabase-js",
+        "backend/package.json: @supabase/supabase-js",
+        "auth.bundle.js"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Root/backend lockfiles and installed package manifests", "Installed LICENSE SHA-256 334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936"],
-      "required_actions": ["Carry the full Supabase MIT notice with distributed auth.bundle.js because its generated output omits the header"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"]
+      "evidence": [
+        "Root/backend lockfiles and installed package manifests",
+        "Installed LICENSE SHA-256 334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936"
+      ],
+      "required_actions": [
+        "Carry the full Supabase MIT notice with distributed auth.bundle.js because its generated output omits the header"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"
+      ]
     },
     {
       "id": "supabase-js-2.112.2",
@@ -22,12 +33,20 @@
       "ref": "2.112.2",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: @supabase/supabase-js"],
+      "scope": [
+        "discover/package.json: @supabase/supabase-js"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json and installed package manifests/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json and installed package manifests/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"
+      ]
     },
     {
       "id": "supabase-phoenix-0.4.5",
@@ -36,12 +55,20 @@
       "ref": "0.4.5",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["Transitive @supabase/phoenix dependency in root, backend, and discover lockfiles"],
+      "scope": [
+        "Transitive @supabase/phoenix dependency in root, backend, and discover lockfiles"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Lockfiles and installed @supabase/phoenix package.json/LICENSE.md"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"]
+      "evidence": [
+        "Lockfiles and installed @supabase/phoenix package.json/LICENSE.md"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"
+      ]
     },
     {
       "id": "lucide-react-0.468.0",
@@ -50,12 +77,22 @@
       "ref": "0.468.0",
       "license": "ISC",
       "status": "PASS",
-      "scope": ["package.json: lucide-react", "components/profile-preview.js", "Pinned Lucide UMD references in discover/public HTML"],
+      "scope": [
+        "package.json: lucide-react",
+        "components/profile-preview.js",
+        "Pinned Lucide UMD references in discover/public HTML"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Root lockfile, installed LICENSE, generated bundle comments, and fixed-version CDN URLs with SRI"],
-      "required_actions": ["Preserve the applicable ISC copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream names, logos, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Root lockfile, installed LICENSE, generated bundle comments, and fixed-version CDN URLs with SRI"
+      ],
+      "required_actions": [
+        "Preserve the applicable ISC copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream names, logos, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "lucide-react-1.24.0",
@@ -64,12 +101,20 @@
       "ref": "1.24.0",
       "license": "ISC",
       "status": "PASS",
-      "scope": ["discover/package.json: lucide-react"],
+      "scope": [
+        "discover/package.json: lucide-react"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable ISC copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream names, logos, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable ISC copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream names, logos, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "react-19.2.7",
@@ -78,12 +123,21 @@
       "ref": "19.2.7",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["package.json: react and react-dom", "components/profile-preview.js"],
+      "scope": [
+        "package.json: react and react-dom",
+        "components/profile-preview.js"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Root lockfile, installed manifests/LICENSE, and retained generated bundle license comments"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Root lockfile, installed manifests/LICENSE, and retained generated bundle license comments"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "react-19.2.4",
@@ -92,12 +146,20 @@
       "ref": "19.2.4",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: react and react-dom"],
+      "scope": [
+        "discover/package.json: react and react-dom"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json and installed package manifests/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json and installed package manifests/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "esbuild-0.24.2",
@@ -106,12 +168,20 @@
       "ref": "0.24.2",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["package.json: esbuild"],
+      "scope": [
+        "package.json: esbuild"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Root lockfile and installed package.json/LICENSE.md"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Root lockfile and installed package.json/LICENSE.md"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "jsdom-29.1.1",
@@ -120,12 +190,20 @@
       "ref": "29.1.1",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["package.json: jsdom"],
+      "scope": [
+        "package.json: jsdom"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Root lockfile and installed package manifest/LICENSE.txt"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Root lockfile and installed package manifest/LICENSE.txt"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "vitest-4.1.10",
@@ -134,12 +212,21 @@
       "ref": "4.1.10",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["package.json: vitest", "discover/package.json: vitest"],
+      "scope": [
+        "package.json: vitest",
+        "discover/package.json: vitest"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Root/discover lockfiles and installed package manifests/LICENSE.md"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Root/discover lockfiles and installed package manifests/LICENSE.md"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "vitest-3.2.7",
@@ -148,12 +235,20 @@
       "ref": "3.2.7",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["backend/package.json: vitest"],
+      "scope": [
+        "backend/package.json: vitest"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Backend lockfile and installed package manifest/LICENSE.md"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Backend lockfile and installed package manifest/LICENSE.md"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "fastify-5.11.2",
@@ -162,12 +257,20 @@
       "ref": "5.11.2",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["backend/package.json: fastify"],
+      "scope": [
+        "backend/package.json: fastify"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Backend lockfile and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Backend lockfile and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "fastify-cors-11.3.0",
@@ -176,12 +279,20 @@
       "ref": "11.3.0",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["backend/package.json: @fastify/cors"],
+      "scope": [
+        "backend/package.json: @fastify/cors"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Backend lockfile and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Backend lockfile and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "fastify-helmet-13.1.0",
@@ -190,12 +301,20 @@
       "ref": "13.1.0",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["backend/package.json: @fastify/helmet"],
+      "scope": [
+        "backend/package.json: @fastify/helmet"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Backend lockfile and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Backend lockfile and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "fastify-rate-limit-10.3.0",
@@ -204,12 +323,20 @@
       "ref": "10.3.0",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["backend/package.json: @fastify/rate-limit"],
+      "scope": [
+        "backend/package.json: @fastify/rate-limit"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Backend lockfile and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Backend lockfile and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "fastify-plugin-5.1.0",
@@ -218,12 +345,20 @@
       "ref": "5.1.0",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["backend/package.json: fastify-plugin"],
+      "scope": [
+        "backend/package.json: fastify-plugin"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Backend lockfile and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Backend lockfile and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "dotenv-17.4.2",
@@ -232,12 +367,20 @@
       "ref": "17.4.2",
       "license": "BSD-2-Clause",
       "status": "PASS",
-      "scope": ["backend/package.json: dotenv"],
+      "scope": [
+        "backend/package.json: dotenv"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Backend lockfile and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable BSD-2-Clause copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Backend lockfile and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable BSD-2-Clause copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "zod-3.25.76",
@@ -246,12 +389,20 @@
       "ref": "3.25.76",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["backend/package.json: zod"],
+      "scope": [
+        "backend/package.json: zod"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Backend lockfile and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Backend lockfile and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "zod-4.4.3",
@@ -260,12 +411,20 @@
       "ref": "4.4.3",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: zod"],
+      "scope": [
+        "discover/package.json: zod"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "tsx-4.23.1",
@@ -274,12 +433,20 @@
       "ref": "4.23.1",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["backend/package.json: tsx"],
+      "scope": [
+        "backend/package.json: tsx"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Backend lockfile and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Backend lockfile and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "typescript-5.9.3",
@@ -288,12 +455,21 @@
       "ref": "5.9.3",
       "license": "Apache-2.0",
       "status": "PASS",
-      "scope": ["backend/package.json: typescript", "discover/package.json: typescript"],
+      "scope": [
+        "backend/package.json: typescript",
+        "discover/package.json: typescript"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Backend/discover lockfiles and installed LICENSE.txt/ThirdPartyNoticeText.txt"],
-      "required_actions": ["Preserve LICENSE.txt and ThirdPartyNoticeText.txt with distributed copies where required"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Backend/discover lockfiles and installed LICENSE.txt/ThirdPartyNoticeText.txt"
+      ],
+      "required_actions": [
+        "Preserve LICENSE.txt and ThirdPartyNoticeText.txt with distributed copies where required"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "types-node-22.20.1",
@@ -302,12 +478,20 @@
       "ref": "22.20.1",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["backend/package.json: @types/node"],
+      "scope": [
+        "backend/package.json: @types/node"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Backend lockfile and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Other DefinitelyTyped packages, upstream brands, documentation, examples, and unverified assets"]
+      "evidence": [
+        "Backend lockfile and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Other DefinitelyTyped packages, upstream brands, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "types-node-20.19.43",
@@ -316,12 +500,20 @@
       "ref": "20.19.43",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: @types/node"],
+      "scope": [
+        "discover/package.json: @types/node"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Other DefinitelyTyped packages, upstream brands, documentation, examples, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Other DefinitelyTyped packages, upstream brands, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "types-react-19.2.17",
@@ -330,12 +522,20 @@
       "ref": "19.2.17",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: @types/react"],
+      "scope": [
+        "discover/package.json: @types/react"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Other DefinitelyTyped packages, upstream brands, documentation, examples, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Other DefinitelyTyped packages, upstream brands, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "types-react-dom-19.2.3",
@@ -344,12 +544,20 @@
       "ref": "19.2.3",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: @types/react-dom"],
+      "scope": [
+        "discover/package.json: @types/react-dom"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Other DefinitelyTyped packages, upstream brands, documentation, examples, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Other DefinitelyTyped packages, upstream brands, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "tabler-icons-react-3.44.0",
@@ -358,12 +566,20 @@
       "ref": "3.44.0",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: @tabler/icons-react"],
+      "scope": [
+        "discover/package.json: @tabler/icons-react"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream names, logos, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream names, logos, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "tiptap-core-packages-3.27.3",
@@ -372,12 +588,25 @@
       "ref": "3.27.3",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: @tiptap/extension-image", "discover/package.json: @tiptap/extension-link", "discover/package.json: @tiptap/extension-placeholder", "discover/package.json: @tiptap/pm", "discover/package.json: @tiptap/react", "discover/package.json: @tiptap/starter-kit"],
+      "scope": [
+        "discover/package.json: @tiptap/extension-image",
+        "discover/package.json: @tiptap/extension-link",
+        "discover/package.json: @tiptap/extension-placeholder",
+        "discover/package.json: @tiptap/pm",
+        "discover/package.json: @tiptap/react",
+        "discover/package.json: @tiptap/starter-kit"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json, exact installed manifests/LICENSE files, and registry hint"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Tiptap Pro, cloud services, hosted services, documentation, examples, brands, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json, exact installed manifests/LICENSE files, and registry hint"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Tiptap Pro, cloud services, hosted services, documentation, examples, brands, and unverified assets"
+      ]
     },
     {
       "id": "motion-12.42.2",
@@ -386,12 +615,20 @@
       "ref": "12.42.2",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: motion"],
+      "scope": [
+        "discover/package.json: motion"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json and installed package manifest/LICENSE.md"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json and installed package manifest/LICENSE.md"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"
+      ]
     },
     {
       "id": "tailwindcss-4.3.2",
@@ -400,12 +637,21 @@
       "ref": "4.3.2",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: tailwindcss", "discover/package.json: @tailwindcss/postcss"],
+      "scope": [
+        "discover/package.json: tailwindcss",
+        "discover/package.json: @tailwindcss/postcss"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json and installed package manifests/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json and installed package manifests/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"
+      ]
     },
     {
       "id": "tailwindcss-cdn-3.4.17",
@@ -414,12 +660,22 @@
       "ref": "3.4.17",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["Pinned Tailwind CDN scripts in discover/public HTML", "Generated CSS embedded in discover/public/course-profile.html"],
+      "scope": [
+        "Pinned Tailwind CDN scripts in discover/public HTML",
+        "Generated CSS embedded in discover/public/course-profile.html"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Exact npm tarball and root/nested LICENSE files", "Fixed-version CDN references with SRI; LICENSE SHA-256 60e0b68c0f35c078eef3a5d29419d0b03ff84ec1df9c3f9d6e39a519a5ae7985"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"]
+      "evidence": [
+        "Exact npm tarball and root/nested LICENSE files",
+        "Fixed-version CDN references with SRI; LICENSE SHA-256 60e0b68c0f35c078eef3a5d29419d0b03ff84ec1df9c3f9d6e39a519a5ae7985"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"
+      ]
     },
     {
       "id": "eslint-9.39.5",
@@ -428,12 +684,20 @@
       "ref": "9.39.5",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: eslint"],
+      "scope": [
+        "discover/package.json: eslint"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json and installed package manifest/LICENSE"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, and unverified assets"]
+      "evidence": [
+        "discover/package-lock.json and installed package manifest/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, and unverified assets"
+      ]
     },
     {
       "id": "eslint-config-next-16.3.0",
@@ -442,12 +706,20 @@
       "ref": "16.3.0",
       "license": "MIT",
       "status": "PASS",
-      "scope": ["discover/package.json: eslint-config-next only"],
+      "scope": [
+        "discover/package.json: eslint-config-next only"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["discover/package-lock.json, installed package manifest, and exact-release repository root license"],
-      "required_actions": ["Preserve the applicable MIT copyright and license text in distributed copies"],
-      "excluded_material": ["Next.js runtime package and its separately licensed bundled components, Vercel brands/trademarks, documentation, examples, and assets"]
+      "evidence": [
+        "discover/package-lock.json, installed package manifest, and exact-release repository root license"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Next.js runtime package and its separately licensed bundled components, Vercel brands/trademarks, documentation, examples, and assets"
+      ]
     },
     {
       "id": "actions-checkout",
@@ -456,12 +728,21 @@
       "ref": "11d5960a326750d5838078e36cf38b85af677262",
       "license": "MIT",
       "status": "PASS",
-      "scope": [".github/workflows/oss-license-gate.yml: actions/checkout"],
+      "scope": [
+        ".github/workflows/oss-license-gate.yml: actions/checkout"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Exact commit tarball; root LICENSE SHA-256 3e855ffa704114a51628ef8f0bf3aeb41728adf9d9070e263bf58aa5640b0eb5", "Bundled .licenses/npm material resolves to MIT, ISC, or Apache-2.0"],
-      "required_actions": ["Preserve the applicable MIT and bundled dependency notices in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, marketplace service, and unverified assets"]
+      "evidence": [
+        "Exact commit tarball; root LICENSE SHA-256 3e855ffa704114a51628ef8f0bf3aeb41728adf9d9070e263bf58aa5640b0eb5",
+        "Bundled .licenses/npm material resolves to MIT, ISC, or Apache-2.0"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT and bundled dependency notices in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, marketplace service, and unverified assets"
+      ]
     },
     {
       "id": "actions-setup-python",
@@ -470,12 +751,21 @@
       "ref": "a309ff8b426b58ec0e2a45f0f869d46889d02405",
       "license": "MIT",
       "status": "PASS",
-      "scope": [".github/workflows/oss-license-gate.yml: actions/setup-python"],
+      "scope": [
+        ".github/workflows/oss-license-gate.yml: actions/setup-python"
+      ],
       "planned_use": "dependency",
       "checked_on": "2026-08-12",
-      "evidence": ["Exact commit tarball; root LICENSE SHA-256 7d070f6b64d9bcc530fe99cc21eaaa4b3c364e0b2d367d7735671fa202a03b32", "Bundled dependencies resolve to MIT, ISC, Apache-2.0, or 0BSD"],
-      "required_actions": ["Preserve the applicable MIT and bundled dependency notices in distributed copies"],
-      "excluded_material": ["Upstream brands, trademarks, documentation, examples, marketplace service, and unverified assets"]
+      "evidence": [
+        "Exact commit tarball; root LICENSE SHA-256 7d070f6b64d9bcc530fe99cc21eaaa4b3c364e0b2d367d7735671fa202a03b32",
+        "Bundled dependencies resolve to MIT, ISC, Apache-2.0, or 0BSD"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT and bundled dependency notices in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, marketplace service, and unverified assets"
+      ]
     },
     {
       "id": "tutorstartup-messaging-pattern",
@@ -537,7 +827,7 @@
         "The presence provider is OPT-IN. Tutoria's spec marks presence as optional and warns against implying exact online state. Only ship the hook if Tutoria adds a presence surface."
       ],
       "excluded_material": [
-        "framer-motion, lucide-react, emoji-picker-react, zustand, next-cloudinary, peerjs — none of these are MIT-compatible dependencies Tutoria already has, and none are required by the patterns being adapted.",
+        "framer-motion, lucide-react, emoji-picker-react, zustand, next-cloudinary, peerjs \u2014 none of these are MIT-compatible dependencies Tutoria already has, and none are required by the patterns being adapted.",
         "Emoji/Voice/Reaction/Screen-share features. Tutoria's spec explicitly defers these.",
         "TutorStartup's prior parent/tutor naming and onboarding flow.",
         "Upstream brands, trademarks, marketplace copy, hard-coded marketing text, glassmorphism styling."
@@ -564,7 +854,7 @@
       "required_actions": [
         "Preserve the upstream MIT notice in THIRD_PARTY_NOTICES.md.",
         "Adapted SQL must use Tutoria's table name `public.message_attachments` (not chatly's column shape). Tutoria already has this table from migration 20260909000000_messaging_alpha_v2.sql with columns: id, message_id, storage_bucket, storage_path, filename, mime_type, size_bytes, created_at. The split_part(name,'/',1)::uuid cast in the RLS is incompatible with Tutoria's `<message_id>/<file>` storage layout; Tutoria's layout will be `<conversation_id>/<message_id>/<file>` and the RLS will be rewritten to enforce that.",
-        "The edge function pattern is a model only — Tutoria will attach the row to the message via a SECURITY DEFINER RPC `create_message_with_attachments`, not via a generic insert."
+        "The edge function pattern is a model only \u2014 Tutoria will attach the row to the message via a SECURITY DEFINER RPC `create_message_with_attachments`, not via a generic insert."
       ],
       "excluded_material": [
         "chatly's lemonsqueezy integration, paywall, AI-enhance-text function, expo push notifications, react-native mobile app.",
@@ -619,6 +909,14 @@
       "excluded_material": [
         "All source from this repository. Lesson is documentation-only; no code adoption."
       ]
+    },
+    {
+      "package": "@react-pdf/renderer",
+      "version": "4.8.1",
+      "license": "MIT",
+      "repository": "https://github.com/diegomura/react-pdf",
+      "description": "React renderer for building PDF documents",
+      "status": "PASS"
     }
   ]
 }

@@ -16,7 +16,7 @@ begin
   -- booking while a competing cancel_booking is committing.
   select * into cur from public.sessions where id = sid for update;
   if cur.id is null then raise insufficient_privilege; end if;
-  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if cur.status <> 'scheduled' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if cause is distinct from 'host' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if not exists (

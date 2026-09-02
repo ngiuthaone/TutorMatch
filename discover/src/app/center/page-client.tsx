@@ -31,10 +31,13 @@ import {
   listHostAttendees,
   listHostCheckInLogs,
   listHostOfferings,
+  listHostPayoutFailures,
+  listHostPayoutStatements,
   listHostPromotionCodes,
   listHostSessions,
   listHostTeam,
   redeemCheckInToken,
+  retryPayoutFailure,
   undoCheckIn,
 } from "@/lib/host-center-api";
 
@@ -362,6 +365,20 @@ export default function CenterPage() {
       if (message.type === "tutoria-center-load-host-payout-summary") {
         try { await ensureSession(); const result = await getHostPayoutSummary(); respond("tutoria-center-host-payout-summary", result); }
         catch (error) { const e = apiErrorPayload(error, "HOST_CENTER_UNAVAILABLE", "Payout summary is temporarily unavailable."); respondError(e.code, e.message); }
+        return;
+      }
+
+      // ── Host Center: payout failures ────────────────────────────────────
+      if (message.type === "tutoria-center-load-host-payout-failures") {
+        try { await ensureSession(); const params = (message as Record<string, unknown>) as { limit?: number; offset?: number }; const result = await listHostPayoutFailures(params); respond("tutoria-center-host-payout-failures", result); }
+        catch (error) { const e = apiErrorPayload(error, "HOST_CENTER_UNAVAILABLE", "Payout failures are temporarily unavailable."); respondError(e.code, e.message); }
+        return;
+      }
+
+      // ── Host Center: payout statements ──────────────────────────────────
+      if (message.type === "tutoria-center-load-host-payout-statements") {
+        try { await ensureSession(); const params = (message as Record<string, unknown>) as { limit?: number; offset?: number }; const result = await listHostPayoutStatements(params); respond("tutoria-center-host-payout-statements", result); }
+        catch (error) { const e = apiErrorPayload(error, "HOST_CENTER_UNAVAILABLE", "Payout statements are temporarily unavailable."); respondError(e.code, e.message); }
         return;
       }
 

@@ -13,7 +13,7 @@ declare
 begin
   select id, version into pid, v from public.tutor_profiles where user_id = uid for update;
   if pid is null then raise no_data_found; end if;
-  if v <> expected_version then raise exception 'PROFILE_VERSION_CONFLICT' using errcode = '40001'; end if;
+  if v <> expected_version then raise exception 'PROFILE_VERSION_CONFLICT' using errcode='45000'; end if;
   if not public.tutor_cv_publishable(pid) then raise exception 'TUTOR_CV_INCOMPLETE' using errcode = '22023'; end if;
   update public.tutor_profiles
     set publication_status = 'published', published_at = now(), unpublished_at = null, updated_at = now(), version = version + 1

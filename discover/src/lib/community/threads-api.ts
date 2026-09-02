@@ -24,6 +24,9 @@ export interface ReferenceThread {
   level?: ThreadLevel | null;
   visibility: ThreadVisibility;
   reply_permission: ReplyPermission;
+  community_id?: string | null;
+  is_pinned?: boolean;
+  is_locked?: boolean;
   appreciated_count: number;
   reply_count: number;
   status: "published" | "closed" | "deleted" | "removed";

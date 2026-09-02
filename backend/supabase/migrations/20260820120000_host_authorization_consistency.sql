@@ -98,7 +98,7 @@ begin
     raise insufficient_privilege;
   end if;
   if b.version <> expected_version then
-    raise exception 'STALE_VERSION' using errcode='40001';
+    raise exception 'STALE_VERSION' using errcode='45000';
   end if;
   if b.status <> 'requested' then
     raise exception 'INVALID_TRANSITION' using errcode='22023';
@@ -164,7 +164,7 @@ begin
     raise insufficient_privilege;
   end if;
   if b.version <> expected_version then
-    raise exception 'STALE_VERSION' using errcode='40001';
+    raise exception 'STALE_VERSION' using errcode='45000';
   end if;
   if b.status not in ('requested', 'confirmed') then
     raise exception 'INVALID_TRANSITION' using errcode='22023';

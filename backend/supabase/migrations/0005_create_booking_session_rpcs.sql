@@ -1,7 +1,7 @@
 -- Tutoria sessions + bookings: security definer RPC surface + grants.
 -- Pattern: tables are RLS-enabled and fully revoked (0004); all access flows
 -- through these functions. Errors are sanitized constant codes; version/CAS
--- conflicts raise STALE_VERSION with errcode 40001 (existing convention).
+-- conflicts raise STALE_VERSION with errcode 45000 (PostgREST-safe; 40001 triggers unwanted retry).
 -- See docs/agent-team/DESIGN-SUPABASE-PERSISTENCE-RLS.md.
 
 -- Internal helpers (revoked; never granted to anon/authenticated).
@@ -96,7 +96,7 @@ declare uid uuid := public.assert_host_of_session(sid); cur public.sessions%rowt
 begin
   select * into cur from public.sessions where id = sid for update;
   if cur.id is null then raise insufficient_privilege; end if;
-  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if cur.status <> 'scheduled' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if ends_at <= starts_at then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if starts_at = cur.starts_at and ends_at = cur.ends_at then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
@@ -113,7 +113,7 @@ declare uid uuid := public.assert_host_of_session(sid); cur public.sessions%rowt
 begin
   select * into cur from public.sessions where id = sid for update;
   if cur.id is null then raise insufficient_privilege; end if;
-  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if cur.status <> 'scheduled' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if new_max <= 0 then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   reserved := public.session_hard_reserved(sid);
@@ -131,7 +131,7 @@ declare uid uuid := public.assert_host_of_session(sid); cur public.sessions%rowt
 begin
   select * into cur from public.sessions where id = sid for update;
   if cur.id is null then raise insufficient_privilege; end if;
-  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if cur.status <> 'scheduled' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if cause is distinct from 'host' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   update public.sessions set status = 'cancelled', version = version + 1 where id = sid;
@@ -150,7 +150,7 @@ declare uid uuid := public.assert_host_of_session(sid); cur public.sessions%rowt
 begin
   select * into cur from public.sessions where id = sid for update;
   if cur.id is null then raise insufficient_privilege; end if;
-  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if cur.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if cur.status <> 'scheduled' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if now() < cur.ends_at then raise exception 'SESSION_IN_FUTURE' using errcode='22023'; end if;
   update public.sessions set status = 'completed', version = version + 1 where id = sid;
@@ -197,7 +197,7 @@ begin
   if s.status <> 'scheduled' then raise exception 'SESSION_NOT_OPEN' using errcode='22023'; end if;
   select * into b from public.bookings where id = booking_id for update;
   if b.id is null then raise insufficient_privilege; end if;
-  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if b.status <> 'requested' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   update public.bookings set status = 'confirmed', version = version + 1 where id = booking_id;
   insert into public.booking_history(booking_id, from_status, to_status, actor, at)
@@ -215,7 +215,7 @@ begin
   if s.host_id <> uid then raise insufficient_privilege; end if;
   select * into b from public.bookings where id = booking_id for update;
   if b.id is null then raise insufficient_privilege; end if;
-  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if b.status <> 'requested' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   update public.bookings set status = 'rejected', version = version + 1 where id = booking_id;
   insert into public.booking_history(booking_id, from_status, to_status, actor, at)
@@ -232,7 +232,7 @@ begin
   select * into s from public.sessions where id = sid for update;
   select * into b from public.bookings where id = booking_id for update;
   if b.id is null then raise insufficient_privilege; end if;
-  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if b.status not in ('requested','confirmed') then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if b.learner_id = uid then
     who := 'attendee';
@@ -261,7 +261,7 @@ begin
   select * into b from public.bookings where id = booking_id for update;
   if b.id is null then raise insufficient_privilege; end if;
   if b.learner_id <> uid then raise insufficient_privilege; end if;
-  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if b.status <> 'confirmed' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if s.status = 'cancelled' then raise exception 'SESSION_NOT_OPEN' using errcode='22023'; end if;
   if now() < s.ends_at then raise exception 'SESSION_IN_FUTURE' using errcode='22023'; end if;
@@ -284,7 +284,7 @@ begin
   if s.host_id <> uid then raise insufficient_privilege; end if;
   select * into b from public.bookings where id = booking_id for update;
   if b.id is null then raise insufficient_privilege; end if;
-  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if b.status <> 'confirmed' then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if now() < s.ends_at then raise exception 'SESSION_IN_FUTURE' using errcode='22023'; end if;
   insert into public.attendance_facts(booking_id, session_id, outcome, reported_by, at, prior_status, source)
@@ -312,7 +312,7 @@ begin
   if b.learner_id = uid then requester := 'attendee';
   elsif exists(select 1 from public.sessions where id = b.session_id and host_id = uid) then requester := 'host';
   else raise insufficient_privilege; end if;
-  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='40001'; end if;
+  if b.version <> expected_version then raise exception 'STALE_VERSION' using errcode='45000'; end if;
   if b.status not in ('requested','confirmed') then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   if target_session_id = b.session_id then raise exception 'INVALID_TRANSITION' using errcode='22023'; end if;
   select * into t from public.sessions where id = target_session_id;

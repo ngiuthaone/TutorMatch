@@ -337,6 +337,9 @@ begin
         'cancelledBySessionId', sid
       ));
 
+    -- Auto-promote from waitlist if spots open up
+    perform public.promote_from_waitlist(sid);
+
     if obligation_created then
       perform public.insert_outbox_event(
         'REFUND_OBLIGATION_CREATED', 'payment', p.id, p.version,
@@ -693,6 +696,9 @@ begin
       'reason', p_reason
     )
   );
+
+  -- Auto-promote from waitlist if spots open up
+  perform public.promote_from_waitlist(b.session_id);
 
   return public.booking_read_json(p_booking_id);
 end $$;

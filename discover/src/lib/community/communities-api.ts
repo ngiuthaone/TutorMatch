@@ -87,3 +87,7 @@ export async function banMember(communityId: string, userId: string, reason?: st
 export async function setMemberRole(communityId: string, userId: string, role: "member" | "moderator") {
   return apiFetch<{ community_id: string; user_id: string; role: string }>(`/api/v1/communities/${encodeURIComponent(communityId)}/members/${encodeURIComponent(userId)}/role`, { method: "PATCH", body: { role } });
 }
+
+export async function archiveCommunity(id: string) {
+  return apiFetch<{ community_id: string; archived: boolean }>(`/api/v1/communities/${encodeURIComponent(id)}/archive`, { method: "POST" });
+}

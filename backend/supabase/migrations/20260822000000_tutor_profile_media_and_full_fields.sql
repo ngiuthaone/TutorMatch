@@ -477,7 +477,7 @@ begin
 
   select id, publication_status into pid, old_status from public.tutor_profiles where user_id = uid for update;
   if pid is null then
-    if expected_version is not null then raise exception 'PROFILE_VERSION_CONFLICT' using errcode = '40001'; end if;
+    if expected_version is not null then raise exception 'PROFILE_VERSION_CONFLICT' using errcode='45000'; end if;
     insert into public.tutor_profiles(user_id, display_name, headline, bio, hourly_rate_vnd, currency, teaching_format,
         role, portfolio_url, lesson_description, cancel_learner_policy, cancel_late_policy, no_show_policy,
         booking_notice, booking_window_days, lesson_buffer_min, same_day_booking, display_duration_min, rates, consultation)
@@ -501,7 +501,7 @@ begin
     values (pid, uid, 'created', new_version);
   else
     if expected_version is null or (select version from public.tutor_profiles where id = pid) <> expected_version then
-      raise exception 'PROFILE_VERSION_CONFLICT' using errcode = '40001';
+      raise exception 'PROFILE_VERSION_CONFLICT' using errcode='45000';
     end if;
     update public.tutor_profiles set
       display_name = btrim(payload->>'displayName'),

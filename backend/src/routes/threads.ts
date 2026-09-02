@@ -36,6 +36,15 @@ const reportSchema = z.object({
   reason: z.string().min(1).max(500),
 });
 
+const updateThreadSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  body: z.string().max(2000).optional(),
+  tags: z.array(z.string().max(50)).max(5).optional(),
+  level: z.enum(["complete_beginner", "beginner", "intermediate", "advanced", "all_levels"]).optional(),
+  visibility: z.enum(["public", "community"]).optional(),
+  replyPermission: z.enum(["everyone", "community_members", "disabled"]).optional(),
+});
+
 const appreciateSchema = z.object({
   targetType: z.enum(["thread", "reply"]),
   targetId: z.string().uuid(),
@@ -149,6 +158,26 @@ export const threadRoutes: FastifyPluginAsync<{
     if (!parsed.success) throw new ApiError(400, "INVALID_BODY", "Appreciation request is invalid.");
     const result = await options.threadService.unappreciate(request.auth.accessToken, parsed.data.targetType, parsed.data.targetId);
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Unappreciation is temporarily unavailable.");
+    return result.data;
+  });
+
+  // Update thread (author only)
+  app.patch("/api/v1/threads/:id", { preHandler: app.authenticate, config: { rateLimit: { max: options.publishMax, timeWindow: options.windowMs } }, onSend: noStore }, async (request) => {
+    const idParsed = idParamSchema.safeParse((request.params as { id?: string }).id ?? "");
+    if (!idParsed.success) throw new ApiError(404, "NOT_FOUND", "Thread not found.");
+    const bodyParsed = updateThreadSchema.safeParse(request.body);
+    if (!bodyParsed.success) throw new ApiError(400, "INVALID_BODY", "Thread update is invalid.");
+    const result = await options.threadService.update(request.auth.accessToken, idParsed.data, {
+      title: bodyParsed.data.title,
+      body: bodyParsed.data.body,
+      tags: bodyParsed.data.tags,
+      level: bodyParsed.data.level,
+      visibility: bodyParsed.data.visibility,
+      replyPermission: bodyParsed.data.replyPermission,
+    });
+    if (result.status === "not_found") throw new ApiError(404, "NOT_FOUND", "Thread not found or has been removed.");
+    if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "Only the thread creator can edit it.");
+    if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Update is temporarily unavailable.");
     return result.data;
   });
 
