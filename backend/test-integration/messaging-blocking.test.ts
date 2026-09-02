@@ -82,7 +82,7 @@ describe.sequential("messaging blocking (server-authoritative)", () => {
       "20260906000001_follows_schema.sql",
       "20260906000002_follow_rpcs.sql",
       "20260907000010_fix_follow_rpc_grants.sql",
-      "20260907000010_session_published_self_notification.sql",
+      "20260911000010_session_published_self_notification.sql",
       "20260908000000_url_validation_hardening.sql",
       "20260908000001_public_capacity_hardening.sql",
       "20260908000003_system_actor_uuid.sql",

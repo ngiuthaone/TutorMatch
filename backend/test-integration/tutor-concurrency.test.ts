@@ -8,7 +8,7 @@ const FUTURE={startsAt:new Date(Date.now()+2*3600e3).toISOString(),endsAt:new Da
 async function createSession(tutor:any,o:any={}){const offeringId=await makeOffering(tutor.client,tutor.user.id,"workshop");return tutor.client.rpc("create_session",{payload:{offeringId,...FUTURE,...o}})}
 describe.sequential("tutor system concurrency invariants",()=>{
   beforeAll(async()=>{
-    for(const n of ["0001_create_profiles.sql","0002_create_tutor_cvs.sql","0004_create_sessions_and_bookings.sql","0005_create_booking_session_rpcs.sql","0006_create_event_outbox.sql","0007_emit_domain_events_from_booking_session_rpcs.sql","20260907000001_tutor_reviews.sql","20260907000002_tutor_availability_exceptions.sql","20260907000003_tutor_dashboard_rpcs.sql","20260907000010_session_published_self_notification.sql"]){
+    for(const n of ["0001_create_profiles.sql","0002_create_tutor_cvs.sql","0004_create_sessions_and_bookings.sql","0005_create_booking_session_rpcs.sql","0006_create_event_outbox.sql","0007_emit_domain_events_from_booking_session_rpcs.sql","20260907000001_tutor_reviews.sql","20260907000002_tutor_availability_exceptions.sql","20260907000003_tutor_dashboard_rpcs.sql","20260911000010_session_published_self_notification.sql"]){
       const m=await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`,import.meta.url)),"utf8");
       await sql.unsafe(m);
     }
