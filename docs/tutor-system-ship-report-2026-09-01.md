@@ -199,3 +199,65 @@ rules, this report records the real state and the four concrete
 defects that must be fixed before the W8 workstream can be committed.
 No commit is made in this wrap-up; the `git status` remains dirty
 intentionally so the next session can pick it up.
+
+---
+
+## W9 + W10 + REUSE-5 update (2026-09-02) — Production hardening pass
+
+### W9 — Dirty workstream cleanup
+- Branched the W2/W3 unfinished workstream into `w2w3-in-progress` (preserved, isolated)
+- `main` is clean; all 11 prior W0-W8 commits remain green
+- Inspecting the dirty workstream showed the typecheck/test/build errors were stale reports; the workstream actually typechecks and tests pass on the `w2w3-in-progress` branch
+
+### W10 — Production infrastructure (3 commits, ~1,900 LOC including load-test scripts)
+- **Sentry** (commit `cca2009`): `@sentry/nextjs` + `@sentry/node` wired for backend (already had richer setup with profiling + tracesSampler; left intact) and discover (sentry.client/server/edge.config.ts + withSentryConfig). PII stripping. Gated on `SENTRY_DSN`.
+- **k6 load tests** (commit `d617b92`): 4 scripts (browse, profile, create-booking, payment-start) with thresholds matching `docs/slos.md`. Runbook in `load-test/README.md`.
+- **Status page** (commit `0eb4adf`): Better Uptime config doc + in-app `/status` route (server-rendered, public, pings DB/storage/worker).
+
+### REUSE-5 — Top 6 reuse actions shipped (2 commits, ~1,250 LOC)
+Per `REPO_REUSE_MATRIX.md`, 6 of the 9 remaining reuse actions:
+
+1. **Tutor activity sparkline** (NextTutor pattern, MIT) — `discover/src/components/tutor/tutor-activity-sparkline.tsx` + `/api/v1/tutor-activity` route. Graceful fallback when `tutor_views` table is absent.
+
+2. **TutorCard component** (extracted from NextTutor inlined pattern) — `discover/src/components/tutor/tutor-card.tsx`. Re-skinned for Tutoria's dark surface; refactored `tutor-browse-client.tsx` to use it.
+
+3. **Rate-limit helper** (UpSpace per-route pattern, MIT) — `backend/src/lib/rate-limit.ts` composes with existing `@fastify/rate-limit` (not a parallel in-memory store). Wired into `security-alert` route.
+
+4. **`no_show` booking status** (BookBarber pattern, reimplemented) — migration `20260912000000_no_show_booking_status.sql` adds status + `mark_booking_no_show` RPC. Pattern from BookBarber public README, reimplemented under our own SQL (not copied — BookBarber is unlicensed).
+
+5. **3 Resend email templates** (BookBarber event→template pattern) — `bookingConfirmed`, `paymentReceived`, `refundIssued` added to `backend/src/services/email.ts`. HTML-escaped to prevent XSS.
+
+6. **OG image generation** (NextTutor `@vercel/og` pattern, MIT) — `discover/src/app/api/og/tutor/[name]/route.tsx`. Edge runtime, graceful fallback.
+
+### Production status: YELLOW → YELLOW (unchanged, +hardening)
+
+New ship-readiness surface area (not blocking):
+- Sentry error tracking (gated on `SENTRY_DSN`)
+- k6 load test scripts (gated on staging URL)
+- Status page fallback at `/status`
+- `no_show` booking state
+- 3 more Resend email templates ready
+- OG images for tutor pages (improves social sharing)
+- TutorCard component reusable across browse/profile/dashboard
+- Tutor activity sparkline (warmth indicator)
+
+### Test status
+- Backend unit: 515/515 PASS (was 513/513)
+- Backend typecheck: 3 pre-existing errors in `app.ts`/`threads.ts`/`search-and-update.test.ts` (out of scope)
+- Discover build: ✓ Compiled successfully in 469ms (3 pre-existing Turbopack errors in unrelated `community-settings.tsx` / `host-center-api`)
+- DB reset: blocked on pre-existing `20260902000000_course_schema_v1.sql` (out of scope; courses is a v1 stub)
+
+### W9 + W10 + REUSE-5 commits
+```
+46f4c79  REUSE-5: add no_show booking status (BookBarber pattern, reimplemented)
+6cd6766  REUSE-5: tutor activity sparkline, tutor card, rate-limit, email templates, OG image
+0eb4adf  W10.C: status page setup (Better Uptime config + in-app /status route)
+d617b92  W10.B: k6 load testing infrastructure
+cca2009  W10.A: Sentry integration (backend + discover)
+```
+
+### Remaining REPO_REUSE_MATRIX actions (deferred)
+3 of the 9 actions remain:
+- (deferred) Real-time notification subscription (BookBarber pattern)
+- (deferred-v1) Geolocation / map view (NextTutor Maps JS — Tutoria v1 has no geolocation)
+- (deferred) In-app `<TutorMap>` component (depends on geolocation decision)
