@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ApiError } from "../errors/api-error.js";
 import type { AuthService } from "../services/auth-service.js";
 import type { BookingService, BookingServiceResult } from "../services/booking-service.js";
+import { sendBookingConfirmedEmail } from "../services/transactional-emails.js";
 
 async function requireTutor(authService: AuthService, request: any) {
   const profile = await authService.getOwnProfile(request.auth.accessToken, request.auth.userId);
@@ -68,7 +69,7 @@ async function readAfterMutation(service: BookingService, token: string, booking
   return read.error ? fallback : read.data;
 }
 
-export const bookingRoutes: FastifyPluginAsync<{ service: BookingService; authService: AuthService }> = async (app, options) => {
+export const bookingRoutes: FastifyPluginAsync<{ service: BookingService; authService: AuthService; supabaseUrl: string; serviceRoleKey: string | undefined }> = async (app, options) => {
   app.get("/api/v1/sessions", { onSend: noStore }, async (request) => {
     const raw = request.query as { tutorProfileId?: unknown; offeringId?: unknown; kind?: unknown };
     const tutorProfileId = raw.tutorProfileId === undefined ? undefined : routeId(raw.tutorProfileId, "tutorProfileId");
@@ -133,6 +134,9 @@ export const bookingRoutes: FastifyPluginAsync<{ service: BookingService; authSe
     const bookingId = routeId((request.params as { bookingId?: unknown }).bookingId, "bookingId");
     const result = await options.service.tutorAccept(request.auth.accessToken, bookingId);
     if (result.error) fail(result);
+    void sendBookingConfirmedEmail(bookingId, options.supabaseUrl, options.serviceRoleKey).catch((err) => {
+      request.log.error({ err, bookingId }, "booking_confirmed_email_failed");
+    });
     return { ok: true, booking: await readAfterMutation(options.service, request.auth.accessToken, bookingId, result.data) };
   });
 

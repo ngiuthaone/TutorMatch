@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { buildVnpayPaymentUrl, buildVnpayTransactionRequest, executeVnpayTransaction, normalizeVnpayOutcome, classifyVnpayRefundOutcome, formatVnpayDateTime, type VnpayConfig } from "./vnpay-adapter.js";
 import { logServiceError } from "../lib/service-error.js";
+import { sendPaymentReceivedEmail, sendRefundIssuedEmail } from "./transactional-emails.js";
 
 function returnUrlForBooking(returnUrl: string, bookingId: string): string {
   const url = new URL(returnUrl);
@@ -39,11 +40,17 @@ export function createSupabasePaymentService(url: string, publishableKey: string
 
   async function recordRefundResult(refundId: string, outcome: "pending" | "succeeded" | "failed" | "ambiguous", providerRequestId: string, body: Record<string, unknown>) {
     if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
-    return await trusted.rpc("record_vnpay_refund_result", {
+    const result = await trusted.rpc("record_vnpay_refund_result", {
       p_refund_id: refundId, p_outcome: outcome, p_provider_request_id: providerRequestId,
       p_provider_transaction_no: typeof body.vnp_TransactionNo === "string" ? body.vnp_TransactionNo : null,
       p_settlement_payload: body
     });
+    if (!result.error && outcome === "succeeded") {
+      void sendRefundIssuedEmail(refundId, url, serviceRoleKey).catch((err) => {
+        logServiceError({ service: "payment-service", operation: "sendRefundIssuedEmail", error: err });
+      });
+    }
+    return result;
   }
 
   async function releaseRefundClaim(workerId: string, refundId: string, message: string) {
@@ -64,7 +71,14 @@ export function createSupabasePaymentService(url: string, publishableKey: string
     async observe(fields: { eventKey: string; merchantReference: string; outcome: string; providerTransactionNo: string | null; amountVnd: number; payload: Record<string, unknown> }) {
       if (!trusted) return { data: null, error: new Error("Payment service authority is not configured") };
       const result = await trusted.rpc("record_vnpay_observation", { p_provider_event_key: fields.eventKey, p_merchant_reference: fields.merchantReference, p_outcome: fields.outcome, p_provider_transaction_no: fields.providerTransactionNo, p_amount_vnd: fields.amountVnd, p_payload: fields.payload });
-      if (!result.error && result.data?.status === "succeeded" && result.data.bookingId) { await trusted.rpc("finalize_paid_booking", { p_booking_id: result.data.bookingId }); await trusted.rpc("enroll_learner_in_course", { p_booking_id: result.data.bookingId }); }
+      if (!result.error && result.data?.status === "succeeded" && result.data.bookingId) {
+        const succeededBookingId: string = result.data.bookingId;
+        await trusted.rpc("finalize_paid_booking", { p_booking_id: succeededBookingId });
+        await trusted.rpc("enroll_learner_in_course", { p_booking_id: succeededBookingId });
+        void sendPaymentReceivedEmail(succeededBookingId, url, serviceRoleKey).catch((err) => {
+          logServiceError({ service: "payment-service", operation: "sendPaymentReceivedEmail", error: err });
+        });
+      }
       return result;
     },
     async reconcile(merchantReference: string) {
