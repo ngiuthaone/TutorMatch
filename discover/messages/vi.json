@@ -1,0 +1,4 @@
+{
+  "common": { "appName": "Tutoria", "viewProfile": "Xem hồ sơ", "bookNow": "Đặt buổi học", "loading": "Đang tải…" },
+  "tutors": { "title": "Tìm gia sư", "subtitle": "Duyệt gia sư đã xác minh", "search": "Tìm theo tên, môn học hoặc giới thiệu…", "noResults": "Không tìm thấy gia sư", "loadMore": "Xem thêm" }
+}

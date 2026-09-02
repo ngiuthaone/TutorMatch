@@ -1,0 +1,4 @@
+{
+  "common": { "appName": "Tutoria", "viewProfile": "View profile", "bookNow": "Book a session", "loading": "Loading…" },
+  "tutors": { "title": "Find a tutor", "subtitle": "Browse verified tutors", "search": "Search by name, subject, or bio…", "noResults": "No tutors found", "loadMore": "Load more" }
+}
