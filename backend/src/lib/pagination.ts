@@ -3,8 +3,6 @@
  * Provides consistent pagination patterns across all services.
  */
 
-import type { SupabaseClient } from "@supabase/supabase-js";
-
 export interface PaginationParams {
   limit?: number;
   offset?: number;

@@ -37,15 +37,15 @@ export function createMapper<T>(): {
   map<M extends Partial<Record<keyof T, string>>>(
     mapping: M
   ): (row: Record<string, unknown>) => {
-    [K in keyof M]: T[K & keyof T];
+    [K in keyof M & keyof T]: T[K];
   };
 } {
   return {
     map<M extends Partial<Record<keyof T, string>>>(
       mapping: M
-    ): (row: Record<string, unknown>) => { [K in keyof M]: T[K & keyof T] } {
+    ): (row: Record<string, unknown>) => { [K in keyof M & keyof T]: T[K] } {
       return (row: Record<string, unknown>) => {
-        const result = {} as { [K in keyof M]: T[K & keyof T] };
+        const result = {} as { [K in keyof M & keyof T]: T[K] };
         for (const [destKey, srcKey] of Object.entries(mapping)) {
           const key = destKey as keyof M;
           result[key] = row[srcKey as string] as unknown as T[keyof T];

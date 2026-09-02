@@ -62,6 +62,7 @@ export function createApp(options: {
   authService: AuthService;
   tutorCvService?: TutorCvService;
   marketplaceService?: ReturnType<typeof createSupabaseMarketplaceService>;
+  courseService?: ReturnType<typeof createSupabaseCourseService>;
   eventService?: EventPublicationService;
   bookingService?: BookingService;
   policyService?: ReturnType<typeof createPolicyService>;
