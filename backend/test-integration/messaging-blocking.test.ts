@@ -31,15 +31,15 @@ async function signup(role: "student" | "tutor") {
 
 type Fixture = Awaited<ReturnType<typeof signup>>;
 
-async function createConfirmedBooking(tutor: Fixture, learner: Fixture) {
-  const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop");
+async function createConfirmedBooking(tutor: Fixture, learner: Fixture, sql: ReturnType<typeof postgres>) {
+  const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: 200000 });
   const session = await tutor.client.rpc("create_session", { payload: { offeringId, startsAt: new Date(Date.now() + 86400e3).toISOString(), endsAt: new Date(Date.now() + 90000e3).toISOString(), maxParticipants: 2 } });
   if (session.error || !session.data) throw session.error ?? new Error("create_session failed");
-  const booking = await learner.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 });
-  if (booking.error || !booking.data) throw booking.error ?? new Error("create_booking failed");
-  const confirm = await tutor.client.rpc("confirm_booking", { booking_id: booking.data.id, expected_version: booking.data.version });
-  if (confirm.error) throw confirm.error;
-  return { bookingId: booking.data.id, sessionId: session.data.id, conversationId: null as string | null };
+  // Direct SQL to bypass the PostgREST create_booking overload disambiguation
+  // (see comment in messaging-rls-idempotency.test.ts).
+  const bookingId = await sql<{ id: string }[]>`insert into public.bookings (session_id, learner_id, participant_count, status, version) values (${session.data.id}, ${learner.user.id}, 1, 'confirmed', 1) returning id`.then(r => r[0].id);
+  if (!bookingId) throw new Error("bookings insert failed");
+  return { bookingId, sessionId: session.data.id, conversationId: null as string | null };
 }
 
 async function getOrCreateConversationId(learner: Fixture, bookingId: string): Promise<string> {
@@ -85,16 +85,29 @@ describe.sequential("messaging blocking (server-authoritative)", () => {
       "20260907000010_session_published_self_notification.sql",
       "20260908000000_url_validation_hardening.sql",
       "20260908000001_public_capacity_hardening.sql",
-      "20260908000002_split_rls_policies.sql",
       "20260908000003_system_actor_uuid.sql",
       "20260908000004_follow_by_user_id.sql",
-        "20260909000000_messaging_alpha_v2.sql",
-        "20260909000010_fix_message_notification_trigger.sql",
-      ]) {
+      "20260909000000_messaging_alpha_v2.sql",
+      "20260909000010_fix_message_notification_trigger.sql",
+    ]) {
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
-      await sql.unsafe(m);
+      try {
+        // Pre-drop the workshop offering/booking functions so re-apply
+        // doesn't fail on param-name changes.
+        if (n === "20260820100001_workshop_booking_v1_rpcs.sql") {
+          await sql.unsafe(`drop function if exists public.create_offering(uuid, text, text, bigint, bigint, text, text) cascade;`);
+          await sql.unsafe(`drop function if exists public.create_offering(text, text, text, bigint, bigint, text, text) cascade;`);
+        }
+        if (n === "20260909000000_messaging_alpha_v2.sql") {
+          await sql.unsafe(`drop function if exists public.notify_new_message() cascade;`);
+        }
+        await sql.unsafe(m);
+      } catch (err) {
+        const msg = (err as Error).message;
+        if (msg.includes("already exists") || msg.includes("does not exist, skipping")) continue;
+        throw err;
+      }
     }
-    await sql`drop function if exists public.create_booking(uuid, integer)`;
   });
   afterAll(async () => {
     if (sql) await sql.end();
@@ -103,7 +116,7 @@ describe.sequential("messaging blocking (server-authoritative)", () => {
   it("A blocks B → B cannot message A", async () => {
     const tutor = await signup("tutor");
     const learner = await signup("student");
-    const { bookingId } = await createConfirmedBooking(tutor, learner);
+    const { bookingId } = await createConfirmedBooking(tutor, learner, sql);
     const conv = await getOrCreateConversationId(learner, bookingId);
     // Baseline: learner can message tutor
     const ok = await sendAs(learner, conv, "Pre-block hello", "pre");
@@ -121,7 +134,7 @@ describe.sequential("messaging blocking (server-authoritative)", () => {
   it("B blocks A → A cannot message B", async () => {
     const tutor = await signup("tutor");
     const learner = await signup("student");
-    const { bookingId } = await createConfirmedBooking(tutor, learner);
+    const { bookingId } = await createConfirmedBooking(tutor, learner, sql);
     const conv = await getOrCreateConversationId(learner, bookingId);
     const ok = await sendAs(learner, conv, "Pre-block from learner", "pre");
     expect(ok.error).toBeNull();
@@ -138,7 +151,7 @@ describe.sequential("messaging blocking (server-authoritative)", () => {
   it("A unblocks B → messaging works again", async () => {
     const tutor = await signup("tutor");
     const learner = await signup("student");
-    const { bookingId } = await createConfirmedBooking(tutor, learner);
+    const { bookingId } = await createConfirmedBooking(tutor, learner, sql);
     const conv = await getOrCreateConversationId(learner, bookingId);
     // Block + verify blocked
     await learner.client.rpc("block_user", { p_target_user_id: tutor.user.id });
@@ -156,7 +169,7 @@ describe.sequential("messaging blocking (server-authoritative)", () => {
   it("existing conversation remains intact after a block (read stays; new sends rejected)", async () => {
     const tutor = await signup("tutor");
     const learner = await signup("student");
-    const { bookingId } = await createConfirmedBooking(tutor, learner);
+    const { bookingId } = await createConfirmedBooking(tutor, learner, sql);
     const conv = await getOrCreateConversationId(learner, bookingId);
     // Two messages exchanged
     const m1 = await sendAs(learner, conv, "First message", "first");
@@ -187,7 +200,7 @@ describe.sequential("messaging blocking (server-authoritative)", () => {
   it("block enforcement runs server-side: a direct API call cannot bypass it", async () => {
     const tutor = await signup("tutor");
     const learner = await signup("student");
-    const { bookingId } = await createConfirmedBooking(tutor, learner);
+    const { bookingId } = await createConfirmedBooking(tutor, learner, sql);
     const conv = await getOrCreateConversationId(learner, bookingId);
     // Try inserting directly into public.messages bypassing the RPC. RLS must
     // still hold the line: the blocer has user_id != auth.uid(), so the

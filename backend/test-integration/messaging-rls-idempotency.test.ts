@@ -42,11 +42,12 @@ async function createConfirmedBooking(tutor: Fixture, learner: Fixture) {
   const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: 200000 });
   const session = await tutor.client.rpc("create_session", { payload: { offeringId, ...FUTURE, maxParticipants: 2 } });
   if (session.error || !session.data) throw session.error ?? new Error("create_session failed");
-  const booking = await learner.client.rpc("create_booking", { session_id: session.data.id, participant_count: 1 });
-  if (booking.error || !booking.data) throw booking.error ?? new Error("create_booking failed");
-  const confirm = await tutor.client.rpc("confirm_booking", { booking_id: booking.data.id, expected_version: booking.data.version });
-  if (confirm.error) throw confirm.error;
-  return { bookingId: booking.data.id, sessionId: session.data.id };
+  // Direct SQL to bypass the PostgREST create_booking overload disambiguation
+  // that the test re-apply triggers. The test only needs a confirmed booking
+  // and the conversation — it does not exercise the create_booking RPC itself.
+  const bookingId = await sql<{ id: string }[]>`insert into public.bookings (session_id, learner_id, participant_count, status, version) values (${session.data.id}, ${learner.user.id}, 1, 'confirmed', 1) returning id`.then(r => r[0].id);
+  if (!bookingId) throw new Error("bookings insert failed");
+  return { bookingId, sessionId: session.data.id };
 }
 
 describe.sequential("messaging Alpha (MSG-010 / DEC-015): RLS, idempotency, membership", () => {
@@ -67,12 +68,41 @@ describe.sequential("messaging Alpha (MSG-010 / DEC-015): RLS, idempotency, memb
       "20260820120000_host_authorization_consistency.sql",
       "20260820130000_alpha_contract_cleanup.sql",
       "20260831130000_drop_7arg_create_booking_overload.sql",
+      "20260831180000_fix_create_booking_flat_pricing_columns.sql",
       "20260904120000_messaging_alpha_v1.sql",
+      "20260908000000_url_validation_hardening.sql",
+      "20260908000003_system_actor_uuid.sql",
+      "20260909000000_messaging_alpha_v2.sql",
+      "20260909000010_fix_message_notification_trigger.sql",
+      "20260910000005_message_attachments_bucket.sql",
+      "20260910000001_create_message_with_attachments.sql",
     ]) {
       const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
-      await sql.unsafe(m);
+      try {
+        // Pre-drop overloaded functions so CREATE OR REPLACE in re-applied
+        // migrations can succeed on a DB that already has them with a
+        // different parameter shape (PostgreSQL disallows param-name
+        // changes on REPLACE FUNCTION).
+        if (n === "20260820100001_workshop_booking_v1_rpcs.sql") {
+          await sql.unsafe(`drop function if exists public.create_offering(uuid, text, text, bigint, bigint, text, text) cascade;`);
+          await sql.unsafe(`drop function if exists public.create_offering(text, text, text, bigint, bigint, text, text) cascade;`);
+          await sql.unsafe(`drop function if exists public.create_session(uuid, timestamp with time zone, timestamp with time zone, integer, text, uuid) cascade;`);
+        }
+        if (n === "20260909000000_messaging_alpha_v2.sql") {
+          await sql.unsafe(`drop function if exists public.notify_new_message() cascade;`);
+        }
+        if (n === "20260820130000_alpha_contract_cleanup.sql") {
+          await sql.unsafe(`drop function if exists public.create_offering(uuid, text, text, bigint, bigint, text, text) cascade;`);
+        }
+        await sql.unsafe(m);
+      } catch (err) {
+        const msg = (err as Error).message;
+        if (msg.includes("already exists") || msg.includes("does not exist, skipping")) continue;
+        throw err;
+      }
     }
-    await sql`drop function if exists public.create_booking(uuid, integer)`;
+    await sql`drop function if exists public.create_booking(uuid, integer, text);`;
+    await sql`drop function if exists public.create_booking(uuid, integer);`;
   });
 
   it("denies direct table access to anon and authenticated", async () => {

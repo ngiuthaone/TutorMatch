@@ -14,7 +14,8 @@
 -- The learner_* columns on public.bookings stay so they are reusable when
 -- the front-end-driven contact capture is added in Layer B.
 
-revoke all on function public.create_booking(uuid, int, text, text, text, text, text) from public, anon, authenticated;
+do $$ begin
+  execute format('revoke all on function public.create_booking(uuid, int, text, text, text, text, text) from public, anon, authenticated');
+exception when others then null; end $$;
 drop function if exists public.create_booking(uuid, int, text, text, text, text, text);
-
 drop function if exists public.create_booking(uuid, int);

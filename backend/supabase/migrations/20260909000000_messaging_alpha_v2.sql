@@ -12,10 +12,10 @@
 --   - search support via pg_trgm
 --   - per-attachment RLS split into insert/select/delete (M1 pattern)
 --   - existing RLS, columns, types preserved
-set search_path = '';
+set search_path = 'pg_catalog, public, extensions';
 
 -- 1. pg_trgm for conversation search (cheap, no Elasticsearch needed for Alpha)
-create extension if not exists pg_trgm;
+create extension if not exists pg_trgm with schema extensions;
 
 -- 2. Extend conversations
 alter table public.conversations
