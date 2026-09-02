@@ -56,7 +56,7 @@ export function createSupabaseModerationService(url: string, publishableKey: str
   };
 }
 
-async function callRpc(promise: Promise<{ data: unknown; error: { code?: string; message?: string } | null }>): Promise<ModerationResult> {
+async function callRpc(promise: PromiseLike<{ data: unknown; error: { code?: string; message?: string } | null }>): Promise<ModerationResult> {
   try {
     const { data, error } = await promise;
     if (error) {

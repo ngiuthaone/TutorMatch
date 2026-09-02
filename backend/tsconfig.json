@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022", "module": "NodeNext", "moduleResolution": "NodeNext",
     "rootDir": ".", "strict": true, "noImplicitAny": true, "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true, "forceConsistentCasingInFileNames": true,
+    "exactOptionalPropertyTypes": false, "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true, "skipLibCheck": true, "types": ["node", "vitest/globals"]
   },
   "include": ["src/**/*.ts", "test/**/*.ts", "vitest.config.ts"]

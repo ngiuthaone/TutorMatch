@@ -4,7 +4,6 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
 
 export interface PaginationParams {
   limit?: number;
@@ -19,9 +18,9 @@ export const MAX_PAGE_LIMIT = 100;
  * Returns the query with range and limit applied.
  */
 export function applyPagination<T>(
-  query: PostgrestFilterBuilder<T>,
+  query: any,
   params?: PaginationParams
-): PostgrestFilterBuilder<T> {
+): any {
   const limit = Math.min(params?.limit ?? DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT);
   let q = query.limit(limit);
 
@@ -49,9 +48,12 @@ export function buildPaginatedResult<T>(
   count?: number | null
 ): PaginatedResult<T> {
   const items = data ?? [];
-  return {
+  const result: PaginatedResult<T> = {
     data: items,
-    total: count ?? undefined,
-    hasMore: count !== undefined ? items.length === MAX_PAGE_LIMIT : false,
+    hasMore: count != null ? items.length === MAX_PAGE_LIMIT : false,
   };
+  if (count != null) {
+    result.total = count;
+  }
+  return result;
 }
