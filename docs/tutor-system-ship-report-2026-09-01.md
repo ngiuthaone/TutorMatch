@@ -261,3 +261,78 @@ cca2009  W10.A: Sentry integration (backend + discover)
 - (deferred) Real-time notification subscription (BookBarber pattern)
 - (deferred-v1) Geolocation / map view (NextTutor Maps JS — Tutoria v1 has no geolocation)
 - (deferred) In-app `<TutorMap>` component (depends on geolocation decision)
+
+---
+
+## A1–A6 update (2026-09-02) — UX & integration pass
+
+### A1 — react-day-picker + time-slot grid (commit `ddbb272`)
+- `discover/src/components/tutor/booking-date-picker.tsx` — date picker (60-day horizon) + time-slot grid; calls new API route
+- `discover/src/app/api/v1/tutors/[id]/available-slots/route.ts` — BFF route, calls `get_tutor_available_slots` RPC
+- The HTML/iframe booking modal got a `fetchRpcAvailability()` hook that pages availability requests 60 days ahead; full React migration is a follow-up
+
+### A2 — react-big-calendar in /center Schedule tab (commit `6902746`)
+- `discover/src/components/tutor/tutor-schedule-calendar.tsx` — week/month calendar, color-coded by status
+- Reuses existing `listTutorBookings()` fetch in `/center`; no new RPC
+- Sits above the existing attendance list (DnD deferred)
+
+### A3 — react-email conversion of Resend templates (commit `397286c`)
+- `backend/src/emails/` (new): 6 React Email components (password-reset, email-verification, security-alert, booking-confirmed, payment-received, refund-issued) + shared `email-layout`
+- `backend/src/services/email.ts`: `EmailTemplates` now async (renders via `@react-email/render`)
+- All call sites updated to await
+- `@react-email/components` + `@react-email/render` added (TS config updated for JSX)
+
+### A4 — Postgres tsvector search on /tutors (commit `0d534e0`)
+- `20260912000010_tutor_search_vector.sql`: tsvector column on `tutor_profiles` + GIN index + auto-update trigger
+- `search_tutors` RPC: full-text search across display_name, headline, bio with relevance ranking
+- `backend/src/routes/tutor-search.ts`: `GET /api/v1/tutors/search?q=&limit=`
+- `/tutors` page now has a search input at the top; uses `/api/v1/tutors/search` when q is present
+
+### A5 — Vietnamese i18n with next-intl (commit `63a9a33`)
+- `discover/messages/{en,vi}.json`: 2 namespace trees (common, tutors)
+- `discover/src/i18n.ts`: locale config (en, vi; default vi)
+- `discover/src/proxy.ts`: locale negotiation (Next.js 16 renamed `middleware.ts` → `proxy.ts`)
+- `discover/src/app/[locale]/tutors`: tutors page moved into locale group, uses `getTranslations` / `useTranslations`
+- Other pages stay at `/` (`localePrefix: always` but only tutors is moved so far)
+- `next-intl` added
+- **Pre-existing TS errors block the build verify;** same as other A1-A4 work.
+
+### A6 — Wire Resend templates into flows (commit `3bdd103`)
+- `backend/src/services/transactional-emails.ts` (new): 3 fire-and-forget functions
+  - `sendBookingConfirmedEmail` — after `confirm_booking` in `booking.ts:139`
+  - `sendPaymentReceivedEmail` — after VNPay IPN success in `payment-service.ts:67`
+  - `sendRefundIssuedEmail` — after `record_vnpay_refund_result` success in `payment-service.ts:42` (covers both `executeRefund` and `sweepRefundExecutions`)
+- All sends catch errors and log; never block the request
+- VND formatting via `Intl` with `vi-VN` locale
+- 516/521 backend tests pass; 5 pre-existing failures in `search-and-update.test.ts` (unrelated)
+
+### New production surface (not launch-blocking)
+| Capability | User impact |
+|---|---|
+| Date picker + time-slot grid | Learners pick a date and see only valid times for the tutor |
+| Tutor schedule calendar | Tutors see their week/month with color-coded statuses |
+| React Email templates | Branded, consistent transactional emails |
+| Full-text search | Search tutors by name, subject, bio (Vietnamese-safe via `simple` config) |
+| Vietnamese i18n | `/vi/tutors` shows Vietnamese UI; `/en/tutors` shows English |
+| Email sends on booking/payment/refund | Learners get emails (when Resend is configured) |
+
+### Test status
+- Backend unit: 516/521 (5 pre-existing failures in `search-and-update.test.ts`, unrelated)
+- Backend typecheck: 0 new errors from A1-A6
+- Discover build: ✓ Compiled successfully in 9.4s (TypeScript pre-existing errors block `next build`'s type-check phase; same errors reproduce on `git stash`)
+
+### A1–A6 commits
+```
+3bdd103  A6: wire Resend templates into booking/payment/refund flows
+63a9a33  A5: Vietnamese i18n with next-intl (first pass, tutors page only)
+0d534e0  A4: Postgres tsvector search on /tutors
+397286c  A3: convert email templates to react-email
+6902746  A2: react-big-calendar in /center Schedule tab (no DnD)
+ddbb272  A1: react-day-picker + time-slot grid in booking modal
+```
+
+### Remaining recommendations (out of scope for this PR)
+- Move more discover pages into `[locale]/` in independent PRs (A5 partial)
+- Fix the 5 pre-existing TS errors in `post-detail-page.tsx` / `realtime-api.ts` to make `pnpm build` fully green
+- Add drag-and-drop to the calendar (A2 deferred)
+- Add `next/image` to `<TutorCard>` for photo optimization
