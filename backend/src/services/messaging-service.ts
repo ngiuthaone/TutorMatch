@@ -38,6 +38,17 @@ export type MessagingMessage = {
   moderationStatus: string;
 };
 
+export type MessagingAttachment = {
+  id: string;
+  messageId: string;
+  storageBucket: string;
+  storagePath: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: string;
+};
+
 export type MessagingResult<T> =
   | { status: "ok"; data: T }
   | { status: "unavailable" };
@@ -124,6 +135,23 @@ export function createSupabaseMessagingService(
         return { status: "ok", data: (data as MessagingMessage[]) ?? [] };
       } catch (error) {
         logServiceError({ service: "messaging-service", operation: "listMessages", error });
+        return { status: "unavailable" };
+      }
+    },
+
+    async listAttachments(token: string, messageId: string): Promise<MessagingReadResult<MessagingAttachment[]>> {
+      try {
+        const { data, error } = await caller(token).rpc("list_message_attachments", { p_message_id: messageId });
+        if (error) {
+          if (error.code === "P0001") return { status: "not_found" };
+          if (error.code === "42501" || /insufficient_privilege|forbidden/i.test(error.message)) {
+            return { status: "forbidden" };
+          }
+          return { status: "unavailable" };
+        }
+        return { status: "ok", data: (data as MessagingAttachment[]) ?? [] };
+      } catch (error) {
+        logServiceError({ service: "messaging-service", operation: "listAttachments", error });
         return { status: "unavailable" };
       }
     },

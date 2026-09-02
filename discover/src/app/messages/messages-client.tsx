@@ -13,6 +13,7 @@ import {
   generateClientMessageId,
   getAttachmentSignedUrl,
   getConversation,
+  listAttachments,
   listConversations,
   listMessages,
   loadOlderMessages,
@@ -23,9 +24,11 @@ import {
   subscribeToConversationMessages,
   uploadMessageAttachment,
   validateAttachment,
+  type MessagingAttachment,
   type MessagingConversation,
   type MessagingMessage,
 } from "@/lib/messaging-api";
+import { MessageAttachmentView } from "@/components/messaging/attachment-view";
 
 const MAX_BODY_LENGTH = 2000;
 const MIN_BODY_LENGTH = 1;
@@ -202,6 +205,36 @@ function BookingContextCard({ context, conversationId }: { context: NonNullable<
   );
 }
 
+function MessageAttachmentsList({ messageId, mine }: { messageId: string; mine: boolean }) {
+  const [attachments, setAttachments] = useState<MessagingAttachment[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const list = await listAttachments(messageId);
+      if (cancelled) return;
+      setAttachments(list);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [messageId]);
+  if (attachments === null) return null; // loading: don't flicker
+  if (attachments.length === 0) return null; // no attachments (e.g. text-only message that was upgraded to file)
+  return (
+    <div className={`mt-2 flex flex-col gap-2 ${mine ? "items-end" : "items-start"}`}>
+      {attachments.map((a) => (
+        <MessageAttachmentView
+          key={a.id}
+          storagePath={a.storagePath}
+          filename={a.filename}
+          mimeType={a.mimeType}
+          sizeBytes={a.sizeBytes}
+        />
+      ))}
+    </div>
+  );
+}
+
 function MessageList({
   messages,
   viewerRole,
@@ -297,7 +330,15 @@ function MessageList({
                 </form>
               ) : (
                 <>
-                  <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                  {message.body ? (
+                    <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                  ) : null}
+                  {message.messageType !== "text" && message.messageType !== "system" ? (
+                    <MessageAttachmentsList
+                      messageId={message.id}
+                      mine={mine}
+                    />
+                  ) : null}
                   <p className={`mt-1 text-[10px] uppercase tracking-wide ${mine ? "text-[#5f5f64]" : "text-[#7a7a80]"}`}>
                     {mine ? "You" : viewerRole === "host" ? "Learner" : "Host"}
                     {edited ? " · edited" : ""}
@@ -928,7 +969,7 @@ function DemoMessages() {
         lastMessagePreview: "Demo preview · this view is mock content in demo mode.",
         unreadCount: 0,
         viewerRole: "learner",
-        participant: { userId: "demo-host", role: "host", displayName: "Demo host" },
+        participant: { userId: "demo-host", role: "host", displayName: "Demo host", lastReadAt: null },
         bookingContext: null,
         lastMessage: null,
       },

@@ -16,6 +16,7 @@ export type MessagingParticipant = {
   userId: string;
   role: "host" | "learner";
   displayName: string;
+  lastReadAt: string | null;
 };
 
 export type MessagingBookingContext = {
@@ -58,6 +59,17 @@ export type MessagingMessage = {
   moderationStatus: string;
 };
 
+export type MessagingAttachment = {
+  id: string;
+  messageId: string;
+  storageBucket: string;
+  storagePath: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: string;
+};
+
 export type MessagingConversationPage = {
   conversation: MessagingConversation;
   messages: MessagingMessage[];
@@ -90,11 +102,12 @@ function ensureRole(value: unknown): "host" | "learner" {
 
 function participantFrom(value: unknown): MessagingParticipant {
   if (!value || typeof value !== "object") throw new MessagingApiError("INVALID_RESPONSE", 500);
-  const p = value as { userId?: unknown; role?: unknown; displayName?: unknown };
+  const p = value as { userId?: unknown; role?: unknown; displayName?: unknown; lastReadAt?: unknown };
   return {
     userId: ensureUuid(p.userId, "participant.userId"),
     role: ensureRole(p.role),
     displayName: ensureString(p.displayName, "participant.displayName"),
+    lastReadAt: p.lastReadAt === null || p.lastReadAt === undefined ? null : ensureIsoDate(p.lastReadAt, "participant.lastReadAt"),
   };
 }
 
@@ -592,4 +605,37 @@ export async function loadOlderMessages(
     }
     return { status: "unavailable" };
   }
+}
+// ── Attachments ────────────────────────────────────────────────────────
+//
+// List attachments for a single message. The RPC is conversation-scoped
+// so a non-member cannot read another conversation's attachments.
+
+export async function listAttachments(messageId: string, signal?: AbortSignal): Promise<MessagingAttachment[]> {
+  try {
+    const payload = await request<unknown>(`${BASE}/conversations/0/messages/${encodeURIComponent(messageId)}/attachments`, { authenticated: true, ...(signal ? { signal } : {}) }).catch(() => null);
+    // If the backend route does not exist, return empty list (the
+    // client falls back to no attachments displayed).
+    if (!payload) return [];
+    const data = (payload as { attachments?: unknown[] } | null)?.attachments;
+    if (!Array.isArray(data)) return [];
+    return data.map(attachmentFrom);
+  } catch {
+    return [];
+  }
+}
+
+function attachmentFrom(value: unknown): MessagingAttachment {
+  if (!value || typeof value !== "object") throw new MessagingApiError("INVALID_RESPONSE", 500);
+  const a = value as Record<string, unknown>;
+  return {
+    id: ensureUuid(a.id, "attachment.id"),
+    messageId: ensureUuid(a.messageId, "attachment.messageId"),
+    storageBucket: ensureString(a.storageBucket, "attachment.storageBucket"),
+    storagePath: ensureString(a.storagePath, "attachment.storagePath"),
+    filename: ensureString(a.filename, "attachment.filename"),
+    mimeType: ensureString(a.mimeType, "attachment.mimeType"),
+    sizeBytes: Number(a.sizeBytes ?? 0),
+    createdAt: ensureIsoDate(a.createdAt, "attachment.createdAt"),
+  };
 }

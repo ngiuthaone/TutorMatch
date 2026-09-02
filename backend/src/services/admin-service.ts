@@ -251,5 +251,43 @@ export function createAdminService(
         return { status: "unavailable" };
       }
     },
+
+    /** List conversation reports for the moderation queue. p_status='all' returns every row. */
+    async listConversationReports(
+      status: "pending" | "resolved" | "dismissed" | "all" = "pending",
+      limit: number = 100,
+    ): Promise<AdminServiceResult<unknown[]>> {
+      try {
+        const { data, error } = await adminClient.rpc("list_conversation_reports", {
+          p_status: status,
+          p_limit: limit,
+        });
+        if (error) return { status: "unavailable" };
+        return { status: "ok", data: (Array.isArray(data) ? data : []) as unknown[] };
+      } catch (error) {
+        logServiceError({ service: "admin-service", operation: "listConversationReports", error });
+        return { status: "unavailable" };
+      }
+    },
+
+    /** Resolve (or dismiss) a single conversation report. */
+    async resolveConversationReport(
+      reportId: string,
+      status: "resolved" | "dismissed",
+      details: string | null,
+    ): Promise<AdminServiceResult<{ id: string; status: string; resolvedBy: string; resolvedAt: string }>> {
+      try {
+        const { data, error } = await adminClient.rpc("resolve_conversation_report", {
+          p_report_id: reportId,
+          p_status: status,
+          p_details: details,
+        });
+        if (error) return { status: "unavailable" };
+        return { status: "ok", data: data as { id: string; status: string; resolvedBy: string; resolvedAt: string } };
+      } catch (error) {
+        logServiceError({ service: "admin-service", operation: "resolveConversationReport", error });
+        return { status: "unavailable" };
+      }
+    },
   };
 }

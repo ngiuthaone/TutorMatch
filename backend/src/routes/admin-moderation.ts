@@ -66,4 +66,45 @@ export const adminModerationRoutes: FastifyPluginAsync<{
     );
     return { ok: true, decision: result.data, audited: logResult.status === "ok" };
   });
+
+  /** GET /api/v1/admin/moderation/reports — list conversation reports. */
+  app.get("/api/v1/admin/moderation/reports", {
+    preHandler,
+    config: { rateLimit: { max: options.max, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const parsed = listQuerySchema.safeParse(request.query);
+    if (!parsed.success) throw new ApiError(400, "MODERATION_QUERY_INVALID", "Reports query is invalid.");
+    const result = await options.adminService.listConversationReports(parsed.data.status === "approved" || parsed.data.status === "rejected" || parsed.data.status === "removed" ? "all" : (parsed.data.status === "all" ? "all" : parsed.data.status === "pending" ? "pending" : "all") as "pending" | "resolved" | "dismissed" | "all", parsed.data.limit);
+    if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Moderation service is temporarily unavailable.");
+    return { ok: true, reports: result.data };
+  });
+
+  /** POST /api/v1/admin/moderation/reports/:id/resolve — mark resolved or dismissed. */
+  app.post("/api/v1/admin/moderation/reports/:id/resolve", {
+    preHandler,
+    config: { rateLimit: { max: options.max, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const params = idParamSchema.safeParse(request.params);
+    if (!params.success) throw new ApiError(400, "MODERATION_ID_INVALID", "Report id is not a valid uuid.");
+    const body = z.object({
+      status: z.enum(["resolved", "dismissed"]),
+      details: z.string().trim().max(2000).optional(),
+    }).safeParse(request.body);
+    if (!body.success) throw new ApiError(400, "MODERATION_DECISION_INVALID", "Status must be resolved or dismissed.");
+    const result = await options.adminService.resolveConversationReport(
+      params.data.id,
+      body.data.status,
+      body.data.details ?? null,
+    );
+    if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Moderation service is temporarily unavailable.");
+    const logResult = await options.adminService.logAction(
+      `conversation_report.${body.data.status}`,
+      "conversation_report",
+      params.data.id,
+      body.data.details ?? `Admin ${body.data.status}`,
+      undefined,
+      undefined,
+    );
+    return { ok: true, decision: result.data, audited: logResult.status === "ok" };
+  });
 };

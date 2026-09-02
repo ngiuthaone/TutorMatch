@@ -108,6 +108,26 @@ export const messagingRoutes: FastifyPluginAsync<{
     return { ok: true, messages: result.data };
   });
 
+  // GET /api/v1/messaging/conversations/:id/messages/:messageId/attachments
+  // — list attachments for a single message. Caller must be a member of
+  // the conversation. Returns an empty array when the message has no
+  // attachments (e.g. a text-only message).
+  app.get("/api/v1/messaging/conversations/:id/messages/:messageId/attachments", {
+    preHandler: app.authenticate,
+    config: { rateLimit: { max: options.readMax, timeWindow: options.windowMs } },
+  }, async (request) => {
+    const params = z.object({ id: z.string().uuid(), messageId: z.string().uuid() }).safeParse(request.params);
+    if (!params.success) throw new ApiError(400, "INVALID_ID", "Conversation or message id is invalid.");
+    const result = await options.service.listAttachments(
+      request.auth.accessToken,
+      params.data.messageId,
+    );
+    if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You are not a member of this conversation.");
+    if (result.status === "not_found") throw new ApiError(404, "MESSAGE_NOT_FOUND", "Message not found.");
+    if (result.status === "unavailable") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+    return { ok: true, attachments: result.data };
+  });
+
   // POST /api/v1/messaging/conversations/:id/messages — idempotent send.
   // clientMessageId is required and is the durable dedupe token for the
   // caller's retry.
