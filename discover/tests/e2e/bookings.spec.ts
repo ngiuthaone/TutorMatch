@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test';
 
+const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
+
 test.describe('Bookings', () => {
   test('bookings page loads without crashing in demo mode', async ({ page }) => {
     const errors: string[] = [];
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
-    await page.goto('/bookings');
+    await page.goto(`${BASE_URL}/bookings`);
     await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).not.toBeEmpty();
     const criticalErrors = errors.filter(e =>

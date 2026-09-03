@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
+
 test.describe('Marketplace — publish-read-takedown flow', () => {
   const TEST_SLUG = `e2e-test-${Date.now()}`;
   const TUTOR_EMAIL = process.env.E2E_TUTOR_EMAIL ?? 'tutor@example.test';
@@ -17,13 +19,13 @@ test.describe('Marketplace — publish-read-takedown flow', () => {
   });
 
   test('tutor can publish a course and it appears in marketplace listings', async ({ page }) => {
-    await page.goto('/auth/sign-in');
+    await page.goto(`${BASE_URL}/auth/sign-in`);
     await page.waitForLoadState('networkidle');
     await page.getByRole('textbox', { name: /email/i }).fill(TUTOR_EMAIL);
     await page.getByRole('button', { name: /continue/i }).click();
     await page.waitForURL(/\/(tutor|dashboard|profile)/);
     
-    await page.goto('/courses/new');
+    await page.goto(`${BASE_URL}/courses/new`);
     await page.waitForLoadState('networkidle');
     
     const slugInput = page.locator('input[name="slug"], input[placeholder*="slug"], input[id*="slug"]').first();
@@ -42,7 +44,7 @@ test.describe('Marketplace — publish-read-takedown flow', () => {
       await page.waitForLoadState('networkidle');
     }
 
-    await page.goto('/marketplace/course');
+    await page.goto(`${BASE_URL}/marketplace/course`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
     
@@ -55,7 +57,7 @@ test.describe('Marketplace — publish-read-takedown flow', () => {
       await page.waitForTimeout(2000);
     }
     
-    await page.goto(`/marketplace/course/${TEST_SLUG}`);
+    await page.goto(`${BASE_URL}/marketplace/course/${TEST_SLUG}`);
     await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).not.toBeEmpty();
     
@@ -67,7 +69,7 @@ test.describe('Marketplace — publish-read-takedown flow', () => {
     const errors: string[] = [];
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
     await page.setViewportSize({ width: 1280, height: 720 });
-    await page.goto('/marketplace/course');
+    await page.goto(`${BASE_URL}/marketplace/course`);
     await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).not.toBeEmpty();
     const criticalErrors = errors.filter(e =>
@@ -80,7 +82,7 @@ test.describe('Marketplace — publish-read-takedown flow', () => {
     const errors: string[] = [];
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/marketplace/course');
+    await page.goto(`${BASE_URL}/marketplace/course`);
     await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).not.toBeEmpty();
     const criticalErrors = errors.filter(e =>
@@ -92,7 +94,7 @@ test.describe('Marketplace — publish-read-takedown flow', () => {
   test('events listing page loads without errors', async ({ page }) => {
     const errors: string[] = [];
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
-    await page.goto('/events');
+    await page.goto(`${BASE_URL}/events`);
     await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).not.toBeEmpty();
     const criticalErrors = errors.filter(e =>

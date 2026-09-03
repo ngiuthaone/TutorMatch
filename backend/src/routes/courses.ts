@@ -104,6 +104,7 @@ export const courseRoutes: FastifyPluginAsync<{ courseService: CourseService; au
       body.data as unknown as CourseInput,
     );
     if (result.status === "conflict") throw new ApiError(409, "SLUG_CONFLICT", "A course with that URL slug already exists.");
+    if (result.status === "validation_error") throw new ApiError(400, "VALIDATION_ERROR", result.error || "Invalid course data.");
     if (result.status !== "ok") throw new ApiError(503, "SERVICE_UNAVAILABLE", "Course service is temporarily unavailable.");
     return reply.code(201).send({ ok: true, item: result.data });
   });

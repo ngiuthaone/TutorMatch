@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test';
 
+const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
+
 test.describe('Auth', () => {
   test('sign-in page renders the form without errors', async ({ page }) => {
     const errors: string[] = [];
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
-    await page.goto('/auth/sign-in');
+    await page.goto(`${BASE_URL}/auth/sign-in`);
     await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
     await expect(page.getByRole('textbox', { name: /email address/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /continue/i })).toBeVisible();
@@ -14,7 +16,7 @@ test.describe('Auth', () => {
   test('auth callback route does not crash', async ({ page }) => {
     const errors: string[] = [];
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
-    await page.goto('/auth/callback');
+    await page.goto(`${BASE_URL}/auth/callback`);
     await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).not.toBeEmpty();
     const criticalErrors = errors.filter(e =>
