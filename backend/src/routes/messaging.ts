@@ -124,7 +124,7 @@ export const messagingRoutes: FastifyPluginAsync<{
     );
     if (result.status === "forbidden") throw new ApiError(403, "FORBIDDEN", "You are not a member of this conversation.");
     if (result.status === "not_found") throw new ApiError(404, "MESSAGE_NOT_FOUND", "Message not found.");
-    if (result.status === "unavailable") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
+    if (result.status !== "ok") throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
     return { ok: true, attachments: result.data };
   });
 
