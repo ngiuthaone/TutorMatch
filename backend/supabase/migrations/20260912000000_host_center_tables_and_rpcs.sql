@@ -277,7 +277,7 @@ begin
           and b.created_at < v_period_start
         group by o.id
       )
-      select coalesce(jsonb_agg(row_to_json(t) order by t.gross desc limit 5), '[]'::jsonb)
+      select coalesce(jsonb_agg(row_to_json(t) order by t.gross desc), '[]'::jsonb)
       from (
         select
           tm.title,
@@ -286,6 +286,8 @@ begin
           coalesce(round(((tm.gross - lm.gross)::float / nullif(lm.gross, 0)) * 100, 1), 0) as growth_pct
         from this_month tm
         left join last_month lm on lm.id = tm.id
+        order by tm.gross desc
+        limit 5
       ) t
     )
   );

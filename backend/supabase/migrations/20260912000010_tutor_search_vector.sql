@@ -41,7 +41,7 @@ language sql stable security definer set search_path = '' as $$
   select *
   from public.tutor_profiles
   where publication_status = 'published'
-    and is_tutor_published(user_id)
+    and public.is_tutor_published(user_id)
     and (
       p_query is null or p_query = '' or
       search_vector @@ plainto_tsquery('simple', p_query)
