@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient, type SupabaseClient } from "@supabase/ssr";
 import { getRuntimeConfig, isLiveMode } from "./config";
 
 let singleton: SupabaseClient | null = null;
@@ -7,15 +7,7 @@ export function getSupabaseClient(): SupabaseClient | null {
   if (!isLiveMode()) return null;
   const config = getRuntimeConfig();
   if (!singleton) {
-    singleton = createClient(config.supabaseUrl, config.supabasePublishableKey, {
-      auth: {
-        flowType: "pkce",
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false,
-        storageKey: `tutoria-auth-${new URL(config.supabaseUrl).hostname.split(".")[0]}`,
-      },
-    });
+    singleton = createBrowserClient(config.supabaseUrl, config.supabasePublishableKey);
   }
   return singleton;
 }
