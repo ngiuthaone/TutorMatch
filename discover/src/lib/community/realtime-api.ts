@@ -147,7 +147,7 @@ export function subscribeToPostComments(
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "comments", filter: `owner_id=eq.${postId}` },
-          (payload) => {
+          (payload: any) => {
             try {
               onComment(commentFrom(payload.new as Record<string, unknown>));
             } catch (error) {
@@ -190,7 +190,7 @@ export function subscribeToPostLikes(
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "posts", filter: `id=eq.${postId}` },
-          (payload) => {
+          (payload: any) => {
             try {
               const row = payload.new as Record<string, unknown>;
               onUpdate({
@@ -235,7 +235,7 @@ export function subscribeToPostCommentCount(
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "posts", filter: `id=eq.${postId}` },
-          (payload) => {
+          (payload: any) => {
             try {
               const row = payload.new as Record<string, unknown>;
               onUpdate({
@@ -282,7 +282,7 @@ export function subscribeToCommunityPosts(
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "posts", filter: `community_id=eq.${communityId}` },
-          (payload) => {
+          (payload: any) => {
             try {
               onPost(postFrom(payload.new as Record<string, unknown>));
             } catch (error) {
@@ -323,7 +323,7 @@ export function subscribeToCommunityThreads(
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "reference_threads", filter: `community_id=eq.${communityId}` },
-          (payload) => {
+          (payload: any) => {
             try {
               onThread(threadFrom(payload.new as Record<string, unknown>));
             } catch (error) {
@@ -364,7 +364,7 @@ export function subscribeToThreadReplies(
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "reference_thread_replies", filter: `thread_id=eq.${threadId}` },
-          (payload) => {
+          (payload: any) => {
             try {
               onReply(threadReplyFrom(payload.new as Record<string, unknown>));
             } catch (error) {
@@ -405,7 +405,7 @@ export function subscribeToGlobalPosts(
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "posts" },
-          (payload) => {
+          (payload: any) => {
             try {
               onPost(postFrom(payload.new as Record<string, unknown>));
             } catch (error) {

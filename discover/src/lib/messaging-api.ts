@@ -347,7 +347,7 @@ export function subscribeToConversationMessages(
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
-          (payload) => {
+          (payload: any) => {
             try {
               const row = payload.new as Record<string, unknown>;
               onMessage(messageFrom(row));
@@ -359,7 +359,7 @@ export function subscribeToConversationMessages(
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
-          (payload) => {
+          (payload: any) => {
             try {
               const row = payload.new as Record<string, unknown>;
               onMessage(messageFrom(row));
@@ -371,7 +371,7 @@ export function subscribeToConversationMessages(
         .on(
           "postgres_changes",
           { event: "DELETE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
-          (payload) => {
+          (payload: any) => {
             try {
               const row = payload.old as Record<string, unknown>;
               // Dispatch a synthetic message with deletedAt to allow the
