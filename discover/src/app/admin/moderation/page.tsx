@@ -6,7 +6,7 @@ import ModerationQueue from "./moderation-queue";
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const session = await getServerSession();
-  if (!session) redirect("/sign-in?return=%2Fadmin%2Fmoderation");
+  if (!session) redirect("/auth/sign-in?next=%2Fadmin%2Fmoderation");
   if (session.user.role !== "admin") {
     return (
       <main className="min-h-[100dvh] bg-[#101011] px-5 py-16 text-[#e8e6df] sm:px-10">
