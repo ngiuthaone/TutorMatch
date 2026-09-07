@@ -107,7 +107,7 @@ export function ensureSession(): Promise<void> {
     }
     try {
       if (unsubscribeAuth) unsubscribeAuth();
-      const { data: { subscription: { unsubscribe } } } = client.auth.onAuthStateChange((event, session) => {
+      const { data: { subscription: { unsubscribe } } } = client.auth.onAuthStateChange((event: any, session: any) => {
         if (event === "PASSWORD_RECOVERY") {
           generation++;
           emit({ status: "initializing" });
