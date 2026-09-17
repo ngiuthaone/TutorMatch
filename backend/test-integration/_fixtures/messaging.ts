@@ -37,6 +37,9 @@ if (!["localhost", "127.0.0.1", "host.docker.internal"].includes(new URL(SUPABAS
 
 export const DB_PASSWORD = "postgres"; // local Supabase default; override via env if needed
 
+/** Monotonic counter so every createConfirmedBooking call gets a non-overlapping session window. */
+let BOOKING_SLOT_COUNTER = 0;
+
 export type Role = "student" | "tutor";
 export type Fixture = Awaited<ReturnType<typeof signup>>;
 
@@ -64,20 +67,34 @@ export async function createConfirmedBooking(
   tutor: Fixture,
   learner: Fixture,
   sql: ReturnType<typeof postgres>,
+  offsetMs?: number,
 ) {
+  // Each call gets its own 1-hour window, starting 1 day out and advancing by
+  // a day per call. This avoids the sessions_no_host_overlap exclusion
+  // constraint when a test creates two bookings for the same tutor.
+  const base = offsetMs ?? 86400e3;
+  const callOffset = base + BOOKING_SLOT_COUNTER++ * 86400e3;
   const offeringId = await makeOffering(tutor.client, tutor.user.id, "workshop", "hourly_v1", { hourlyRateVnd: 200000 });
   const session = await tutor.client.rpc("create_session", {
     payload: {
       offeringId,
-      startsAt: new Date(Date.now() + 86400e3).toISOString(),
-      endsAt: new Date(Date.now() + 90000e3).toISOString(),
+      startsAt: new Date(Date.now() + callOffset).toISOString(),
+      endsAt: new Date(Date.now() + callOffset + 3600e3).toISOString(),
       maxParticipants: 2,
     },
   });
   if (session.error || !session.data) throw session.error ?? new Error("create_session failed");
   const bookingId = await sql<{ id: string }[]>`
-    insert into public.bookings (session_id, learner_id, participant_count, status, version)
-    values (${session.data.id}, ${learner.user.id}, 1, 'confirmed', 1)
+    insert into public.bookings (
+      session_id, learner_id, participant_count, status, version,
+      pricing_model, pricing_amount_vnd, pricing_currency,
+      pricing_unit_price_vnd, pricing_participant_count, pricing_snapshotted_at
+    )
+    values (
+      ${session.data.id}, ${learner.user.id}, 1, 'confirmed', 1,
+      'flat_per_participant_v1', 500000, 'VND',
+      500000, 1, now()
+    )
     returning id
   `.then((r) => r[0].id);
   if (!bookingId) throw new Error("bookings insert failed");
@@ -112,40 +129,9 @@ export async function applyMessagingMigrations(sql: ReturnType<typeof postgres>)
      where table_schema = 'public' and table_name = 'conversations'
   `;
   if (Number(already[0]?.count ?? "0") > 0) return;
-  const migrations = [
-    "0001_create_profiles.sql",
-    "0002_create_tutor_cvs.sql",
-    "0003_create_marketplace_listings.sql",
-    "0004_create_sessions_and_bookings.sql",
-    "0005_create_booking_session_rpcs.sql",
-    "0006_create_event_outbox.sql",
-    "0007_emit_domain_events_from_booking_session_rpcs.sql",
-    "20260815150540_tutor_authorization_hardening.sql",
-    "20260819120000_shared_booking_engine.sql",
-    "20260820100000_workshop_booking_v1_schema.sql",
-    "20260820100001_workshop_booking_v1_rpcs.sql",
-    "20260820100002_fix_booking_read_json_workshop.sql",
-    "20260820120000_host_authorization_consistency.sql",
-    "20260820130000_alpha_contract_cleanup.sql",
-    "20260831130000_drop_7arg_create_booking_overload.sql",
-    "20260831180000_fix_create_booking_flat_pricing_columns.sql",
-    "20260904120000_messaging_alpha_v1.sql",
-    "20260905000040_production_fixes.sql",
-    "20260906000001_follows_schema.sql",
-    "20260906000002_follow_rpcs.sql",
-    "20260907000010_fix_follow_rpc_grants.sql",
-    "20260907000010_session_published_self_notification.sql",
-    "20260908000000_url_validation_hardening.sql",
-    "20260908000001_public_capacity_hardening.sql",
-    "20260908000003_system_actor_uuid.sql",
-    "20260908000004_follow_by_user_id.sql",
-    "20260909000000_messaging_alpha_v2.sql",
-    "20260909000010_fix_message_notification_trigger.sql",
-    "20260910000005_message_attachments_bucket.sql",
-    "20260910000001_create_message_with_attachments.sql",
-  ];
+  const migrations = MIGRATIONS;
   for (const n of migrations) {
-    const m = await readFile(fileURLToPath(new URL(`../supabase/migrations/${n}`, import.meta.url)), "utf8");
+    const m = await readFile(fileURLToPath(new URL(`../../supabase/migrations/${n}`, import.meta.url)), "utf8");
     try {
       // Pre-drop functions that have changed parameter shape so REPLACE
       // FUNCTION succeeds on re-apply. Idempotent if absent.
@@ -165,7 +151,62 @@ export async function applyMessagingMigrations(sql: ReturnType<typeof postgres>)
   }
   await sql`drop function if exists public.create_booking(uuid, integer, text);`;
   await sql`drop function if exists public.create_booking(uuid, integer);`;
+  // The notifications.type CHECK has been rebuilt several times as new
+  // notification types were added (new_message, session_published, mention),
+  // and each rebuild dropped previously-allowed values. Re-apply the full
+  // set here so message notifications never violate the constraint on a DB
+  // that was seeded by an older migration chain.
+  await sql.unsafe(`
+    alter table public.notifications drop constraint if exists notifications_type_check;
+    alter table public.notifications add constraint notifications_type_check
+      check (type in ('like','comment','reply','repost','follow','new_message','session_published','mention'));
+  `);
 }
+
+/** Migrations that create tables/RPCs — only applied on a fresh DB. */
+const MIGRATIONS = [
+  "0001_create_profiles.sql",
+  "0002_create_tutor_cvs.sql",
+  "0003_create_marketplace_listings.sql",
+  "0004_create_sessions_and_bookings.sql",
+  "0005_create_booking_session_rpcs.sql",
+  "0006_create_event_outbox.sql",
+  "0007_emit_domain_events_from_booking_session_rpcs.sql",
+  "20260815150540_tutor_authorization_hardening.sql",
+  "20260819120000_shared_booking_engine.sql",
+"20260820100000_workshop_booking_v1_schema.sql",
+    "20260820100001_workshop_booking_v1_rpcs.sql",
+    "20260820100002_fix_booking_read_json_workshop.sql",
+    "20260820120000_host_authorization_consistency.sql",
+    "20260820130000_alpha_contract_cleanup.sql",
+    "20260831130000_drop_7arg_create_booking_overload.sql",
+    "20260831180000_fix_create_booking_flat_pricing_columns.sql",
+    "20260902000001_restore_dropped_booking_constraints.sql",
+    "20260904120000_messaging_alpha_v1.sql",
+  "20260905000040_production_fixes.sql",
+  "20260906000001_follows_schema.sql",
+  "20260906000002_follow_rpcs.sql",
+  "20260907000010_fix_follow_rpc_grants.sql",
+  "20260907000010_session_published_self_notification.sql",
+  "20260908000000_url_validation_hardening.sql",
+  "20260908000001_public_capacity_hardening.sql",
+  "20260908000003_system_actor_uuid.sql",
+  "20260908000004_follow_by_user_id.sql",
+  "20260909000000_messaging_alpha_v2.sql",
+  "20260909000006_admin_moderation_rpcs.sql",
+  "20260909000007_list_message_attachments.sql",
+  "20260909000010_fix_message_notification_trigger.sql",
+  "20260910000005_message_attachments_bucket.sql",
+  "20260910000001_create_message_with_attachments.sql",
+  "20260911000010_session_published_self_notification.sql",
+  "20260911000020_bookings_no_overlap_constraint.sql",
+  "20260915000000_mention_notifications.sql",
+  "20260916000000b_fix_notifications_type_check.sql",
+];
+
+/** Constraint/trigger re-applies that must run even when the schema already
+ *  exists (they are idempotent ALTER TABLE / CREATE OR REPLACE). */
+const LATE_MIGRATIONS = ["20260916000000b_fix_notifications_type_check.sql"];
 
 /** Test "client" type alias — a Supabase client + a user. */
 export type SupabaseTestClient = SupabaseClient<unknown, unknown, { Authorization: string }>;

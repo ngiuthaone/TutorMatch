@@ -3,12 +3,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mockRpc = vi.fn();
-const mockClient = vi.fn().mockReturnValue({ rpc: mockRpc });
+const mockClient = vi.fn();
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn(() => mockClient()),
 }));
 
-import { createSupabaseBookingService } from '../../src/services/booking-service';
+import { createSupabaseBookingService } from '../src/services/booking-service.js';
 
 describe('BookingService', () => {
   let service: ReturnType<typeof createSupabaseBookingService>;
@@ -18,11 +18,12 @@ describe('BookingService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockClient.mockReturnValue({ rpc: mockRpc });
     service = createSupabaseBookingService(url, key);
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    mockClient.mockReset();
   });
 
   describe('createBooking', () => {

@@ -916,7 +916,47 @@
       "license": "MIT",
       "repository": "https://github.com/diegomura/react-pdf",
       "description": "React renderer for building PDF documents",
-      "status": "PASS"
+      "status": "PASS",
+      "id": "react-pdf-renderer-4.8.1",
+      "name": "@react-pdf/renderer 4.8.1",
+      "source": "https://github.com/diegomura/react-pdf",
+      "ref": "4.8.1",
+      "scope": [
+        "package.json: @react-pdf/renderer"
+      ],
+      "planned_use": "dependency",
+      "checked_on": "2026-09-17",
+      "evidence": [
+        "npm registry license MIT; package.json declares @react-pdf/renderer@4.8.1"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ]
+    },
+    {
+      "id": "faker-js-10.6.0",
+      "name": "Faker.js 10.6.0",
+      "source": "https://github.com/faker-js/faker",
+      "ref": "10.6.0",
+      "license": "MIT",
+      "status": "PASS",
+      "scope": [
+        "discover/package.json: @faker-js/faker"
+      ],
+      "planned_use": "devDependency (test data generation)",
+      "checked_on": "2026-09-16",
+      "evidence": [
+        "discover/package-lock.json and installed package manifests/LICENSE"
+      ],
+      "required_actions": [
+        "Preserve the applicable MIT copyright and license text in distributed copies"
+      ],
+      "excluded_material": [
+        "Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets"
+      ]
     }
   ]
 }

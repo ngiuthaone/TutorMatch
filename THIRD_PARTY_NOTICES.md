@@ -137,6 +137,24 @@ This ledger records external source actually incorporated into Tutoria; it does 
 - Excluded material:
   - Next.js runtime package and its separately licensed bundled components, Vercel brands/trademarks, documentation, examples, and assets
 
+<!-- OSS:faker-js-10.6.0 -->
+## Faker.js 10.6.0
+
+- Source: https://github.com/faker-js/faker
+- Pinned ref/version: `10.6.0`
+- License: `MIT`
+- Status: `PASS`
+- Planned/use mode: devDependency (test data generation)
+- Checked on: 2026-09-16
+- Scope incorporated:
+  - `discover/package.json: @faker-js/faker`
+- Evidence checked:
+  - discover/package-lock.json and installed package manifests/LICENSE
+- Required actions:
+  - Preserve the applicable MIT copyright and license text in distributed copies
+- Excluded material:
+  - Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets
+
 <!-- OSS:fastify-5.11.2 -->
 ## Fastify
 
@@ -364,6 +382,24 @@ This ledger records external source actually incorporated into Tutoria; it does 
   - Preserve the applicable MIT copyright and license text in distributed copies
 - Excluded material:
   - Upstream brands, trademarks, documentation, examples, and unverified assets
+
+<!-- OSS:react-pdf-renderer-4.8.1 -->
+## @react-pdf/renderer 4.8.1
+
+- Source: https://github.com/diegomura/react-pdf
+- Pinned ref/version: `4.8.1`
+- License: `MIT`
+- Status: `PASS`
+- Planned/use mode: dependency
+- Checked on: 2026-09-17
+- Scope incorporated:
+  - `package.json: @react-pdf/renderer`
+- Evidence checked:
+  - npm registry license MIT; package.json declares @react-pdf/renderer@4.8.1
+- Required actions:
+  - Preserve the applicable MIT copyright and license text in distributed copies
+- Excluded material:
+  - Upstream brands, trademarks, documentation, examples, hosted services, and unverified assets
 
 <!-- OSS:supabase-js-2.110.7 -->
 ## Supabase JavaScript client 2.110.7
@@ -714,76 +750,3 @@ This ledger records external source actually incorporated into Tutoria; it does 
   - Preserve the applicable MIT copyright and license text in distributed copies
 - Excluded material:
   - Upstream brands, trademarks, documentation, examples, and unverified assets
-
-<!-- OSS:nexttutor-aditya-gupta-me -->
-## NextTutor (aditya-gupta-me)
-
-- Source: https://github.com/aditya-gupta-me/nexttutor
-- Pinned ref/version: branch `main` ref at `/tmp/audit/nexttutor/LICENSE` (Copyright (c) 2026 Aditya Gupta)
-- License: `MIT`
-- Status: `PASS`
-- Planned/use mode: study + adapt (no direct file copy)
-- Checked on: 2026-09-02
-- Scope incorporated:
-  - `discover/src/components/rating-stars.tsx` — shared rating-stars component reimplemented from the inlined-stars pattern in `ReviewsList.tsx`
-  - Replaced inline star rendering at four Tutoria call sites (tutor profile reviews, tutor browse cards, center dashboard rating tile, bookings review modal preview)
-- Evidence checked:
-  - Root LICENSE confirms MIT (Copyright (c) 2026 Aditya Gupta)
-- Required actions:
-  - Preserve the MIT copyright notice shown above when redistributing the adapted component
-- Excluded material:
-  - Upstream brands, trademarks, documentation, examples, marketplace service, hosted content, and any non-MIT assets
-
-<!-- OSS:tutorhub-tise-genene -->
-## TutorHub (tise-genene)
-
-- Source: https://github.com/tise-genene/tutorhub
-- Pinned ref/version: repository head (© 2025 Tise Genene)
-- License: `MIT`
-- Status: `PASS`
-- Planned/use mode: study + adapt (no direct file copy)
-- Checked on: 2026-09-02
-- Scope incorporated:
-  - Pattern reference for the Tutoria `bookings` lifecycle and RPC shape only; Tutoria reimplemented its own RPCs and SQL
-- Evidence checked:
-  - Repository LICENSE at `tutorhub` head confirms MIT
-- Required actions:
-  - Preserve the MIT copyright notice shown above when redistributing adapted material
-- Excluded material:
-  - Upstream brands, trademarks, documentation, examples, hosted services, and any non-MIT assets
-
-<!-- OSS:upspace-ivanreeve -->
-## UpSpace (ivanreeve)
-
-- Source: https://github.com/ivanreeve/upspace
-- Pinned ref/version: branch `main` ref at `/tmp/audit/upspace/LICENSE.md` (Copyright (c) 2025 UpSpace)
-- License: `MIT`
-- Status: `PASS`
-- Planned/use mode: study + adapt (no direct file copy)
-- Checked on: 2026-09-02
-- Scope incorporated:
-  - Marketplace shell layout pattern (rate limiting, wallet/payout flow, AI assistant hooks, OpenAPI docs) — referenced only; Tutoria implementation is independent
-- Evidence checked:
-  - `LICENSE.md` confirms MIT (Copyright (c) 2025 UpSpace)
-- Required actions:
-  - Preserve the MIT copyright notice shown above when redistributing adapted material
-- Excluded material:
-  - Upstream brands, trademarks, documentation, examples, hosted services, and any non-MIT assets
-
-<!-- OSS:bookbarber-anas-baigg-pattern-only -->
-## BookBarber (Anas-Baigg) — pattern reference only
-
-- Source: https://github.com/Anas-Baigg/bookbarber
-- Pinned ref/version: repository head
-- License: `None declared` (no LICENSE file in repository)
-- Status: `STUDY_ONLY`
-- Planned/use mode: study + adapt (no direct file copy)
-- Checked on: 2026-09-02
-- Scope incorporated:
-  - Pattern reference for the EXCLUDE USING gist no-double-booking constraint, reimplemented Tutoria-native in `20260911000020_bookings_no_overlap_constraint.sql`. The pattern is generic PostgreSQL functionality (btree_gist + gist exclusion) and the migration is written from scratch against Tutoria's `public.sessions` schema; no BookBarber source was copied.
-- Evidence checked:
-  - BookBarber repository head has no LICENSE file
-- Required actions:
-  - Do not redistribute BookBarber source. Attribution is provided for the design pattern only.
-- Excluded material:
-  - All BookBarber source, brands, trademarks, documentation, examples, and hosted content
