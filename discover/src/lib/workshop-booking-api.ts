@@ -169,12 +169,12 @@ export async function getWorkshopBySlug(slug: string): Promise<WorkshopWithSessi
     id: String(raw.id ?? ""),
     kind: (raw.kind as WorkshopOffering["kind"]) ?? "workshop",
     title: String(raw.title ?? ""),
-    description: raw.description == null ? null : String(raw.description),
-    pricingModel: (raw.pricingModel as WorkshopOffering["pricingModel"]) ?? "hourly_v1",
-    pricePerParticipantVnd: raw.pricePerParticipantVnd == null ? null : Number(raw.pricePerParticipantVnd),
-    hourlyRateVnd: raw.hourlyRateVnd == null ? null : Number(raw.hourlyRateVnd),
-    bookingMode: (raw.bookingMode as WorkshopOffering["bookingMode"]) ?? "approval",
-    publicationStatus: (raw.publicationStatus as WorkshopOffering["publicationStatus"]) ?? "draft",
+    description: (raw.description as string) ?? "",
+    pricingModel: (raw.pricingModel ?? raw.pricing_model) as WorkshopOffering["pricingModel"] ?? "flat_per_participant_v1",
+    pricePerParticipantVnd: (raw.pricePerParticipantVnd ?? raw.price_per_participant_vnd ?? 0) as number,
+    hourlyRateVnd: (raw.hourlyRateVnd ?? raw.hourly_rate_vnd) as number | null,
+    bookingMode: (raw.bookingMode ?? raw.booking_mode) as WorkshopOffering["bookingMode"] ?? "approval",
+    publicationStatus: (raw.publicationStatus ?? raw.publication_status) as WorkshopOffering["publicationStatus"] ?? "draft",
     version: Number(raw.version ?? 1),
   };
 
