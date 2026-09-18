@@ -1006,6 +1006,10 @@
   padding: 0 14px;
 }
 
+.toastHidden {
+  display: none;
+}
+
 .toast {
   position: fixed;
   right: 22px;
