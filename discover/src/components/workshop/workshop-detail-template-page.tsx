@@ -21,6 +21,7 @@ import {
   type WorkshopOffering,
   type WorkshopSession,
   type WorkshopRecommendation,
+  type WorkshopPublishedContent,
 } from "@/lib/workshop-booking-api";
 import { useSession } from "@/lib/auth/session";
 import { ParticipantQuantity } from "@/components/shared/participant-quantity";
@@ -36,7 +37,7 @@ type PageState =
       status: "ready";
       offering: WorkshopOffering;
       sessions: BookableSession[];
-      content?: import("@/lib/event-data").EventDetail;
+      content?: WorkshopPublishedContent;
       recommendations: WorkshopRecommendation[];
     };
 
@@ -281,6 +282,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
   const [participants, setParticipants] = useState(1);
   const [saved, setSaved] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [selectedBranchId, setSelectedBranchId] = useState("");
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -345,12 +347,16 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
   useEffect(() => {
     setSelectedSession(null);
     setParticipants(1);
+    const branches = page.status === "ready" ? page.content?.branches ?? [] : [];
+    setSelectedBranchId(branches[0]?.id ?? "");
   }, [page]);
 
   const offering = page.status === "ready" ? page.offering : null;
   const sessions = page.status === "ready" ? page.sessions : [];
   const content = page.status === "ready" ? page.content : undefined;
   const recommendations = page.status === "ready" ? page.recommendations : [];
+  const branches = content?.branches ?? [];
+  const selectedBranch = branches.find((branch) => branch.id === selectedBranchId) ?? branches[0];
   const unitPrice = offering?.pricePerParticipantVnd ?? null;
   const selectedSpots = selectedSession?.spotsLeft ?? null;
   const maxParticipants =
@@ -762,6 +768,25 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
           </section>
         ) : null}
 
+        {content?.beforeYouAttend?.length ? (
+          <section className={styles.contentSection}>
+            <SectionHeader
+              eyebrow="Before you attend"
+              title="A few practical details."
+            />
+            <div className={styles.beforeAttendGrid}>
+              {content.beforeYouAttend.map((group) => (
+                <article className={styles.beforeAttendCard} key={group.title}>
+                  <span className={styles.cardLabel}>{group.title}</span>
+                  <ul>
+                    {group.items.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         <section id="details" className={styles.contentSection}>
           <SectionHeader
             eyebrow="Details"
@@ -886,7 +911,53 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
                 {content?.hostBio ? <p>{content.hostBio}</p> : null}
                 {content?.hostRecommendation ? (
                   <span className={styles.recommendationBadge}>{content.hostRecommendation}</span>
-                ) : null}        <section id="faq" className={styles.contentSection}>
+                ) : null}
+              </div>
+            </article>
+
+            <article className={styles.locationCard}>
+              <div className={styles.locationIcon}><IconMapPin size={18} /></div>
+              <div className={styles.locationContent}>
+                <span className={styles.cardLabel}>Location</span>
+
+                {branches.length > 1 ? (
+                  <div className={styles.branchPicker}>
+                    {branches.map((branch) => (
+                      <button
+                        type="button"
+                        key={branch.id}
+                        className={selectedBranch?.id === branch.id ? styles.branchActive : styles.branch}
+                        onClick={() => setSelectedBranchId(branch.id)}
+                      >
+                        {branch.name}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+
+                <h3>{selectedBranch?.name || content?.studioName || content?.location || "Location provided after booking"}</h3>
+                {selectedBranch?.address || content?.address ? (
+                  <p>{selectedBranch?.address || content?.address}</p>
+                ) : (
+                  <p>Location details will appear here when supplied by the creator.</p>
+                )}
+                {selectedBranch?.mapUrl ? (
+                  <a className={styles.mapLink} href={selectedBranch.mapUrl} target="_blank" rel="noreferrer">
+                    Open map
+                    <IconChevronRight size={14} />
+                  </a>
+                ) : null}
+                {selectedBranch?.note ? <span className={styles.accessibilityLine}>{selectedBranch.note}</span> : null}
+                {content?.accessibility ? <span className={styles.accessibilityLine}>{content.accessibility}</span> : null}
+                {branches.length > 1 ? (
+                  <span className={styles.branchCount}>{branches.length} branches</span>
+                ) : null}
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="faq" className={styles.contentSection}>
           <SectionHeader
             eyebrow="FAQ"
             title="Practical details to help you prepare."
