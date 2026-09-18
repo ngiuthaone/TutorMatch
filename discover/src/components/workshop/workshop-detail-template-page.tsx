@@ -592,16 +592,16 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
 
                   {selectedSession ? (
                     <>
-                      {(selectedSession.spotsLeft ?? 0) <= 3 ? (
-                        <p className={styles.urgency}>
-                          {(selectedSession.spotsLeft ?? 0) === 0
-                            ? "This session is full."
-                            : selectedSession.spotsLeft +
-                              " spot" +
-                              (selectedSession.spotsLeft === 1 ? "" : "s") +
-                              " remaining"}
-                        </p>
-                      ) : null}
+                      {(() => {
+                        const spotsLeft = selectedSession.spotsLeft ?? 0;
+                        return spotsLeft <= 3 ? (
+                          <p className={styles.urgency}>
+                            {spotsLeft === 0
+                              ? "This session is full."
+                              : spotsLeft + " spot" + (spotsLeft === 1 ? "" : "s") + " remaining"}
+                          </p>
+                        ) : null;
+                      })()}
 
                       <ParticipantQuantity
                         max={maxParticipants}
