@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
-import { WorkshopDetailPage } from "@/components/workshop/workshop-detail-page";
+
+import { WorkshopDetailTemplatePage } from "@/components/workshop/workshop-detail-template-page";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  return { title: `Workshop — Tutoria`, description: "Book this workshop on Tutoria." };
+  return {
+    title: "Workshop — Tutoria",
+    description: "Book this workshop on Tutoria.",
+  };
 }
 
 export default async function WorkshopDetailRoute({ params }: Props) {
   const { slug } = await params;
-  return <WorkshopDetailPage slug={slug} />;
+  return <WorkshopDetailTemplatePage slug={slug} />;
 }
