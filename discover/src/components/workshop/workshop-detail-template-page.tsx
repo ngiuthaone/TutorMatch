@@ -178,7 +178,7 @@ function MediaGallery({
           className={styles.galleryTile + " " + styles.galleryPrimary}
           onClick={() => setOpen(true)}
           aria-label={"Open gallery for " + title}
-          style={{ backgroundImage: \`url("\${safeImages[0]}")\` }}
+          style={{ backgroundImage: `url("${safeImages[0]}")` }}
         >
           <span>{title}</span>
           <small>View gallery</small>
@@ -194,7 +194,7 @@ function MediaGallery({
               setOpen(true);
             }}
             aria-label={"Open workshop image " + (index + 2)}
-            style={{ backgroundImage: \`url("\${image}")\` }}
+            style={{ backgroundImage: `url("${image}")` }}
           >
             <span>{index + 2}</span>
           </button>
@@ -222,7 +222,7 @@ function MediaGallery({
 
             <div
               className={styles.galleryFocus}
-              style={{ backgroundImage: \`url("\${safeImages[active] ?? safeImages[0]}")\` }}
+              style={{ backgroundImage: `url("${safeImages[active] ?? safeImages[0]}")` }}
             />
 
             <div className={styles.galleryThumbs}>
@@ -233,7 +233,7 @@ function MediaGallery({
                   className={styles.galleryThumb + (active === index ? " " + styles.galleryThumbActive : "")}
                   onClick={() => setActive(index)}
                   aria-label={"View image " + (index + 1)}
-                  style={{ backgroundImage: \`url("\${image}")\` }}
+                  style={{ backgroundImage: `url("${image}")` }}
                 />
               ))}
             </div>
@@ -735,7 +735,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
                     <p>{step.description}</p>
                   </div>
                   {step.image ? (
-                    <div className={styles.planImage} style={{ backgroundImage: \`url("\${step.image}")\` }} />
+                    <div className={styles.planImage} style={{ backgroundImage: `url("${step.image}")` }} />
                   ) : null}
                 </article>
               ))}
@@ -895,7 +895,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
         <section id="host" className={styles.contentSection}>
           <SectionHeader
             eyebrow="Host & location"
-            title={content?.host ? \`Meet \${content.host}.\` : "Meet your workshop host."}
+            title={content?.host ? `Meet ${content.host}.` : "Meet your workshop host."}
             description={content?.hostBio || "Host and venue information published with the workshop."}
           />
 
@@ -903,7 +903,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
             <article className={styles.hostCard}>
               <div
                 className={styles.hostAvatarImage}
-                style={content?.hostImage ? { backgroundImage: \`url("\${content.hostImage}")\` } : undefined}
+                style={content?.hostImage ? { backgroundImage: `url("${content.hostImage}")` } : undefined}
               >
                 {!content?.hostImage ? "T" : null}
               </div>
@@ -998,7 +998,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
             eyebrow="Reviews"
             title={
               content?.rating
-                ? \`\${content.rating.toFixed(1)} · \${content.reviewCount || 0} reviews\`
+                ? `${content.rating.toFixed(1)} · ${content.reviewCount || 0} reviews`
                 : "What participants say."
             }
             description="Reviews are published separately from the booking engine so the page can stay focused on the experience."
@@ -1007,7 +1007,37 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
           {content?.reviews?.length ? (
             <div className={styles.reviewGrid}>
               {content.reviews.slice(0, 6).map((review) => (
-                <article className={styles.reviewCard} key={review.name + revie        <section
+                <article className={styles.reviewCard} key={review.name + review.attended}>
+                  <div className={styles.reviewTop}>
+                    <div
+                      className={styles.reviewAvatar}
+                      style={
+                        review.avatar
+                          ? { backgroundImage: `url("${review.avatar}")` }
+                          : undefined
+                      }
+                    />
+                    <div>
+                      <strong>{review.name}</strong>
+                      <span>{review.attended}</span>
+                    </div>
+                    <b>{"★".repeat(Math.max(0, Math.min(5, Math.round(review.rating))))}</b>
+                  </div>
+                  <p>{review.body}</p>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.reviewEmpty}>
+              <div>
+                <strong>No published reviews yet.</strong>
+                <p>Reviews from completed participants will appear here.</p>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section
           id="recommendations"
           className={styles.contentSection + " " + styles.recommendationSection}
         >
@@ -1027,7 +1057,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
                 >
                   <div
                     className={styles.recommendationImage}
-                    style={item.image ? { backgroundImage: \`url("\${item.image}")\` } : undefined}
+                    style={item.image ? { backgroundImage: `url("${item.image}")` } : undefined}
                   />
                   <div className={styles.recommendationCopy}>
                     <span>{item.topic || "Workshop"}</span>
@@ -1054,47 +1084,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
           </Link>
         </section>
 
-        <section
-          id="recommendations"
-          className={styles.contentSection + " " + styles.recommendationSection}
-        >
-          <SectionHeader
-            eyebrow="Recommendations"
-            title="You may also like"
-            description="The visual recommendation rail is in place; the next step is wiring it to Tutoria discovery data."
-          />
-
-          <div className={styles.recommendationRail}>
-            {[
-              ["01", "More workshops", "Explore other experiences on Tutoria."],
-              [
-                "02",
-                "Learn something new",
-                "Discover classes, courses, events and workshops.",
-              ],
-              [
-                "03",
-                "For you",
-                "Personalized recommendations will appear here.",
-              ],
-            ].map(([number, title, copy]) => (
-              <article className={styles.recommendationCard} key={number}>
-                <span>{number}</span>
-                <div>
-                  <strong>{title}</strong>
-                  <p>{copy}</p>
-                </div>
-                <IconChevronRight size={16} />
-              </article>
-            ))}
-          </div>
-
-          <Link href="/workshops" className={styles.exploreLink}>
-            Explore more workshops
-            <IconChevronRight size={16} />
-          </Link>
-        </section>
-      </main>
+     </main>
 
       <MobileBookingBar
         onClick={openBookingFlow}
