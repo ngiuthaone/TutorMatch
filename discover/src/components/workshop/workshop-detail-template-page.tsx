@@ -20,6 +20,7 @@ import {
   getWorkshopBySlug,
   type WorkshopOffering,
   type WorkshopSession,
+  type WorkshopRecommendation,
 } from "@/lib/workshop-booking-api";
 import { useSession } from "@/lib/auth/session";
 import { ParticipantQuantity } from "@/components/shared/participant-quantity";
@@ -31,7 +32,13 @@ import styles from "./workshop-detail-template-page.module.css";
 type PageState =
   | { status: "loading" }
   | { status: "not-found" }
-  | { status: "ready"; offering: WorkshopOffering; sessions: BookableSession[] };
+  | {
+      status: "ready";
+      offering: WorkshopOffering;
+      sessions: BookableSession[];
+      content?: import("@/lib/event-data").EventDetail;
+      recommendations: WorkshopRecommendation[];
+    };
 
 interface WorkshopDetailTemplatePageProps {
   slug: string;
@@ -142,9 +149,25 @@ function SectionHeader({
   );
 }
 
-function MediaGallery({ title }: { title: string }) {
+function MediaGallery({
+  title,
+  images,
+}: {
+  title: string;
+  images: string[];
+}) {
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
+  const safeImages = images.filter(Boolean).slice(0, 5);
+
+  if (!safeImages.length) {
+    return (
+      <div className={styles.galleryEmpty}>
+        <span>{title}</span>
+        <small>Workshop media will appear here after the creator adds it.</small>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -154,23 +177,25 @@ function MediaGallery({ title }: { title: string }) {
           className={styles.galleryTile + " " + styles.galleryPrimary}
           onClick={() => setOpen(true)}
           aria-label={"Open gallery for " + title}
+          style={{ backgroundImage: \`url("\${safeImages[0]}")\` }}
         >
           <span>{title}</span>
-          <small>Workshop media</small>
+          <small>View gallery</small>
         </button>
 
-        {[1, 2, 3, 4].map((index) => (
+        {safeImages.slice(1, 5).map((image, index) => (
           <button
             type="button"
-            key={index}
+            key={image + index}
             className={styles.galleryTile}
             onClick={() => {
-              setActive(index);
+              setActive(index + 1);
               setOpen(true);
             }}
-            aria-label={"Open workshop image " + (index + 1)}
+            aria-label={"Open workshop image " + (index + 2)}
+            style={{ backgroundImage: \`url("\${image}")\` }}
           >
-            <span>{index + 1}</span>
+            <span>{index + 2}</span>
           </button>
         ))}
       </div>
@@ -194,21 +219,21 @@ function MediaGallery({ title }: { title: string }) {
               </button>
             </div>
 
-            <div className={styles.galleryFocus}>
-              <span>{active + 1}</span>
-            </div>
+            <div
+              className={styles.galleryFocus}
+              style={{ backgroundImage: \`url("\${safeImages[active] ?? safeImages[0]}")\` }}
+            />
 
             <div className={styles.galleryThumbs}>
-              {[0, 1, 2, 3, 4].map((index) => (
+              {safeImages.map((image, index) => (
                 <button
                   type="button"
-                  key={index}
+                  key={image + index}
                   className={styles.galleryThumb + (active === index ? " " + styles.galleryThumbActive : "")}
                   onClick={() => setActive(index)}
                   aria-label={"View image " + (index + 1)}
-                >
-                  {index + 1}
-                </button>
+                  style={{ backgroundImage: \`url("\${image}")\` }}
+                />
               ))}
             </div>
           </div>
@@ -299,7 +324,13 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
           version: offering.version,
         }));
 
-        setPage({ status: "ready", offering, sessions: bookableSessions });
+        setPage({
+          status: "ready",
+          offering,
+          sessions: bookableSessions,
+          content: result.content,
+          recommendations: result.recommendations,
+        });
       } catch {
         if (!cancelled && !controller.signal.aborted) setPage({ status: "not-found" });
       }
@@ -318,6 +349,8 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
 
   const offering = page.status === "ready" ? page.offering : null;
   const sessions = page.status === "ready" ? page.sessions : [];
+  const content = page.status === "ready" ? page.content : undefined;
+  const recommendations = page.status === "ready" ? page.recommendations : [];
   const unitPrice = offering?.pricePerParticipantVnd ?? null;
   const selectedSpots = selectedSession?.spotsLeft ?? null;
   const maxParticipants =
@@ -422,12 +455,20 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
     );
   }
 
-  const descriptionParagraphs = offering.description
-    ? offering.description
-        .split(/\n{2,}/)
-        .map((item) => item.trim())
-        .filter(Boolean)
-    : [];
+  const descriptionParagraphs = content?.about?.length
+    ? content.about
+    : offering.description
+      ? offering.description
+          .split(/\n{2,}/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : [];
+
+  const mediaImages = [
+    content?.image,
+    content?.galleryImage,
+    ...(content?.plan ?? []).map((item) => item.image),
+  ].filter((value): value is string => Boolean(value));
 
   const visibleSessions = sessions.slice(0, 4);
   const bookingModeLabel =
@@ -495,29 +536,28 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
 
                 <h1>{offering.title}</h1>
 
-                <p className={styles.heroDescription}>
-                  {offering.description ||
-                    "A host-led learning experience on Tutoria."}
-                </p>
+                {content?.subtitle ? (
+                  <p className={styles.heroDescription}>{content.subtitle}</p>
+                ) : (
+                  <p className={styles.heroDescription}>
+                    {offering.description || "A host-led learning experience on Tutoria."}
+                  </p>
+                )}
 
                 <div className={styles.heroMeta}>
                   <span>
                     <IconClock size={14} />
-                    {visibleSessions.length
-                      ? "Scheduled sessions"
-                      : "Flexible schedule"}
+                    {content?.duration || (visibleSessions.length ? "Scheduled sessions" : "Flexible schedule")}
                   </span>
-                  <span>
-                    <IconUsers size={14} />
-                    Participant booking
-                  </span>
-                  <span>
-                    <IconSparkles size={14} />
-                    Hosted on Tutoria
-                  </span>
+                  {content?.minimumAge ? (
+                    <span><IconUsers size={14} /> {content.minimumAge}</span>
+                  ) : null}
+                  {content?.location ? (
+                    <span><IconMapPin size={14} /> {content.location}</span>
+                  ) : null}
                 </div>
 
-                <MediaGallery title={offering.title} />
+                <MediaGallery title={offering.title} images={mediaImages} />
               </div>
 
               <aside className={styles.bookingCard} aria-label="Book workshop">
@@ -648,6 +688,80 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
           </div>
         </section>
 
+        {content?.highlights?.length ? (
+          <section className={styles.contentSection}>
+            <SectionHeader
+              eyebrow="Highlights"
+              title="What makes this workshop special."
+            />
+            <div className={styles.highlightGrid}>
+              {content.highlights.map((item) => (
+                <article className={styles.highlightCard} key={item.title}>
+                  <div className={styles.highlightIcon}><IconSparkles size={17} /></div>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {content?.plan?.length ? (
+          <section className={styles.contentSection}>
+            <SectionHeader
+              eyebrow="Workshop plan"
+              title="How the experience flows."
+              description="The published plan comes directly from the creator's structured workshop content."
+            />
+            <div className={styles.planList}>
+              {content.plan.map((step, index) => (
+                <article className={styles.planRow} key={step.title + index}>
+                  <div className={styles.planIndex}>{String(index + 1).padStart(2, "0")}</div>
+                  <div className={styles.planCopy}>
+                    <div className={styles.planTopline}>
+                      <h3>{step.title}</h3>
+                      {step.duration ? <span>{step.duration}</span> : null}
+                    </div>
+                    <p>{step.description}</p>
+                  </div>
+                  {step.image ? (
+                    <div className={styles.planImage} style={{ backgroundImage: \`url("\${step.image}")\` }} />
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {content?.learn?.length || content?.included?.length || content?.bring?.length ? (
+          <section className={styles.contentSection}>
+            <SectionHeader
+              eyebrow="Good to know"
+              title="Everything you need before you arrive."
+            />
+            <div className={styles.goodToKnowGrid}>
+              {content.learn?.length ? (
+                <article className={styles.checklistCard}>
+                  <span className={styles.cardLabel}>You’ll learn</span>
+                  <ul>{content.learn.map((item) => <li key={item}>{item}</li>)}</ul>
+                </article>
+              ) : null}
+              {content.included?.length ? (
+                <article className={styles.checklistCard}>
+                  <span className={styles.cardLabel}>Included</span>
+                  <ul>{content.included.map((item) => <li key={item}>{item}</li>)}</ul>
+                </article>
+              ) : null}
+              {content.bring?.length ? (
+                <article className={styles.checklistCard}>
+                  <span className={styles.cardLabel}>Bring</span>
+                  <ul>{content.bring.map((item) => <li key={item}>{item}</li>)}</ul>
+                </article>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
         <section id="details" className={styles.contentSection}>
           <SectionHeader
             eyebrow="Details"
@@ -752,88 +866,117 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
         <section id="host" className={styles.contentSection}>
           <SectionHeader
             eyebrow="Host & location"
-            title="Meet your workshop host."
-            description="Host and venue content can be expanded here as the published offering schema gains those fields."
+            title={content?.host ? \`Meet \${content.host}.\` : "Meet your workshop host."}
+            description={content?.hostBio || "Host and venue information published with the workshop."}
           />
 
           <div className={styles.hostLocationGrid}>
             <article className={styles.hostCard}>
-              <div className={styles.avatar}>T</div>
+              <div
+                className={styles.hostAvatarImage}
+                style={content?.hostImage ? { backgroundImage: \`url("\${content.hostImage}")\` } : undefined}
+              >
+                {!content?.hostImage ? "T" : null}
+              </div>
               <div>
                 <span className={styles.cardLabel}>Workshop host</span>
-                <h3>Tutoria host</h3>
-                <p>
-                  The published workshop is managed through Tutoria's creator
-                  tools.
-                </p>
-              </div>
-            </article>
-
-            <article className={styles.locationCard}>
-              <div className={styles.locationIcon}>
-                <IconMapPin size={18} />
-              </div>
-              <div>
-                <span className={styles.cardLabel}>Location</span>
-                <h3>Shared after booking</h3>
-                <p>
-                  The current workshop API does not expose a venue address, so
-                  the page does not invent one.
-                </p>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section id="faq" className={styles.contentSection}>
+                <h3>{content?.host || "Tutoria host"}</h3>
+                {content?.hostRole ? <strong className={styles.hostRole}>{content.hostRole}</strong> : null}
+                {content?.hostExperience ? <span className={styles.hostExperience}>{content.hostExperience}</span> : null}
+                {content?.hostBio ? <p>{content.hostBio}</p> : null}
+                {content?.hostRecommendation ? (
+                  <span className={styles.recommendationBadge}>{content.hostRecommendation}</span>
+                ) : null}        <section id="faq" className={styles.contentSection}>
           <SectionHeader
             eyebrow="FAQ"
             title="Practical details to help you prepare."
           />
           <FaqItems
-            items={[
-              {
-                question: "How do I choose a session?",
-                answer:
-                  "Select a published date and time in the booking card or Schedule section.",
-              },
-              {
-                question: "How does booking work?",
-                answer:
-                  offering.bookingMode === "instant"
-                    ? "Your selected session can be booked immediately once you complete the booking flow."
-                    : "Tutoria sends the booking request to the host, who then approves or rejects it.",
-              },
-              {
-                question: "How is the price calculated?",
-                answer:
-                  unitPrice == null
-                    ? "The workshop has not published a participant price yet."
-                    : "The current participant price is " +
-                      formatVnd(unitPrice) +
-                      " per participant, with the final total based on your selected quantity.",
-              },
-            ]}
+            items={
+              content?.faqs?.length
+                ? content.faqs
+                : [
+                    {
+                      question: "How do I choose a session?",
+                      answer: "Select a published date and time in the booking card or Schedule section.",
+                    },
+                    {
+                      question: "How does booking work?",
+                      answer:
+                        offering.bookingMode === "instant"
+                          ? "Your selected session can be booked immediately once you complete the booking flow."
+                          : "Tutoria sends the booking request to the host, who then approves or rejects it.",
+                    },
+                  ]
+            }
           />
+          {content?.cancellation?.length ? (
+            <div className={styles.cancellationCard}>
+              <span className={styles.cardLabel}>Cancellation</span>
+              <ul>{content.cancellation.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+          ) : null}
         </section>
 
         <section id="reviews" className={styles.contentSection}>
           <SectionHeader
             eyebrow="Reviews"
-            title="What participants say."
-            description="Reviews will populate here from the workshop review data once they are available to this native route."
+            title={
+              content?.rating
+                ? \`\${content.rating.toFixed(1)} · \${content.reviewCount || 0} reviews\`
+                : "What participants say."
+            }
+            description="Reviews are published separately from the booking engine so the page can stay focused on the experience."
           />
 
-          <div className={styles.reviewEmpty}>
-            <div className={styles.reviewScore}>—</div>
-            <div>
-              <strong>No published reviews yet</strong>
-              <p>
-                Participant reviews are kept on the workshop page rather than
-                in the booking card.
-              </p>
+          {content?.reviews?.length ? (
+            <div className={styles.reviewGrid}>
+              {content.reviews.slice(0, 6).map((review) => (
+                <article className={styles.reviewCard} key={review.name + revie        <section
+          id="recommendations"
+          className={styles.contentSection + " " + styles.recommendationSection}
+        >
+          <SectionHeader
+            eyebrow="Recommendations"
+            title="You may also like"
+            description="Recommendations are drawn from Tutoria's published event catalogue."
+          />
+
+          {recommendations.length ? (
+            <div className={styles.recommendationRail}>
+              {recommendations.slice(0, 6).map((item) => (
+                <Link
+                  href={"/workshops/" + item.slug}
+                  className={styles.recommendationCard}
+                  key={item.slug}
+                >
+                  <div
+                    className={styles.recommendationImage}
+                    style={item.image ? { backgroundImage: \`url("\${item.image}")\` } : undefined}
+                  />
+                  <div className={styles.recommendationCopy}>
+                    <span>{item.topic || "Workshop"}</span>
+                    <strong>{item.title}</strong>
+                    <p>{item.host}{item.location ? " · " + item.location : ""}</p>
+                    {item.rating ? <small>★ {item.rating.toFixed(1)}{item.reviewCount ? " · " + item.reviewCount : ""}</small> : null}
+                  </div>
+                  <IconChevronRight size={16} />
+                </Link>
+              ))}
             </div>
-          </div>
+          ) : (
+            <div className={styles.reviewEmpty}>
+              <div>
+                <strong>More workshops are coming.</strong>
+                <p>Once the published workshop catalogue is available, related experiences will appear here.</p>
+              </div>
+            </div>
+          )}
+
+          <Link href="/workshops" className={styles.exploreLink}>
+            Explore more workshops
+            <IconChevronRight size={16} />
+          </Link>
         </section>
 
         <section
