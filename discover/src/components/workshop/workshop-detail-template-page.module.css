@@ -219,7 +219,9 @@
   overflow: hidden;
   border: 1px solid rgba(255,255,255,.06);
   border-radius: 20px;
-  background: radial-gradient(circle at 25% 20%, rgba(214,193,173,.12), transparent 28%), linear-gradient(145deg, #18181b, #0f0f11);
+  background-position: center;
+  background-size: cover;
+  background-color: #121214;
   color: #fff;
   text-align: left;
   cursor: pointer;
@@ -260,6 +262,33 @@
 .galleryPrimary {
   grid-column: 1;
   grid-row: 1 / span 2;
+}
+
+.galleryEmpty {
+  display: grid;
+  min-height: 320px;
+  place-content: end start;
+  gap: 5px;
+  margin-top: 26px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(214,193,173,.10), transparent 28%),
+    linear-gradient(145deg, #18181b, #0f0f11);
+  padding: 18px;
+}
+
+.galleryEmpty span {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.galleryEmpty small {
+  max-width: 340px;
+  color: var(--quiet);
+  font-size: 10px;
+  line-height: 1.55;
 }
 
 .bookingCard {
@@ -614,6 +643,313 @@
   line-height: 1.65;
 }
 
+
+.highlightGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 12px;
+}
+
+.highlightCard {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255,255,255,.018);
+  padding: 20px;
+}
+
+.highlightIcon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(255,255,255,.055);
+  color: #fff;
+}
+
+.highlightCard h3 {
+  margin: 18px 0 8px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.highlightCard p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.planList {
+  border-top: 1px solid var(--line);
+}
+
+.planRow {
+  display: grid;
+  grid-template-columns: 54px minmax(0,1fr) 180px;
+  gap: 18px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 18px 0;
+}
+
+.planIndex {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(255,255,255,.05);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.planCopy { min-width: 0; }
+
+.planTopline {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.planTopline h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+}
+
+.planTopline span {
+  color: var(--quiet);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.planCopy p {
+  max-width: 720px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.planImage {
+  min-height: 92px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background-position: center;
+  background-size: cover;
+  background-color: #141416;
+}
+
+.goodToKnowGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 12px;
+}
+
+.checklistCard {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255,255,255,.018);
+  padding: 20px;
+}
+
+.checklistCard ul,
+.cancellationCard ul {
+  display: grid;
+  gap: 9px;
+  margin: 13px 0 0;
+  padding-left: 16px;
+}
+
+.checklistCard li,
+.cancellationCard li {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.hostAvatarImage {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 18px;
+  background-position: center;
+  background-size: cover;
+  background-color: rgba(255,255,255,.055);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.hostRole,
+.hostExperience,
+.accessibilityLine,
+.recommendationBadge {
+  display: block;
+}
+
+.hostRole {
+  color: #d4d4d8;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.hostExperience {
+  margin-top: 4px;
+  color: var(--quiet);
+  font-size: 10px;
+}
+
+.hostCard p {
+  margin-top: 12px;
+}
+
+.recommendationBadge {
+  width: fit-content;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255,255,255,.035);
+  padding: 6px 9px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.accessibilityLine {
+  margin-top: 12px;
+  color: #d4d4d8;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.cancellationCard {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.reviewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 12px;
+}
+
+.reviewCard {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255,255,255,.018);
+  padding: 20px;
+}
+
+.reviewTop {
+  display: grid;
+  grid-template-columns: 40px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.reviewAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background-position: center;
+  background-size: cover;
+  background-color: #1b1b1e;
+}
+
+.reviewTop strong,
+.reviewTop span {
+  display: block;
+}
+
+.reviewTop strong {
+  color: #fff;
+  font-size: 11px;
+}
+
+.reviewTop span {
+  margin-top: 3px;
+  color: var(--quiet);
+  font-size: 9px;
+}
+
+.reviewTop b {
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.reviewCard > p {
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.recommendationCard {
+  position: relative;
+  overflow: hidden;
+  grid-template-columns: 92px minmax(0,1fr) auto;
+  min-height: 112px;
+  padding: 0;
+}
+
+.recommendationImage {
+  align-self: stretch;
+  min-height: 112px;
+  background-position: center;
+  background-size: cover;
+  background-color: #171719;
+}
+
+.recommendationCopy {
+  min-width: 0;
+  padding: 16px 0;
+}
+
+.recommendationCopy span,
+.recommendationCopy small {
+  display: block;
+  color: var(--quiet);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.recommendationCopy strong {
+  display: block;
+  margin-top: 7px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+}
+
+.recommendationCopy p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recommendationCopy small {
+  margin-top: 7px;
+  color: #d4d4d8;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.recommendationCard > svg {
+  margin-right: 16px;
+  color: var(--muted);
+}
+
 .scheduleCard {
   border-radius: 24px;
   overflow: hidden;
@@ -906,7 +1242,9 @@
   display: grid;
   height: min(62vh, 560px);
   place-items: center;
-  background: radial-gradient(circle at 30% 25%, rgba(214,193,173,.11), transparent 28%), linear-gradient(145deg, #18181b, #0c0c0e);
+  background-position: center;
+  background-size: cover;
+  background-color: #0c0c0e;
   color: rgba(255,255,255,.9);
   font-size: 64px;
   font-weight: 700;
@@ -931,7 +1269,9 @@
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(255,255,255,.035);
+  background-color: rgba(255,255,255,.035);
+  background-position: center;
+  background-size: cover;
   color: var(--muted);
   font: inherit;
   cursor: pointer;
@@ -1066,6 +1406,20 @@
   .gallery {
     grid-template-columns: repeat(2,minmax(0,1fr));
     grid-template-rows: 230px 120px;
+  }
+
+  .highlightGrid,
+  .goodToKnowGrid,
+  .reviewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .planRow {
+    grid-template-columns: 42px minmax(0,1fr);
+  }
+
+  .planImage {
+    grid-column: 2;
   }
 
   .galleryPrimary {
