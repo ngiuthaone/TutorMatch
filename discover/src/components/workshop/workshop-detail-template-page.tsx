@@ -902,7 +902,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
         />
       ) : null}
 
-      <p className={styles.toast} role="status" aria-live="polite">
+      <p className={toast ? styles.toast : styles.toastHidden} role="status" aria-live="polite">
         {toast}
       </p>
     </div>
