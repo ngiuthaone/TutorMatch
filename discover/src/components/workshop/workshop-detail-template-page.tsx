@@ -357,6 +357,10 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
   const recommendations = page.status === "ready" ? page.recommendations : [];
   const branches = content?.branches ?? [];
   const selectedBranch = branches.find((branch) => branch.id === selectedBranchId) ?? branches[0];
+  const safeMapUrl =
+    selectedBranch?.mapUrl && /^https:\/\//i.test(selectedBranch.mapUrl)
+      ? selectedBranch.mapUrl
+      : undefined;
   const unitPrice = offering?.pricePerParticipantVnd ?? null;
   const selectedSpots = selectedSession?.spotsLeft ?? null;
   const maxParticipants =
@@ -941,8 +945,8 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
                 ) : (
                   <p>Location details will appear here when supplied by the creator.</p>
                 )}
-                {selectedBranch?.mapUrl ? (
-                  <a className={styles.mapLink} href={selectedBranch.mapUrl} target="_blank" rel="noreferrer">
+                {safeMapUrl ? (
+                  <a className={styles.mapLink} href={safeMapUrl} target="_blank" rel="noreferrer">
                     Open map
                     <IconChevronRight size={14} />
                   </a>
