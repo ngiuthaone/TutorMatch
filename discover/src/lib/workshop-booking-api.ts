@@ -255,12 +255,49 @@ export async function getWorkshopBySlug(slug: string): Promise<WorkshopWithSessi
       : payload && Array.isArray(payload.events)
         ? payload.events
         : [];
-    recommendations = source
+    const recommendationCandidates = source
       .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
       .filter((item) => String(item.slug ?? "") !== slug)
-      .slice(0, 8)
       .map((item) => ({
+        item,
         slug: String(item.slug ?? ""),
+      }))
+      .filter((candidate) => candidate.slug)
+      .slice(0, 16);
+
+    const validatedRecommendations = await Promise.all(
+      recommendationCandidates.map(async ({ item, slug: candidateSlug }) => {
+        try {
+          const offeringPayload = await request(
+            `/api/v1/offerings/by-slug/${encodeURIComponent(candidateSlug)}`,
+          ) as {
+            ok?: unknown;
+            offering?: unknown;
+            sessions?: unknown;
+          };
+
+          const offering = offeringPayload.offering as Record<string, unknown> | null;
+          if (
+            offeringPayload.ok !== true ||
+            !offering ||
+            offering.kind !== "workshop" ||
+            offering.publicationStatus !== "published"
+          ) {
+            return null;
+          }
+
+          return { item, slug: candidateSlug };
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    recommendations = validatedRecommendations
+      .filter((candidate): candidate is { item: Record<string, unknown>; slug: string } => Boolean(candidate))
+      .slice(0, 8)
+      .map(({ item, slug: candidateSlug }) => ({
+        slug: candidateSlug,
         title: String(item.title ?? ""),
         host: String(item.host ?? item.creatorName ?? "Tutoria host"),
         topic: String(item.topic ?? "Workshop"),
