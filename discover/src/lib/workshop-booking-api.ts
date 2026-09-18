@@ -277,11 +277,13 @@ export async function getWorkshopBySlug(slug: string): Promise<WorkshopWithSessi
           };
 
           const offering = offeringPayload.offering as Record<string, unknown> | null;
+          const offeringKind = offering?.kind ?? offering?.offering_kind;
+          const publicationStatus = offering?.publicationStatus ?? offering?.publication_status;
           if (
             offeringPayload.ok !== true ||
             !offering ||
-            offering.kind !== "workshop" ||
-            offering.publicationStatus !== "published"
+            offeringKind !== "workshop" ||
+            publicationStatus !== "published"
           ) {
             return null;
           }
