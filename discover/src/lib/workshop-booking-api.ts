@@ -1,5 +1,6 @@
 import { getApiBaseUrl } from "./auth/config";
 import { getSessionAccessToken } from "./auth/session";
+import type { EventDetail } from "./event-data";
 
 export class WorkshopApiError extends Error {
   code: string;
@@ -146,9 +147,23 @@ export async function startWorkshopPayment(bookingId: string): Promise<{ redirec
   return { redirectUrl };
 }
 
+export interface WorkshopRecommendation {
+  slug: string;
+  title: string;
+  host: string;
+  topic: string;
+  location: string;
+  price: string;
+  image?: string;
+  rating?: number;
+  reviewCount?: number;
+}
+
 export interface WorkshopWithSessions {
   offering: WorkshopOffering;
   sessions: WorkshopSession[];
+  content?: EventDetail;
+  recommendations: WorkshopRecommendation[];
 }
 
 /**
@@ -189,5 +204,45 @@ export async function getWorkshopBySlug(slug: string): Promise<WorkshopWithSessi
     status: (s.status as WorkshopSession["status"]) ?? "scheduled",
   }));
 
-  return { offering, sessions };
+  let content: EventDetail | undefined;
+  try {
+    const rawContent = await request(`/api/v1/events/${encodeURIComponent(slug)}`);
+    const candidate = rawContent as Record<string, unknown> | null;
+    if (candidate && typeof candidate.title === "string" && typeof candidate.slug === "string") {
+      content = candidate as unknown as EventDetail;
+    }
+  } catch {
+    // Rich publishing content is optional while legacy offerings are migrated.
+  }
+
+  let recommendations: WorkshopRecommendation[] = [];
+  try {
+    const rawList = await request("/api/v1/events");
+    const payload = rawList as { events?: unknown } | unknown[] | null;
+    const source = Array.isArray(payload)
+      ? payload
+      : payload && Array.isArray(payload.events)
+        ? payload.events
+        : [];
+    recommendations = source
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+      .filter((item) => String(item.slug ?? "") !== slug)
+      .slice(0, 8)
+      .map((item) => ({
+        slug: String(item.slug ?? ""),
+        title: String(item.title ?? ""),
+        host: String(item.host ?? item.creatorName ?? "Tutoria host"),
+        topic: String(item.topic ?? "Workshop"),
+        location: String(item.location ?? ""),
+        price: String(item.price ?? ""),
+        image: typeof item.image === "string" ? item.image : undefined,
+        rating: typeof item.rating === "number" ? item.rating : undefined,
+        reviewCount: typeof item.reviewCount === "number" ? item.reviewCount : undefined,
+      }))
+      .filter((item) => item.slug && item.title);
+  } catch {
+    recommendations = [];
+  }
+
+  return { offering, sessions, content, recommendations };
 }
