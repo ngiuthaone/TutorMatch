@@ -159,10 +159,22 @@ export interface WorkshopRecommendation {
   reviewCount?: number;
 }
 
+export interface WorkshopBranch {
+  id: string;
+  name: string;
+  address: string;
+  mapUrl?: string;
+  note?: string;
+}
+
+export type WorkshopPublishedContent = EventDetail & {
+  branches?: WorkshopBranch[];
+};
+
 export interface WorkshopWithSessions {
   offering: WorkshopOffering;
   sessions: WorkshopSession[];
-  content?: EventDetail;
+  content?: WorkshopPublishedContent;
   recommendations: WorkshopRecommendation[];
 }
 
@@ -204,12 +216,31 @@ export async function getWorkshopBySlug(slug: string): Promise<WorkshopWithSessi
     status: (s.status as WorkshopSession["status"]) ?? "scheduled",
   }));
 
-  let content: EventDetail | undefined;
+  let content: WorkshopPublishedContent | undefined;
   try {
     const rawContent = await request(`/api/v1/events/${encodeURIComponent(slug)}`);
     const candidate = rawContent as Record<string, unknown> | null;
     if (candidate && typeof candidate.title === "string" && typeof candidate.slug === "string") {
-      content = candidate as unknown as EventDetail;
+      const rawBranches = Array.isArray(candidate.branches)
+        ? candidate.branches
+        : Array.isArray(candidate.locations)
+          ? candidate.locations
+          : [];
+      const branches: WorkshopBranch[] = rawBranches
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: String(item.id ?? item.slug ?? "branch-" + index),
+          name: String(item.name ?? item.studioName ?? item.title ?? "Workshop branch"),
+          address: String(item.address ?? item.location ?? ""),
+          mapUrl: typeof item.mapUrl === "string" ? item.mapUrl : typeof item.map_url === "string" ? item.map_url : undefined,
+          note: typeof item.note === "string" ? item.note : undefined,
+        }))
+        .filter((item) => item.name && item.address);
+
+      content = {
+        ...(candidate as unknown as EventDetail),
+        ...(branches.length ? { branches } : {}),
+      };
     }
   } catch {
     // Rich publishing content is optional while legacy offerings are migrated.
