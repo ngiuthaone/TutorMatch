@@ -100,7 +100,7 @@ function SessionPicker({
             <p className={styles.emptyText}>No published sessions are available yet.</p>
           ) : (
             sessions.map((item) => {
-              const full = item.spotsLeft <= 0;
+              const full = (item.spotsLeft ?? 0) <= 0;
               const active = selected?.id === item.id;
               const info = formatSession(item);
 
@@ -592,9 +592,9 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
 
                   {selectedSession ? (
                     <>
-                      {selectedSession.spotsLeft <= 3 ? (
+                      {(selectedSession.spotsLeft ?? 0) <= 3 ? (
                         <p className={styles.urgency}>
-                          {selectedSession.spotsLeft === 0
+                          {(selectedSession.spotsLeft ?? 0) === 0
                             ? "This session is full."
                             : selectedSession.spotsLeft +
                               " spot" +
@@ -857,7 +857,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
               <div className={styles.sessionList}>
                 {sessions.map((item) => {
                   const sessionInfo = formatSession(item);
-                  const full = item.spotsLeft <= 0;
+                  const full = (item.spotsLeft ?? 0) <= 0;
                   return (
                     <button
                       type="button"
