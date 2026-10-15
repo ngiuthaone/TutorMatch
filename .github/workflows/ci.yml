@@ -116,10 +116,6 @@ jobs:
         with:
           version: 2.114.0
 
-      - name: Install Playwright browsers
-        working-directory: discover
-        run: npx playwright install --with-deps chromium
-
       - name: Install backend dependencies
         working-directory: backend
         run: pnpm install --frozen-lockfile
@@ -127,6 +123,10 @@ jobs:
       - name: Install discover dependencies
         working-directory: discover
         run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: discover
+        run: npx playwright install --with-deps chromium
 
       - name: Start Supabase
         working-directory: backend
