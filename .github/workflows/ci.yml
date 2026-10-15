@@ -72,21 +72,21 @@ jobs:
 
       # Push migrations dry-run (validates all migrations apply cleanly)
       - name: Validate migrations (dry-run)
+        working-directory: backend
         run: |
-          cd backend
           supabase db push --dry-run
 
       # Check RLS policies exist on key tables
       - name: Verify RLS policies on key tables
+        working-directory: backend
         run: |
-          cd backend
           supabase inspect db rls-policies --json > rls_policies.json
           python3 -c "import json; d=json.load(open('rls_policies.json')); t=['profiles','bookings','payments','marketplace_listings','messages','notifications','posts','comments','articles','sessions','reschedule_requests']; m=[x for x in t if not any(p.get('tablename','')==x for p in d)]; [print('ERROR:',','.join(m)) or exit(1) for _ in [0] if m]; print('OK')"
 
       # Verify critical indexes exist
       - name: Verify critical indexes
+        working-directory: backend
         run: |
-          cd backend
           supabase inspect db indexes --json > indexes.json
           python3 -c "import json; d=json.load(open('indexes.json')); c=[('bookings','sessions_offering_id'),('bookings','bookings_learner'),('marketplace_listings','creator'),('profiles','profiles_role'),('reschedule_requests','booking_status')]; e=[f'Missing:{i} on {t}' for t,i in c if not any(p.get('tablename','')==t and (p.get('indexname','')==i or i in p.get('indexname','')) for p in d)]; [print(*e) or exit(1) for _ in [0] if e]; print('OK')"
 
