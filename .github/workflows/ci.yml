@@ -111,8 +111,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "pnpm"
-          cache-dependency-path: backend/pnpm-lock.yaml
 
       - uses: supabase/setup-cli@v1 # v3
         with:
