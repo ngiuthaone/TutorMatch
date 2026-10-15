@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
-import type { Session } from "@supabase/supabase-js";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { ApiClientError, getApiClient } from "./api-client";
 import { getAuthCallbackUrl, getRuntimeConfig, isLiveMode } from "./config";
 import { setLiveIdentity, type LiveIdentity } from "./identity";
@@ -107,7 +107,7 @@ export function ensureSession(): Promise<void> {
     }
     try {
       if (unsubscribeAuth) unsubscribeAuth();
-      const { data: { subscription: { unsubscribe } } } = client.auth.onAuthStateChange((event: any, session: any) => {
+      const { data: { subscription: { unsubscribe } } } = client.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
         if (event === "PASSWORD_RECOVERY") {
           generation++;
           emit({ status: "initializing" });

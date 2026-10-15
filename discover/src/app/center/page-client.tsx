@@ -248,7 +248,6 @@ export default function CenterPage() {
   const [dashboardError, setDashboardError] = useState<string | null>(null);
 
   const refreshDashboard = useCallback(async () => {
-    if (!isLiveMode()) { setDashboardLoaded(true); return; }
     try {
       await ensureSession();
       const result = await getMyTutorDashboard();
@@ -439,7 +438,7 @@ export default function CenterPage() {
       {dashboardError && (
         <p role="alert" className="mx-auto max-w-5xl px-5 pt-10 text-sm text-amber-100">{dashboardError}</p>
       )}
-      <iframe ref={frameRef} src="/center.html" title="Tutoria Center" onLoad={notifyFrameReady} style={{ width: "100%", height: "100dvh", border: 0, display: "block" }} />
+      <iframe ref={frameRef} src="/center.html" title="Tutoria Center" onLoad={notifyFrameReady} style={{ width: "100%", height: "100dvh", border: 0, display: isLiveMode() ? "block" : "none" }} />
     </main>
   );
 }

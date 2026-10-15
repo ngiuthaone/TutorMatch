@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minh Anh — Public Speaking Coach | Tutoria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg:#0d0d0f; --wrap:#19191c; --wrap-line:#303034;
+    --card:#28282b; --card-line:#38383d; --card-soft:#232326;
+    --ink:#f1f1f2; --label:#d8d8da; --muted:#8f9096; --faint:#6f7076;
+    --field-bg:#111113; --field-line:#3b3b40; --field-ph:#626268;
+    --btn-bg:#242427; --btn-line:#3a3a3f; --btn-text:#e9e9eb;
+    --primary-bg:#ececed; --primary-text:#111113;
+    --ok-bg:#26372d; --ok-text:#acd0b8;
+  }
+  *{box-sizing:border-box}
+  html,body{background:var(--bg); color-scheme:dark}
+  body{
+    color:var(--label); font-family:"Instrument Sans","SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    letter-spacing:-.008em; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .heading{color:var(--ink); font-weight:650; letter-spacing:-.03em}
+  .mono{font-family:"Instrument Sans","SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:.06em; color:var(--faint)}
+  .muted{color:var(--muted)}
+  .card{background:var(--card); border:1px solid var(--card-line); border-radius:6px}
+  .card-soft{background:var(--card-soft); border:1px solid var(--card-line); border-radius:6px}
+  .field{background:var(--field-bg); border:1px solid var(--field-line); border-radius:4px; color:var(--ink)}
+  .tag{background:#262629; border:1px solid #414146; border-radius:4px; color:#d2d2d5}
+  .btn{background:var(--btn-bg); border:1px solid var(--btn-line); color:var(--btn-text); border-radius:4px}
+  .btn:hover{background:#2e2e32; border-color:#55555b}
+  .btn-primary{background:var(--primary-bg); border:1px solid var(--primary-bg); color:var(--primary-text); border-radius:4px; font-weight:600}
+  .btn-primary:hover{background:#fff}
+  .ok-pill{background:var(--ok-bg); color:var(--ok-text); border-radius:4px}
+  .tab{color:var(--muted)}
+  .tab-active{color:var(--ink); box-shadow:inset 0 -2px 0 #e6e6e8}
+  table.avail th, table.avail td{border:1px solid var(--wrap-line); padding:10px 12px; text-align:center}
+  ::selection{background:#3a3a3f; color:#fff}
+  .video-thumb{cursor:pointer}
+  .video-trigger{background:none;border:none;padding:0;width:100%}
+  #video-modal.is-open{display:block}
+</style>
+</head>
+<body>
+
+<header class="border-b" style="border-color:var(--wrap-line)">
+  <div class="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
+    <div class="flex items-center gap-8">
+      <span class="heading text-lg">tutoria</span>
+      <nav class="hidden md:flex gap-6 text-[13.5px]">
+        <a href="#" class="tab-active pb-1" style="color:var(--ink)">Home</a>
+        <a href="#" class="tab">Discover</a>
+        <a href="#" class="tab">Learn</a>
+        <a href="#" class="tab">Create</a>
+        <a href="#" class="tab">Community</a>
+      </nav>
+    </div>
+    <div class="w-9 h-9 rounded-full card-soft flex items-center justify-center text-sm mono">N</div>
+  </div>
+</header>
+
+<div class="max-w-6xl mx-auto px-6 py-8">
+  <p class="mono text-[11px] mb-6">Explore <span class="mx-1">/</span> Public speaking <span class="mx-1">/</span> Minh Anh</p>
+
+  <div class="flex flex-col md:flex-row gap-8 mb-10">
+    <div class="w-28 h-28 rounded-full card-soft shrink-0 flex items-center justify-center heading text-2xl">MA</div>
+    <div class="flex-1">
+      <div class="flex flex-wrap items-center gap-3 mb-1">
+        <h1 class="heading text-2xl">Minh Anh</h1>
+        <span class="ok-pill text-[11.5px] px-2.5 py-1">ID verified</span>
+      </div>
+      <p class="muted mb-3 text-[13px]">Public Speaking Coach · Cau Giay, Ha Noi</p>
+      <p class="max-w-xl mb-4 text-[15px]" style="color:var(--ink)">Build a clear voice, calm delivery, and the confidence to speak when it matters.</p>
+      <div class="flex flex-wrap gap-6 text-[13px] mb-4">
+        <div>★ 4.9 <span class="muted">(1,200 reviews)</span></div>
+        <div><span style="color:var(--ink)">200</span> <span class="muted">lessons taught</span></div>
+        <div><span style="color:var(--ink)">~1 hour</span> <span class="muted">average response</span></div>
+        <div><span style="color:#acd0b8">●</span> Available this week <span class="muted">· Next Mon, 09:00</span></div>
+      </div>
+      <div class="flex gap-2 text-[12.5px]">
+        <span class="tag px-2.5 py-1">Vietnamese (Native)</span>
+        <span class="tag px-2.5 py-1">English (Fluent)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <div class="lg:col-span-2">
+      <div class="flex gap-6 border-b mb-8 text-[13.5px]" style="border-color:var(--wrap-line)">
+        <a class="pb-3 tab-active" href="#about">About</a>
+        <a class="pb-3 tab" href="#pricing">Lessons &amp; pricing</a>
+        <a class="pb-3 tab" href="#availability">Availability</a>
+        <a class="pb-3 tab" href="#faq">FAQ</a>
+        <a class="pb-3 tab" href="#reviews">Reviews (1,200)</a>
+      </div>
+
+      <section id="about" class="mb-12">
+        <p class="mono text-[11px] mb-2">About Minh</p>
+        <h2 class="heading text-xl mb-4">Minh's approach to learning</h2>
+        <p class="mb-3 text-[13.5px]" style="color:var(--label)">I coach students and working professionals who want to speak with more clarity and confidence.</p>
+        <p class="mb-6 text-[13.5px]" style="color:var(--label)">Lessons combine practical drills, supportive feedback, and real speaking scenarios, from classroom presentations to high-stakes meetings.</p>
+
+        <div class="card p-4 sm:p-5 mb-8">
+          <button class="video-trigger w-full text-left" data-target="video-modal" aria-label="Play introduction video">
+            <div class="video-thumb relative w-full aspect-video sm:aspect-[16/9] card-soft overflow-hidden" style="border-radius:6px">
+              <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                <span class="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/90 text-black text-xs sm:text-sm shadow">&#9654;</span>
+              </div>
+              <div class="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/70 text-white text-[11px] sm:text-[12px]">1:02</div>
+            </div>
+            <div class="mt-3 sm:mt-4">
+              <p class="mono text-[11px] sm:text-[12px] mb-1">Introduction video</p>
+              <p style="color:var(--ink)" class="text-[13.5px] sm:text-[14px]">Meet Minh and see how lessons work</p>
+            </div>
+          </button>
+        </div>
+
+        <p class="mono text-[11px] mb-2">Teaching overview</p>
+        <h3 class="heading text-lg mb-2">What learning with Minh looks like</h3>
+        <p class="muted mb-6 max-w-lg text-[13px]">Subjects, learners, and methods are shown separately so learners can scan the profile quickly.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+          <div>
+            <p class="mb-2 text-[13.5px]" style="color:var(--ink)">Skills &amp; specialties</p>
+            <div class="flex flex-wrap gap-1.5"><span class="tag px-2 py-1 text-[12px]">Public speaking</span><span class="tag px-2 py-1 text-[12px]">Presentation skills</span><span class="tag px-2 py-1 text-[12px]">Communication</span></div>
+          </div>
+          <div>
+            <p class="mb-2 text-[13.5px]" style="color:var(--ink)">Learner levels</p>
+            <div class="flex flex-wrap gap-1.5"><span class="tag px-2 py-1 text-[12px]">Complete beginners</span><span class="tag px-2 py-1 text-[12px]">Developing speakers</span><span class="tag px-2 py-1 text-[12px]">Experienced presenters</span></div>
+          </div>
+          <div>
+            <p class="mb-2 text-[13.5px]" style="color:var(--ink)">Who I teach</p>
+            <div class="flex flex-wrap gap-1.5"><span class="tag px-2 py-1 text-[12px]">Teenagers</span><span class="tag px-2 py-1 text-[12px]">University students</span><span class="tag px-2 py-1 text-[12px]">Adults</span><span class="tag px-2 py-1 text-[12px]">Professionals</span></div>
+          </div>
+          <div>
+            <p class="mb-2 text-[13.5px]" style="color:var(--ink)">Teaching style</p>
+            <div class="flex flex-wrap gap-1.5"><span class="tag px-2 py-1 text-[12px]">Guided demonstration</span><span class="tag px-2 py-1 text-[12px]">Practice exercises</span><span class="tag px-2 py-1 text-[12px]">Personalized feedback</span><span class="tag px-2 py-1 text-[12px]">Recorded review</span></div>
+          </div>
+        </div>
+
+        <div class="card p-5 mb-6">
+          <p class="mb-3 text-[13.5px]" style="color:var(--ink)">What you can achieve</p>
+          <ul class="muted text-[13px] space-y-1.5">
+            <li>— Structure a persuasive talk</li>
+            <li>— Manage nerves before speaking</li>
+            <li>— Use voice and body language well</li>
+            <li>— Handle questions with confidence</li>
+          </ul>
+        </div>
+
+        <div class="card-soft p-5">
+          <p class="mb-2 text-[13.5px]" style="color:var(--ink)">Typical lesson</p>
+          <p class="muted text-[13px]">We begin with a short speaking prompt, choose one skill to improve, then practice it through guided exercises. You finish with direct feedback and a simple plan for the week.</p>
+        </div>
+      </section>
+
+      <section id="pricing" class="mb-12">
+        <p class="mono text-[11px] mb-2">Lesson formats</p>
+        <h2 class="heading text-xl mb-2">Choose where learning happens</h2>
+        <p class="muted mb-4 text-[13px]">Ha Noi and online</p>
+        <div class="flex flex-wrap gap-1.5 mb-8">
+          <span class="tag px-3 py-1.5 text-[12.5px]">Online</span>
+          <span class="tag px-3 py-1.5 text-[12.5px]">At my teaching space</span>
+          <span class="tag px-3 py-1.5 text-[12.5px]">At your location</span>
+          <span class="tag px-3 py-1.5 text-[12.5px]">Public place</span>
+        </div>
+
+        <p class="text-[11px] mb-2" style="font-family:'Instrument Sans',sans-serif; color:var(--faint); letter-spacing:.06em">Rates &amp; offers</p>
+        <h3 class="heading text-lg mb-1">Select the lesson length that fits your goal</h3>
+        <p class="muted text-[13px] mb-4">Payment becomes available after tutor approval.</p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          <div class="card p-4 text-center">
+            <p class="mono text-[10.5px] mb-1">30 min</p><p class="heading">150.000 <span class="text-[11px] muted">VND</span></p>
+          </div>
+          <div class="card p-4 text-center">
+            <p class="mono text-[10.5px] mb-1">50 min</p><p class="heading">210.000 <span class="text-[11px] muted">VND</span></p>
+          </div>
+          <div class="card p-4 text-center relative" style="border-color:#55555b">
+            <span class="ok-pill absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 text-[10px]">Popular</span>
+            <p class="mono text-[10.5px] mb-1 mt-1">60 min</p><p class="heading">250.000 <span class="text-[11px] muted">VND</span></p>
+          </div>
+          <div class="card p-4 text-center">
+            <p class="mono text-[10.5px] mb-1">90 min</p><p class="heading">350.000 <span class="text-[11px] muted">VND</span></p>
+          </div>
+        </div>
+
+        <div class="card-soft p-5 mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="mono text-[11px] mb-1">First lesson price</p>
+            <p class="mb-1 text-[13.5px]" style="color:var(--ink)">A lower price for your first 30-minute lesson</p>
+            <p class="muted text-[13px]">Get a feel for Minh's teaching style, discuss your goals, and start building a realistic learning plan.</p>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="muted text-[12px] line-through">250.000 đ</p>
+            <p class="heading text-lg">220.000 đ</p>
+          </div>
+        </div>
+
+        <p class="mb-3 text-[13.5px]" style="color:var(--ink)">Booking rules &amp; cancellation policy</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 mb-8 text-[13px]">
+          <div class="card-soft p-4">
+            <p class="mono text-[11px] mb-1" style="color:var(--ink)">Same-day booking</p>
+            <p class="muted">Available when the tutor has an open time.</p>
+          </div>
+          <div class="card-soft p-4">
+            <p class="mono text-[11px] mb-1" style="color:var(--ink)">No-show</p>
+            <p class="muted">The full lesson fee is charged.</p>
+          </div>
+          <div class="card-soft p-4">
+            <p class="mono text-[11px] mb-1" style="color:var(--ink)">Learner cancellation</p>
+            <p class="muted">Full refund at least 24 hours before the lesson.</p>
+          </div>
+          <div class="card-soft p-4">
+            <p class="mono text-[11px] mb-1" style="color:var(--ink)">Tutor cancellation</p>
+            <p class="muted">Full refund with the option to reschedule.</p>
+          </div>
+        </div>
+
+        <div class="card-soft p-5 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="mono text-[11px] mb-1">Short consultation</p>
+            <p class="mb-1 text-[13.5px]" style="color:var(--ink)">Ask one focused question before committing to a full lesson</p>
+            <p class="muted text-[13px] mb-2">A concise session for feedback, planning, or checking whether Minh is the right fit for your goal.</p>
+            <div class="flex flex-wrap gap-1.5"><span class="tag px-2 py-1 text-[11.5px]">Quick feedback</span><span class="tag px-2 py-1 text-[11.5px]">Goal &amp; material review</span><span class="tag px-2 py-1 text-[11.5px]">Ideal for new learners</span></div>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="muted text-[11px]">60 minutes</p>
+            <p class="heading text-lg">250.000 đ</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="availability" class="mb-12">
+        <p class="mono text-[11px] mb-2">Choose a time</p>
+        <h2 class="heading text-xl mb-1">Weekly availability</h2>
+        <p class="muted text-[13px] mb-4">Ha Noi time, GMT+7</p>
+        <div class="overflow-x-auto mb-3 card">
+          <table class="avail w-full text-[12.5px] min-w-[560px]">
+            <tr><th></th><th class="mono text-[10.5px]">Mon</th><th class="mono text-[10.5px]">Tue</th><th class="mono text-[10.5px]">Wed</th><th class="mono text-[10.5px]">Thu</th><th class="mono text-[10.5px]">Fri</th><th class="mono text-[10.5px]">Sat</th><th class="mono text-[10.5px]">Sun</th></tr>
+            <tr><th class="muted font-normal">09:00–12:00</th><td>Open</td><td class="muted">—</td><td>Open</td><td class="muted">—</td><td>Open</td><td>Open</td><td class="muted">—</td></tr>
+            <tr><th class="muted font-normal">14:00–18:00</th><td>Open</td><td>Open</td><td>Open</td><td class="muted">—</td><td>Open</td><td>Open</td><td>Open</td></tr>
+            <tr><th class="muted font-normal">18:00–21:00</th><td>Open</td><td class="muted">—</td><td class="muted">—</td><td>Open</td><td class="muted">—</td><td class="muted">—</td><td>Open</td></tr>
+          </table>
+        </div>
+        <p class="muted text-[12px]">Exact slots are shown after selecting a lesson length and format. Availability can change as other learners book.</p>
+      </section>
+
+      <section id="faq" class="mb-12">
+        <p class="mono text-[11px] mb-2">Before you book</p>
+        <h2 class="heading text-xl mb-4">Frequently asked questions</h2>
+        <p class="muted mb-4 text-[13px]">Everything you need to know before your first lesson with Minh.</p>
+        <div class="card divide-y" style="border-color:var(--card-line)">
+          <details class="p-4"><summary class="cursor-pointer text-[13.5px]" style="color:var(--ink)">How do I book a lesson with this tutor?</summary><p class="text-[13px] mt-2" style="color:var(--label)">Select a lesson length, choose your preferred format, then pick one of the available time slots. You’ll send a booking request first, then pay securely through Tutoria after the tutor accepts.</p></details>
+          <details class="p-4" style="border-color:var(--card-line)"><summary class="cursor-pointer text-[13.5px]" style="color:var(--ink)">Can I reschedule a booked lesson?</summary><p class="text-[13px] mt-2" style="color:var(--label)">Yes. You can request a new time from the booking page. Rescheduling remains free when the request is made at least 24 hours before the lesson.</p></details>
+          <details class="p-4" style="border-color:var(--card-line)"><summary class="cursor-pointer text-[13.5px]" style="color:var(--ink)">What should I prepare for my first lesson?</summary><p class="text-[13px] mt-2" style="color:var(--label)">Minh will send a short preparation list covering materials, equipment, and any advance steps needed for your chosen topic.</p></details>
+          <details class="p-4" style="border-color:var(--card-line)"><summary class="cursor-pointer text-[13.5px]" style="color:var(--ink)">How are lessons paid for?</summary><p class="text-[13px] mt-2" style="color:var(--label)">You’ll pay through Tutoria after the tutor accepts your booking request.</p></details>
+        </div>
+      </section>
+
+      <section id="reviews" class="mb-12">
+        <h2 class="heading text-xl mb-1">1,200 reviews from completed lessons</h2>
+        <p class="muted text-[13px] mb-6">Most recent · Verified bookings only</p>
+
+        <div class="flex flex-col sm:flex-row gap-8 mb-8">
+          <div class="text-center shrink-0">
+            <p class="heading text-4xl">4.9<span class="text-base muted"> / 5</span></p>
+          </div>
+          <div class="flex-1 space-y-1.5 text-[12px]">
+            <div class="flex items-center gap-2"><span class="w-4 muted">5</span><div class="flex-1 h-1.5 rounded field overflow-hidden"><div class="h-full" style="width:90%;background:#d9d9db"></div></div><span class="w-10 text-right muted">185</span></div>
+            <div class="flex items-center gap-2"><span class="w-4 muted">4</span><div class="flex-1 h-1.5 rounded field overflow-hidden"><div class="h-full" style="width:20%;background:#d9d9db"></div></div><span class="w-10 text-right muted">14</span></div>
+            <div class="flex items-center gap-2"><span class="w-4 muted">3</span><div class="flex-1 h-1.5 rounded field overflow-hidden"><div class="h-full" style="width:8%;background:#d9d9db"></div></div><span class="w-10 text-right muted">4</span></div>
+            <div class="flex items-center gap-2"><span class="w-4 muted">2</span><div class="flex-1 h-1.5 rounded field overflow-hidden"></div><span class="w-10 text-right muted">0</span></div>
+            <div class="flex items-center gap-2"><span class="w-4 muted">1</span><div class="flex-1 h-1.5 rounded field overflow-hidden"></div><span class="w-10 text-right muted">0</span></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div class="card p-4">
+            <p class="mb-1 text-[13px]" style="color:var(--ink)">Mai Phuong <span class="ok-pill text-[10px] px-1.5 py-0.5 ml-1">Verified</span></p>
+            <p class="muted text-[11.5px] mb-2">Apr 28, 2026 · 60-min online lesson</p>
+            <p class="text-[13.5px]" style="color:var(--label)">Patient, clear, and encouraging. I left the first lesson with a plan I could use right away.</p>
+          </div>
+          <div class="card p-4">
+            <p class="mb-1 text-[13px]" style="color:var(--ink)">Huyen Trang <span class="ok-pill text-[10px] px-1.5 py-0.5 ml-1">Verified</span></p>
+            <p class="muted text-[11.5px] mb-2">Apr 12, 2026 · 50-min online lesson</p>
+            <p class="text-[13.5px]" style="color:var(--label)">The feedback is specific and practical. Every session feels focused on what I need most.</p>
+          </div>
+          <div class="card p-4">
+            <p class="mb-1 text-[13px]" style="color:var(--ink)">Jason L. <span class="ok-pill text-[10px] px-1.5 py-0.5 ml-1">Verified</span></p>
+            <p class="muted text-[11.5px] mb-2">Mar 31, 2026 · 90-min in-person lesson</p>
+            <p class="text-[13.5px]" style="color:var(--label)">Great structure and thoughtful pacing. I can see my progress from one week to the next.</p>
+          </div>
+          <div class="card p-4">
+            <p class="mb-1 text-[13px]" style="color:var(--ink)">Thanh Vy <span class="ok-pill text-[10px] px-1.5 py-0.5 ml-1">Verified</span></p>
+            <p class="muted text-[11.5px] mb-2">Mar 18, 2026 · 60-min online lesson</p>
+            <p class="text-[13.5px]" style="color:var(--label)">The lesson activities are useful, and the follow-up notes make it easy to keep practicing.</p>
+          </div>
+        </div>
+        <a href="#" class="btn inline-block px-4 py-2 text-[13px]">View all 1,200 reviews</a>
+      </section>
+    </div>
+
+    <aside class="lg:col-span-1">
+      <div class="card p-5 sticky top-6">
+        <div class="flex items-baseline justify-between mb-4">
+          <p class="heading text-xl">250.000 đ <span class="text-[12px] muted font-normal">/ 60 min</span></p>
+        </div>
+        <div class="flex gap-2 mb-4 text-[12.5px]">
+          <button class="btn-primary flex-1 py-1.5">One lesson</button>
+          <button class="btn flex-1 py-1.5">Weekly</button>
+        </div>
+
+        <p class="mono text-[10.5px] mb-1.5">Lesson length (minutes)</p>
+        <div class="flex gap-1.5 mb-4 text-[12.5px]">
+          <button class="tag px-2.5 py-1">30</button>
+          <button class="tag px-2.5 py-1">50</button>
+          <button class="tag px-2.5 py-1" style="border-color:#8a8a90; color:#fff">60</button>
+          <button class="tag px-2.5 py-1">90</button>
+        </div>
+
+        <p class="mono text-[10.5px] mb-1.5">Lesson format</p>
+        <select class="field w-full mb-4 px-3 py-2 text-[13px]">
+          <option>Online</option>
+          <option>At my teaching space</option>
+          <option>At your location</option>
+          <option>Public place</option>
+        </select>
+
+        <div class="field p-3 mb-4 text-[13px]">
+          <p class="mono text-[10px] mb-1">Next available</p>
+          <p style="color:var(--ink)">Mon, Jul 27 · 09:00</p>
+          <p class="muted text-[11.5px]">Shown in Ha Noi time (GMT+7)</p>
+        </div>
+
+        <button class="btn w-full py-2.5 mb-2 text-[13.5px]">Choose a time</button>
+        <button class="btn-primary w-full py-2.5 mb-3 text-[13.5px]">Book with Minh</button>
+        <p class="muted text-[11.5px] text-center mb-4">You won't be charged yet</p>
+
+        <button class="btn w-full py-2.5 mb-3 text-[13.5px]">Message Minh</button>
+        <p class="muted text-[11.5px] text-center">Secure payment through Tutoria after approval</p>
+        <p class="muted text-[11.5px] text-center mt-1">Minh usually replies within an hour</p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="video-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-label="Introduction video">
+  <div class="absolute inset-0 bg-black/80" data-close-modal></div>
+  <div class="relative z-10 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-3xl aspect-video card flex items-center justify-center text-sm muted" style="border-radius:8px">
+      Video player placeholder
+    </div>
+    <button class="absolute top-4 right-4 text-white/80 hover:text-white text-lg" data-close-modal aria-label="Close video">&#x2715;</button>
+  </div>
+</div>
+<script>
+  document.addEventListener('click',function(e){
+    const trigger=e.target.closest('.video-trigger');
+    const modal=document.getElementById('video-modal');
+    const closer=e.target.closest('[data-close-modal]');
+    if(trigger){
+      const id=trigger.getAttribute('data-target');
+      const target=document.getElementById(id);
+      if(target) target.classList.add('is-open');
+    }
+    if(closer && modal){
+      modal.classList.remove('is-open');
+    }
+  });
+</script>
+</body>
+</html>

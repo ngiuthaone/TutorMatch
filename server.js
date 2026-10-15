@@ -127,6 +127,19 @@ async function handleApi(request, response, pathname) {
     return true;
   }
 
+  if (pathname === "/api/tutors" && request.method === "GET") {
+    const source = request.url.split("?")[1] || "";
+    const hasStoreSource = source.includes("source=store");
+    const state = readState();
+    const tutorProfiles = state && state.tutorProfiles ? state.tutorProfiles : [];
+    if (hasStoreSource) {
+      sendJson(request, response, 200, { ok: true, tutorProfiles });
+    } else {
+      sendJson(request, response, 200, { ok: true, tutorProfiles: tutorProfiles.map(({ verificationStatus, rejectionReason, ...rest }) => rest) });
+    }
+    return true;
+  }
+
   if (pathname.startsWith("/api/")) {
     sendJson(request, response, 404, { ok: false, error: "API route not found" });
     return true;

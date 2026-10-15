@@ -2,7 +2,6 @@ import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { ApiError } from "../errors/api-error.js";
 import type { AuthService } from "../services/auth-service.js";
-import type { MarketplaceKind } from "../services/marketplace-service.js";
 import { safeHttpUrl } from "../lib/sanitize.js";
 
 // Listing payloads are capped at 500KB by migration 0003 (octet_length on payload);

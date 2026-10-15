@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Link from "next/link";
 import { IconArrowLeft, IconMessage2, IconHeart, IconUserPlus, IconUserCheck } from "@tabler/icons-react";
 
 const ALL_POSTS = [
@@ -64,9 +65,9 @@ export function TagPage({ tag }: { tag: string }) {
     <div className="min-h-[100dvh] flex flex-col">
       <main className="flex-1">
         <div className="max-w-[680px] mx-auto px-4 pt-12 pb-1">
-          <a href="/discussions" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors mb-4">
+          <Link href="/discussions" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors mb-4">
             <IconArrowLeft size={14} /> Discussions
-          </a>
+          </Link>
           <div className="flex items-center gap-3">
             <span className="text-2xl">{tagIcons[decoded] || "🏷️"}</span>
             <div className="flex-1">
@@ -84,7 +85,7 @@ export function TagPage({ tag }: { tag: string }) {
 
         <div className="max-w-[680px] mx-auto px-4 pb-16 pt-6 space-y-3">
           {matchingPosts.map(post => (
-            <a key={post.id} href="/discussions"
+            <Link key={post.id} href="/discussions"
               className="block rounded-2xl border border-border bg-background p-5 hover:shadow-sm hover:border-primary/20 transition-all duration-200">
               <div className="flex items-start gap-3">
                 <img src={post.avatar} alt={post.author} className="w-9 h-9 rounded-full object-cover shrink-0" loading="lazy" />
@@ -105,11 +106,11 @@ export function TagPage({ tag }: { tag: string }) {
                   </div>
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
 
           {matchingBlogs.map(blog => (
-            <a key={blog.id} href={`/discussions/blogs/${blog.id}`}
+            <Link key={blog.id} href={`/discussions/blogs/${blog.id}`}
               className="block rounded-2xl border border-border bg-background p-5 hover:shadow-sm hover:border-primary/20 transition-all duration-200">
               <div className="flex items-start gap-4">
                 {blog.image && (
@@ -133,7 +134,7 @@ export function TagPage({ tag }: { tag: string }) {
                   </div>
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
 
           {matchingPosts.length === 0 && matchingBlogs.length === 0 && (

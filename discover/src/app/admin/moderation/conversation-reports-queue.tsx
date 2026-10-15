@@ -29,7 +29,7 @@ function formatDate(iso: string) {
 
 export default function ConversationReportsQueue({ initialStatus }: { initialStatus: string }) {
   const [status, setStatus] = useState(initialStatus);
-  const [reports, setReports] = useState<any[] | null>(null);
+  const [reports, setReports] = useState<Report[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -54,7 +54,7 @@ export default function ConversationReportsQueue({ initialStatus }: { initialSta
   }, []);
 
   useEffect(() => {
-    void reload(status);
+    queueMicrotask(() => { void reload(status); });
   }, [status]);
 
   const decide = useCallback(async (id: string, decision: "resolved" | "dismissed") => {

@@ -9,20 +9,33 @@
 -- deleted_at is null; admin reads still see the row with a placeholder.
 set search_path = '';
 
-create or replace function public.soft_delete_message(p_message_id uuid) returns jsonb
-language plpgsql security definer set search_path = '' as $$
-declare
-  uid uuid := auth.uid();
-  m public.messages%rowtype;
+do $$
 begin
-  if uid is null then raise insufficient_privilege; end if;
-  select * into m from public.messages where id = p_message_id for update;
-  if m.id is null then raise exception 'NOT_FOUND' using errcode = 'P0001'; end if;
-  if m.sender_id <> uid then raise insufficient_privilege; end if;
-  update public.messages
-    set deleted_at = now(), body = '[deleted]'
-    where id = p_message_id;
-  return jsonb_build_object('id', p_message_id, 'deletedAt', now(), 'mine', true);
+  if exists (
+    select 1
+    from information_schema.tables
+    where table_schema = 'public'
+      and table_name = 'messages'
+  ) then
+    create or replace function public.soft_delete_message(p_message_id uuid) returns jsonb
+    language plpgsql security definer set search_path = '' as $f$
+    declare
+      uid uuid := auth.uid();
+      m public.messages%rowtype;
+    begin
+      if uid is null then raise insufficient_privilege; end if;
+      select * into m from public.messages where id = p_message_id for update;
+      if m.id is null then raise exception 'NOT_FOUND' using errcode = 'P0001'; end if;
+      if m.sender_id <> uid then raise insufficient_privilege; end if;
+      update public.messages
+        set deleted_at = now(), body = '[deleted]'
+        where id = p_message_id;
+      return jsonb_build_object('id', p_message_id, 'deletedAt', now(), 'mine', true);
+    end $f$;
+    revoke all on function public.soft_delete_message(uuid) from public, anon, authenticated;
+    grant execute on function public.soft_delete_message(uuid) to authenticated;
+  else
+    -- Table doesn't exist yet in migration sequence; skip function creation
+    null;
+  end if;
 end $$;
-revoke all on function public.soft_delete_message(uuid) from public, anon, authenticated;
-grant execute on function public.soft_delete_message(uuid) to authenticated;

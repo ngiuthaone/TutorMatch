@@ -4,7 +4,6 @@ import {
   calculateRefundAmountSafe,
   calculateCommission,
   computeHoursUntilStart,
-  type RefundCalculationInput,
 } from "../src/domain/refund-calculation.js";
 import {
   calculatePayoutStatement,
@@ -20,8 +19,6 @@ import {
 import {
   listingKindToOfferingType,
   isValidOfferingType,
-  type ListingKind,
-  type OfferingType,
 } from "../src/domain/offering-type-mapping.js";
 
 // ─── Refund Calculation Tests ────────────────────────────────────────────────
@@ -646,7 +643,9 @@ describe("refund + commission integration", () => {
   });
 
   it("unresolved withholding blocks payout even with zero withholding amount", () => {
-    const payout = calculatePayoutStatement({
+    // Withholding is unresolved — payout should be blocked by eligibility check.
+    // (Payout value is intentionally not asserted here; see eligibility below.)
+    void calculatePayoutStatement({
       hostId: "h1",
       periodStart: "2026-08-01T00:00:00Z",
       periodEnd: "2026-08-31T23:59:59Z",

@@ -75,7 +75,7 @@ async function main() {
   await app.listen({ host: config.HOST, port: config.PORT });
   app.log.info({ host: config.HOST, port: config.PORT }, "Tutoria API started");
 
-  process.on("unhandledRejection", (reason, promise) => {
+  process.on("unhandledRejection", (reason, _promise) => {
     app.log.error({ err: reason, type: "unhandledRejection" }, "Unhandled promise rejection");
     if (process.env.SENTRY_DSN) {
       import("@sentry/node").then(({ captureException }) => {

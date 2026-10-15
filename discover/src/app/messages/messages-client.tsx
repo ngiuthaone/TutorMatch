@@ -609,29 +609,31 @@ function ConversationView({
 
   useEffect(() => {
     const controller = new AbortController();
-    lastReadAtRef.current = null;
-    setHasMore(false);
-    void (async () => {
-      setState("loading");
-      setError("");
-      setConversation(null);
-      setMessages([]);
-      try {
-        const [conv, list] = await Promise.all([
-          getConversation(conversationId, controller.signal),
-          listMessages(conversationId, 200, controller.signal),
-        ]);
-        if (controller.signal.aborted) return;
-        setConversation(conv);
-        setMessages(list);
-        setHasMore(list.length === 200);
-        setState("ready");
-      } catch (caught) {
-        if (controller.signal.aborted) return;
-        setState("error");
-        setError(summarizeError(caught));
-      }
-    })();
+    queueMicrotask(() => {
+      lastReadAtRef.current = null;
+      setHasMore(false);
+      void (async () => {
+        setState("loading");
+        setError("");
+        setConversation(null);
+        setMessages([]);
+        try {
+          const [conv, list] = await Promise.all([
+            getConversation(conversationId, controller.signal),
+            listMessages(conversationId, 200, controller.signal),
+          ]);
+          if (controller.signal.aborted) return;
+          setConversation(conv);
+          setMessages(list);
+          setHasMore(list.length === 200);
+          setState("ready");
+        } catch (caught) {
+          if (controller.signal.aborted) return;
+          setState("error");
+          setError(summarizeError(caught));
+        }
+      })();
+    });
     return () => controller.abort();
   }, [conversationId]);
 

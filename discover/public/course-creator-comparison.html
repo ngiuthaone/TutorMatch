@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Course Creator Comparison</title>
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --surface: #141619;
+      --panel: #1a1d22;
+      --line: #2a2e36;
+      --text: #e6e8eb;
+      --muted: #9ba3af;
+      --accent: #7c5cff;
+      --accent-soft: rgba(124, 92, 255, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 40px 24px 80px;
+    }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: clamp(26px, 4vw, 42px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin: 0 0 6px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 48px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 56px 0 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .group {
+      display: grid;
+      gap: 16px;
+    }
+
+    .group.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .group.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.18s ease, border-color 0.18s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: #3a3f4a;
+    }
+
+    .card-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-soft);
+    }
+
+    .badge {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-left: auto;
+    }
+
+    .card-img {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: contain;
+      background: #0f1114;
+      border-bottom: 1px solid var(--line);
+      display: block;
+    }
+
+    .card-img[src=""] {
+      background: #3a1220;
+      outline: 2px dashed #d64560;
+    }
+
+    .card-foot {
+      padding: 12px 18px;
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface);
+    }
+
+    @media (max-width: 900px) {
+      .group.three {
+        grid-template-columns: 1fr;
+      }
+      .group.two {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Course Creator Comparison</h1>
+    <p class="subtitle">Side-by-side view of iframe, test harness, and React app implementations across key course creator screens.</p>
+
+    <h2>Intended Learners</h2>
+    <div class="group three">
+      <div class="card">
+        <div class="card-head">
+          <p class="card-title"><span class="dot"></span>Original Iframe</p>
+          <span class="badge">baseline</span>
+        </div>
+        <img class="card-img" src="/course-creator-comparison/iframe-intended-learners.png" alt="Original iframe Intended Learners">
+        <div class="card-foot">Original iframe embed of the Intended Learners flow.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <p class="card-title"><span class="dot"></span>Test Harness</p>
+          <span class="badge">validation</span>
+        </div>
+        <img class="card-img" src="/course-creator-comparison/test-intended-learners.png" alt="Test harness Intended Learners">
+        <div class="card-foot">Test harness rendering of the same Intended Learners flow.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <p class="card-title"><span class="dot"></span>React App</p>
+          <span class="badge">new impl</span>
+        </div>
+        <img class="card-img" src="/course-creator-comparison/react-intended-learners.png" alt="React app Intended Learners">
+        <div class="card-foot">React implementation of Intended Learners.</div>
+      </div>
+    </div>
+
+    <h2>Landing Page</h2>
+    <div class="group three">
+      <div class="card">
+        <div class="card-head">
+          <p class="card-title"><span class="dot"></span>Original Iframe</p>
+          <span class="badge">baseline</span>
+        </div>
+        <img class="card-img" src="/course-creator-comparison/iframe-landing-page.png" alt="Original iframe Landing Page">
+        <div class="card-foot">Original iframe embed of the Landing Page flow.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <p class="card-title"><span class="dot"></span>Test Harness</p>
+          <span class="badge">validation</span>
+        </div>
+        <img class="card-img" src="/course-creator-comparison/test-landing-page.png" alt="Test harness Landing Page">
+        <div class="card-foot">Test harness rendering of the same Landing Page flow.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <p class="card-title"><span class="dot"></span>React App</p>
+          <span class="badge">new impl</span>
+        </div>
+        <img class="card-img" src="/course-creator-comparison/react-default.png" alt="React app default view">
+        <div class="card-foot">React implementation of the Landing Page view.</div>
+      </div>
+    </div>
+
+    <h2>React App — Other Views</h2>
+    <div class="group two">
+      <div class="card">
+        <div class="card-head">
+          <p class="card-title"><span class="dot"></span>Editor</p>
+          <span class="badge">new impl</span>
+        </div>
+        <img class="card-img" src="/course-creator-comparison/react-editor.png" alt="React app editor">
+        <div class="card-foot">React app course editor view.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <p class="card-title"><span class="dot"></span>Course Structure</p>
+          <span class="badge">new impl</span>
+        </div>
+        <img class="card-img" src="/course-creator-comparison/react-course-structure.png" alt="React app Course Structure">
+        <div class="card-foot">React app course structure view.</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

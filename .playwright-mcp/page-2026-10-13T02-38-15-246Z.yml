@@ -1,0 +1,172 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - button "Back" [ref=f1e6] [cursor=pointer]
+      - generic [aria-hidden] [ref=f1e9]: tutoria··
+      - generic [ref=f1e10]:
+        - generic [ref=f1e11]: Master sourdough bread baking at home
+        - generic [ref=f1e12]:
+          - generic [ref=f1e13]: Draft
+          - text: · Saved
+    - generic [ref=f1e14]:
+      - button "Preview" [ref=f1e15] [cursor=pointer]
+      - button "Course settings" [ref=f1e19] [cursor=pointer]
+      - button "Save" [ref=f1e23] [cursor=pointer]
+  - generic [ref=f1e28]:
+    - complementary [ref=f1e29]:
+      - generic [ref=f1e30]:
+        - heading "Master sourdough bread baking at home" [level=2] [ref=f1e31]
+        - paragraph [ref=f1e32]: Master sourdough bread baking at home · Draft
+      - generic [ref=f1e33]:
+        - generic [ref=f1e34]: Plan
+        - button "✓ Intended learners" [ref=f1e35] [cursor=pointer]:
+          - generic [ref=f1e36]: ✓
+          - generic [ref=f1e37]: Intended learners
+        - button "Video & setup" [ref=f1e38] [cursor=pointer]
+      - generic [ref=f1e41]:
+        - generic [ref=f1e42]: Create
+        - button "✓ Curriculum" [ref=f1e43] [cursor=pointer]:
+          - generic [ref=f1e44]: ✓
+          - generic [ref=f1e45]: Curriculum
+        - button "Captions" [ref=f1e46] [cursor=pointer]
+      - generic [ref=f1e49]:
+        - generic [ref=f1e50]: Publish
+        - button "✓ Course landing page" [ref=f1e51] [cursor=pointer]:
+          - generic [ref=f1e52]: ✓
+          - generic [ref=f1e53]: Course landing page
+        - button "✓ Pricing" [ref=f1e54] [cursor=pointer]:
+          - generic [ref=f1e55]: ✓
+          - generic [ref=f1e56]: Pricing
+        - button "Promotions" [ref=f1e57] [cursor=pointer]
+        - button "FAQ" [ref=f1e60] [cursor=pointer]
+        - button "Course messages" [ref=f1e63] [cursor=pointer]
+        - button "✓ Submit for review" [ref=f1e66] [cursor=pointer]:
+          - generic [ref=f1e67]: ✓
+          - generic [ref=f1e68]: Submit for review
+    - main [ref=f1e69]:
+      - generic [ref=f1e70]:
+        - generic [ref=f1e73]:
+          - generic [ref=f1e74]: Publish
+          - heading "Course landing page" [level=1] [ref=f1e75]
+          - paragraph [ref=f1e76]: Your course landing page is crucial to your success on the marketplace. It helps learners understand what they will learn and decide whether this course is right for them.
+        - paragraph [ref=f1e77]: The title, subtitle, description, basic information, topics, and course image are required before you can submit your course for review.
+        - generic [ref=f1e78]:
+          - generic [ref=f1e79]:
+            - generic [ref=f1e80]: Course title
+            - generic [ref=f1e81]: 37/60
+          - textbox [ref=f1e82]: Master sourdough bread baking at home
+          - generic [ref=f1e83]: Your title should be a mix of attention-grabbing, informative, and optimized for search.
+        - generic [ref=f1e84]:
+          - generic [ref=f1e85]:
+            - generic [ref=f1e86]: Course subtitle
+            - generic [ref=f1e87]: 69/120
+          - textbox [ref=f1e88]: From starter to crusty loaf — artisan bread technique for home bakers
+          - generic [ref=f1e89]: Use one or two related keywords and mention 3–4 of the most important areas that you cover.
+        - generic [ref=f1e90]:
+          - generic [ref=f1e91]:
+            - generic [ref=f1e92]: Course description
+            - generic [ref=f1e93]: 101 words · 200 required
+          - textbox "Insert your course description." [ref=f1e95]: Learn the craft of naturally leavened sourdough bread in your own kitchen. This course guides you from building and maintaining a healthy starter to mixing, shaping, scoring, and baking a beautiful artisan loaf. You will explore fermentation science, hydration levels, crumb structure, and the techniques professional bakers rely on every morning. Through demonstration lectures, guided practice assignments, and downloadable baking logs, you will gain the confidence to adapt recipes to your own flour, climate, and schedule. By the end of the course, you will be able to bake predictable, flavorful sourdough bread and troubleshoot the most common problems home bakers face.
+          - generic [ref=f1e96]: Description should have a minimum of 200 words. Do not include coupon codes, referral links, or external links.
+        - generic [ref=f1e97]:
+          - heading "Basic info" [level=2] [ref=f1e98]
+          - generic [ref=f1e99]:
+            - generic [ref=f1e100]:
+              - generic [ref=f1e101]: Language
+              - combobox "Language" [ref=f1e102]:
+                - option "-- Select --"
+                - option "English" [selected]
+                - option "Vietnamese"
+                - option "French"
+                - option "German"
+                - option "Spanish"
+                - option "Japanese"
+                - option "Korean"
+                - option "Portuguese"
+                - option "Italian"
+                - option "Indonesian"
+                - option "Thai"
+            - generic [ref=f1e103]:
+              - generic [ref=f1e104]: Level
+              - combobox "Level" [ref=f1e105]:
+                - option "-- Select --"
+                - option "Beginner Level" [selected]
+                - option "Intermediate Level"
+                - option "Expert Level"
+                - option "All Levels"
+            - generic [ref=f1e106]:
+              - generic [ref=f1e107]: Category
+              - combobox "Category" [ref=f1e108]:
+                - option "-- Select --"
+                - option "Development"
+                - option "Business"
+                - option "Finance & Accounting"
+                - option "IT & Software"
+                - option "Office Productivity"
+                - option "Personal Development"
+                - option "Design" [selected]
+                - option "Marketing"
+                - option "Lifestyle"
+                - option "Photography & Video"
+                - option "Health & Fitness"
+                - option "Music"
+                - option "Teaching & Academics"
+            - generic [ref=f1e109]:
+              - generic [ref=f1e110]: Subcategory
+              - textbox "Subcategory" [ref=f1e111]:
+                - /placeholder: Select a subcategory
+                - text: Culinary arts
+        - generic [ref=f1e112]:
+          - heading "What is primarily taught in your course?" [level=2] [ref=f1e114]
+          - generic [ref=f1e117]:
+            - generic [ref=f1e118]:
+              - text: Sourdough baking
+              - button "Remove Sourdough baking" [ref=f1e119] [cursor=pointer]
+            - generic [ref=f1e123]:
+              - text: Artisan bread
+              - button "Remove Artisan bread" [ref=f1e124] [cursor=pointer]
+            - generic [ref=f1e128]:
+              - text: Fermentation
+              - button "Remove Fermentation" [ref=f1e129] [cursor=pointer]
+          - textbox "Search topics..." [ref=f1e134]
+          - generic [ref=f1e135]: Choose up to four specific topics (3/4 selected).
+        - generic [ref=f1e136]:
+          - generic [ref=f1e137]:
+            - generic [ref=f1e138]: 750 × 422 px
+            - generic [ref=f1e145]:
+              - heading "Course image" [level=2] [ref=f1e146]
+              - paragraph [ref=f1e147]: "Upload your course image here. It must meet the course image quality standards to be accepted. Important guidelines: 750 × 422 pixels; .jpg, .jpeg, .gif, .bmp, or .png format; no text on the image."
+              - button "Change image" [ref=f1e148] [cursor=pointer]
+              - generic [ref=f1e149]: sourdough-cover.jpg
+              - generic [ref=f1e150]: Images used in the course must be properly licensed and appropriate for a general audience.
+          - generic [ref=f1e151]:
+            - generic [ref=f1e152]: Promotional video
+            - generic [ref=f1e158]:
+              - heading "Promotional video" [level=2] [ref=f1e159]
+              - paragraph [ref=f1e160]: A promotional video can help learners preview your teaching style and understand what they will gain from the course. A focused video under two minutes is recommended.
+              - button "Replace video" [ref=f1e161] [cursor=pointer]
+              - generic [ref=f1e162]: sourdough-promo.mp4
+        - generic [ref=f1e163]:
+          - heading "Instructor" [level=2] [ref=f1e164]
+          - paragraph [ref=f1e165]: Shown on the course landing page beside your course.
+          - generic [ref=f1e166]:
+            - generic [ref=f1e167]:
+              - generic [ref=f1e172]: No photo selected
+              - button "Choose photo" [ref=f1e173] [cursor=pointer]
+            - generic [ref=f1e174]:
+              - generic [ref=f1e175]:
+                - generic [ref=f1e176]: Name
+                - textbox "Name" [ref=f1e177]: Mai Tran
+              - generic [ref=f1e178]:
+                - generic [ref=f1e179]: Bio
+                - textbox "Bio" [ref=f1e180]:
+                  - /placeholder: A sentence or two about your background.
+                  - text: Sourdough baker and instructor with 10 years of artisan bread experience.
+  - contentinfo [ref=f1e181]:
+    - generic [ref=f1e182]:
+      - generic [ref=f1e183]:
+        - button "Previous" [ref=f1e184] [cursor=pointer]
+        - generic [ref=f1e187]: Saved
+      - generic [ref=f1e188]:
+        - button "Save" [ref=f1e189] [cursor=pointer]
+        - button "Save & continue" [ref=f1e190] [cursor=pointer]

@@ -31,10 +31,6 @@ function failSend(status: "forbidden" | "blocked" | "invalid" | "unavailable"): 
   throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
 }
 
-function failAvailability(status: "unavailable"): never {
-  throw new ApiError(503, "MESSAGING_UNAVAILABLE", "Messaging is temporarily unavailable.");
-}
-
 export const messagingRoutes: FastifyPluginAsync<{
   service: MessagingService;
   readMax: number;

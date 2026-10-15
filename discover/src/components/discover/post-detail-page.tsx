@@ -66,7 +66,7 @@ export function PostDetailPage({ postId }: { postId: string }) {
     }
   }, [postId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { queueMicrotask(() => { void load(); }); }, [load]);
 
   // Realtime: live comment count + new comments
   useEffect(() => {

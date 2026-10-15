@@ -9,7 +9,7 @@ test.describe('Auth', () => {
     await page.goto(`${BASE_URL}/auth/sign-in`);
     await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
     await expect(page.getByRole('textbox', { name: /email address/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /continue/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeVisible();
     expect(errors).toHaveLength(0);
   });
 

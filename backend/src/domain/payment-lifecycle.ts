@@ -155,23 +155,12 @@ export type Result<T> =
   | { ok: true; value: T }
   | { ok: false; error: { code: PaymentErrorCode; message: string } };
 
-const ALL_STATUSES: readonly PaymentStatus[] = [
-  "pending",
-  "succeeded",
-  "failed",
-  "refunded",
-];
-
 const ALL_PROVIDERS: readonly PaymentProvider[] = [
   "stripe",
   "vnpay",
   "wallet",
   "manual",
 ];
-
-function isStatus(value: unknown): value is PaymentStatus {
-  return (ALL_STATUSES as readonly unknown[]).includes(value);
-}
 
 function isProvider(value: unknown): value is PaymentProvider {
   return (ALL_PROVIDERS as readonly unknown[]).includes(value);

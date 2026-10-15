@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, DM_Serif_Display, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Cormorant_Garamond, DM_Serif_Display, Geist, Geist_Mono, Instrument_Sans, DM_Mono, Instrument_Serif } from "next/font/google";
 import { RuntimeConfigBootstrap } from "@/components/auth/runtime-config-bootstrap";
 import "./globals.css";
+import "@/components/course-creator/lib/course-creator-layout.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -11,6 +12,18 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const instrumentSans = Instrument_Sans({
+  variable: "--font-tutoria-sans",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const dmMono = DM_Mono({
+  variable: "--font-tutoria-mono",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 const instrumentSerif = Instrument_Serif({
@@ -42,7 +55,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: "dark",
-  themeColor: "#0b0b0c",
+  themeColor: "#0d0d0f",
 };
 
 export default function RootLayout({
@@ -53,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${dmSerifDisplay.variable} ${cormorantGaramond.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSans.variable} ${dmMono.variable} ${instrumentSerif.variable} ${dmSerifDisplay.variable} ${cormorantGaramond.variable} h-full antialiased`}
     >
       <body className="tutoria-cosmos min-h-[100dvh] flex flex-col">
         <RuntimeConfigBootstrap />

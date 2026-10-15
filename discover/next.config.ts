@@ -31,7 +31,7 @@ export async function headers() {
             "default-src 'self'",
             "script-src 'self'",
             "connect-src 'self' https://sufjrstewzvzjzvzekry.supabase.co",
-            "img-src 'self' data: https://picsum.photos https://images.unsplash.com",
+            "img-src 'self' data: https://picsum.photos https://images.unsplash.com https://sufjrstewzvzjzvzekry.supabase.co",
             "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
             "frame-ancestors 'none'",
             "base-uri 'self'",

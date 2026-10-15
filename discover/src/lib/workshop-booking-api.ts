@@ -1,5 +1,6 @@
 import { getApiBaseUrl } from "./auth/config";
 import { getSessionAccessToken } from "./auth/session";
+import type { EventDetail } from "./event-data";
 
 export class WorkshopApiError extends Error {
   code: string;
@@ -146,9 +147,35 @@ export async function startWorkshopPayment(bookingId: string): Promise<{ redirec
   return { redirectUrl };
 }
 
+export interface WorkshopRecommendation {
+  slug: string;
+  title: string;
+  host: string;
+  topic: string;
+  location: string;
+  price: string;
+  image?: string;
+  rating?: number;
+  reviewCount?: number;
+}
+
+export interface WorkshopBranch {
+  id: string;
+  name: string;
+  address: string;
+  mapUrl?: string;
+  note?: string;
+}
+
+export type WorkshopPublishedContent = EventDetail & {
+  branches?: WorkshopBranch[];
+};
+
 export interface WorkshopWithSessions {
   offering: WorkshopOffering;
   sessions: WorkshopSession[];
+  content?: WorkshopPublishedContent;
+  recommendations: WorkshopRecommendation[];
 }
 
 /**
@@ -189,5 +216,103 @@ export async function getWorkshopBySlug(slug: string): Promise<WorkshopWithSessi
     status: (s.status as WorkshopSession["status"]) ?? "scheduled",
   }));
 
-  return { offering, sessions };
+  let content: WorkshopPublishedContent | undefined;
+  try {
+    const rawContent = await request(`/api/v1/events/${encodeURIComponent(slug)}`);
+    const candidate = rawContent as Record<string, unknown> | null;
+    if (candidate && typeof candidate.title === "string" && typeof candidate.slug === "string") {
+      const rawBranches = Array.isArray(candidate.branches)
+        ? candidate.branches
+        : Array.isArray(candidate.locations)
+          ? candidate.locations
+          : [];
+      const branches: WorkshopBranch[] = rawBranches
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map((item, index) => ({
+          id: String(item.id ?? item.slug ?? "branch-" + index),
+          name: String(item.name ?? item.studioName ?? item.title ?? "Workshop branch"),
+          address: String(item.address ?? item.location ?? ""),
+          mapUrl: typeof item.mapUrl === "string" ? item.mapUrl : typeof item.map_url === "string" ? item.map_url : undefined,
+          note: typeof item.note === "string" ? item.note : undefined,
+        }))
+        .filter((item) => item.name && item.address);
+
+      content = {
+        ...(candidate as unknown as EventDetail),
+        ...(branches.length ? { branches } : {}),
+      };
+    }
+  } catch {
+    // Rich publishing content is optional while legacy offerings are migrated.
+  }
+
+  let recommendations: WorkshopRecommendation[] = [];
+  try {
+    const rawList = await request("/api/v1/events");
+    const payload = rawList as { events?: unknown } | unknown[] | null;
+    const source = Array.isArray(payload)
+      ? payload
+      : payload && Array.isArray(payload.events)
+        ? payload.events
+        : [];
+    const recommendationCandidates = source
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+      .filter((item) => String(item.slug ?? "") !== slug)
+      .map((item) => ({
+        item,
+        slug: String(item.slug ?? ""),
+      }))
+      .filter((candidate) => candidate.slug)
+      .slice(0, 16);
+
+    const validatedRecommendations = await Promise.all(
+      recommendationCandidates.map(async ({ item, slug: candidateSlug }) => {
+        try {
+          const offeringPayload = await request(
+            `/api/v1/offerings/by-slug/${encodeURIComponent(candidateSlug)}`,
+          ) as {
+            ok?: unknown;
+            offering?: unknown;
+            sessions?: unknown;
+          };
+
+          const offering = offeringPayload.offering as Record<string, unknown> | null;
+          const offeringKind = offering?.kind ?? offering?.offering_kind;
+          const publicationStatus = offering?.publicationStatus ?? offering?.publication_status;
+          if (
+            offeringPayload.ok !== true ||
+            !offering ||
+            offeringKind !== "workshop" ||
+            publicationStatus !== "published"
+          ) {
+            return null;
+          }
+
+          return { item, slug: candidateSlug };
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    recommendations = validatedRecommendations
+      .filter((candidate): candidate is { item: Record<string, unknown>; slug: string } => Boolean(candidate))
+      .slice(0, 8)
+      .map(({ item, slug: candidateSlug }) => ({
+        slug: candidateSlug,
+        title: String(item.title ?? ""),
+        host: String(item.host ?? item.creatorName ?? "Tutoria host"),
+        topic: String(item.topic ?? "Workshop"),
+        location: String(item.location ?? ""),
+        price: String(item.price ?? ""),
+        image: typeof item.image === "string" ? item.image : undefined,
+        rating: typeof item.rating === "number" ? item.rating : undefined,
+        reviewCount: typeof item.reviewCount === "number" ? item.reviewCount : undefined,
+      }))
+      .filter((item) => item.slug && item.title);
+  } catch {
+    recommendations = [];
+  }
+
+  return { offering, sessions, content, recommendations };
 }

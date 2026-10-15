@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
 import { testConfig } from "./helpers/config.js";
 import { FakeAuthService } from "./helpers/fake-auth-service.js";

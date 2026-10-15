@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { getUserFromStorage } from "@/lib/types";
 import {
   IconHeart, IconMessage2, IconArrowLeft, IconUserCheck, IconUserPlus,
@@ -148,9 +149,9 @@ export function UserProfile({ name }: { name: string }) {
         <div className="max-w-[640px] mx-auto px-4 pt-12 pb-16 text-center">
           <h1 className="text-xl font-semibold text-foreground">User not found</h1>
           <p className="text-sm text-muted mt-2">This profile doesn&apos;t exist or may have been removed.</p>
-          <a href="/discussions" className="inline-flex items-center gap-1.5 mt-6 text-sm font-medium text-primary hover:text-primary-dark transition-colors">
+          <Link href="/discussions" className="inline-flex items-center gap-1.5 mt-6 text-sm font-medium text-primary hover:text-primary-dark transition-colors">
             <IconArrowLeft size={14} /> Back to discussions
-          </a>
+          </Link>
         </div>
       </main>
     );
@@ -166,9 +167,9 @@ export function UserProfile({ name }: { name: string }) {
   return (
     <main className="flex-1">
       <div className="max-w-[640px] mx-auto px-4 pt-8 pb-16">
-        <a href="/discussions" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors mb-6">
+        <Link href="/discussions" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors mb-6">
           <IconArrowLeft size={14} /> Discussions
-        </a>
+        </Link>
 
         <div className="rounded-2xl border border-border bg-background overflow-hidden">
           <div className="aspect-[4/1] bg-gradient-to-br from-primary/20 via-primary/10 to-surface relative overflow-hidden">
@@ -288,7 +289,7 @@ export function UserProfile({ name }: { name: string }) {
           ) : (
             <div className="mt-6 space-y-3">
               {posts.map(p => (
-                <a key={p.id} href="/discussions" className="block rounded-2xl border border-border bg-background p-5 hover:shadow-sm hover:border-primary/20 transition-all duration-200">
+                <Link key={p.id} href="/discussions" className="block rounded-2xl border border-border bg-background p-5 hover:shadow-sm hover:border-primary/20 transition-all duration-200">
                   <div className="flex items-start gap-3">
                     <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
                     <div className="flex-1 min-w-0">
@@ -307,13 +308,13 @@ export function UserProfile({ name }: { name: string }) {
                         <div className="flex items-center gap-1"><IconHeart size={13} /><span className="tabular-nums">{p.likes}</span></div>
                         <div className="flex items-center gap-1"><IconMessage2 size={13} /><span className="tabular-nums">{p.comments}</span></div>
                       </div>
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          )
-        )}
+                     </div>
+                   </div>
+                 </Link>
+               ))}
+             </div>
+           )
+         )}
 
         {/* Articles tab */}
         {tab === "articles" && (

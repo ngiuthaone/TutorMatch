@@ -33,12 +33,12 @@ export function BookingDatePicker({ tutorProfileId, onSlotSelected, selectedSlot
 
   useEffect(() => {
     if (!selectedDate) {
-      setState({ slots: [], loading: false, error: null });
+      queueMicrotask(() => setState({ slots: [], loading: false, error: null }));
       return;
     }
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     const controller = new AbortController();
-    setState((prev) => ({ ...prev, loading: true, error: null }));
+    queueMicrotask(() => setState((prev) => ({ ...prev, loading: true, error: null })));
 
     fetch(`/api/v1/tutors/${tutorProfileId}/available-slots?date=${dateStr}`, {
       signal: controller.signal,
