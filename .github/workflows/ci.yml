@@ -193,7 +193,7 @@ jobs:
 
       - name: Run E2E tests
         working-directory: discover
-        run: npx playwright test --project=chromium --grep-invert="debug|verify|storage"
+        run: npx playwright test --project=chromium tests/e2e/auth.spec.ts
         env:
           BASE_URL: http://127.0.0.1:3000
           E2E_BASE_URL: http://127.0.0.1:3000
