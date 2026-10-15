@@ -138,7 +138,7 @@ jobs:
           pnpm run dev > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
         env:
-          NODE_ENV: test
+          NODE_ENV: development
           TUTORIA_ENVIRONMENT: development
           HOST: 127.0.0.1
           PORT: 4000
