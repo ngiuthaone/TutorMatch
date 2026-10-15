@@ -14,11 +14,11 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4
+      - uses: actions/checkout@v4 # v4
+      - uses: pnpm/action-setup@v4 # v4
         with:
           version: 9
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
+      - uses: actions/setup-node@v4 # v4
         with:
           node-version: "22"
           cache: "pnpm"
@@ -34,7 +34,7 @@ jobs:
     name: Policy (security policy validation)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@v4 # v4
       - name: Install PyYAML
         run: pip install pyyaml
       - name: Validate security policies
@@ -47,7 +47,7 @@ jobs:
       run:
         working-directory: discover
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@v4 # v4
       - uses: actions/setup-node@39370e3970a6d050c480ff0ed4d3fdee5af # v4
         with:
           node-version: "22"
@@ -65,7 +65,7 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@v4 # v4
       - uses: supabase/setup-cli@v1 # v3
         with:
           supabase-url: ${{ vars.SUPABASE_URL }}
@@ -97,21 +97,21 @@ jobs:
     needs: [backend, discover]
     if: github.event_name == 'push'
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@v4 # v4
 
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
+      - uses: actions/setup-node@v4 # v4
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: discover/package-lock.json
 
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
+      - uses: actions/setup-node@v4 # v4
         with:
           node-version: "22"
           cache: "pnpm"
           cache-dependency-path: backend/pnpm-lock.yaml
 
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4
+      - uses: pnpm/action-setup@v4 # v4
         with:
           version: 9
 
