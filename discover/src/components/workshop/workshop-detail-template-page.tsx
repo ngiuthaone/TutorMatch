@@ -39,6 +39,8 @@ type PageState =
       sessions: BookableSession[];
       content?: WorkshopPublishedContent;
       recommendations: WorkshopRecommendation[];
+      selectedSession: BookableSession | null;
+      participants: number;
     };
 
 interface WorkshopDetailTemplatePageProps {
@@ -275,15 +277,96 @@ function FaqItems({
   );
 }
 
+
+function WorkshopPlanPreview({
+  plan,
+  activeIndex,
+  setActiveIndex,
+}: {
+  plan: NonNullable<WorkshopPublishedContent["plan"]>;
+  activeIndex: number;
+  setActiveIndex: (index: number) => void;
+}) {
+  const active = plan[activeIndex];
+
+  return (
+    <div className={styles.planGridWrapper}>
+      <div className={styles.planGrid}>
+        <div className={styles.planColumn}>
+          {plan.map((step, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <article
+                key={step.title + index}
+                data-plan-step={index + 1}
+                data-active={isActive}
+                className={
+                  styles.planStep + (isActive ? " " + styles.planStepActive : "")
+                }
+                onMouseEnter={() => setActiveIndex(index)}
+                onFocus={() => setActiveIndex(index)}
+                onClick={() => setActiveIndex(index)}
+              >
+                <div className={styles.planStepNumber}>
+                  {String(index + 1).padStart(2, "0")}
+                </div>
+                <div className={styles.planStepBody}>
+                  <div className={styles.planStepTitle}>
+                    <h3>{step.title}</h3>
+                  </div>
+                  <p className={styles.planStepDescription}>{step.description}</p>
+                </div>
+                <div className={styles.planStepMeta}>
+                  {step.image ? (
+                    <div
+                      className={styles.planStepThumb}
+                      style={{ backgroundImage: `url("${step.image}")` }}
+                    />
+                  ) : null}
+                  {step.duration ? (
+                    <span className={styles.planStepTime}>{step.duration}</span>
+                  ) : null}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        <aside className={styles.planPreview} aria-label="Workshop plan preview">
+          <div className={styles.planPreviewCard}>
+            <div className={styles.planPreviewMedia}>
+              {active.image ? (
+                <div
+                  className={
+                    styles.planPreviewImage + " " + styles.planPreviewImageActive
+                  }
+                  style={{ backgroundImage: `url("${active.image}")` }}
+                />
+              ) : null}
+              <div className={styles.planPreviewOverlay}>
+                <p className={styles.planPreviewEyebrow}>Live preview</p>
+                <h3 className={styles.planPreviewTitle}>{active.title}</h3>
+                {active.duration ? (
+                  <p className={styles.planPreviewTime}>{active.duration}</p>
+                ) : null}
+              </div>
+            </div>
+            <p className={styles.planPreviewCopy}>{active.description}</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
 export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageProps) {
   const session = useSession();
   const [page, setPage] = useState<PageState>({ status: "loading" });
-  const [selectedSession, setSelectedSession] = useState<BookableSession | null>(null);
-  const [participants, setParticipants] = useState(1);
   const [saved, setSaved] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [selectedBranchId, setSelectedBranchId] = useState("");
   const [toast, setToast] = useState("");
+  const [activePlanIndex, setActivePlanIndex] = useState(0);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((message: string) => {
@@ -326,13 +409,17 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
           version: offering.version,
         }));
 
+        const branches = result.content?.branches ?? [];
         setPage({
           status: "ready",
           offering,
           sessions: bookableSessions,
           content: result.content,
           recommendations: result.recommendations,
+          selectedSession: null,
+          participants: 1,
         });
+        setSelectedBranchId(branches[0]?.id ?? "");
       } catch {
         if (!cancelled && !controller.signal.aborted) setPage({ status: "not-found" });
       }
@@ -344,17 +431,22 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
     };
   }, [slug]);
 
-  useEffect(() => {
-    setSelectedSession(null);
-    setParticipants(1);
-    const branches = page.status === "ready" ? page.content?.branches ?? [] : [];
-    setSelectedBranchId(branches[0]?.id ?? "");
-  }, [page]);
+  const updateSelection = useCallback(
+    (updates: Partial<{ selectedSession: BookableSession | null; participants: number }>) => {
+      setPage((prev) => {
+        if (prev.status !== "ready") return prev;
+        return { ...prev, ...updates };
+      });
+    },
+    [],
+  );
 
   const offering = page.status === "ready" ? page.offering : null;
   const sessions = page.status === "ready" ? page.sessions : [];
   const content = page.status === "ready" ? page.content : undefined;
   const recommendations = page.status === "ready" ? page.recommendations : [];
+  const selectedSession = page.status === "ready" ? page.selectedSession : null;
+  const participants = page.status === "ready" ? page.participants : 1;
   const branches = content?.branches ?? [];
   const selectedBranch = branches.find((branch) => branch.id === selectedBranchId) ?? branches[0];
   const safeMapUrl =
@@ -587,7 +679,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
                   <SessionPicker
                     sessions={sessions}
                     selected={selectedSession}
-                    onSelect={setSelectedSession}
+                    onSelect={(session) => updateSelection({ selectedSession: session })}
                   />
 
                   {selectedSession ? (
@@ -606,7 +698,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
                       <ParticipantQuantity
                         max={maxParticipants}
                         value={participants}
-                        onChange={setParticipants}
+                        onChange={(value) => updateSelection({ participants: value })}
                       />
 
                       <div className={styles.priceDivider}>
@@ -721,25 +813,13 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
             <SectionHeader
               eyebrow="Workshop plan"
               title="How the experience flows."
-              description="The published plan comes directly from the creator's structured workshop content."
+              description="Hover a step to preview the moment in the kitchen."
             />
-            <div className={styles.planList}>
-              {content.plan.map((step, index) => (
-                <article className={styles.planRow} key={step.title + index}>
-                  <div className={styles.planIndex}>{String(index + 1).padStart(2, "0")}</div>
-                  <div className={styles.planCopy}>
-                    <div className={styles.planTopline}>
-                      <h3>{step.title}</h3>
-                      {step.duration ? <span>{step.duration}</span> : null}
-                    </div>
-                    <p>{step.description}</p>
-                  </div>
-                  {step.image ? (
-                    <div className={styles.planImage} style={{ backgroundImage: `url("${step.image}")` }} />
-                  ) : null}
-                </article>
-              ))}
-            </div>
+            <WorkshopPlanPreview
+              plan={content.plan}
+              activeIndex={activePlanIndex}
+              setActiveIndex={setActivePlanIndex}
+            />
           </section>
         ) : null}
 
@@ -870,7 +950,7 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
                       }
                       disabled={full}
                       onClick={() => {
-                        setSelectedSession(item);
+                        updateSelection({ selectedSession: item });
                         document
                           .getElementById("overview")
                           ?.scrollIntoView({ behavior: "smooth" });
@@ -1102,9 +1182,9 @@ export function WorkshopDetailTemplatePage({ slug }: WorkshopDetailTemplatePageP
           offeringId={offering.id}
           listingTitle={offering.title}
           selectedSession={selectedSession}
-          onSelectSession={setSelectedSession}
+          onSelectSession={(session) => updateSelection({ selectedSession: session })}
           participants={participants}
-          onParticipants={setParticipants}
+          onParticipants={(value) => updateSelection({ participants: value })}
           onBooked={handleBooked}
           sessions={sessions}
         />

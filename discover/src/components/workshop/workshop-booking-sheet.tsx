@@ -19,7 +19,13 @@ import { ParticipantQuantity } from "@/components/shared/participant-quantity";
 
 const STEPS = ["When", "Guests", "Contact", "Review", "Pay"] as const;
 type Step = (typeof STEPS)[number];
-const STEP_INDEX: Record<Step, number> = { When: 0, Guests: 1, Contact: 2, Review: 3, Pay: 4 };
+const STEP_INDEX: Record<Step, number> = {
+  When: 0,
+  Guests: 1,
+  Contact: 2,
+  Review: 3,
+  Pay: 4,
+};
 const LAST_STEP: Step = "Pay";
 
 const PAY_METHODS = ["VNPay", "Credit / Debit Card"] as const;
@@ -204,8 +210,6 @@ export function WorkshopBookingSheet({
   const hasSession = selectedSession !== null;
 
   /* Validators per step. */
-  const whenValid = hasSession;
-  const guestsValid = hasSession;
   const contactValid =
     name.trim().length > 0 &&
     EMAIL_RE.test(email.trim()) &&
@@ -216,16 +220,14 @@ export function WorkshopBookingSheet({
     (s: Step) => {
       switch (s) {
         case "When":
-          return whenValid;
-        case "Guests":
-          return guestsValid;
+          return hasSession;
         case "Contact":
           return contactValid;
         default:
           return true;
       }
     },
-    [whenValid, guestsValid, contactValid],
+    [hasSession, contactValid],
   );
 
   const goNext = () => {
@@ -371,6 +373,11 @@ export function WorkshopBookingSheet({
 
         {/* Header */}
         <div className="flex items-center gap-3 px-5 pt-4 pb-3">
+          {!inReceipt && (
+            <span className="shrink-0 rounded-full border border-[rgba(255,255,255,0.14)] bg-[rgba(255,255,255,0.04)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--accent,#d6c1ad)]">
+              Free cancellation · 24h before
+            </span>
+          )}
           {!inReceipt && step !== "When" && (
             <button
               type="button"
@@ -779,6 +786,9 @@ function BookingReceipt({
         <p className="mt-1 text-[0.85rem] leading-6 text-[var(--muted,#a1a1aa)]">
           Your seat is reserved and the host has been notified. We&apos;ll confirm shortly \u2014
           {isFree ? " this is a free booking." : " payment happens in a separate secure step."}
+        </p>
+        <p className="mt-2 text-[0.72rem] text-[var(--quiet,#71717a)]">
+          No charge has been taken. Show the check-in code below to the host.
         </p>
       </div>
 

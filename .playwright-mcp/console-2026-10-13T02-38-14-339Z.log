@@ -1,0 +1,2 @@
+[     644ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:4000/api/v1/tutors?limit=24:0
+[     859ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8001/favicon.ico:0

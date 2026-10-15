@@ -1,6 +1,7 @@
 "use client";
 
 import { IconHeart, IconMessage2 } from "@tabler/icons-react";
+import Link from "next/link";
 
 const recentPosts = [
   { id: "p1", author: "Duc Pham", role: "Photography Artist", avatar: "https://picsum.photos/seed/duc-avatar/60/60", content: "Golden hour at West Lake today. The light was absolutely incredible 🌅", image: "https://picsum.photos/seed/golden-hour/600/400", likes: 142, comments: 8, tags: ["Photography"], createdAt: "1h ago" },
@@ -14,11 +15,11 @@ export function Discussions() {
       <div className="max-w-[680px] mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold tracking-tight text-foreground">Discussions</h2>
-          <a href="/discussions" className="text-sm text-primary hover:text-primary-dark font-medium transition-colors">See all</a>
+          <Link href="/discussions" className="text-sm text-primary hover:text-primary-dark font-medium transition-colors">See all</Link>
         </div>
         <div className="space-y-3">
           {recentPosts.map((post) => (
-            <a key={post.id} href="/discussions"
+            <Link key={post.id} href="/discussions"
               className="block rounded-2xl border border-border bg-background p-4 hover:shadow-sm hover:border-primary/20 transition-all duration-200">
               <div className="flex items-start gap-3">
                 <img src={post.avatar} alt={post.author} className="w-8 h-8 rounded-full object-cover shrink-0" loading="lazy" />
@@ -47,8 +48,8 @@ export function Discussions() {
                   </div>
                 </div>
               </div>
-            </a>
-          ))}
+            </Link>
+            ))}
         </div>
       </div>
     </section>

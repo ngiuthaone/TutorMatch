@@ -174,12 +174,7 @@ export type Result<T> =
   | { ok: true; value: T }
   | { ok: false; error: { code: SessionErrorCode; message: string } };
 
-const ALL_STATUSES: readonly SessionStatus[] = ["scheduled", "cancelled", "completed"];
 const ALL_ACTORS: readonly SessionActor[] = ["host", "system"];
-
-function isStatus(value: string): value is SessionStatus {
-  return (ALL_STATUSES as readonly string[]).includes(value);
-}
 
 function isActor(value: string): value is SessionActor {
   return (ALL_ACTORS as readonly string[]).includes(value);

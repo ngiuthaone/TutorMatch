@@ -23,8 +23,6 @@ export function serviceUnavailable() {
   return { status: "unavailable" as const };
 }
 
-import type { PostgrestError } from "@supabase/supabase-js";
-
 /**
  * Common Supabase error codes mapped to result statuses.
  */

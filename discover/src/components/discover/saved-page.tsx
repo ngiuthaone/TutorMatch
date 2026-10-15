@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { IconHeart, IconMessage2, IconBookmark, IconArrowLeft } from "@tabler/icons-react";
 
 const POSTS = [
@@ -50,10 +51,10 @@ export function SavedPage() {
     <div className="min-h-[100dvh] flex flex-col">
       <main className="flex-1">
         <div className="max-w-[680px] mx-auto px-4 pt-12 pb-1">
-          <a href="/discussions"
+          <Link href="/discussions"
             className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors mb-4">
             <IconArrowLeft size={14} /> Discussions
-          </a>
+          </Link>
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">Saved</h1>
           <p className="mt-2 text-sm text-muted">{total} saved {total === 1 ? "item" : "items"}</p>
         </div>

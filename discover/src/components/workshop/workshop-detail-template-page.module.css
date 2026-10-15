@@ -733,6 +733,177 @@
   line-height: 1.7;
 }
 
+
+.planGridWrapper {
+  width: min(100% - 40px, 1200px);
+  margin: 0 auto;
+}
+
+.planGrid {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 420px;
+  gap: 28px;
+  align-items: start;
+}
+
+.planColumn {
+  display: grid;
+  gap: 10px;
+}
+
+.planStep {
+  display: grid;
+  grid-template-columns: 40px minmax(0,1fr) auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255,255,255,.02);
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+.planStep:hover,
+.planStep:focus-visible,
+.planStepActive {
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.16);
+  outline: none;
+}
+
+.planStepNumber {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.025);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.planStepBody {
+  min-width: 0;
+}
+
+.planStepTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.planStepTitle h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -.02em;
+}
+
+.planStepDescription {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.planStepMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.planStepThumb {
+  width: 72px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background-position: center;
+  background-size: cover;
+  background-color: #141416;
+}
+
+.planStepTime {
+  color: var(--quiet);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.planPreview {
+  position: sticky;
+  top: 120px;
+}
+
+.planPreviewCard {
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: rgba(255,255,255,.025);
+  overflow: hidden;
+}
+
+.planPreviewMedia {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #101012;
+}
+
+.planPreviewImage {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+
+.planPreviewImageActive {
+  opacity: 1;
+}
+
+.planPreviewOverlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: linear-gradient(to top, rgba(0,0,0,.8), rgba(0,0,0,.22), transparent);
+  padding: 22px;
+}
+
+.planPreviewEyebrow {
+  color: rgba(255,255,255,.7);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.planPreviewTitle {
+  margin: 8px 0 0;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -.03em;
+}
+
+.planPreviewTime {
+  margin: 4px 0 0;
+  color: rgba(255,255,255,.8);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.planPreviewCopy {
+  padding: 18px 20px 22px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
 .planImage {
   min-height: 92px;
   border: 1px solid var(--line);

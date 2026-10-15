@@ -36,7 +36,7 @@ export function BlockedUsersList({ initial }: { initial: Block[] }) {
   if (rows.length === 0) {
     return (
       <ul className="mt-4 divide-y divide-[#1c1d20] rounded border border-[#1c1d20] bg-[#0b0b0c]">
-        <li className="p-6 text-center text-sm text-[#7a7a80]">You haven't blocked anyone.</li>
+        <li className="p-6 text-center text-sm text-[#7a7a80]">You haven&apos;t blocked anyone.</li>
       </ul>
     );
   }

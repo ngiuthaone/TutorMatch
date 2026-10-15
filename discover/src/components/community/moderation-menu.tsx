@@ -19,6 +19,19 @@ interface ModerationMenuProps {
 
 export function ModerationMenu({ targetType, targetId, isPinned, isLocked, isRemoved, canModerate, onUpdate }: ModerationMenuProps) {
   if (!canModerate) return null;
+  return (
+    <ModerationMenuInner
+      targetType={targetType}
+      targetId={targetId}
+      isPinned={isPinned}
+      isLocked={isLocked}
+      isRemoved={isRemoved}
+      onUpdate={onUpdate}
+    />
+  );
+}
+
+function ModerationMenuInner({ targetType, targetId, isPinned, isLocked, isRemoved, onUpdate }: Omit<ModerationMenuProps, "canModerate">) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const ref = useRef<HTMLDivElement>(null);

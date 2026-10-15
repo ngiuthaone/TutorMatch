@@ -356,7 +356,7 @@ describe("marketplace-service mapRow / public read (real service + fake supabase
  * special-case must not swallow genuine infrastructure failures.
  */
 function makeFakeClientWithUpdateError(updateError: { code: string; message: string }) {
-  const rows: Row[] = [];
+  const _rows: Row[] = [];
   function makeBuilder(): any {
     const state: QueryState = {
       table: null,

@@ -3,8 +3,6 @@
  * Provides consistent version checking patterns across all services.
  */
 
-import type { SupabaseClient } from "@supabase/supabase-js";
-
 /**
  * Check if the current version matches the expected version.
  * Returns true if versions match (proceed with update), false if stale.

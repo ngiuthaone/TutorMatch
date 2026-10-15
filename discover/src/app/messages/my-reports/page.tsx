@@ -58,7 +58,7 @@ export default async function MyReportsPage() {
         </p>
         <ul className="mt-4 divide-y divide-[#1c1d20] rounded border border-[#1c1d20] bg-[#0b0b0c]">
           {reports.length === 0 ? (
-            <li className="p-6 text-center text-sm text-[#7a7a80]">You haven't reported anything yet.</li>
+            <li className="p-6 text-center text-sm text-[#7a7a80]">You haven&apos;t reported anything yet.</li>
           ) : (
             reports.map((r) => (
               <li key={r.id} className="p-3">

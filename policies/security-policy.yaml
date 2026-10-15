@@ -1,0 +1,90 @@
+schema_version: "1.0"
+policy_owner: "orchestrator / security_reviewer"
+description: >
+  Machine-readable security policy for AI coding agents operating on the Tutoria
+  repository. Enforced by scripts/validate-policies.py and integrated into CI.
+  Human-readable governance remains in AGENTS.md and docs/OSS_POLICY.md.
+last_reviewed: "2026-10-12"
+
+forbidden_commands:
+  description: >
+    Shell commands or patterns that agents must never execute without explicit
+    human approval. The validator scans .agents/skills/*/SKILL.md and scripts/
+    for these patterns. Documentation files (docs/, AGENTS.md) are not scanned
+    because they legitimately reference patterns to describe restrictions.
+  patterns:
+    - pattern: "rm -rf /"
+      severity: "critical"
+      reason: "Destructive recursive delete from filesystem root"
+    - pattern: "git push --force"
+      severity: "critical"
+      reason: "Can overwrite remote history and destroy peer work"
+    - pattern: "git reset --hard HEAD~"
+      severity: "critical"
+      reason: "Destroys commit history"
+    - pattern: "curl.*\\|.*sh"
+      severity: "critical"
+      reason: "Remote script pipe execution is untrusted supply-chain risk"
+    - pattern: "sudo "
+      severity: "high"
+      reason: "Elevated privileges bypass sandbox and security controls"
+
+protected_files:
+  description: >
+    Files that require orchestrator approval before modification.
+  paths:
+    - "AGENTS.md"
+    - "CLAUDE.md"
+    - "docs/OSS_POLICY.md"
+    - "oss/REPO_POLICY.json"
+    - "oss/EXTERNAL_SOURCES.json"
+    - "THIRD_PARTY_NOTICES.md"
+    - ".env"
+    - ".env.local"
+    - ".env.production"
+    - "backend/.env"
+    - "backend/.env.bak"
+    - "backend/.env.prod.bak"
+    - "render.yaml"
+    - "vercel.json"
+    - ".github/workflows/"
+
+security_sensitive_changes:
+  description: >
+    Code surfaces that must involve security_reviewer before merge.
+  triggers:
+    - "Supabase RLS policies"
+    - "Supabase RPC functions"
+    - "auth/session handling"
+    - "user-generated content"
+    - "file uploads / storage"
+    - "messaging/conversations"
+    - "booking/payments/refunds"
+    - "admin/moderation"
+    - "CORS/CSP/rate limiting"
+    - "secrets/configuration"
+
+required_verification:
+  description: >
+    Evidence that must be present before a task involving these surfaces is
+    marked complete. Agents must report UNVERIFIED when a check cannot run.
+  checks:
+    - "relevant unit/integration tests"
+    - "lint/type-check/build for affected surface"
+    - "QA verification against acceptance contract (when preflight used)"
+    - "security review for sensitive flows"
+    - "external-source/license review when applicable"
+
+prohibited_deploy_actions:
+  description: >
+    Deployment or release actions that require explicit human approval.
+    Never perform these without orchestrator confirmation.
+  actions:
+    - "git push to main"
+    - "git commit (without explicit permission)"
+    - "git merge (without explicit permission)"
+    - "deploy to production"
+    - "publish package to npm"
+    - "migrate production database"
+    - "reset Supabase service_role key"
+    - "send authenticated API requests to production"

@@ -4,20 +4,6 @@
  */
 
 /**
- * Type for required fields in a mapped object.
- */
-type RequiredFields<T> = {
-  [K in keyof T]-?: T[K] extends undefined ? never : K;
-}[keyof T];
-
-/**
- * Type for optional fields in a mapped object.
- */
-type OptionalFields<T> = {
-  [K in keyof T]-?: T[K] extends undefined ? K : never;
-}[keyof T];
-
-/**
  * Mapper function type that converts a DB row to a domain object.
  */
 export type RowMapper<T> = (row: Record<string, unknown>) => T;

@@ -15,7 +15,7 @@ export const MAX_PAGE_LIMIT = 100;
  * Apply pagination parameters to a Supabase query.
  * Returns the query with range and limit applied.
  */
-export function applyPagination<T>(
+export function applyPagination(
   query: any,
   params?: PaginationParams
 ): any {

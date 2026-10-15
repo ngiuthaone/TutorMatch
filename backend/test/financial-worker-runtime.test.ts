@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createFinancialWorkerRuntime, runFinancialWorkerIteration } from "../src/workers/financial-worker-runtime.js";
 
-type SweepResult = { data?: unknown; error?: unknown };
 const service = () => ({
   sweepRefundExecutions: vi.fn(async (): Promise<{ data?: unknown; error?: unknown }> => ({ data: { claimed: 0 } })),
   sweepRefundReconciliations: vi.fn(async (): Promise<{ data?: unknown; error?: unknown }> => ({ data: { claimed: 0 } })),
@@ -92,8 +91,7 @@ describe("financial worker runtime", () => {
     const calls = service();
     const runtime = createFinancialWorkerRuntime({ service: calls, workerId: "worker-test", intervalMs: 2, logger: vi.fn() });
     const running = runtime.start();
-    await new Promise((resolve) => setTimeout(resolve, 8));
-    expect(runtime.health().iterationCount).toBeGreaterThan(1);
+    await vi.waitFor(() => expect(runtime.health().iterationCount).toBeGreaterThan(1));
     await runtime.stop("test");
     await running;
   });

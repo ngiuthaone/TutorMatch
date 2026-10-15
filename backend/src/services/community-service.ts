@@ -57,7 +57,7 @@ export type CommunityMembershipCheckResult =
   | { status: "ok"; data: { is_member: boolean; is_moderator: boolean; is_owner: boolean; is_pending: boolean; is_banned: boolean } }
   | { status: "unavailable" };
 
-function mapError(code: string, message: string, kind: "join" | "leave" | "mod" | "create" | "update"): { status: "not_found" | "forbidden" | "invalid" | "unavailable"; code?: string } {
+function mapError(code: string, message: string, _kind: "join" | "leave" | "mod" | "create" | "update"): { status: "not_found" | "forbidden" | "invalid" | "unavailable"; code?: string } {
   if (code === "P0001") {
     if (message.includes("EMAIL_VERIFICATION_REQUIRED")) return { status: "invalid", code: "EMAIL_VERIFICATION_REQUIRED" };
     if (message.includes("NOT_FOUND")) return { status: "not_found" };

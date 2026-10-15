@@ -1,0 +1,13 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "testHarnessUrl": "http://localhost:3000/course-creator-test.html",
+  "reactAppUrl": "http://localhost:3000/courses/new",
+  "viewport": { "width": 1440, "height": 1200 },
+  "pages": [
+    "intended-learners", "course-structure", "setup-test-video", "film-edit",
+    "curriculum", "captions", "accessibility", "landing-page",
+    "pricing", "promotions", "course-messages", "submit-review"
+  ],
+  "outputDir": "/tmp/visual-regression",
+  "threshold": 0.1
+}

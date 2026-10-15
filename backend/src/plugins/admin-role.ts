@@ -13,7 +13,7 @@ export function createRequireAdmin(
   supabaseUrl: string,
   publishableKey: string,
 ) {
-  return async function requireAdmin(request: FastifyRequest, reply: FastifyReply) {
+  return async function requireAdmin(request: FastifyRequest, _reply: FastifyReply) {
     if (!request.auth?.userId) {
       throw new ApiError(401, "UNAUTHORIZED", "Authentication is required.", { "WWW-Authenticate": "Bearer" });
     }
